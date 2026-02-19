@@ -87,14 +87,17 @@ get_next_seq() {
     local max_seq=0
     
     if [[ -d "$workflow_base" ]]; then
-        for dir in "$workflow_base"/"${date_prefix}"_*/ 2>/dev/null; do
+        shopt -s nullglob
+        for dir in "$workflow_base"/"${date_prefix}"_*/; do
             if [[ -d "$dir" ]]; then
-                seq=$(basename "$dir" | cut -d'_' -f2)
-                if [[ "$seq" =~ ^[0-9]+$ ]] && [[ "$seq" -gt "$max_seq" ]]; then
-                    max_seq=$seq
+                local seq_num
+                seq_num=$(basename "$dir" | cut -d'_' -f2)
+                if [[ "$seq_num" =~ ^[0-9]+$ ]] && [[ "$seq_num" -gt "$max_seq" ]]; then
+                    max_seq=$seq_num
                 fi
             fi
         done
+        shopt -u nullglob
     fi
     
     printf "%03d" $((max_seq + 1))

@@ -129,12 +129,12 @@ format_duration() {
 count_tasks() {
   local tasks_file="$1"
   local pattern="$2"
+  local count=0
 
   if [[ -f "$tasks_file" ]]; then
-    grep -c "$pattern" "$tasks_file" 2> /dev/null || echo "0"
-  else
-    echo "0"
+    count=$(grep -c "$pattern" "$tasks_file" 2>/dev/null) || count=0
   fi
+  echo "$count"
 }
 
 generate_markdown_report() {
@@ -162,6 +162,11 @@ generate_markdown_report() {
   local total_checks=$(count_tasks "$workflow_dir/checklist.md" "^\- \[")
   local done_checks=$(count_tasks "$workflow_dir/checklist.md" "^\- \[x\]")
 
+  local task_rate=0
+  local check_rate=0
+  [[ $total_tasks -gt 0 ]] && task_rate=$((done_tasks * 100 / total_tasks))
+  [[ $total_checks -gt 0 ]] && check_rate=$((done_checks * 100 / total_checks))
+
   cat << EOF
 # Workflow Report / 工作流报告
 
@@ -187,12 +192,12 @@ $description
 ### Tasks / 任务
 - Total: $total_tasks
 - Completed: $done_tasks
-- Completion Rate: $(( total_tasks > 0 ? done_tasks * 100 / total_tasks : 0 ))%
+- Completion Rate: ${task_rate}%
 
 ### Checklist / 检查清单
 - Total: $total_checks
 - Completed: $done_checks
-- Completion Rate: $(( total_checks > 0 ? done_checks * 100 / total_checks : 0 ))%
+- Completion Rate: ${check_rate}%
 
 ## Files / 文件
 
@@ -205,7 +210,8 @@ EOF
   if [[ $include_logs -eq 1 && -d "$workflow_dir/logs" ]]; then
     echo "## Logs / 日志"
     echo ""
-    for log in "$workflow_dir/logs"/*.log 2> /dev/null; do
+    shopt -s nullglob
+    for log in "$workflow_dir/logs"/*.log; do
       if [[ -f "$log" ]]; then
         echo "### $(basename "$log")"
         echo '```'
@@ -214,6 +220,7 @@ EOF
         echo ""
       fi
     done
+    shopt -u nullglob
   fi
 
   echo "---"
@@ -241,6 +248,11 @@ generate_json_report() {
   local total_checks=$(count_tasks "$workflow_dir/checklist.md" "^\- \[")
   local done_checks=$(count_tasks "$workflow_dir/checklist.md" "^\- \[x\]")
 
+  local task_rate=0
+  local check_rate=0
+  [[ $total_tasks -gt 0 ]] && task_rate=$((done_tasks * 100 / total_tasks))
+  [[ $total_checks -gt 0 ]] && check_rate=$((done_checks * 100 / total_checks))
+
   cat << EOF
 {
   "workflow_id": "$workflow_id",
@@ -255,12 +267,12 @@ generate_json_report() {
     "tasks": {
       "total": $total_tasks,
       "completed": $done_tasks,
-      "completion_rate": $(( total_tasks > 0 ? done_tasks * 100 / total_tasks : 0 ))
+      "completion_rate": $task_rate
     },
     "checklist": {
       "total": $total_checks,
       "completed": $done_checks,
-      "completion_rate": $(( total_checks > 0 ? done_checks * 100 / total_checks : 0 ))
+      "completion_rate": $check_rate
     }
   },
   "generated_at": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
