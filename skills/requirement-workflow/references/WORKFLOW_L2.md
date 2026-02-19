@@ -1,369 +1,368 @@
-# L2: Standard Workflow / 标准流程
+# L2: Standard Workflow
 
-常规功能开发的完整工作流。
+Complete workflow for regular feature development.
 
-## Overview / 概览
+## Overview
 
 ```
 INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → DELIVERING → DONE
 ```
 
-| 属性 | 值 |
-|------|-----|
-| 目标时间 | 1-8 小时 |
-| 产出物 | spec.md, design.md, tasks.md, checklist.md, report.md |
-| 适用 | 新功能开发, API 变更, 组件重构 |
+| Property | Value |
+|----------|-------|
+| Target Time | 1-8 hours |
+| Outputs | spec.md, design.md, tasks.md, checklist.md, report.md |
+| Best For | Most feature development |
 
-## Stages / 阶段详情
+## Stages
 
 ### Stage 1: INIT → ANALYZING
 
-**触发:** 工作流初始化完成后
+**Trigger:** Workflow initialization complete
 
-**AI 执行:**
-1. 理解用户需求
-2. 提出澄清问题（如需要）
-3. 记录需求到 `spec.md`
+**AI Actions:**
+1. Understand user requirements
+2. Ask clarifying questions (if needed)
+3. Document requirements in `spec.md`
 
-**产出 (spec.md):**
+**Output (spec.md):**
 ```markdown
-# 需求规格: {name}
+# Requirements: {name}
 
-## 背景
-{为什么需要这个功能}
+## Background
+{Why this feature is needed}
 
-## 目标
-{功能要达成什么}
+## Objectives
+{What the feature should achieve}
 
-## 范围
-- 包含: {功能边界内}
-- 不包含: {明确排除的}
+## Scope
+- In Scope: {included features}
+- Out of Scope: {explicitly excluded}
 
-## 验收标准
-- [ ] {标准1}
-- [ ] {标准2}
+## Acceptance Criteria
+- [ ] {criterion_1}
+- [ ] {criterion_2}
 ```
 
-**状态转换:**
+**Transition:**
 ```bash
 ./scripts/advance-stage.sh -r /project --to ANALYZING
 ```
 
 ### Stage 2: ANALYZING → PLANNING
 
-**触发:** 需求明确，spec.md 完成
+**Trigger:** Requirements clear, spec.md complete
 
-**AI 执行:**
-1. 分析现有代码库
-2. 识别受影响的模块
-3. 规划技术方案
-4. 创建任务列表 (`tasks.md`)
+**AI Actions:**
+1. Analyze existing codebase
+2. Identify affected modules
+3. Plan technical approach
+4. Create task list (`tasks.md`)
 
-**产出 (tasks.md):**
+**Output (tasks.md):**
 ```markdown
-# 任务列表
+# Task List
 
-## Phase 1: 准备工作
-- [ ] 任务1.1
-- [ ] 任务1.2
+## Phase 1: Preparation
+- [ ] Task 1.1
+- [ ] Task 1.2
 
-## Phase 2: 核心实现
-- [ ] 任务2.1
-- [ ] 任务2.2
+## Phase 2: Core Implementation
+- [ ] Task 2.1
+- [ ] Task 2.2
 
-## Phase 3: 测试与完善
-- [ ] 任务3.1
+## Phase 3: Testing and Polish
+- [ ] Task 3.1
 ```
 
-**状态转换:**
+**Transition:**
 ```bash
 ./scripts/advance-stage.sh -r /project --to PLANNING
 ```
 
 ### Stage 3: PLANNING → DESIGNING
 
-**触发:** 任务规划完成
+**Trigger:** Task planning complete
 
-**AI 执行:**
-1. 设计技术方案
-2. 确定 API 接口（如适用）
-3. 设计数据结构
-4. 记录到 `design.md`
+**AI Actions:**
+1. Design technical solution
+2. Define API interfaces (if applicable)
+3. Design data structures
+4. Document in `design.md`
 
-**产出 (design.md):**
+**Output (design.md):**
 ```markdown
-# 技术设计: {name}
+# Technical Design: {name}
 
-## 方案概述
-{整体设计思路}
+## Solution Overview
+{High-level design approach}
 
-## 组件交互
-{模块间如何配合}
+## Component Interaction
+{How modules work together}
 
-## API 设计 (如适用)
-| 接口 | 方法 | 描述 |
-|------|------|------|
+## API Design (if applicable)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
 | /api/xxx | POST | ... |
 
-## 数据模型
-{数据结构定义}
+## Data Model
+{Data structure definitions}
 
-## 风险与缓解
-| 风险 | 缓解措施 |
-|------|----------|
+## Risks and Mitigations
+| Risk | Mitigation |
+|------|------------|
 ```
 
-**状态转换:**
+**Transition:**
 ```bash
 ./scripts/advance-stage.sh -r /project --to DESIGNING
 ```
 
 ### Stage 4: DESIGNING → IMPLEMENTING
 
-**触发:** 设计完成，design.md 完成
+**Trigger:** Design complete, design.md done
 
-**AI 执行:**
-1. 按 tasks.md 顺序执行
-2. 使用 TodoWrite 跟踪
-3. 每完成任务更新进度
+**AI Actions:**
+1. Execute tasks from tasks.md in order
+2. Track with TodoWrite
+3. Update progress on each completion
 
-**执行规范:**
-- 遵循现有代码风格
-- 添加必要的测试
-- 及时提交进度
+**Guidelines:**
+- Follow existing code style
+- Add necessary tests
+- Commit progress regularly
 
-**状态转换:**
+**Transition:**
 ```bash
 ./scripts/advance-stage.sh -r /project --to IMPLEMENTING
 ```
 
 ### Stage 5: IMPLEMENTING → TESTING
 
-**触发:** 所有开发任务完成
+**Trigger:** All development tasks complete
 
-**AI 执行:**
-1. 运行完整测试套件
-2. 执行质量检查:
+**AI Actions:**
+1. Run full test suite
+2. Execute quality checks:
    - Lint check
    - Type check
    - Unit tests
-   - Integration tests (如适用)
-3. 更新 `checklist.md`
+   - Integration tests (if applicable)
+3. Update `checklist.md`
 
-**产出 (checklist.md):**
+**Output (checklist.md):**
 ```markdown
-# 验收清单
+# Acceptance Checklist
 
-## 功能验证
-- [ ] 核心功能正常
-- [ ] 边界条件处理
-- [ ] 错误处理
+## Functional Verification
+- [ ] Core functionality works
+- [ ] Edge cases handled
+- [ ] Error handling
 
-## 质量检查
-- [ ] Lint 通过
-- [ ] Type check 通过
-- [ ] 单元测试通过
-- [ ] 测试覆盖率 >= 70%
+## Quality Checks
+- [ ] Lint passed
+- [ ] Type check passed
+- [ ] Unit tests passed
+- [ ] Coverage >= 70%
 
-## 文档
-- [ ] API 文档更新
-- [ ] README 更新（如需要）
+## Documentation
+- [ ] API docs updated
+- [ ] README updated (if needed)
 ```
 
 **Hook Point:** `quality_gate`
 
-**状态转换:**
+**Transition:**
 ```bash
 ./scripts/advance-stage.sh -r /project --to TESTING
 ```
 
 ### Stage 6: TESTING → DELIVERING
 
-**触发:** 所有测试通过
+**Trigger:** All tests passed
 
-**AI 执行:**
-1. 生成变更报告
-2. 准备交付材料
-3. 更新 `artifacts/report.md`
+**AI Actions:**
+1. Generate change report
+2. Prepare delivery materials
+3. Update `artifacts/report.md`
 
-**产出 (report.md):**
+**Output (report.md):**
 ```markdown
-# 工作流报告
+# Workflow Report
 
-## 概要
-| 项目 | 值 |
-|------|-----|
-| 工作流 ID | xxx |
-| 类型 | feature |
-| 级别 | L2 |
-| 用时 | 4h 30m |
+## Summary
+| Item | Value |
+|------|-------|
+| Workflow ID | xxx |
+| Type | feature |
+| Level | L2 |
+| Duration | 4h 30m |
 
-## 变更摘要
-- 新增文件: 3
-- 修改文件: 5
-- 删除文件: 0
+## Change Summary
+- Files added: 3
+- Files modified: 5
+- Files deleted: 0
 
-## 测试结果
-- 单元测试: 通过
-- 覆盖率: 78%
+## Test Results
+- Unit tests: Passed
+- Coverage: 78%
 
-## 备注
-{其他说明}
+## Notes
+{Additional remarks}
 ```
 
-**状态转换:**
+**Transition:**
 ```bash
 ./scripts/advance-stage.sh -r /project --to DELIVERING
 ```
 
 ### Stage 7: DELIVERING → DONE
 
-**触发:** 交付材料准备完成
+**Trigger:** Delivery materials ready
 
-**AI 执行:**
-1. 最终确认所有任务完成
-2. 总结工作流
-3. 标记完成
+**AI Actions:**
+1. Final confirmation all tasks complete
+2. Summarize workflow
+3. Mark complete
 
-**状态转换:**
+**Transition:**
 ```bash
 ./scripts/advance-stage.sh -r /project --to DONE
 ```
 
-## Complete Example / 完整示例
+## Complete Example
 
-### 场景: 实现用户头像上传功能
+### Scenario: Implement user avatar upload feature
 
 ```
-User: 我需要实现一个用户头像上传功能
+User: I need a user avatar upload feature
 
-AI: 这是一个标准功能开发，我使用 L2 标准流程。
+AI: Standard feature development. Using L2 Standard workflow.
 
-📊 需求分析:
-- 类型: feature
-- 级别: L2 (Standard)
-- 预估影响: ~10 个文件
+📊 Analysis:
+- Type: feature
+- Level: L2 (Standard)
+- Est. impact: ~10 files
 
-正在初始化工作流...
+Initializing workflow...
 
 ✅ Workflow: 20240115_001_feature_user-avatar-upload
 📁 .trae/workflow/20240115_001_feature_user-avatar-upload/
 
 ---
 
-[ANALYZING] 需求分析
+[ANALYZING] Requirements analysis
 
-需要澄清几个问题:
-1. 头像尺寸限制是多少?
-2. 支持哪些图片格式?
-3. 是否需要裁剪功能?
+Questions to clarify:
+1. Max file size?
+2. Supported formats?
+3. Cropping needed?
 
-User: 限制 2MB，支持 jpg/png，需要圆形裁剪
+User: 2MB limit, jpg/png, need circular cropping
 
-AI: 明白了，我来更新需求规格...
+Got it, updating spec.md...
 
-📄 spec.md 已创建:
-- 最大文件: 2MB
-- 格式: jpg, png
-- 裁剪: 圆形预览
-- 存储: 对象存储服务
+📄 spec.md created:
+- Max file: 2MB
+- Formats: jpg, png
+- Cropping: circular preview
 
-推进到 PLANNING...
+Advancing to PLANNING...
 
 ---
 
-[PLANNING] 任务规划
+[PLANNING] Task planning
 
-分析现有代码结构后，规划任务:
+After analyzing codebase, planned tasks:
 
 📋 tasks.md:
-1. 创建上传组件 AvatarUploader
-2. 添加图片裁剪功能
-3. 实现后端上传 API
-4. 集成存储服务
-5. 更新用户 Profile 页面
-6. 添加单元测试
+1. Create AvatarUploader component
+2. Add image cropping feature
+3. Implement upload API
+4. Integrate storage service
+5. Update user Profile page
+6. Add unit tests
 
-推进到 DESIGNING...
+Advancing to DESIGNING...
 
 ---
 
-[DESIGNING] 技术设计
+[DESIGNING] Technical design
 
-📄 design.md 已创建:
+📄 design.md created:
 
-组件设计:
-- AvatarUploader: 处理文件选择和预览
-- ImageCropper: 圆形裁剪功能
+Component design:
+- AvatarUploader: handles file selection and preview
+- ImageCropper: circular cropping
 
-API 设计:
+API design:
 - POST /api/users/avatar
-- 返回: { url: string }
+- Returns: { url: string }
 
-存储方案:
-- 使用 S3 兼容存储
-- 路径: /avatars/{userId}/{timestamp}.{ext}
+Storage:
+- S3-compatible storage
+- Path: /avatars/{userId}/{timestamp}.{ext}
 
-推进到 IMPLEMENTING...
-
----
-
-[IMPLEMENTING] 编码实现
-
-开始执行任务列表...
-
-✅ 任务 1: AvatarUploader 组件完成
-✅ 任务 2: ImageCropper 组件完成
-✅ 任务 3: 上传 API 完成
-✅ 任务 4: 存储服务集成完成
-✅ 任务 5: Profile 页面更新完成
-✅ 任务 6: 单元测试完成
-
-推进到 TESTING...
+Advancing to IMPLEMENTING...
 
 ---
 
-[TESTING] 测试验证
+[IMPLEMENTING] Coding
 
-执行质量检查:
-- ✅ TypeScript 编译通过
-- ✅ ESLint 无错误
-- ✅ 单元测试通过 (12/12)
-- ✅ 覆盖率: 75%
+Executing task list...
 
-更新 checklist.md...
+✅ Task 1: AvatarUploader complete
+✅ Task 2: ImageCropper complete
+✅ Task 3: Upload API complete
+✅ Task 4: Storage integration complete
+✅ Task 5: Profile page updated
+✅ Task 6: Unit tests complete
 
-推进到 DELIVERING...
-
----
-
-[DELIVERING] 交付准备
-
-生成报告 artifacts/report.md:
-- 新增文件: 4
-- 修改文件: 6
-- 总代码行: +320, -15
-- 测试覆盖: 75%
-
-推进到 DONE...
+Advancing to TESTING...
 
 ---
 
-[DONE] 工作流完成
+[TESTING] Verification
 
-✅ 用户头像上传功能已完成！
+Running quality checks:
+- ✅ TypeScript compilation passed
+- ✅ ESLint no errors
+- ✅ Unit tests passed (12/12)
+- ✅ Coverage: 75%
 
-变更摘要:
-- 前端: AvatarUploader, ImageCropper 组件
-- 后端: /api/users/avatar 接口
-- 存储: S3 集成
+Updating checklist.md...
 
-总用时: 3h 45m
+Advancing to DELIVERING...
+
+---
+
+[DELIVERING] Preparing delivery
+
+Generating report artifacts/report.md:
+- Files added: 4
+- Files modified: 6
+- Total code: +320, -15
+- Test coverage: 75%
+
+Advancing to DONE...
+
+---
+
+[DONE] Workflow complete
+
+✅ User avatar upload feature complete!
+
+Change summary:
+- Frontend: AvatarUploader, ImageCropper components
+- Backend: /api/users/avatar endpoint
+- Storage: S3 integration
+
+Duration: 3h 45m
 ```
 
-## Quality Gate / 质量门禁
+## Quality Gate
 
-L2 的标准质量检查:
+L2 standard quality checks:
 
 ```yaml
 quality_gate:
@@ -374,22 +373,22 @@ quality_gate:
   integration_tests: recommended
 ```
 
-## Hooks / 可用钩子
+## Available Hooks
 
 ```
-pre_stage_{STAGE}      # 进入阶段前
-post_stage_{STAGE}     # 完成阶段后
-pre_task_{task_id}     # 执行任务前
-post_task_{task_id}    # 完成任务后
-quality_gate           # 质量检查时
-pre_delivery           # 交付前
-on_blocked             # 阻塞时
-on_error               # 出错时
+pre_stage_{STAGE}      # Before entering stage
+post_stage_{STAGE}     # After completing stage
+pre_task_{task_id}     # Before executing task
+post_task_{task_id}    # After completing task
+quality_gate           # During quality checks
+pre_delivery           # Before delivery
+on_blocked             # When blocked
+on_error               # On error
 ```
 
-## Skill Injection / 技能注入
+## Skill Injection
 
-L2 推荐注入的技能:
+Recommended skills for L2:
 
 ```yaml
 injected_skills:
@@ -406,11 +405,11 @@ injected_skills:
     timing: pre
 ```
 
-## Escalation / 升级到 L3
+## Escalation to L3
 
-如果发现:
-- 涉及安全敏感操作
-- 需要跨团队审批
-- 复杂度超出预期
+Escalate if you discover:
+- Security-sensitive operations
+- Requires cross-team approval
+- Complexity exceeds expectations
 
-**应升级到 L3。**
+**Escalate to L3.**

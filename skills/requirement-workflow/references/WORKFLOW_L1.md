@@ -1,183 +1,183 @@
-# L1: Quick Workflow / 快速流程
+# L1: Quick Workflow
 
-快速修复和小改动的精简工作流。
+Streamlined workflow for quick fixes and minor changes.
 
-## Overview / 概览
+## Overview
 
 ```
 INIT → PLANNING → IMPLEMENTING → TESTING → DONE
 ```
 
-| 属性 | 值 |
-|------|-----|
-| 目标时间 | < 1 小时 |
-| 产出物 | tasks.md, checklist.md |
-| 跳过 | spec.md, design.md |
-| 适用 | Bug 修复, 小改动, 配置变更 |
+| Property | Value |
+|----------|-------|
+| Target Time | < 1 hour |
+| Outputs | tasks.md, checklist.md |
+| Skipped | spec.md, design.md |
+| Best For | Bug fixes, minor changes, config updates |
 
-## Stages / 阶段详情
+## Stages
 
 ### Stage 1: INIT → PLANNING
 
-**触发:** 工作流初始化完成后
+**Trigger:** Workflow initialization complete
 
-**AI 执行:**
-1. 快速分析问题/需求
-2. 直接规划修复方案
-3. 创建简单任务列表 (`tasks.md`)
+**AI Actions:**
+1. Quick analysis of issue/requirement
+2. Plan fix approach directly
+3. Create simple task list (`tasks.md`)
 
-**产出:**
+**Output:**
 ```markdown
 # Tasks
 
-- [ ] 定位问题位置
-- [ ] 实现修复
-- [ ] 验证修复效果
+- [ ] Locate issue
+- [ ] Implement fix
+- [ ] Verify fix works
 ```
 
-**状态转换:**
+**Transition:**
 ```bash
 ./scripts/advance-stage.sh -r /project --to PLANNING
 ```
 
 ### Stage 2: PLANNING → IMPLEMENTING
 
-**触发:** 任务规划完成
+**Trigger:** Task planning complete
 
-**AI 执行:**
-1. 按任务列表逐项执行
-2. 使用 TodoWrite 跟踪进度
-3. 每完成一项标记 ✅
+**AI Actions:**
+1. Execute tasks sequentially
+2. Track progress with TodoWrite
+3. Mark each task ✅ when done
 
-**注意事项:**
-- L1 不需要详细设计文档
-- 直接进入编码
+**Notes:**
+- L1 does not require detailed design documents
+- Proceed directly to coding
 
-**状态转换:**
+**Transition:**
 ```bash
 ./scripts/advance-stage.sh -r /project --to IMPLEMENTING
 ```
 
 ### Stage 3: IMPLEMENTING → TESTING
 
-**触发:** 所有任务完成
+**Trigger:** All tasks complete
 
-**AI 执行:**
-1. 运行相关测试
-2. 执行基础质量检查:
+**AI Actions:**
+1. Run relevant tests
+2. Execute basic quality checks:
    - Lint check
-   - Type check (如适用)
-3. 更新 `checklist.md`
+   - Type check (if applicable)
+3. Update `checklist.md`
 
-**产出:**
+**Output:**
 ```markdown
 # Checklist
 
-- [x] 代码修改完成
-- [x] 本地测试通过
-- [ ] Lint 检查通过
-- [ ] 相关单元测试通过
+- [x] Code changes complete
+- [x] Local tests pass
+- [ ] Lint check passed
+- [ ] Related unit tests passed
 ```
 
-**状态转换:**
+**Transition:**
 ```bash
 ./scripts/advance-stage.sh -r /project --to TESTING
 ```
 
 ### Stage 4: TESTING → DONE
 
-**触发:** 所有检查通过
+**Trigger:** All checks passed
 
-**AI 执行:**
-1. 确认所有 checklist 项目已完成
-2. 简要总结变更
-3. 标记工作流完成
+**AI Actions:**
+1. Confirm all checklist items complete
+2. Brief summary of changes
+3. Mark workflow complete
 
-**状态转换:**
+**Transition:**
 ```bash
 ./scripts/advance-stage.sh -r /project --to DONE
 ```
 
-## Complete Example / 完整示例
+## Complete Example
 
-### 场景: 修复登录按钮点击无响应
+### Scenario: Fix login button not responding
 
 ```
-User: 登录按钮点击没反应，帮我修一下
+User: Login button doesn't respond when clicked
 
-AI: 这是一个明确的 bug，我使用 L1 快速流程。
+AI: This is a clear bug. Using L1 Quick workflow.
 
-📊 需求分析:
-- 类型: bugfix  
-- 级别: L1
-- 影响: 1 个文件
+📊 Analysis:
+- Type: bugfix
+- Level: L1
+- Impact: 1 file
 
-正在初始化工作流...
+Initializing workflow...
 
 ✅ Workflow: 20240115_001_bugfix_fix-login-button
 📁 .trae/workflow/20240115_001_bugfix_fix-login-button/
 
 ---
 
-[PLANNING] 分析问题并规划修复
+[PLANNING] Analyzing and planning fix
 
-让我检查登录按钮的代码...
+Checking login button code...
 
-发现问题: onClick handler 中有 typo，调用了不存在的函数
+Found issue: onClick handler has typo, calling non-existent function
 
-📋 任务列表:
-1. 修复 LoginButton.tsx 中的函数名 typo
-2. 验证按钮点击正常
+📋 Task list:
+1. Fix function name typo in LoginButton.tsx
+2. Verify button click works
 
-推进到 IMPLEMENTING...
-
----
-
-[IMPLEMENTING] 执行修复
-
-修改文件: src/components/LoginButton.tsx
-- 将 `handleLgoin` 改为 `handleLogin`
-
-✅ 任务 1 完成
-
-推进到 TESTING...
+Advancing to IMPLEMENTING...
 
 ---
 
-[TESTING] 验证修复
+[IMPLEMENTING] Executing fix
 
-执行检查:
-- ✅ TypeScript 编译通过
-- ✅ ESLint 无新错误
-- ✅ 相关测试通过
+Modified: src/components/LoginButton.tsx
+- Changed `handleLgoin` to `handleLogin`
 
-推进到 DONE...
+✅ Task 1 complete
+
+Advancing to TESTING...
 
 ---
 
-[DONE] 工作流完成
+[TESTING] Verifying fix
 
-📋 修复总结:
-- 修复了 LoginButton.tsx 中的函数名 typo
-- 变更文件: 1 个
-- 用时: ~5 分钟
+Running checks:
+- ✅ TypeScript compilation passed
+- ✅ ESLint no new errors
+- ✅ Related tests passed
 
-✅ Bug 已修复，登录按钮现在可以正常点击了。
+Advancing to DONE...
+
+---
+
+[DONE] Workflow complete
+
+📋 Fix Summary:
+- Fixed function name typo in LoginButton.tsx
+- Files changed: 1
+- Duration: ~5 minutes
+
+✅ Bug fixed. Login button now responds to clicks.
 ```
 
-## Skip Conditions / 跳过条件
+## Skip Conditions
 
-L1 流程可以跳过:
+L1 workflow skips:
 
-| 阶段 | 可跳过? | 原因 |
-|------|---------|------|
-| ANALYZING | ✅ 跳过 | 问题已明确 |
-| DESIGNING | ✅ 跳过 | 不需要设计 |
-| DELIVERING | ✅ 跳过 | 无需正式交付 |
+| Stage | Skipped? | Reason |
+|-------|----------|--------|
+| ANALYZING | ✅ Skip | Issue is already clear |
+| DESIGNING | ✅ Skip | No design needed |
+| DELIVERING | ✅ Skip | No formal delivery |
 
-## Quality Gate / 质量门禁
+## Quality Gate
 
-L1 的最小质量检查:
+L1 minimum quality checks:
 
 ```yaml
 quality_gate:
@@ -187,26 +187,26 @@ quality_gate:
   integration_tests: skip
 ```
 
-## Hooks / 可用钩子
+## Available Hooks
 
 ```
-quality_gate           # 测试前执行
-on_error              # 出错时执行
+quality_gate     # Before testing
+on_error        # On error
 ```
 
-## Escalation / 升级条件
+## Escalation
 
-如果在 L1 执行过程中发现:
+If during L1 execution you discover:
 
-- 问题比预期复杂
-- 需要修改多个模块
-- 需要设计讨论
+- Issue is more complex than expected
+- Multiple modules need changes
+- Design discussion needed
 
-**应升级到 L2:**
+**Escalate to L2:**
 
 ```bash
-# 在 workflow.yaml 中记录
+# Record in workflow.yaml
 escalated_from: L1
-escalation_reason: "发现问题涉及多个模块"
+escalation_reason: "Issue spans multiple modules"
 level: L2
 ```

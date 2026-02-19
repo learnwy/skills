@@ -1,145 +1,144 @@
-# Level Selection Guide / 级别选择指南
+# Level Selection Guide
 
-如何判断需求应该使用哪个工作流级别。
+How to determine which workflow level to use for a requirement.
 
-## Quick Decision Tree / 快速决策树
-
-```
-需求是否明确且影响范围小?
-├── 是 → 是否涉及安全/支付/认证?
-│       ├── 是 → L3
-│       └── 否 → L1
-└── 否 → 是否跨模块或有破坏性变更?
-        ├── 是 → L3
-        └── 否 → L2
-```
-
-## Selection Criteria / 选择标准
-
-### L1: Quick (快速流程)
-
-**选择条件 (满足全部):**
-- [ ] 影响文件 ≤ 3 个
-- [ ] 只涉及 1 个模块
-- [ ] 风险等级: 低
-- [ ] 无外部依赖变更
-- [ ] 不需要设计文档
-- [ ] 预估时间 < 1 小时
-
-**典型场景:**
-- Bug 修复（原因已明确）
-- UI 微调
-- 配置变更
-- 文档更新
-- 单文件重构
-
-### L2: Standard (标准流程)
-
-**选择条件 (满足大部分):**
-- [ ] 影响文件 4-15 个
-- [ ] 涉及 1-3 个模块
-- [ ] 风险等级: 中
-- [ ] 可能有外部依赖
-- [ ] 需要简单设计
-- [ ] 预估时间 1-8 小时
-
-**典型场景:**
-- 新功能开发
-- API 新增/修改
-- 组件重构
-- 跨文件变更（范围清晰）
-
-### L3: Full (完整流程)
-
-**选择条件 (满足任一):**
-- [ ] 影响文件 > 15 个
-- [ ] 涉及 > 3 个模块
-- [ ] 风险等级: 高
-- [ ] 有破坏性变更 (Breaking Changes)
-- [ ] 安全敏感功能
-- [ ] 需要复杂架构设计
-- [ ] 预估时间 > 8 小时
-
-**典型场景:**
-- 安全/认证相关功能
-- 支付/交易功能
-- 系统架构变更
-- 跨模块重构
-- 数据迁移
-- 合规要求的功能
-
-## Scoring Algorithm / 评分算法
+## Quick Decision Tree
 
 ```
-得分计算:
+Is the requirement clear with small scope?
+├── Yes → Does it involve security/payment/auth?
+│         ├── Yes → L3
+│         └── No  → L1
+└── No  → Is it cross-module or has breaking changes?
+          ├── Yes → L3
+          └── No  → L2
+```
 
-文件数量:     ≤3=0, 4-15=1, >15=2
-模块数量:     1=0, 2-3=1, >3=2
-风险等级:     低=0, 中=1, 高=2
-破坏性变更:   无=0, 有=2
-外部依赖:     无=0, 少量=1, 多个=2
+## Selection Criteria
 
-总分:
+### L1: Quick
+
+**Select when ALL of the following are true:**
+- [ ] Affects ≤ 3 files
+- [ ] Involves only 1 module
+- [ ] Risk level: Low
+- [ ] No external dependency changes
+- [ ] No design document needed
+- [ ] Estimated time < 1 hour
+
+**Typical Scenarios:**
+- Bug fixes (root cause is clear)
+- UI tweaks
+- Configuration changes
+- Documentation updates
+- Single-file refactoring
+
+### L2: Standard
+
+**Select when MOST of the following are true:**
+- [ ] Affects 4-15 files
+- [ ] Involves 1-3 modules
+- [ ] Risk level: Medium
+- [ ] May have external dependencies
+- [ ] Requires simple design
+- [ ] Estimated time 1-8 hours
+
+**Typical Scenarios:**
+- New feature development
+- API additions/modifications
+- Component refactoring
+- Cross-file changes (scope is clear)
+
+### L3: Full
+
+**Select when ANY of the following are true:**
+- [ ] Affects > 15 files
+- [ ] Involves > 3 modules
+- [ ] Risk level: High
+- [ ] Has breaking changes
+- [ ] Security-sensitive feature
+- [ ] Requires complex architecture design
+- [ ] Estimated time > 8 hours
+
+**Typical Scenarios:**
+- Security/authentication features
+- Payment/transaction features
+- System architecture changes
+- Cross-module refactoring
+- Data migrations
+- Compliance-required features
+
+## Scoring Algorithm
+
+```
+Scoring:
+
+File count:        ≤3=0, 4-15=1, >15=2
+Module count:      1=0, 2-3=1, >3=2
+Risk level:        Low=0, Medium=1, High=2
+Breaking changes:  No=0, Yes=2
+External deps:     None=0, Few=1, Many=2
+
+Total:
   0-2  → L1
   3-6  → L2
   7+   → L3
 ```
 
-## Override Rules / 覆盖规则
+## Override Rules
 
-即使评分指向较低级别，以下情况 **强制升级**:
+Even if scoring suggests a lower level, **force upgrade** for:
 
-| 条件 | 强制级别 |
-|------|----------|
-| 涉及用户认证 | ≥ L2 |
-| 涉及支付/金融 | L3 |
-| 涉及个人数据 (GDPR) | L3 |
-| 合规审计要求 | L3 |
-| 团队规范要求 | 按规范 |
+| Condition | Minimum Level |
+|-----------|---------------|
+| User authentication involved | ≥ L2 |
+| Payment/financial involved | L3 |
+| Personal data (GDPR) involved | L3 |
+| Compliance audit required | L3 |
+| Team policy requires | Per policy |
 
-## Examples / 示例
+## Examples
 
-### Example 1: 修复登录按钮样式
-
-```
-- 影响文件: 1个 CSS 文件
-- 模块: UI 组件
-- 风险: 低
-→ 级别: L1
-```
-
-### Example 2: 添加用户头像上传
+### Example 1: Fix button style
 
 ```
-- 影响文件: ~10个
-- 模块: 用户模块, 存储模块
-- 风险: 中
-- 需要设计 API 和存储方案
-→ 级别: L2
+- Files affected: 1 CSS file
+- Module: UI component
+- Risk: Low
+→ Level: L1
 ```
 
-### Example 3: 集成第三方支付
+### Example 2: Add user avatar upload
 
 ```
-- 影响文件: 20+
-- 模块: 支付, 订单, 用户, 通知
-- 风险: 高 (金融相关)
-- 需要安全审查
-→ 级别: L3
+- Files affected: ~10
+- Modules: User, Storage
+- Risk: Medium
+- Requires API and storage design
+→ Level: L2
 ```
 
-## Manual Override / 手动覆盖
+### Example 3: Integrate third-party payment
 
-用户可以手动指定级别:
+```
+- Files affected: 20+
+- Modules: Payment, Order, User, Notification
+- Risk: High (financial)
+- Requires security review
+→ Level: L3
+```
+
+## Manual Override
+
+Users can manually specify level:
 
 ```bash
-# 强制使用 L3
 ./scripts/init-workflow.sh -r /project -n "simple-fix" -t bugfix -l L3
 ```
 
-在 workflow.yaml 中记录:
+Recorded in workflow.yaml:
 
 ```yaml
 level: L3
-level_override_reason: "团队要求所有 API 变更使用 L3"
+level_override_reason: "Team policy requires L3 for all API changes"
 ```

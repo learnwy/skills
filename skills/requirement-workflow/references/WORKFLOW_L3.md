@@ -1,164 +1,164 @@
-# L3: Full Workflow / 完整流程
+# L3: Full Workflow
 
-复杂功能和安全敏感需求的完整工作流。
+Complete workflow for complex features and security-sensitive requirements.
 
-## Overview / 概览
+## Overview
 
 ```
 INIT → ANALYZING(ext) → PLANNING(ext) → DESIGNING(ext) → IMPLEMENTING → TESTING → DELIVERING → DONE
 ```
 
-| 属性 | 值 |
-|------|-----|
-| 目标时间 | > 8 小时 (可能跨天) |
-| 产出物 | 全部文档 + 威胁模型 + 审批记录 |
-| 强制要求 | 安全审查, 架构审批 |
-| 适用 | 安全功能, 跨模块重构, 破坏性变更 |
+| Property | Value |
+|----------|-------|
+| Target Time | > 8 hours (may span multiple days) |
+| Outputs | All documents + threat model + approval records |
+| Mandatory | Security review, architecture approval |
+| Best For | Security features, cross-module refactoring, breaking changes |
 
-## L3 vs L2 / 与 L2 的差异
+## L3 vs L2 Differences
 
-| 阶段 | L2 | L3 扩展内容 |
-|------|-----|-------------|
-| ANALYZING | 需求澄清 | + 威胁建模, 影响分析 |
-| PLANNING | 任务规划 | + 资源规划, 回滚策略 |
-| DESIGNING | 技术设计 | + 架构审查, 安全审查 |
-| TESTING | 质量检查 | + 安全测试, 渗透测试 |
-| DELIVERING | 生成报告 | + 合规签字, 审批流程 |
+| Stage | L2 | L3 Extended Content |
+|-------|----|--------------------|
+| ANALYZING | Requirements clarification | + Threat modeling, impact analysis |
+| PLANNING | Task planning | + Resource planning, rollback strategy |
+| DESIGNING | Technical design | + Architecture review, security review |
+| TESTING | Quality checks | + Security testing, penetration testing |
+| DELIVERING | Generate report | + Compliance sign-off, approval flow |
 
-## Stages / 阶段详情
+## Stages
 
 ### Stage 1: INIT → ANALYZING (Extended)
 
-**触发:** 工作流初始化完成后
+**Trigger:** Workflow initialization complete
 
-**L3 扩展内容:**
-1. 标准需求分析 (同 L2)
-2. **威胁建模** (STRIDE/DREAD)
-3. **影响分析** (哪些系统/团队受影响)
-4. **风险评估矩阵**
+**L3 Extended Content:**
+1. Standard requirements analysis (same as L2)
+2. **Threat Modeling** (STRIDE/DREAD)
+3. **Impact Analysis** (which systems/teams affected)
+4. **Risk Assessment Matrix**
 
-**产出:**
+**Output:**
 
-spec.md (扩展版):
+spec.md (extended):
 ```markdown
-# 需求规格: {name}
+# Requirements: {name}
 
-## 背景 / 目标 / 范围
-{同 L2}
+## Background / Objectives / Scope
+{Same as L2}
 
-## 威胁模型
-| 威胁类型 | 描述 | 风险等级 | 缓解措施 |
-|----------|------|----------|----------|
-| Spoofing | ... | 高 | ... |
-| Tampering | ... | 中 | ... |
+## Threat Model
+| Threat Type | Description | Risk Level | Mitigation |
+|-------------|-------------|------------|------------|
+| Spoofing | ... | High | ... |
+| Tampering | ... | Medium | ... |
 
-## 影响分析
-- 受影响系统: {列表}
-- 受影响团队: {列表}
-- 数据迁移需求: {是/否}
+## Impact Analysis
+- Affected systems: {list}
+- Affected teams: {list}
+- Data migration required: {yes/no}
 
-## 风险评估
-| 风险 | 概率 | 影响 | 等级 | 缓解 |
-|------|------|------|------|------|
+## Risk Assessment
+| Risk | Probability | Impact | Level | Mitigation |
+|------|-------------|--------|-------|------------|
 ```
 
-**状态转换:**
+**Transition:**
 ```bash
 ./scripts/advance-stage.sh -r /project --to ANALYZING
 ```
 
 ### Stage 2: ANALYZING → PLANNING (Extended)
 
-**触发:** 需求分析和威胁建模完成
+**Trigger:** Requirements analysis and threat modeling complete
 
-**L3 扩展内容:**
-1. 标准任务规划 (同 L2)
-2. **资源规划** (需要哪些人参与)
-3. **时间线估算**
-4. **依赖映射**
-5. **回滚策略**
+**L3 Extended Content:**
+1. Standard task planning (same as L2)
+2. **Resource Planning** (who needs to participate)
+3. **Timeline Estimation**
+4. **Dependency Mapping**
+5. **Rollback Strategy**
 
-**产出 (tasks.md 扩展):**
+**Output (tasks.md extended):**
 ```markdown
-# 任务列表
+# Task List
 
-## 资源需求
-- 开发: 2人
-- 安全审查: 1人
-- 测试: 1人
+## Resource Requirements
+- Development: 2 people
+- Security Review: 1 person
+- Testing: 1 person
 
-## 时间线
-| 阶段 | 预估时间 | 负责人 |
-|------|----------|--------|
-| 设计 | 2天 | ... |
-| 开发 | 3天 | ... |
+## Timeline
+| Phase | Estimated | Owner |
+|-------|-----------|-------|
+| Design | 2 days | ... |
+| Development | 3 days | ... |
 
-## 依赖
-- 外部: {列表}
-- 内部: {列表}
+## Dependencies
+- External: {list}
+- Internal: {list}
 
-## 回滚策略
-1. 检测指标: {什么情况触发回滚}
-2. 回滚步骤: {具体操作}
-3. 验证方法: {确认回滚成功}
+## Rollback Strategy
+1. Detection criteria: {what triggers rollback}
+2. Rollback steps: {specific actions}
+3. Verification: {how to confirm rollback success}
 
-## 任务列表
-{详细任务}
+## Task List
+{Detailed tasks}
 ```
 
-**状态转换:**
+**Transition:**
 ```bash
 ./scripts/advance-stage.sh -r /project --to PLANNING
 ```
 
 ### Stage 3: PLANNING → DESIGNING (Extended)
 
-**触发:** 规划完成
+**Trigger:** Planning complete
 
-**L3 扩展内容:**
-1. 标准技术设计 (同 L2)
-2. **架构审查**
-3. **安全设计审查**
-4. **性能影响分析**
-5. **迁移计划** (如适用)
+**L3 Extended Content:**
+1. Standard technical design (same as L2)
+2. **Architecture Review**
+3. **Security Design Review**
+4. **Performance Impact Analysis**
+5. **Migration Plan** (if applicable)
 
-**产出 (design.md 扩展):**
+**Output (design.md extended):**
 ```markdown
-# 技术设计: {name}
+# Technical Design: {name}
 
-## 方案概述 / API 设计
-{同 L2}
+## Solution Overview / API Design
+{Same as L2}
 
-## 架构审查
-### 安全边界
-{信任域划分}
+## Architecture Review
+### Security Boundaries
+{Trust domain separation}
 
-### 数据流
-{敏感数据如何流动}
+### Data Flow
+{How sensitive data flows}
 
-### 认证/授权
-{访问控制设计}
+### Authentication/Authorization
+{Access control design}
 
-## 安全控制
-| 控制项 | 实现方式 | 验证方法 |
-|--------|----------|----------|
-| 输入验证 | ... | ... |
-| 加密存储 | ... | ... |
-| 审计日志 | ... | ... |
+## Security Controls
+| Control | Implementation | Verification |
+|---------|----------------|--------------|
+| Input validation | ... | ... |
+| Encrypted storage | ... | ... |
+| Audit logging | ... | ... |
 
-## 性能影响
-- 预期 QPS: {数值}
-- 延迟影响: {预估}
-- 资源消耗: {预估}
+## Performance Impact
+- Expected QPS: {value}
+- Latency impact: {estimate}
+- Resource consumption: {estimate}
 
-## 迁移计划 (如适用)
-1. 准备阶段
-2. 数据迁移
-3. 切换验证
-4. 回滚预案
+## Migration Plan (if applicable)
+1. Preparation phase
+2. Data migration
+3. Cutover verification
+4. Rollback plan
 ```
 
-**审批要求:**
+**Approval Requirements:**
 ```yaml
 required_approvals:
   - role: security_team
@@ -167,284 +167,284 @@ required_approvals:
     status: pending
 ```
 
-**状态转换:**
+**Transition:**
 ```bash
 ./scripts/advance-stage.sh -r /project --to DESIGNING
 ```
 
 ### Stage 4: DESIGNING → IMPLEMENTING
 
-**触发:** 设计完成 **且** 必要审批通过
+**Trigger:** Design complete **AND** required approvals obtained
 
-**AI 执行:**
-1. 确认所有审批已通过
-2. 按计划执行开发任务
-3. 实时扫描安全问题
+**AI Actions:**
+1. Confirm all approvals received
+2. Execute development tasks per plan
+3. Real-time security scanning
 
-**安全开发要求:**
-- 启用 SAST 扫描
-- 依赖漏洞检查
-- 密钥泄露检测
+**Security Development Requirements:**
+- Enable SAST scanning
+- Dependency vulnerability check
+- Secret leak detection
 
-**状态转换:**
+**Transition:**
 ```bash
 ./scripts/advance-stage.sh -r /project --to IMPLEMENTING
 ```
 
 ### Stage 5: IMPLEMENTING → TESTING (Extended)
 
-**触发:** 开发完成
+**Trigger:** Development complete
 
-**L3 扩展内容:**
-1. 标准测试 (同 L2)
-2. **安全测试**
-   - 注入测试 (SQL, XSS, CSRF)
-   - 认证绕过测试
-   - 权限提升测试
-3. **渗透测试** (辅助)
-4. **性能测试** (如适用)
+**L3 Extended Content:**
+1. Standard testing (same as L2)
+2. **Security Testing**
+   - Injection tests (SQL, XSS, CSRF)
+   - Authentication bypass tests
+   - Privilege escalation tests
+3. **Penetration Testing** (assisted)
+4. **Performance Testing** (if applicable)
 
-**产出 (checklist.md 扩展):**
+**Output (checklist.md extended):**
 ```markdown
-# 验收清单
+# Acceptance Checklist
 
-## 功能验证
-{同 L2}
+## Functional Verification
+{Same as L2}
 
-## 安全验证
-- [ ] SAST 扫描通过
-- [ ] DAST 扫描通过
-- [ ] 依赖漏洞检查通过
-- [ ] 敏感数据加密验证
-- [ ] 访问控制测试通过
-- [ ] 审计日志验证
+## Security Verification
+- [ ] SAST scan passed
+- [ ] DAST scan passed
+- [ ] Dependency vulnerability check passed
+- [ ] Sensitive data encryption verified
+- [ ] Access control tests passed
+- [ ] Audit logging verified
 
-## 性能验证
-- [ ] 负载测试通过
-- [ ] 响应时间达标
-- [ ] 资源消耗在预算内
+## Performance Verification
+- [ ] Load testing passed
+- [ ] Response time meets target
+- [ ] Resource consumption within budget
 ```
 
-**状态转换:**
+**Transition:**
 ```bash
 ./scripts/advance-stage.sh -r /project --to TESTING
 ```
 
 ### Stage 6: TESTING → DELIVERING (Extended)
 
-**触发:** 所有测试 (包括安全测试) 通过
+**Trigger:** All tests (including security tests) passed
 
-**L3 扩展内容:**
-1. 生成完整报告
-2. **合规文档**
-3. **最终安全签字**
-4. **部署批准**
+**L3 Extended Content:**
+1. Generate complete report
+2. **Compliance Documentation**
+3. **Final Security Sign-off**
+4. **Deployment Approval**
 
-**产出:**
+**Output:**
 
 artifacts/security_review.md:
 ```markdown
-# 安全审查报告
+# Security Review Report
 
-## 审查摘要
-| 项目 | 状态 |
-|------|------|
-| 威胁建模 | ✅ 完成 |
-| 安全设计审查 | ✅ 通过 |
-| SAST 扫描 | ✅ 无高危 |
-| 渗透测试 | ✅ 通过 |
+## Review Summary
+| Item | Status |
+|------|--------|
+| Threat modeling | ✅ Complete |
+| Security design review | ✅ Passed |
+| SAST scan | ✅ No high severity |
+| Penetration test | ✅ Passed |
 
-## 发现问题
-| 问题 | 严重度 | 状态 |
-|------|--------|------|
-| {问题1} | 中 | 已修复 |
+## Issues Found
+| Issue | Severity | Status |
+|-------|----------|--------|
+| {issue_1} | Medium | Fixed |
 
-## 签字
-- 安全团队: _______
+## Sign-offs
+- Security team: _______
 - Tech Lead: _______
 ```
 
-**状态转换:**
+**Transition:**
 ```bash
 ./scripts/advance-stage.sh -r /project --to DELIVERING
 ```
 
 ### Stage 7: DELIVERING → DONE
 
-**触发:** 所有签字完成
+**Trigger:** All sign-offs complete
 
-**AI 执行:**
-1. 确认所有审批
-2. 生成最终报告
-3. 归档所有文档
-4. 标记完成
+**AI Actions:**
+1. Confirm all approvals
+2. Generate final report
+3. Archive all documents
+4. Mark complete
 
-**状态转换:**
+**Transition:**
 ```bash
 ./scripts/advance-stage.sh -r /project --to DONE
 ```
 
-## Complete Example / 完整示例
+## Complete Example
 
-### 场景: 集成 OAuth 2.0 第三方登录
+### Scenario: Integrate OAuth 2.0 third-party login
 
 ```
-User: 需要集成 OAuth 2.0 支持 Google/GitHub 第三方登录
+User: Need to integrate OAuth 2.0 for Google/GitHub login
 
-AI: 这是安全敏感功能，我使用 L3 完整流程。
+AI: Security-sensitive feature. Using L3 Full workflow.
 
-📊 需求分析:
-- 类型: feature
-- 级别: L3 (Full)
-- 安全等级: 高
-- 影响: 认证系统, 用户模块
+📊 Analysis:
+- Type: feature
+- Level: L3 (Full)
+- Security: High
+- Impact: Auth system, User module
 
-正在初始化工作流...
+Initializing workflow...
 
 ✅ Workflow: 20240115_001_feature_oauth-integration
 📁 .trae/workflow/20240115_001_feature_oauth-integration/
 
 ---
 
-[ANALYZING - Extended] 深度需求分析
+[ANALYZING - Extended] Deep requirements analysis
 
-📄 需求规格已记录
+📄 Requirements documented
 
-执行威胁建模 (STRIDE):
-| 威胁 | 风险 | 缓解 |
-|------|------|------|
-| Spoofing (伪装) | 高 | 验证 OAuth state 参数 |
-| Tampering (篡改) | 中 | HTTPS + 签名验证 |
-| Repudiation (抵赖) | 低 | 审计日志 |
-| Info Disclosure | 高 | 最小权限 scope |
-| DoS | 中 | 速率限制 |
-| Elevation | 高 | 严格权限映射 |
+Threat modeling (STRIDE):
+| Threat | Risk | Mitigation |
+|--------|------|------------|
+| Spoofing | High | Validate OAuth state parameter |
+| Tampering | Medium | HTTPS + signature verification |
+| Repudiation | Low | Audit logging |
+| Info Disclosure | High | Minimal permission scope |
+| DoS | Medium | Rate limiting |
+| Elevation | High | Strict permission mapping |
 
-影响分析:
-- 受影响系统: Auth Service, User Service, Frontend
-- 需要协调: 后端团队, 安全团队
+Impact analysis:
+- Affected systems: Auth Service, User Service, Frontend
+- Coordination needed: Backend team, Security team
 
-推进到 PLANNING...
-
----
-
-[PLANNING - Extended] 资源与时间规划
-
-📋 任务规划:
-- 设计阶段: 2天
-- 开发阶段: 3天
-- 测试阶段: 2天
-- 审批: 1天
-
-回滚策略:
-- 触发条件: 认证失败率 > 1%
-- 回滚方式: Feature Flag 关闭
-- 验证: 原有登录正常
-
-推进到 DESIGNING...
+Advancing to PLANNING...
 
 ---
 
-[DESIGNING - Extended] 架构与安全设计
+[PLANNING - Extended] Resource and timeline planning
 
-📄 design.md 已创建:
+📋 Task planning:
+- Design phase: 2 days
+- Development phase: 3 days
+- Testing phase: 2 days
+- Approval: 1 day
 
-安全设计:
-- OAuth State: 加密随机数 + 时间戳
-- Token 存储: 加密存储在 HttpOnly Cookie
-- Scope: 最小权限 (email, profile)
-- 账户绑定: 需要验证已有账户
+Rollback strategy:
+- Trigger: Auth failure rate > 1%
+- Method: Feature flag disable
+- Verification: Original login works
 
-🔒 需要审批:
-- [ ] 安全团队审查
-- [ ] Tech Lead 审批
-
-等待审批中...
-
-User: 安全团队和 Tech Lead 都已审批
-
-AI: 审批已记录，推进到实现阶段...
+Advancing to DESIGNING...
 
 ---
 
-[IMPLEMENTING] 编码实现
+[DESIGNING - Extended] Architecture and security design
 
-启用安全扫描:
-- ✅ SAST 扫描器已注入
-- ✅ 依赖漏洞检测已启用
-- ✅ 密钥泄露检测已启用
+📄 design.md created:
 
-执行开发任务...
-(详细任务执行)
+Security design:
+- OAuth State: encrypted random + timestamp
+- Token storage: encrypted in HttpOnly Cookie
+- Scope: minimal permissions (email, profile)
+- Account binding: requires existing account verification
 
-推进到 TESTING...
+🔒 Approvals required:
+- [ ] Security team review
+- [ ] Tech Lead approval
 
----
+Awaiting approvals...
 
-[TESTING - Extended] 安全测试
+User: Security team and Tech Lead both approved
 
-标准测试:
-- ✅ 单元测试通过
-- ✅ 集成测试通过
-
-安全测试:
-- ✅ OAuth State 验证测试
-- ✅ CSRF 防护测试
-- ✅ Token 安全性测试
-- ✅ 权限提升测试
-- ✅ SAST 扫描无高危
-- ✅ 依赖漏洞检查通过
-
-推进到 DELIVERING...
+AI: Approvals recorded, advancing to implementation...
 
 ---
 
-[DELIVERING - Extended] 合规签字
+[IMPLEMENTING] Coding
 
-生成安全审查报告...
+Security scanning enabled:
+- ✅ SAST scanner injected
+- ✅ Dependency vulnerability detection enabled
+- ✅ Secret leak detection enabled
 
-📄 artifacts/security_review.md 已创建
+Executing development tasks...
+(detailed task execution)
 
-最终签字:
-- ✅ 安全团队: 已签字
-- ✅ Tech Lead: 已签字
-
-推进到 DONE...
+Advancing to TESTING...
 
 ---
 
-[DONE] 工作流完成
+[TESTING - Extended] Security testing
 
-✅ OAuth 2.0 集成已完成！
+Standard testing:
+- ✅ Unit tests passed
+- ✅ Integration tests passed
 
-📊 最终报告:
-- 新增文件: 12
-- 修改文件: 8
-- 安全审查: 通过
-- 测试覆盖: 82%
-- 总用时: 5天
+Security testing:
+- ✅ OAuth State validation test
+- ✅ CSRF protection test
+- ✅ Token security test
+- ✅ Privilege escalation test
+- ✅ SAST scan no high severity
+- ✅ Dependency vulnerability check passed
 
-📁 产出物:
-- spec.md (含威胁模型)
-- design.md (含安全设计)
+Advancing to DELIVERING...
+
+---
+
+[DELIVERING - Extended] Compliance sign-off
+
+Generating security review report...
+
+📄 artifacts/security_review.md created
+
+Final sign-offs:
+- ✅ Security team: Signed
+- ✅ Tech Lead: Signed
+
+Advancing to DONE...
+
+---
+
+[DONE] Workflow complete
+
+✅ OAuth 2.0 integration complete!
+
+📊 Final report:
+- Files added: 12
+- Files modified: 8
+- Security review: Passed
+- Test coverage: 82%
+- Duration: 5 days
+
+📁 Artifacts:
+- spec.md (with threat model)
+- design.md (with security design)
 - security_review.md
 - report.md
 ```
 
-## Required Approvals / 必需审批
+## Required Approvals
 
-L3 流程的强制审批点:
+L3 mandatory approval points:
 
-| 阶段 | 审批人 | 内容 |
-|------|--------|------|
-| DESIGNING 完成后 | 安全团队 | 安全设计审查 |
-| DESIGNING 完成后 | Tech Lead | 架构审查 |
-| DELIVERING 前 | 安全团队 | 安全测试签字 |
-| DELIVERING 前 | 产品/合规 | 上线审批 (如需要) |
+| Stage | Approver | Content |
+|-------|----------|---------|
+| After DESIGNING | Security team | Security design review |
+| After DESIGNING | Tech Lead | Architecture review |
+| Before DELIVERING | Security team | Security testing sign-off |
+| Before DELIVERING | Product/Compliance | Launch approval (if needed) |
 
-## Quality Gate / 质量门禁
+## Quality Gate
 
-L3 的完整质量检查:
+L3 complete quality checks:
 
 ```yaml
 quality_gate:
@@ -458,27 +458,27 @@ quality_gate:
   security_tests: required
 ```
 
-## Hooks / 可用钩子
+## Available Hooks
 
-L3 的所有钩子:
+L3 all hooks:
 
 ```
-pre_stage_{STAGE}         # 进入阶段前
-post_stage_{STAGE}        # 完成阶段后
-pre_task_{task_id}        # 执行任务前
-post_task_{task_id}       # 完成任务后
-quality_gate              # 质量检查时
-security_review           # 安全审查时
-architecture_review       # 架构审查时
-pre_delivery              # 交付前
-on_blocked                # 阻塞时
-on_error                  # 出错时
-on_approval_required      # 需要审批时
+pre_stage_{STAGE}         # Before entering stage
+post_stage_{STAGE}        # After completing stage
+pre_task_{task_id}        # Before executing task
+post_task_{task_id}       # After completing task
+quality_gate              # During quality checks
+security_review           # During security review
+architecture_review       # During architecture review
+pre_delivery              # Before delivery
+on_blocked                # When blocked
+on_error                  # On error
+on_approval_required      # When approval needed
 ```
 
-## Skill Injection / 技能注入
+## Skill Injection
 
-L3 推荐/必需的技能:
+L3 recommended/required skills:
 
 ```yaml
 injected_skills:
@@ -513,13 +513,13 @@ injected_skills:
     required: true
 ```
 
-## Blocked Handling / 阻塞处理
+## Blocked Handling
 
-L3 的特殊阻塞情况:
+L3 special blocking scenarios:
 
-| 阻塞原因 | 处理方式 |
-|----------|----------|
-| 安全审查不通过 | 修复后重新审查 |
-| 发现高危漏洞 | 停止开发，优先修复 |
-| 审批超时 | 通知相关人，等待或升级 |
-| 渗透测试发现问题 | 记录并修复后重测 |
+| Block Reason | Resolution |
+|--------------|------------|
+| Security review failed | Fix issues and re-review |
+| High severity vulnerability found | Stop development, fix immediately |
+| Approval timeout | Notify stakeholders, wait or escalate |
+| Penetration test found issues | Document and fix, then retest |
