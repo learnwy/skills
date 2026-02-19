@@ -72,6 +72,9 @@
 # =============================================================================
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/yaml-utils.sh"
+
 show_help() {
   cat << EOF
 Usage: $(basename "$0") -r <root> [OPTIONS]
@@ -103,12 +106,6 @@ get_active_workflow() {
   else
     echo ""
   fi
-}
-
-read_yaml_value() {
-  local file="$1"
-  local key="$2"
-  grep "^${key}:" "$file" 2> /dev/null | head -1 | sed "s/^${key}: *//" | tr -d '"'
 }
 
 format_duration() {
@@ -143,13 +140,13 @@ generate_markdown_report() {
   local workflow_file="$workflow_dir/workflow.yaml"
   local workflow_id=$(basename "$workflow_dir")
 
-  local name=$(read_yaml_value "$workflow_file" "name")
-  local req_type=$(read_yaml_value "$workflow_file" "type")
-  local level=$(read_yaml_value "$workflow_file" "level")
-  local status=$(read_yaml_value "$workflow_file" "status")
-  local created_at=$(read_yaml_value "$workflow_file" "created_at")
-  local updated_at=$(read_yaml_value "$workflow_file" "updated_at")
-  local description=$(read_yaml_value "$workflow_file" "description")
+  local name=$(yaml_read "$workflow_file" "name")
+  local req_type=$(yaml_read "$workflow_file" "type")
+  local level=$(yaml_read "$workflow_file" "level")
+  local status=$(yaml_read "$workflow_file" "status")
+  local created_at=$(yaml_read "$workflow_file" "created_at")
+  local updated_at=$(yaml_read "$workflow_file" "updated_at")
+  local description=$(yaml_read "$workflow_file" "description")
 
   local now=$(date +%s)
   local created_ts=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$created_at" +%s 2> /dev/null || echo "$now")
@@ -232,12 +229,12 @@ generate_json_report() {
   local workflow_file="$workflow_dir/workflow.yaml"
   local workflow_id=$(basename "$workflow_dir")
 
-  local name=$(read_yaml_value "$workflow_file" "name")
-  local req_type=$(read_yaml_value "$workflow_file" "type")
-  local level=$(read_yaml_value "$workflow_file" "level")
-  local status=$(read_yaml_value "$workflow_file" "status")
-  local created_at=$(read_yaml_value "$workflow_file" "created_at")
-  local updated_at=$(read_yaml_value "$workflow_file" "updated_at")
+  local name=$(yaml_read "$workflow_file" "name")
+  local req_type=$(yaml_read "$workflow_file" "type")
+  local level=$(yaml_read "$workflow_file" "level")
+  local status=$(yaml_read "$workflow_file" "status")
+  local created_at=$(yaml_read "$workflow_file" "created_at")
+  local updated_at=$(yaml_read "$workflow_file" "updated_at")
 
   local now=$(date +%s)
   local created_ts=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$created_at" +%s 2> /dev/null || echo "$now")
@@ -285,11 +282,11 @@ generate_text_report() {
   local workflow_file="$workflow_dir/workflow.yaml"
   local workflow_id=$(basename "$workflow_dir")
 
-  local name=$(read_yaml_value "$workflow_file" "name")
-  local req_type=$(read_yaml_value "$workflow_file" "type")
-  local level=$(read_yaml_value "$workflow_file" "level")
-  local status=$(read_yaml_value "$workflow_file" "status")
-  local created_at=$(read_yaml_value "$workflow_file" "created_at")
+  local name=$(yaml_read "$workflow_file" "name")
+  local req_type=$(yaml_read "$workflow_file" "type")
+  local level=$(yaml_read "$workflow_file" "level")
+  local status=$(yaml_read "$workflow_file" "status")
+  local created_at=$(yaml_read "$workflow_file" "created_at")
 
   local now=$(date +%s)
   local created_ts=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$created_at" +%s 2> /dev/null || echo "$now")
@@ -417,7 +414,7 @@ main() {
   echo "✅ Report generated: $output"
 
   if [[ $notify -eq 1 ]]; then
-    local status=$(read_yaml_value "$workflow_file" "status")
+    local status=$(yaml_read "$workflow_file" "status")
     echo "📧 Notification would be sent for workflow: $workflow_id (status: $status)"
   fi
 }

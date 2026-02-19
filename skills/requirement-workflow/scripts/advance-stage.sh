@@ -55,6 +55,9 @@
 # =============================================================================
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/yaml-utils.sh"
+
 show_help() {
   cat << EOF
 Usage: $(basename "$0") -r <root> [OPTIONS]
@@ -87,12 +90,6 @@ get_active_workflow() {
   else
     echo ""
   fi
-}
-
-read_yaml_value() {
-  local file="$1"
-  local key="$2"
-  grep "^${key}:" "$file" 2> /dev/null | head -1 | sed "s/^${key}: *//" | tr -d '"'
 }
 
 get_next_stage() {
@@ -158,22 +155,12 @@ validate_transition() {
 update_workflow_state() {
   local workflow_file="$1"
   local new_state="$2"
-  local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+  local timestamp
+  timestamp=$(yaml_get_timestamp)
 
-  local temp_file=$(mktemp)
-
-  sed "s/^status: \".*\"/status: \"$new_state\"/" "$workflow_file" > "$temp_file"
-  sed -i '' "s/^updated_at: \".*\"/updated_at: \"$timestamp\"/" "$temp_file"
-
-  local history_entry="  - state: \"$new_state\"\n    entered_at: \"$timestamp\"\n    current: true"
-
-  if grep -q "^state_history:" "$temp_file"; then
-    sed -i '' "s/current: true/current: false/g" "$temp_file"
-    sed -i '' "/^state_history:/a\\
-$history_entry" "$temp_file"
-  fi
-
-  mv "$temp_file" "$workflow_file"
+  yaml_write "$workflow_file" "status" "$new_state"
+  yaml_write "$workflow_file" "updated_at" "$timestamp"
+  yaml_append_history "$workflow_file" "$new_state" "$timestamp" "true"
 }
 
 main() {
@@ -243,8 +230,8 @@ main() {
     exit 1
   fi
 
-  local current_status=$(read_yaml_value "$workflow_file" "status")
-  local level=$(read_yaml_value "$workflow_file" "level")
+  local current_status=$(yaml_read "$workflow_file" "status")
+  local level=$(yaml_read "$workflow_file" "level")
 
   if [[ -z "$target_stage" ]]; then
     target_stage=$(get_next_stage "$current_status" "$level")

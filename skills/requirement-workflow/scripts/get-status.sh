@@ -59,6 +59,9 @@
 # =============================================================================
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/yaml-utils.sh"
+
 show_help() {
   cat << EOF
 Usage: $(basename "$0") -r <root> [OPTIONS]
@@ -88,12 +91,6 @@ get_active_workflow() {
   else
     echo ""
   fi
-}
-
-read_yaml_value() {
-  local file="$1"
-  local key="$2"
-  grep "^${key}:" "$file" 2> /dev/null | head -1 | sed "s/^${key}: *//" | tr -d '"'
 }
 
 get_level_name() {
@@ -159,12 +156,12 @@ show_workflow_status() {
     return 1
   fi
 
-  local name=$(read_yaml_value "$workflow_file" "name")
-  local req_type=$(read_yaml_value "$workflow_file" "type")
-  local level=$(read_yaml_value "$workflow_file" "level")
-  local status=$(read_yaml_value "$workflow_file" "status")
-  local created_at=$(read_yaml_value "$workflow_file" "created_at")
-  local updated_at=$(read_yaml_value "$workflow_file" "updated_at")
+  local name=$(yaml_read "$workflow_file" "name")
+  local req_type=$(yaml_read "$workflow_file" "type")
+  local level=$(yaml_read "$workflow_file" "level")
+  local status=$(yaml_read "$workflow_file" "status")
+  local created_at=$(yaml_read "$workflow_file" "created_at")
+  local updated_at=$(yaml_read "$workflow_file" "updated_at")
 
   local progress=$(get_stage_progress "$status" "$level")
   local level_name=$(get_level_name "$level")

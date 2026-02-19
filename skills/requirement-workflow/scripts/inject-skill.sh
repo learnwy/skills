@@ -63,6 +63,9 @@
 # =============================================================================
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/lib/yaml-utils.sh"
+
 show_help() {
   cat << EOF
 Usage: $(basename "$0") -r <root> --hook <hook> --skill <skill> [OPTIONS]
@@ -171,39 +174,77 @@ inject_skill() {
   local config="${4:-}"
   local required="${5:-false}"
   local order="${6:-0}"
-  local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+  local timestamp
+  timestamp=$(yaml_get_timestamp)
 
-  local temp_file=$(mktemp)
-  cp "$workflow_file" "$temp_file"
+  local temp_file
+  local output_file
+  temp_file=$(mktemp)
+  output_file=$(mktemp)
+  
+  sed 's/^hooks: {}$/hooks:/' "$workflow_file" > "$temp_file"
 
-  local skill_entry="    - skill: \"$skill\""
-  [[ -n "$config" ]] && skill_entry="$skill_entry\n      config: $config"
-  skill_entry="$skill_entry\n      required: $required"
-  skill_entry="$skill_entry\n      order: $order"
-  skill_entry="$skill_entry\n      added_at: \"$timestamp\""
+  local hooks_found=0
+  local hook_found=0
+  local skill_inserted=0
 
-  if grep -q "^hooks:" "$temp_file"; then
-    if grep -q "^  ${hook}:" "$temp_file"; then
-      sed -i '' "/^  ${hook}:/a\\
-$skill_entry" "$temp_file"
-    else
-      sed -i '' "/^hooks:/a\\
-  ${hook}:\\
-$skill_entry" "$temp_file"
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    if [[ "$line" == "hooks:" && $hooks_found -eq 0 ]]; then
+      hooks_found=1
+      echo "$line" >> "$output_file"
+      continue
     fi
-  else
-    echo "" >> "$temp_file"
-    echo "hooks:" >> "$temp_file"
-    echo "  ${hook}:" >> "$temp_file"
-    printf "$skill_entry\n" >> "$temp_file"
+    
+    if [[ $hooks_found -eq 1 && "$line" == "  ${hook}:" && $skill_inserted -eq 0 ]]; then
+      hook_found=1
+      echo "$line" >> "$output_file"
+      continue
+    fi
+    
+    if [[ $hook_found -eq 1 && $skill_inserted -eq 0 ]]; then
+      echo "    - skill: \"$skill\"" >> "$output_file"
+      [[ -n "$config" ]] && echo "      config: $config" >> "$output_file"
+      echo "      required: $required" >> "$output_file"
+      echo "      order: $order" >> "$output_file"
+      echo "      added_at: \"$timestamp\"" >> "$output_file"
+      skill_inserted=1
+      hook_found=0
+    fi
+    
+    echo "$line" >> "$output_file"
+  done < "$temp_file"
+
+  if [[ $hooks_found -eq 0 ]]; then
+    echo "" >> "$output_file"
+    echo "hooks:" >> "$output_file"
   fi
 
-  sed -i '' "s/^updated_at: \".*\"/updated_at: \"$timestamp\"/" "$temp_file"
-  mv "$temp_file" "$workflow_file"
+  if [[ $skill_inserted -eq 0 ]]; then
+    local final_output
+    final_output=$(mktemp)
+    local hooks_line_found=0
+    while IFS= read -r line || [[ -n "$line" ]]; do
+      echo "$line" >> "$final_output"
+      if [[ "$line" == "hooks:" && $hooks_line_found -eq 0 ]]; then
+        echo "  ${hook}:" >> "$final_output"
+        echo "    - skill: \"$skill\"" >> "$final_output"
+        [[ -n "$config" ]] && echo "      config: $config" >> "$final_output"
+        echo "      required: $required" >> "$final_output"
+        echo "      order: $order" >> "$final_output"
+        echo "      added_at: \"$timestamp\"" >> "$final_output"
+        hooks_line_found=1
+      fi
+    done < "$output_file"
+    mv "$final_output" "$output_file"
+  fi
+
+  yaml_write "$output_file" "updated_at" "$timestamp"
+  mv "$output_file" "$workflow_file"
+  rm -f "$temp_file"
 
   echo "✅ Injected skill '$skill' at hook '$hook'"
-  [[ "$required" == "true" ]] && echo "   Required: yes"
-  [[ -n "$config" ]] && echo "   Config: $config"
+  [[ "$required" == "true" ]] && echo "   Required: yes" || true
+  [[ -n "$config" ]] && echo "   Config: $config" || true
 }
 
 remove_skill() {
