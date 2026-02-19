@@ -4,17 +4,24 @@
 
 ---
 
-## 参数设计说明
+## 核心概念：活动工作流
 
-| 脚本 | 关键参数 | 说明 |
-|------|----------|------|
-| `init-workflow.sh` | `-r, --root` (必需) | 项目根目录，用于创建 `.trae/workflow/` |
-| 其他脚本 | `-p, --path` (必需) | workflow 目录的完整路径 |
+### 设计原则
 
-**设计原则**:
-- `init-workflow.sh` 是唯一需要知道项目根目录的脚本
-- 其他脚本只需要 workflow 目录路径即可获取所有信息
-- 日期和序号由 `init-workflow.sh` 自动生成
+1. **`init-workflow.sh`** 创建新工作流时，自动将其设为"活动工作流"
+   - 写入 `{project_root}/.trae/active_workflow` 文件
+   - 日期和序号自动生成
+
+2. **其他脚本**只需要 `-r` 参数指定项目根目录
+   - 自动从 `.trae/active_workflow` 读取当前活动工作流
+   - 支持 `-p` 参数明确指定特定工作流（覆盖默认）
+
+### 参数统一
+
+| 脚本 | 必需参数 | 可选参数 |
+|------|----------|----------|
+| `init-workflow.sh` | `-r ROOT`, `-n NAME` | `-t TYPE`, `-l LEVEL`, `-d DESC`, `--tags` |
+| 其他脚本 | `-r ROOT` | `-p PATH` (覆盖活动工作流) |
 
 ---
 
@@ -40,13 +47,10 @@
 | `--tags TAGS` | 逗号分隔的标签 |
 | `-h, --help` | 显示帮助信息 |
 
-### Input / 输入
-
-- 命令行参数
-
 ### Output / 输出
 
 - 创建工作流目录: `{root}/.trae/workflow/{date}_{seq}_{type}_{name}/`
+- 设置活动工作流: `{root}/.trae/active_workflow`
 - 自动生成:
   - `{date}` - 当天日期 (YYYYMMDD)
   - `{seq}` - 当天第几个工作流 (001, 002, ...)
@@ -69,20 +73,14 @@
 # 📁 Directory: /path/to/project/.trae/workflow/20240115_001_feature_user-authentication
 # 📊 Level: L2
 # 🏷️  Type: feature
+# 🔄 Active: Yes (set as active workflow)
 
 # 当前目录创建快速 bug 修复流程 (L1)
 ./scripts/init-workflow.sh -r . -n "fix-login-bug" -t bugfix -l L1
-# OUTPUT:
-# ✅ Workflow initialized successfully!
-# 📋 Workflow ID: 20240115_002_bugfix_fix-login-bug
-# 📁 Directory: ./.trae/workflow/20240115_002_bugfix_fix-login-bug
-# 📊 Level: L1
-# 🏷️  Type: bugfix
 
 # 带描述和标签的重构流程
 ./scripts/init-workflow.sh -r ~/projects/myapp -n "api-refactor" -t refactor -l L3 \
-  -d "Refactor payment API for better performance" \
-  --tags "breaking,api,performance"
+  -d "Refactor payment API for better performance" --tags "breaking,api,performance"
 ```
 
 ---
@@ -94,14 +92,15 @@
 ### Usage / 用法
 
 ```bash
-./scripts/advance-stage.sh -p <workflow_dir> [OPTIONS]
+./scripts/advance-stage.sh -r <root> [OPTIONS]
 ```
 
 ### Options / 选项
 
 | Option | Description |
 |--------|-------------|
-| `-p, --path DIR` | workflow 目录路径 (必需) |
+| `-r, --root DIR` | 项目根目录 (必需) |
+| `-p, --path DIR` | 指定工作流路径 (覆盖活动工作流) |
 | `-t, --to STAGE` | 目标阶段 (不指定则自动推进) |
 | `--validate` | 仅验证，不实际转换 |
 | `--force` | 强制转换（即使验证失败） |
@@ -113,22 +112,11 @@
 INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → DELIVERING → DONE
 ```
 
-### Input / 输入
-
-- workflow 目录路径（包含 workflow.yaml）
-- 目标阶段（可选）
-
-### Output / 输出
-
-- 更新 `workflow.yaml` 状态
-- 添加状态历史记录
-- 执行钩子函数
-
 ### Examples / 示例
 
 ```bash
-# 自动推进到下一阶段
-./scripts/advance-stage.sh -p /project/.trae/workflow/20240115_001_feature_user-auth
+# 自动推进活动工作流到下一阶段
+./scripts/advance-stage.sh -r /path/to/project
 # OUTPUT:
 # 📍 Auto-determined next stage: ANALYZING
 # 📋 Workflow: 20240115_001_feature_user-auth
@@ -139,22 +127,16 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 # Next: Complete requirement analysis in spec.md
 
 # 指定目标阶段
-./scripts/advance-stage.sh -p /project/.trae/workflow/20240115_001_feature_user-auth --to IMPLEMENTING
-# OUTPUT:
-# 📋 Workflow: 20240115_001_feature_user-auth
-# 📊 Level: L2
-# 🔄 Transition: DESIGNING → IMPLEMENTING
-# ✅ Validation passed
-# ✅ Successfully transitioned to IMPLEMENTING
+./scripts/advance-stage.sh -r /path/to/project --to IMPLEMENTING
 
 # 仅验证不转换
-./scripts/advance-stage.sh -p /project/.trae/workflow/20240115_001_feature_auth --validate
-# OUTPUT:
-# 📋 Workflow: 20240115_001_feature_auth
-# 📊 Level: L2
-# 🔄 Transition: PLANNING → DESIGNING
-# ✅ Validation passed
-# ✅ Validation complete (no changes made)
+./scripts/advance-stage.sh -r /path/to/project --validate
+
+# 强制转换
+./scripts/advance-stage.sh -r /path/to/project --to DESIGNING --force
+
+# 操作特定工作流（非活动）
+./scripts/advance-stage.sh -r /path/to/project -p /path/to/.trae/workflow/xxx
 ```
 
 ---
@@ -166,33 +148,24 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 ### Usage / 用法
 
 ```bash
-./scripts/get-status.sh -p <workflow_dir> [OPTIONS]
+./scripts/get-status.sh -r <root> [OPTIONS]
 ```
 
 ### Options / 选项
 
 | Option | Description |
 |--------|-------------|
-| `-p, --path DIR` | workflow 目录路径 (必需) |
+| `-r, --root DIR` | 项目根目录 (必需) |
+| `-p, --path DIR` | 指定工作流路径 (覆盖活动工作流) |
 | `--history` | 显示状态转换历史 |
 | `--json` | 以 JSON 格式输出 |
 | `-h, --help` | 显示帮助信息 |
 
-### Input / 输入
-
-- workflow 目录路径
-
-### Output / 输出
-
-- 工作流状态详情（文本或 JSON 格式）
-- 进度条和完成百分比
-- 状态历史（可选）
-
 ### Examples / 示例
 
 ```bash
-# 查看工作流状态
-./scripts/get-status.sh -p /project/.trae/workflow/20240115_001_feature_user-auth
+# 查看活动工作流状态
+./scripts/get-status.sh -r /path/to/project
 # OUTPUT:
 # ═══════════════════════════════════════════════════════
 # 📋 Workflow: user-authentication
@@ -201,39 +174,17 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 # 📊 Level: L2 (Standard)
 # 🏷️  Type: feature
 # 💻 Status: IMPLEMENTING
-# 📈 Progress: 62%
+# 📈 Progress: 60%
 # ⏰ Duration: 2h 30m
-# 📁 Directory: /project/.trae/workflow/20240115_001_feature_user-auth
+# 📁 Directory: /path/to/project/.trae/workflow/...
 # 
-# Progress: [████████████░░░░░░░░] 62%
+# Progress: [████████████░░░░░░░░] 60%
 
 # 查看状态历史
-./scripts/get-status.sh -p /project/.trae/workflow/20240115_001_feature_user-auth --history
-# OUTPUT:
-# ... (基本状态信息) ...
-# ═══════════════════════════════════════════════════════
-# 📜 State History
-# ═══════════════════════════════════════════════════════
-#   INIT @ 2024-01-15T09:00:00Z
-#   ANALYZING @ 2024-01-15T09:15:00Z
-#   PLANNING @ 2024-01-15T10:00:00Z
-#   DESIGNING @ 2024-01-15T10:30:00Z
-# ▶ IMPLEMENTING @ 2024-01-15T11:00:00Z
+./scripts/get-status.sh -r /path/to/project --history
 
 # JSON 格式输出
-./scripts/get-status.sh -p /project/.trae/workflow/20240115_001_feature_user-auth --json
-# OUTPUT:
-# {
-#   "id": "20240115_001_feature_user-authentication",
-#   "name": "user-authentication",
-#   "type": "feature",
-#   "level": "L2",
-#   "status": "IMPLEMENTING",
-#   "progress": 62,
-#   "created_at": "2024-01-15T09:00:00Z",
-#   "updated_at": "2024-01-15T11:00:00Z",
-#   "duration_seconds": 9000
-# }
+./scripts/get-status.sh -r /path/to/project --json
 ```
 
 ---
@@ -245,14 +196,15 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 ### Usage / 用法
 
 ```bash
-./scripts/inject-skill.sh -p <workflow_dir> --hook <hook> --skill <skill> [OPTIONS]
+./scripts/inject-skill.sh -r <root> --hook <hook> --skill <skill> [OPTIONS]
 ```
 
 ### Options / 选项
 
 | Option | Description |
 |--------|-------------|
-| `-p, --path DIR` | workflow 目录路径 (必需) |
+| `-r, --root DIR` | 项目根目录 (必需) |
+| `-p, --path DIR` | 指定工作流路径 (覆盖活动工作流) |
 | `--hook HOOK` | 注入的钩子点 (必需，除非 --list) |
 | `--skill SKILL` | 技能名称 (必需，除非 --remove 或 --list) |
 | `--config CONFIG` | 技能配置 (JSON 字符串) |
@@ -275,63 +227,25 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 | `on_blocked` | 工作流阻塞时 |
 | `on_error` | 发生错误时 |
 
-### Input / 输入
-
-- workflow 目录路径
-- 钩子名称
-- 技能名称和配置
-
-### Output / 输出
-
-- 更新 `workflow.yaml` 中的 hooks 配置
-
 ### Examples / 示例
 
 ```bash
 # 注入代码审查技能到设计完成后
-./scripts/inject-skill.sh -p /project/.trae/workflow/20240115_001_feature_auth \
-  --hook post_stage_DESIGNING --skill code-reviewer
-# OUTPUT:
-# ✅ Injected skill 'code-reviewer' at hook 'post_stage_DESIGNING'
+./scripts/inject-skill.sh -r /path/to/project --hook post_stage_DESIGNING --skill code-reviewer
+# OUTPUT: ✅ Injected skill 'code-reviewer' at hook 'post_stage_DESIGNING'
 
 # 注入必需的 lint 检查
-./scripts/inject-skill.sh -p /project/.trae/workflow/20240115_001_feature_auth \
-  --hook quality_gate --skill lint-checker --required
-# OUTPUT:
-# ✅ Injected skill 'lint-checker' at hook 'quality_gate'
-#    Required: yes
+./scripts/inject-skill.sh -r /path/to/project --hook quality_gate --skill lint-checker --required
 
 # 带配置的技能注入
-./scripts/inject-skill.sh -p /project/.trae/workflow/20240115_001_feature_auth \
-  --hook pre_stage_TESTING --skill unit-test-runner --config '{"coverage_threshold": 80}'
-# OUTPUT:
-# ✅ Injected skill 'unit-test-runner' at hook 'pre_stage_TESTING'
-#    Config: {"coverage_threshold": 80}
+./scripts/inject-skill.sh -r /path/to/project --hook pre_stage_TESTING \
+  --skill unit-test-runner --config '{"coverage_threshold": 80}'
 
 # 列出已注入的技能
-./scripts/inject-skill.sh -p /project/.trae/workflow/20240115_001_feature_auth --list
-# OUTPUT:
-# ═══════════════════════════════════════════════════════
-# 📋 Injected Skills for: 20240115_001_feature_auth
-# ═══════════════════════════════════════════════════════
-# 
-# 📦 Configuration-based Injections:
-# -----------------------------------
-#   - stage: DESIGNING
-#     skill: code-reviewer
-#     timing: post
-# 
-# 🪝 Hook-based Injections:
-# -------------------------
-#   Hook: quality_gate
-#     - skill: "lint-checker"
-#       required: true
+./scripts/inject-skill.sh -r /path/to/project --list
 
 # 移除技能
-./scripts/inject-skill.sh -p /project/.trae/workflow/20240115_001_feature_auth \
-  --hook quality_gate --skill lint-checker --remove
-# OUTPUT:
-# ✅ Removed skill 'lint-checker' from hook 'quality_gate'
+./scripts/inject-skill.sh -r /path/to/project --hook quality_gate --skill lint-checker --remove
 ```
 
 ---
@@ -343,56 +257,36 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 ### Usage / 用法
 
 ```bash
-./scripts/generate-report.sh -p <workflow_dir> [OPTIONS]
+./scripts/generate-report.sh -r <root> [OPTIONS]
 ```
 
 ### Options / 选项
 
 | Option | Description |
 |--------|-------------|
-| `-p, --path DIR` | workflow 目录路径 (必需) |
+| `-r, --root DIR` | 项目根目录 (必需) |
+| `-p, --path DIR` | 指定工作流路径 (覆盖活动工作流) |
 | `--format FORMAT` | 输出格式: markdown\|json\|text (默认: markdown) |
 | `--output FILE` | 输出文件 (默认: artifacts/report.md) |
 | `--include-logs` | 在报告中包含阶段日志 |
 | `--notify` | 生成后发送通知 |
 | `-h, --help` | 显示帮助信息 |
 
-### Input / 输入
-
-- workflow 目录路径
-
-### Output / 输出
-
-- 报告文件 (markdown/json/text 格式)
-- 包含:
-  - 工作流摘要
-  - 任务完成情况
-  - 状态历史
-  - 产出物列表
-  - 日志（可选）
-
 ### Examples / 示例
 
 ```bash
 # 生成 Markdown 报告
-./scripts/generate-report.sh -p /project/.trae/workflow/20240115_001_feature_auth
-# OUTPUT:
-# ✅ Report generated: /project/.trae/workflow/20240115_001_feature_auth/artifacts/report.md
+./scripts/generate-report.sh -r /path/to/project
+# OUTPUT: ✅ Report generated: .../artifacts/report.md
 
 # 生成 JSON 报告
-./scripts/generate-report.sh -p /project/.trae/workflow/20240115_001_feature_auth --format json
-# OUTPUT:
-# ✅ Report generated: /project/.trae/workflow/20240115_001_feature_auth/artifacts/report.json
+./scripts/generate-report.sh -r /path/to/project --format json
 
 # 包含日志并发送通知
-./scripts/generate-report.sh -p /project/.trae/workflow/20240115_001_feature_auth --include-logs --notify
-# OUTPUT:
-# ✅ Report generated: /project/.trae/workflow/20240115_001_feature_auth/artifacts/report.md
-# 📧 Notification would be sent for workflow: 20240115_001_feature_auth (status: DONE)
+./scripts/generate-report.sh -r /path/to/project --include-logs --notify
 
 # 指定输出文件
-./scripts/generate-report.sh -p /project/.trae/workflow/20240115_001_feature_auth \
-  --format markdown --output ./reports/auth-feature-report.md
+./scripts/generate-report.sh -r /path/to/project --format markdown --output ./reports/auth-report.md
 ```
 
 ---
@@ -402,29 +296,23 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 | Task | Command |
 |------|---------|
 | 初始化工作流 | `./scripts/init-workflow.sh -r /project -n "name" -t feature` |
-| 查看状态 | `./scripts/get-status.sh -p /project/.trae/workflow/xxx` |
-| 推进阶段 | `./scripts/advance-stage.sh -p /project/.trae/workflow/xxx` |
-| 注入技能 | `./scripts/inject-skill.sh -p /project/.trae/workflow/xxx --hook quality_gate --skill linter` |
-| 生成报告 | `./scripts/generate-report.sh -p /project/.trae/workflow/xxx` |
+| 查看状态 | `./scripts/get-status.sh -r /project` |
+| 推进阶段 | `./scripts/advance-stage.sh -r /project` |
+| 注入技能 | `./scripts/inject-skill.sh -r /project --hook quality_gate --skill linter` |
+| 生成报告 | `./scripts/generate-report.sh -r /project` |
 
 ## Common Workflows / 常用工作流
 
 ### L1 快速修复流程
 
 ```bash
-# 1. 初始化
+# 1. 初始化（自动设为活动工作流）
 ./scripts/init-workflow.sh -r /project -n "fix-bug" -t bugfix -l L1
-# 返回: 📁 Directory: /project/.trae/workflow/20240115_001_bugfix_fix-bug
 
-# 2. 直接进入实现 (保存返回的路径)
-WORKFLOW_DIR="/project/.trae/workflow/20240115_001_bugfix_fix-bug"
-./scripts/advance-stage.sh -p "$WORKFLOW_DIR" --to IMPLEMENTING
-
-# 3. 完成后测试
-./scripts/advance-stage.sh -p "$WORKFLOW_DIR" --to TESTING
-
-# 4. 完成
-./scripts/advance-stage.sh -p "$WORKFLOW_DIR" --to DONE
+# 2. 后续操作只需要 -r 参数
+./scripts/advance-stage.sh -r /project --to IMPLEMENTING
+./scripts/advance-stage.sh -r /project --to TESTING
+./scripts/advance-stage.sh -r /project --to DONE
 ```
 
 ### L2 标准功能开发
@@ -432,28 +320,34 @@ WORKFLOW_DIR="/project/.trae/workflow/20240115_001_bugfix_fix-bug"
 ```bash
 # 1. 初始化
 ./scripts/init-workflow.sh -r /project -n "new-feature" -t feature
-# 返回: 📁 Directory: /project/.trae/workflow/20240115_001_feature_new-feature
 
-WORKFLOW_DIR="/project/.trae/workflow/20240115_001_feature_new-feature"
+# 2. 逐步推进（自动下一阶段）
+./scripts/advance-stage.sh -r /project  # → ANALYZING
+./scripts/advance-stage.sh -r /project  # → PLANNING
+./scripts/advance-stage.sh -r /project  # → DESIGNING
+./scripts/advance-stage.sh -r /project  # → IMPLEMENTING
+./scripts/advance-stage.sh -r /project  # → TESTING
+./scripts/advance-stage.sh -r /project  # → DELIVERING
+./scripts/advance-stage.sh -r /project  # → DONE
 
-# 2. 分析需求
-./scripts/advance-stage.sh -p "$WORKFLOW_DIR"  # → ANALYZING
+# 3. 生成报告
+./scripts/generate-report.sh -r /project
+```
 
-# 3. 完成 spec.md 后规划
-./scripts/advance-stage.sh -p "$WORKFLOW_DIR"  # → PLANNING
+### 多工作流并行
 
-# 4. 设计阶段
-./scripts/advance-stage.sh -p "$WORKFLOW_DIR"  # → DESIGNING
+```bash
+# 初始化第一个工作流
+./scripts/init-workflow.sh -r /project -n "feature-a" -t feature
+# feature-a 现在是活动工作流
 
-# 5. 实现
-./scripts/advance-stage.sh -p "$WORKFLOW_DIR"  # → IMPLEMENTING
+# 初始化第二个工作流
+./scripts/init-workflow.sh -r /project -n "feature-b" -t feature
+# feature-b 现在是活动工作流
 
-# 6. 测试
-./scripts/advance-stage.sh -p "$WORKFLOW_DIR"  # → TESTING
+# 操作活动工作流 (feature-b)
+./scripts/advance-stage.sh -r /project
 
-# 7. 交付
-./scripts/advance-stage.sh -p "$WORKFLOW_DIR"  # → DELIVERING → DONE
-
-# 8. 生成报告
-./scripts/generate-report.sh -p "$WORKFLOW_DIR"
+# 操作特定工作流 (feature-a)
+./scripts/advance-stage.sh -r /project -p /project/.trae/workflow/xxx_feature-a
 ```

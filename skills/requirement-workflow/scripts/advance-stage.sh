@@ -6,13 +6,14 @@
 # DESCRIPTION:
 #   Transitions a workflow to the next stage with validation checks.
 #   Supports auto-advance (determines next stage based on level) or manual target.
+#   By default operates on the active workflow.
 #
 # USAGE:
-#   ./scripts/advance-stage.sh -p <workflow_dir> [-t <stage>] [--validate] [--force]
+#   ./scripts/advance-stage.sh -r <root> [-t <stage>] [--validate] [--force]
 #
 # OPTIONS:
-#   -p, --path DIR          Workflow directory path (REQUIRED)
-#                           e.g., /project/.trae/workflow/20240115_001_feature_auth
+#   -r, --root DIR          Project root directory (REQUIRED)
+#   -p, --path DIR          Specific workflow path (overrides active workflow)
 #   -t, --to STAGE          Target stage (auto-advance if not specified)
 #   --validate              Only validate, don't actually transition
 #   --force                 Force transition even if validation fails
@@ -22,8 +23,8 @@
 #   INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → DELIVERING → DONE
 #
 # INPUT:
-#   - Workflow directory path (contains workflow.yaml)
-#   - Optional target stage
+#   - Project root directory
+#   - Reads active workflow from {root}/.trae/active_workflow
 #
 # OUTPUT:
 #   - Updates workflow.yaml status and state_history
@@ -31,8 +32,8 @@
 #   - Prints transition result
 #
 # EXAMPLES:
-#   # Auto-advance to next stage
-#   ./scripts/advance-stage.sh -p /project/.trae/workflow/20240115_001_feature_auth
+#   # Auto-advance active workflow to next stage
+#   ./scripts/advance-stage.sh -r /path/to/project
 #   # OUTPUT:
 #   # 📍 Auto-determined next stage: ANALYZING
 #   # 📋 Workflow: 20240115_001_feature_auth
@@ -40,28 +41,29 @@
 #   # ✅ Successfully transitioned to ANALYZING
 #
 #   # Advance to specific stage
-#   ./scripts/advance-stage.sh -p /project/.trae/workflow/20240115_001_feature_auth --to IMPLEMENTING
+#   ./scripts/advance-stage.sh -r /path/to/project --to IMPLEMENTING
 #
 #   # Validate only (no changes)
-#   ./scripts/advance-stage.sh -p /project/.trae/workflow/20240115_001_feature_auth --validate
-#   # OUTPUT:
-#   # ✅ Validation passed
-#   # ✅ Validation complete (no changes made)
+#   ./scripts/advance-stage.sh -r /path/to/project --validate
 #
 #   # Force transition despite validation errors
-#   ./scripts/advance-stage.sh -p /project/.trae/workflow/20240115_001_feature_auth --to DESIGNING --force
+#   ./scripts/advance-stage.sh -r /path/to/project --to DESIGNING --force
+#
+#   # Operate on a specific workflow (not active one)
+#   ./scripts/advance-stage.sh -r /path/to/project -p /path/to/.trae/workflow/xxx
 #
 # =============================================================================
 set -euo pipefail
 
 show_help() {
   cat << EOF
-Usage: $(basename "$0") -p <workflow_dir> [OPTIONS]
+Usage: $(basename "$0") -r <root> [OPTIONS]
 
 Advance workflow to the next stage with validation.
 
 Options:
-    -p, --path DIR          Workflow directory path (REQUIRED)
+    -r, --root DIR          Project root directory (REQUIRED)
+    -p, --path DIR          Specific workflow path (overrides active workflow)
     -t, --to STAGE          Target stage (auto-advance if not specified)
     --validate              Only validate, don't actually transition
     --force                 Force transition even if validation fails
@@ -70,26 +72,27 @@ Options:
 Stages: INIT, ANALYZING, PLANNING, DESIGNING, IMPLEMENTING, TESTING, DELIVERING, DONE
 
 Examples:
-    $(basename "$0") -p /project/.trae/workflow/20240115_001_feature_auth
-    $(basename "$0") -p /project/.trae/workflow/20240115_001_feature_auth --to IMPLEMENTING
-    $(basename "$0") -p /project/.trae/workflow/20240115_001_feature_auth --validate
+    $(basename "$0") -r /path/to/project
+    $(basename "$0") -r /path/to/project --to IMPLEMENTING
+    $(basename "$0") -r /path/to/project --validate
 EOF
+}
+
+get_active_workflow() {
+  local project_root="$1"
+  local active_file="$project_root/.trae/active_workflow"
+  
+  if [[ -f "$active_file" ]]; then
+    cat "$active_file"
+  else
+    echo ""
+  fi
 }
 
 read_yaml_value() {
   local file="$1"
   local key="$2"
   grep "^${key}:" "$file" 2> /dev/null | head -1 | sed "s/^${key}: *//" | tr -d '"'
-}
-
-update_yaml_value() {
-  local file="$1"
-  local key="$2"
-  local value="$3"
-
-  if grep -q "^${key}:" "$file"; then
-    sed -i '' "s/^${key}:.*/${key}: \"${value}\"/" "$file"
-  fi
 }
 
 get_next_stage() {
@@ -104,9 +107,7 @@ get_next_stage() {
         echo "ANALYZING"
       fi
       ;;
-    ANALYZING)
-      echo "PLANNING"
-      ;;
+    ANALYZING) echo "PLANNING" ;;
     PLANNING)
       if [[ "$level" == "L1" ]]; then
         echo "IMPLEMENTING"
@@ -114,12 +115,8 @@ get_next_stage() {
         echo "DESIGNING"
       fi
       ;;
-    DESIGNING)
-      echo "IMPLEMENTING"
-      ;;
-    IMPLEMENTING)
-      echo "TESTING"
-      ;;
+    DESIGNING) echo "IMPLEMENTING" ;;
+    IMPLEMENTING) echo "TESTING" ;;
     TESTING)
       if [[ "$level" == "L1" ]]; then
         echo "DONE"
@@ -127,136 +124,60 @@ get_next_stage() {
         echo "DELIVERING"
       fi
       ;;
-    DELIVERING)
-      echo "DONE"
-      ;;
-    *)
-      echo ""
-      ;;
+    DELIVERING) echo "DONE" ;;
+    *) echo "" ;;
   esac
 }
 
 validate_transition() {
-  local workflow_dir="$1"
-  local from_stage="$2"
-  local to_stage="$3"
-  local level="$4"
-  local errors=()
+  local current="$1"
+  local target="$2"
+  local level="$3"
 
-  case "$to_stage" in
-    ANALYZING)
-      if [[ "$from_stage" != "INIT" ]]; then
-        errors+=("Can only transition to ANALYZING from INIT")
-      fi
-      if [[ "$level" == "L1" ]]; then
-        errors+=("L1 workflows skip ANALYZING stage")
-      fi
+  local valid_next=$(get_next_stage "$current" "$level")
+
+  if [[ "$target" == "$valid_next" ]]; then
+    return 0
+  fi
+
+  case "$current" in
+    INIT)
+      [[ "$target" == "ANALYZING" || "$target" == "PLANNING" ]] && return 0
       ;;
     PLANNING)
-      if [[ "$from_stage" != "INIT" && "$from_stage" != "ANALYZING" ]]; then
-        errors+=("Can only transition to PLANNING from INIT or ANALYZING")
-      fi
-      if [[ "$from_stage" == "ANALYZING" && ! -f "$workflow_dir/spec.md" ]]; then
-        errors+=("spec.md not found - complete requirement analysis first")
-      fi
-      ;;
-    DESIGNING)
-      if [[ "$from_stage" != "PLANNING" ]]; then
-        errors+=("Can only transition to DESIGNING from PLANNING")
-      fi
-      if [[ "$level" == "L1" ]]; then
-        errors+=("L1 workflows skip DESIGNING stage")
-      fi
-      if [[ ! -f "$workflow_dir/tasks.md" ]]; then
-        errors+=("tasks.md not found - complete task breakdown first")
-      fi
-      ;;
-    IMPLEMENTING)
-      if [[ "$from_stage" != "PLANNING" && "$from_stage" != "DESIGNING" ]]; then
-        errors+=("Can only transition to IMPLEMENTING from PLANNING or DESIGNING")
-      fi
+      [[ "$target" == "DESIGNING" || "$target" == "IMPLEMENTING" ]] && return 0
       ;;
     TESTING)
-      if [[ "$from_stage" != "IMPLEMENTING" ]]; then
-        errors+=("Can only transition to TESTING from IMPLEMENTING")
-      fi
-      ;;
-    DELIVERING)
-      if [[ "$from_stage" != "TESTING" ]]; then
-        errors+=("Can only transition to DELIVERING from TESTING")
-      fi
-      if [[ "$level" == "L1" ]]; then
-        errors+=("L1 workflows skip DELIVERING stage")
-      fi
-      ;;
-    DONE)
-      if [[ "$from_stage" != "TESTING" && "$from_stage" != "DELIVERING" ]]; then
-        errors+=("Can only transition to DONE from TESTING or DELIVERING")
-      fi
+      [[ "$target" == "DELIVERING" || "$target" == "DONE" ]] && return 0
       ;;
   esac
 
-  if [[ ${#errors[@]} -gt 0 ]]; then
-    echo "❌ Validation failed:"
-    for err in "${errors[@]}"; do
-      echo "   - $err"
-    done
-    return 1
-  fi
-
-  echo "✅ Validation passed"
-  return 0
+  return 1
 }
 
-add_state_history() {
+update_workflow_state() {
   local workflow_file="$1"
   local new_state="$2"
   local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
   local temp_file=$(mktemp)
-  local in_history=0
-  local added=0
 
-  while IFS= read -r line; do
-    if [[ "$line" =~ ^state_history: ]]; then
-      echo "$line" >> "$temp_file"
-      in_history=1
-      continue
-    fi
+  sed "s/^status: \".*\"/status: \"$new_state\"/" "$workflow_file" > "$temp_file"
+  sed -i '' "s/^updated_at: \".*\"/updated_at: \"$timestamp\"/" "$temp_file"
 
-    if [[ $in_history -eq 1 && "$line" =~ ^[[:space:]]+-[[:space:]]state: ]]; then
-      if [[ $added -eq 0 ]]; then
-        echo "  - state: \"$new_state\"" >> "$temp_file"
-        echo "    entered_at: \"$timestamp\"" >> "$temp_file"
-        echo "    current: true" >> "$temp_file"
-        echo "" >> "$temp_file"
-        added=1
-      fi
-    fi
+  local history_entry="  - state: \"$new_state\"\n    entered_at: \"$timestamp\"\n    current: true"
 
-    if [[ $in_history -eq 1 && "$line" =~ current:[[:space:]]*true ]]; then
-      line="${line/current: true/current: false}"
-      line="${line/current:true/current: false}"
-    fi
-
-    if [[ $in_history -eq 1 && ! "$line" =~ ^[[:space:]] && "$line" != "" ]]; then
-      in_history=0
-    fi
-
-    echo "$line" >> "$temp_file"
-  done < "$workflow_file"
+  if grep -q "^state_history:" "$temp_file"; then
+    sed -i '' "s/current: true/current: false/g" "$temp_file"
+    sed -i '' "/^state_history:/a\\
+$history_entry" "$temp_file"
+  fi
 
   mv "$temp_file" "$workflow_file"
 }
 
-run_hooks() {
-  local workflow_dir="$1"
-  local hook_name="$2"
-
-  echo "🪝 Running hook: $hook_name"
-}
-
 main() {
+  local project_root=""
   local workflow_dir=""
   local target_stage=""
   local validate_only=0
@@ -264,6 +185,10 @@ main() {
 
   while [[ $# -gt 0 ]]; do
     case $1 in
+      -r | --root)
+        project_root="$2"
+        shift 2
+        ;;
       -p | --path)
         workflow_dir="$2"
         shift 2
@@ -292,13 +217,24 @@ main() {
     esac
   done
 
-  if [[ -z "$workflow_dir" ]]; then
-    echo "Error: --path is required" >&2
+  if [[ -z "$project_root" ]]; then
+    echo "Error: --root is required" >&2
     show_help
     exit 1
   fi
 
-  workflow_dir="${workflow_dir%/}"
+  project_root="${project_root%/}"
+  project_root="$(cd "$project_root" && pwd)"
+
+  if [[ -z "$workflow_dir" ]]; then
+    workflow_dir=$(get_active_workflow "$project_root")
+  fi
+
+  if [[ -z "$workflow_dir" ]]; then
+    echo "Error: No active workflow found. Run init-workflow.sh first." >&2
+    exit 1
+  fi
+
   local workflow_file="$workflow_dir/workflow.yaml"
   local workflow_id=$(basename "$workflow_dir")
 
@@ -322,65 +258,34 @@ main() {
   echo "📋 Workflow: $workflow_id"
   echo "📊 Level: $level"
   echo "🔄 Transition: $current_status → $target_stage"
-  echo ""
 
-  if ! validate_transition "$workflow_dir" "$current_status" "$target_stage" "$level"; then
+  if ! validate_transition "$current_status" "$target_stage" "$level"; then
     if [[ $force -eq 0 ]]; then
+      echo "❌ Validation failed: Invalid transition from $current_status to $target_stage for level $level" >&2
       exit 1
+    else
+      echo "⚠️  Validation failed but forcing transition..."
     fi
-    echo "⚠️  Forcing transition despite validation errors"
+  else
+    echo "✅ Validation passed"
   fi
 
   if [[ $validate_only -eq 1 ]]; then
-    echo ""
     echo "✅ Validation complete (no changes made)"
     exit 0
   fi
 
-  run_hooks "$workflow_dir" "pre_stage_$target_stage"
-
-  local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-  update_yaml_value "$workflow_file" "status" "$target_stage"
-  update_yaml_value "$workflow_file" "updated_at" "$timestamp"
-
-  add_state_history "$workflow_file" "$target_stage"
-
-  run_hooks "$workflow_dir" "post_stage_$current_status"
-
-  echo ""
+  update_workflow_state "$workflow_file" "$target_stage"
   echo "✅ Successfully transitioned to $target_stage"
-  echo ""
-  echo "📁 Log: $workflow_dir/logs/${target_stage,,}.log"
 
   case "$target_stage" in
-    ANALYZING)
-      echo ""
-      echo "Next: Complete requirement analysis in spec.md"
-      ;;
-    PLANNING)
-      echo ""
-      echo "Next: Break down tasks in tasks.md"
-      ;;
-    DESIGNING)
-      echo ""
-      echo "Next: Create technical design in design.md"
-      ;;
-    IMPLEMENTING)
-      echo ""
-      echo "Next: Start implementing tasks"
-      ;;
-    TESTING)
-      echo ""
-      echo "Next: Run tests and complete checklist.md"
-      ;;
-    DELIVERING)
-      echo ""
-      echo "Next: Generate final report and deliver"
-      ;;
-    DONE)
-      echo ""
-      echo "🎉 Workflow completed!"
-      ;;
+    ANALYZING) echo "Next: Complete requirement analysis in spec.md" ;;
+    PLANNING) echo "Next: Break down tasks in tasks.md" ;;
+    DESIGNING) echo "Next: Document technical design in design.md" ;;
+    IMPLEMENTING) echo "Next: Implement the solution" ;;
+    TESTING) echo "Next: Run tests and complete checklist.md" ;;
+    DELIVERING) echo "Next: Prepare for delivery" ;;
+    DONE) echo "🎉 Workflow completed!" ;;
   esac
 }
 

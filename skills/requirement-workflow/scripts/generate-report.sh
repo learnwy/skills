@@ -6,13 +6,14 @@
 # DESCRIPTION:
 #   Generates a comprehensive report of the workflow including status,
 #   progress, task completion, state history, and artifacts.
+#   By default operates on the active workflow.
 #
 # USAGE:
-#   ./scripts/generate-report.sh -p <workflow_dir> [--format <fmt>] [--output <file>]
+#   ./scripts/generate-report.sh -r <root> [--format <fmt>] [--output <file>]
 #
 # OPTIONS:
-#   -p, --path DIR          Workflow directory path (REQUIRED)
-#                           e.g., /project/.trae/workflow/20240115_001_feature_auth
+#   -r, --root DIR          Project root directory (REQUIRED)
+#   -p, --path DIR          Specific workflow path (overrides active workflow)
 #   --format FORMAT         Output format: markdown|json|text (default: markdown)
 #   --output FILE           Output file (default: artifacts/report.md)
 #   --include-logs          Include stage logs in the report
@@ -20,7 +21,8 @@
 #   -h, --help              Show help message
 #
 # INPUT:
-#   - Workflow directory path (contains workflow.yaml)
+#   - Project root directory
+#   - Reads active workflow from {root}/.trae/active_workflow
 #
 # OUTPUT (markdown):
 #   # Workflow Report
@@ -51,33 +53,34 @@
 #
 # EXAMPLES:
 #   # Generate markdown report (default)
-#   ./scripts/generate-report.sh -p /project/.trae/workflow/20240115_001_feature_auth
+#   ./scripts/generate-report.sh -r /path/to/project
 #   # OUTPUT: ✅ Report generated: .../artifacts/report.md
 #
 #   # Generate JSON report
-#   ./scripts/generate-report.sh -p /project/.trae/workflow/20240115_001_feature_auth --format json
+#   ./scripts/generate-report.sh -r /path/to/project --format json
 #
 #   # Include logs in report
-#   ./scripts/generate-report.sh -p /project/.trae/workflow/20240115_001_feature_auth --include-logs
+#   ./scripts/generate-report.sh -r /path/to/project --include-logs
 #
 #   # Custom output file
-#   ./scripts/generate-report.sh -p /project/.trae/workflow/20240115_001_feature_auth \
+#   ./scripts/generate-report.sh -r /path/to/project \
 #     --format markdown --output ./reports/auth-report.md
 #
 #   # Generate and notify
-#   ./scripts/generate-report.sh -p /project/.trae/workflow/20240115_001_feature_auth --notify
+#   ./scripts/generate-report.sh -r /path/to/project --notify
 #
 # =============================================================================
 set -euo pipefail
 
 show_help() {
   cat << EOF
-Usage: $(basename "$0") -p <workflow_dir> [OPTIONS]
+Usage: $(basename "$0") -r <root> [OPTIONS]
 
 Generate a workflow summary report.
 
 Options:
-    -p, --path DIR          Workflow directory path (REQUIRED)
+    -r, --root DIR          Project root directory (REQUIRED)
+    -p, --path DIR          Specific workflow path (overrides active workflow)
     --format FORMAT         Output format: markdown|json|text (default: markdown)
     --output FILE           Output file (default: artifacts/report.md)
     --include-logs          Include stage logs in report
@@ -85,10 +88,21 @@ Options:
     -h, --help              Show this help message
 
 Examples:
-    $(basename "$0") -p /project/.trae/workflow/20240115_001_feature_auth
-    $(basename "$0") -p /project/.trae/workflow/20240115_001_feature_auth --format json
-    $(basename "$0") -p /project/.trae/workflow/20240115_001_feature_auth --include-logs --notify
+    $(basename "$0") -r /path/to/project
+    $(basename "$0") -r /path/to/project --format json
+    $(basename "$0") -r /path/to/project --include-logs --notify
 EOF
+}
+
+get_active_workflow() {
+  local project_root="$1"
+  local active_file="$project_root/.trae/active_workflow"
+  
+  if [[ -f "$active_file" ]]; then
+    cat "$active_file"
+  else
+    echo ""
+  fi
 }
 
 read_yaml_value() {
@@ -98,85 +112,55 @@ read_yaml_value() {
 }
 
 format_duration() {
-  local seconds=$1
+  local seconds="$1"
   local hours=$((seconds / 3600))
   local minutes=$(((seconds % 3600) / 60))
   local secs=$((seconds % 60))
 
   if [[ $hours -gt 0 ]]; then
-    printf "%dh %dm %ds" $hours $minutes $secs
+    echo "${hours}h ${minutes}m ${secs}s"
   elif [[ $minutes -gt 0 ]]; then
-    printf "%dm %ds" $minutes $secs
+    echo "${minutes}m ${secs}s"
   else
-    printf "%ds" $secs
+    echo "${secs}s"
   fi
 }
 
 count_tasks() {
   local tasks_file="$1"
-  local status="$2"
+  local pattern="$2"
 
-  if [[ ! -f "$tasks_file" ]]; then
+  if [[ -f "$tasks_file" ]]; then
+    grep -c "$pattern" "$tasks_file" 2> /dev/null || echo "0"
+  else
     echo "0"
-    return
   fi
-
-  case "$status" in
-    total)
-      grep -c "^\s*- \[" "$tasks_file" 2> /dev/null || echo "0"
-      ;;
-    done)
-      grep -c "^\s*- \[x\]" "$tasks_file" 2> /dev/null || echo "0"
-      ;;
-    pending)
-      grep -c "^\s*- \[ \]" "$tasks_file" 2> /dev/null || echo "0"
-      ;;
-  esac
-}
-
-count_checklist() {
-  local checklist_file="$1"
-  local status="$2"
-
-  if [[ ! -f "$checklist_file" ]]; then
-    echo "0"
-    return
-  fi
-
-  case "$status" in
-    total)
-      grep -c "^\s*- \[" "$checklist_file" 2> /dev/null || echo "0"
-      ;;
-    done)
-      grep -c "^\s*- \[x\]" "$checklist_file" 2> /dev/null || echo "0"
-      ;;
-  esac
 }
 
 generate_markdown_report() {
-  local workflow_id="$1"
-  local workflow_dir="$2"
-  local include_logs="$3"
-
+  local workflow_dir="$1"
+  local include_logs="$2"
   local workflow_file="$workflow_dir/workflow.yaml"
+  local workflow_id=$(basename "$workflow_dir")
 
   local name=$(read_yaml_value "$workflow_file" "name")
   local req_type=$(read_yaml_value "$workflow_file" "type")
   local level=$(read_yaml_value "$workflow_file" "level")
   local status=$(read_yaml_value "$workflow_file" "status")
-  local description=$(read_yaml_value "$workflow_file" "description")
   local created_at=$(read_yaml_value "$workflow_file" "created_at")
   local updated_at=$(read_yaml_value "$workflow_file" "updated_at")
+  local description=$(read_yaml_value "$workflow_file" "description")
 
-  local created_ts=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$created_at" "+%s" 2> /dev/null || echo "0")
-  local updated_ts=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$updated_at" "+%s" 2> /dev/null || echo "0")
-  local duration=$((updated_ts - created_ts))
-  local duration_str=$(format_duration $duration)
+  local now=$(date +%s)
+  local created_ts=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$created_at" +%s 2> /dev/null || echo "$now")
+  local duration=$((now - created_ts))
+  local duration_str=$(format_duration "$duration")
 
-  local tasks_total=$(count_tasks "$workflow_dir/tasks.md" "total")
-  local tasks_done=$(count_tasks "$workflow_dir/tasks.md" "done")
-  local checklist_total=$(count_checklist "$workflow_dir/checklist.md" "total")
-  local checklist_done=$(count_checklist "$workflow_dir/checklist.md" "done")
+  local total_tasks=$(count_tasks "$workflow_dir/tasks.md" "^\- \[")
+  local done_tasks=$(count_tasks "$workflow_dir/tasks.md" "^\- \[x\]")
+
+  local total_checks=$(count_tasks "$workflow_dir/checklist.md" "^\- \[")
+  local done_checks=$(count_tasks "$workflow_dir/checklist.md" "^\- \[x\]")
 
   cat << EOF
 # Workflow Report / 工作流报告
@@ -201,69 +185,29 @@ $description
 ## Progress / 进度
 
 ### Tasks / 任务
+- Total: $total_tasks
+- Completed: $done_tasks
+- Completion Rate: $(( total_tasks > 0 ? done_tasks * 100 / total_tasks : 0 ))%
 
-- Total: $tasks_total
-- Completed: $tasks_done
-- Completion Rate: $((tasks_total > 0 ? tasks_done * 100 / tasks_total : 0))%
+### Checklist / 检查清单
+- Total: $total_checks
+- Completed: $done_checks
+- Completion Rate: $(( total_checks > 0 ? done_checks * 100 / total_checks : 0 ))%
 
-### Verification Checklist / 验收清单
+## Files / 文件
 
-- Total Items: $checklist_total
-- Completed: $checklist_done
-- Completion Rate: $((checklist_total > 0 ? checklist_done * 100 / checklist_total : 0))%
-
-## State History / 状态历史
-
-| State | Entered At |
-|-------|------------|
-EOF
-
-  local in_history=0
-  local state="" entered=""
-
-  while IFS= read -r line; do
-    if [[ "$line" =~ ^state_history: ]]; then
-      in_history=1
-      continue
-    fi
-
-    if [[ $in_history -eq 1 ]]; then
-      if [[ "$line" =~ ^[[:space:]]+-[[:space:]]state:[[:space:]]*\"?([^\"]+)\"? ]]; then
-        if [[ -n "$state" ]]; then
-          echo "| $state | $entered |"
-        fi
-        state="${BASH_REMATCH[1]}"
-        entered=""
-      elif [[ "$line" =~ entered_at:[[:space:]]*\"?([^\"]+)\"? ]]; then
-        entered="${BASH_REMATCH[1]}"
-      elif [[ ! "$line" =~ ^[[:space:]] && "$line" != "" ]]; then
-        in_history=0
-      fi
-    fi
-  done < "$workflow_file"
-
-  [[ -n "$state" ]] && echo "| $state | $entered |"
-
-  cat << EOF
-
-## Artifacts / 产出物
+- [Spec](spec.md)
+- [Tasks](tasks.md)
+- [Checklist](checklist.md)
 
 EOF
 
-  for artifact in "$workflow_dir"/*.md; do
-    [[ -f "$artifact" ]] && echo "- $(basename "$artifact")"
-  done
-
-  if [[ "$include_logs" == "1" && -d "$workflow_dir/logs" ]]; then
-    cat << EOF
-
-## Logs / 日志
-
-EOF
-    for log in "$workflow_dir/logs"/*.log; do
+  if [[ $include_logs -eq 1 && -d "$workflow_dir/logs" ]]; then
+    echo "## Logs / 日志"
+    echo ""
+    for log in "$workflow_dir/logs"/*.log 2> /dev/null; do
       if [[ -f "$log" ]]; then
         echo "### $(basename "$log")"
-        echo ""
         echo '```'
         head -50 "$log"
         echo '```'
@@ -272,35 +216,30 @@ EOF
     done
   fi
 
-  cat << EOF
-
----
-*Report generated at $(date -u +"%Y-%m-%dT%H:%M:%SZ")*
-EOF
+  echo "---"
+  echo "*Report generated at $(date -u +"%Y-%m-%dT%H:%M:%SZ")*"
 }
 
 generate_json_report() {
-  local workflow_id="$1"
-  local workflow_dir="$2"
-
+  local workflow_dir="$1"
   local workflow_file="$workflow_dir/workflow.yaml"
+  local workflow_id=$(basename "$workflow_dir")
 
   local name=$(read_yaml_value "$workflow_file" "name")
   local req_type=$(read_yaml_value "$workflow_file" "type")
   local level=$(read_yaml_value "$workflow_file" "level")
   local status=$(read_yaml_value "$workflow_file" "status")
-  local description=$(read_yaml_value "$workflow_file" "description")
   local created_at=$(read_yaml_value "$workflow_file" "created_at")
   local updated_at=$(read_yaml_value "$workflow_file" "updated_at")
 
-  local created_ts=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$created_at" "+%s" 2> /dev/null || echo "0")
-  local updated_ts=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$updated_at" "+%s" 2> /dev/null || echo "0")
-  local duration=$((updated_ts - created_ts))
+  local now=$(date +%s)
+  local created_ts=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$created_at" +%s 2> /dev/null || echo "$now")
+  local duration=$((now - created_ts))
 
-  local tasks_total=$(count_tasks "$workflow_dir/tasks.md" "total")
-  local tasks_done=$(count_tasks "$workflow_dir/tasks.md" "done")
-  local checklist_total=$(count_checklist "$workflow_dir/checklist.md" "total")
-  local checklist_done=$(count_checklist "$workflow_dir/checklist.md" "done")
+  local total_tasks=$(count_tasks "$workflow_dir/tasks.md" "^\- \[")
+  local done_tasks=$(count_tasks "$workflow_dir/tasks.md" "^\- \[x\]")
+  local total_checks=$(count_tasks "$workflow_dir/checklist.md" "^\- \[")
+  local done_checks=$(count_tasks "$workflow_dir/checklist.md" "^\- \[x\]")
 
   cat << EOF
 {
@@ -309,20 +248,19 @@ generate_json_report() {
   "type": "$req_type",
   "level": "$level",
   "status": "$status",
-  "description": "$description",
+  "duration_seconds": $duration,
   "created_at": "$created_at",
   "updated_at": "$updated_at",
-  "duration_seconds": $duration,
   "progress": {
     "tasks": {
-      "total": $tasks_total,
-      "completed": $tasks_done,
-      "completion_rate": $((tasks_total > 0 ? tasks_done * 100 / tasks_total : 0))
+      "total": $total_tasks,
+      "completed": $done_tasks,
+      "completion_rate": $(( total_tasks > 0 ? done_tasks * 100 / total_tasks : 0 ))
     },
     "checklist": {
-      "total": $checklist_total,
-      "completed": $checklist_done,
-      "completion_rate": $((checklist_total > 0 ? checklist_done * 100 / checklist_total : 0))
+      "total": $total_checks,
+      "completed": $done_checks,
+      "completion_rate": $(( total_checks > 0 ? done_checks * 100 / total_checks : 0 ))
     }
   },
   "generated_at": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
@@ -331,10 +269,9 @@ EOF
 }
 
 generate_text_report() {
-  local workflow_id="$1"
-  local workflow_dir="$2"
-
+  local workflow_dir="$1"
   local workflow_file="$workflow_dir/workflow.yaml"
+  local workflow_id=$(basename "$workflow_dir")
 
   local name=$(read_yaml_value "$workflow_file" "name")
   local req_type=$(read_yaml_value "$workflow_file" "type")
@@ -342,35 +279,31 @@ generate_text_report() {
   local status=$(read_yaml_value "$workflow_file" "status")
   local created_at=$(read_yaml_value "$workflow_file" "created_at")
 
-  local tasks_total=$(count_tasks "$workflow_dir/tasks.md" "total")
-  local tasks_done=$(count_tasks "$workflow_dir/tasks.md" "done")
+  local now=$(date +%s)
+  local created_ts=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$created_at" +%s 2> /dev/null || echo "$now")
+  local duration=$((now - created_ts))
+  local duration_str=$(format_duration "$duration")
 
-  cat << EOF
-═══════════════════════════════════════════════════════
-              WORKFLOW REPORT
-═══════════════════════════════════════════════════════
+  local total_tasks=$(count_tasks "$workflow_dir/tasks.md" "^\- \[")
+  local done_tasks=$(count_tasks "$workflow_dir/tasks.md" "^\- \[x\]")
 
-Workflow: $name
-ID: $workflow_id
-Type: $req_type
-Level: $level
-Status: $status
-
-Tasks: $tasks_done / $tasks_total completed
-
-Created: $created_at
-═══════════════════════════════════════════════════════
-EOF
-}
-
-send_notification() {
-  local workflow_id="$1"
-  local status="$2"
-
-  echo "📧 Notification would be sent for workflow: $workflow_id (status: $status)"
+  echo "═══════════════════════════════════════════════════════"
+  echo "              WORKFLOW REPORT"
+  echo "═══════════════════════════════════════════════════════"
+  echo ""
+  echo "Workflow: $name"
+  echo "ID: $workflow_id"
+  echo "Type: $req_type"
+  echo "Level: $level"
+  echo "Status: $status"
+  echo "Duration: $duration_str"
+  echo "Tasks: $done_tasks / $total_tasks completed"
+  echo ""
+  echo "═══════════════════════════════════════════════════════"
 }
 
 main() {
+  local project_root=""
   local workflow_dir=""
   local format="markdown"
   local output=""
@@ -379,6 +312,10 @@ main() {
 
   while [[ $# -gt 0 ]]; do
     case $1 in
+      -r | --root)
+        project_root="$2"
+        shift 2
+        ;;
       -p | --path)
         workflow_dir="$2"
         shift 2
@@ -411,13 +348,24 @@ main() {
     esac
   done
 
-  if [[ -z "$workflow_dir" ]]; then
-    echo "Error: --path is required" >&2
+  if [[ -z "$project_root" ]]; then
+    echo "Error: --root is required" >&2
     show_help
     exit 1
   fi
 
-  workflow_dir="${workflow_dir%/}"
+  project_root="${project_root%/}"
+  project_root="$(cd "$project_root" && pwd)"
+
+  if [[ -z "$workflow_dir" ]]; then
+    workflow_dir=$(get_active_workflow "$project_root")
+  fi
+
+  if [[ -z "$workflow_dir" ]]; then
+    echo "Error: No active workflow found. Run init-workflow.sh first." >&2
+    exit 1
+  fi
+
   local workflow_id=$(basename "$workflow_dir")
   local workflow_file="$workflow_dir/workflow.yaml"
 
@@ -426,25 +374,27 @@ main() {
     exit 1
   fi
 
+  local ext="md"
+  case "$format" in
+    json) ext="json" ;;
+    text) ext="txt" ;;
+  esac
+
   if [[ -z "$output" ]]; then
-    case "$format" in
-      markdown) output="$workflow_dir/artifacts/report.md" ;;
-      json) output="$workflow_dir/artifacts/report.json" ;;
-      text) output="$workflow_dir/artifacts/report.txt" ;;
-    esac
+    output="$workflow_dir/artifacts/report.$ext"
   fi
 
   mkdir -p "$(dirname "$output")"
 
   case "$format" in
     markdown)
-      generate_markdown_report "$workflow_id" "$workflow_dir" "$include_logs" > "$output"
+      generate_markdown_report "$workflow_dir" "$include_logs" > "$output"
       ;;
     json)
-      generate_json_report "$workflow_id" "$workflow_dir" > "$output"
+      generate_json_report "$workflow_dir" > "$output"
       ;;
     text)
-      generate_text_report "$workflow_id" "$workflow_dir" > "$output"
+      generate_text_report "$workflow_dir" > "$output"
       ;;
     *)
       echo "Error: Unknown format: $format" >&2
@@ -456,7 +406,7 @@ main() {
 
   if [[ $notify -eq 1 ]]; then
     local status=$(read_yaml_value "$workflow_file" "status")
-    send_notification "$workflow_id" "$status"
+    echo "📧 Notification would be sent for workflow: $workflow_id (status: $status)"
   fi
 }
 

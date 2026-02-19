@@ -208,75 +208,81 @@ on_error                 # When an error occurs
 
 > 📖 详细用法请参考 [Scripts Reference](references/SCRIPTS_REFERENCE.md)
 
+### 核心概念：活动工作流
+
+所有脚本采用 **活动工作流** 机制：
+- `init-workflow.sh` 创建工作流后自动将其标记为 **活动工作流**
+- 其他脚本自动读取活动工作流，无需手动指定路径
+- 活动工作流路径存储在: `.trae/active_workflow`
+
 ### 参数设计
 
-| 脚本 | 关键参数 | 说明 |
-|------|----------|------|
-| `init-workflow.sh` | `-r, --root` (必需) | 项目根目录 |
-| 其他脚本 | `-p, --path` (必需) | workflow 目录路径 |
-
-**设计说明**: `init-workflow.sh` 创建工作流后返回目录路径，其他脚本使用该路径操作。
+| 脚本 | 必需参数 | 可选参数 | 说明 |
+|------|----------|----------|------|
+| `init-workflow.sh` | `-r, --root`, `-n, --name` | `-t`, `-l`, `-d`, `--tags` | 创建工作流并设为活动 |
+| 其他脚本 | `-r, --root` | `-p, --path` | 自动读取活动工作流，`-p` 可覆盖 |
 
 ### 快速参考
 
 | 脚本 | 功能 | 常用命令 |
 |------|------|----------|
 | `init-workflow.sh` | 初始化工作流 | `./scripts/init-workflow.sh -r /project -n "name" -t feature` |
-| `get-status.sh` | 查看状态 | `./scripts/get-status.sh -p $WORKFLOW_DIR` |
-| `advance-stage.sh` | 推进阶段 | `./scripts/advance-stage.sh -p $WORKFLOW_DIR` |
-| `inject-skill.sh` | 注入技能 | `./scripts/inject-skill.sh -p $WORKFLOW_DIR --hook quality_gate --skill linter` |
-| `generate-report.sh` | 生成报告 | `./scripts/generate-report.sh -p $WORKFLOW_DIR` |
+| `get-status.sh` | 查看状态 | `./scripts/get-status.sh -r /project` |
+| `advance-stage.sh` | 推进阶段 | `./scripts/advance-stage.sh -r /project` |
+| `inject-skill.sh` | 注入技能 | `./scripts/inject-skill.sh -r /project --hook quality_gate --skill linter` |
+| `generate-report.sh` | 生成报告 | `./scripts/generate-report.sh -r /project` |
 
 ### scripts/init-workflow.sh
 
-初始化新的工作流目录和状态文件。
+初始化新的工作流目录和状态文件，并设为活动工作流。
 
 ```bash
 ./scripts/init-workflow.sh -r /path/to/project -n "user-auth" -t feature
-# Output: 
-# 📁 Directory: /path/to/project/.trae/workflow/20240115_001_feature_user-auth
+
+# OUTPUT:
+# ✅ Workflow initialized: /path/to/project/.trae/workflow/20240115_001_feature_user-auth
+# 📌 Active workflow set
 # (日期和序号自动生成)
 ```
 
 ### scripts/advance-stage.sh
 
-推进工作流到下一阶段（带验证）。
+推进工作流到下一阶段（自动读取活动工作流）。
 
 ```bash
-WORKFLOW_DIR="/project/.trae/workflow/20240115_001_feature_user-auth"
-
-./scripts/advance-stage.sh -p "$WORKFLOW_DIR"              # 自动推进到下一阶段
-./scripts/advance-stage.sh -p "$WORKFLOW_DIR" --to TESTING # 指定目标阶段
-./scripts/advance-stage.sh -p "$WORKFLOW_DIR" --validate   # 仅验证不转换
+./scripts/advance-stage.sh -r /project                # 自动推进到下一阶段
+./scripts/advance-stage.sh -r /project --to TESTING   # 指定目标阶段
+./scripts/advance-stage.sh -r /project --validate     # 仅验证不转换
+./scripts/advance-stage.sh -r /project -p /custom/path  # 覆盖活动工作流
 ```
 
 ### scripts/get-status.sh
 
-获取工作流状态和进度。
+获取工作流状态和进度（自动读取活动工作流）。
 
 ```bash
-./scripts/get-status.sh -p "$WORKFLOW_DIR"           # 工作流状态
-./scripts/get-status.sh -p "$WORKFLOW_DIR" --history # 显示状态历史
-./scripts/get-status.sh -p "$WORKFLOW_DIR" --json    # JSON 格式输出
+./scripts/get-status.sh -r /project             # 工作流状态
+./scripts/get-status.sh -r /project --history   # 显示状态历史
+./scripts/get-status.sh -r /project --json      # JSON 格式输出
 ```
 
 ### scripts/inject-skill.sh
 
-在特定钩子点注入技能。
+在特定钩子点注入技能（自动读取活动工作流）。
 
 ```bash
-./scripts/inject-skill.sh -p "$WORKFLOW_DIR" --hook quality_gate --skill lint-checker --required
-./scripts/inject-skill.sh -p "$WORKFLOW_DIR" --list  # 列出已注入技能
+./scripts/inject-skill.sh -r /project --hook quality_gate --skill lint-checker --required
+./scripts/inject-skill.sh -r /project --list    # 列出已注入技能
 ```
 
 ### scripts/generate-report.sh
 
-生成工作流摘要报告。
+生成工作流摘要报告（自动读取活动工作流）。
 
 ```bash
-./scripts/generate-report.sh -p "$WORKFLOW_DIR"                    # Markdown 报告
-./scripts/generate-report.sh -p "$WORKFLOW_DIR" --format json      # JSON 报告
-./scripts/generate-report.sh -p "$WORKFLOW_DIR" --include-logs     # 包含日志
+./scripts/generate-report.sh -r /project                    # Markdown 报告
+./scripts/generate-report.sh -r /project --format json      # JSON 报告
+./scripts/generate-report.sh -r /project --include-logs     # 包含日志
 ```
 
 ## State Transitions / 状态转换

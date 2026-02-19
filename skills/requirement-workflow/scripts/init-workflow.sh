@@ -5,9 +5,10 @@
 #
 # DESCRIPTION:
 #   Creates a new workflow directory with all necessary templates and state files.
+#   Sets the new workflow as the active workflow for the project.
 #
 # USAGE:
-#   ./scripts/init-workflow.sh -n <name> [-t <type>] [-r <root>] [-l <level>] [-d <desc>] [--tags <tags>]
+#   ./scripts/init-workflow.sh -r <root> -n <name> [-t <type>] [-l <level>] [-d <desc>] [--tags <tags>]
 #
 # OPTIONS:
 #   -r, --root DIR          Project root directory (REQUIRED)
@@ -23,6 +24,7 @@
 #
 # OUTPUT:
 #   Creates directory: {root}/.trae/workflow/{date}_{seq}_{type}_{name}/
+#   Updates: {root}/.trae/active_workflow (记录当前活动工作流路径)
 #   Generated files:
 #     - workflow.yaml   (state file)
 #     - spec.md         (requirement spec template)
@@ -63,7 +65,7 @@ Options:
     -r, --root DIR          Project root directory (REQUIRED)
     -n, --name NAME         Requirement name (REQUIRED)
     -t, --type TYPE         Type: feature|bugfix|refactor|hotfix (default: feature)
-    -l, --level LEVEL       Force level: L1|L2|L3 (auto-detected if not specified)
+    -l, --level LEVEL       Force level: L1|L2|L3 (default: L2)
     -d, --description DESC  Brief description
     --tags TAGS             Comma-separated tags
     -h, --help              Show this help message
@@ -106,6 +108,7 @@ create_workflow_yaml() {
     local name="$5"
     local description="$6"
     local tags="$7"
+    local project_root="$8"
     local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
     
     cat > "$workflow_dir/workflow.yaml" << EOF
@@ -116,6 +119,7 @@ level: "$level"
 status: "INIT"
 description: "$description"
 tags: [$tags]
+project_root: "$project_root"
 created_at: "$timestamp"
 updated_at: "$timestamp"
 
@@ -251,6 +255,13 @@ create_checklist_template() {
 EOF
 }
 
+set_active_workflow() {
+    local project_root="$1"
+    local workflow_dir="$2"
+    
+    echo "$workflow_dir" > "$project_root/.trae/active_workflow"
+}
+
 main() {
     local name=""
     local req_type="feature"
@@ -320,6 +331,8 @@ main() {
     fi
     
     project_root="${project_root%/}"
+    project_root="$(cd "$project_root" && pwd)"
+    
     if [[ ! -d "$project_root" ]]; then
         echo "Error: Project root directory does not exist: $project_root" >&2
         exit 1
@@ -336,10 +349,12 @@ main() {
     
     mkdir -p "$workflow_dir"/{logs,artifacts}
     
-    create_workflow_yaml "$workflow_dir" "$workflow_id" "$level" "$req_type" "$name" "$description" "$tags"
+    create_workflow_yaml "$workflow_dir" "$workflow_id" "$level" "$req_type" "$name" "$description" "$tags" "$project_root"
     create_spec_template "$workflow_dir" "$name" "$description"
     create_tasks_template "$workflow_dir"
     create_checklist_template "$workflow_dir"
+    
+    set_active_workflow "$project_root" "$workflow_dir"
     
     cat << EOF
 ✅ Workflow initialized successfully!
@@ -348,6 +363,7 @@ main() {
 📁 Directory: $workflow_dir
 📊 Level: $level
 🏷️  Type: $req_type
+🔄 Active: Yes (set as active workflow)
 
 Files created:
   - workflow.yaml (state file)
@@ -357,7 +373,7 @@ Files created:
 
 Next steps:
 1. Review and complete spec.md
-2. Run: ./scripts/advance-stage.sh --workflow-id $workflow_id --to ANALYZING
+2. Run: ./scripts/advance-stage.sh -r "$project_root"
 EOF
 }
 
