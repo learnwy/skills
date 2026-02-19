@@ -1,95 +1,88 @@
-# Verification Checklist / 验收检查清单
-# {{NAME}}
+# 测试检查清单: {{NAME}}
 
-> Workflow ID: `{{WORKFLOW_ID}}`
-> Level: {{LEVEL}}
-> Created: {{TIMESTAMP}}
+> 工作流: {{WORKFLOW_ID}}
+> 测试时间: {{DATE}}
+> 来源: impl.md, 代码文件
 
-## Pre-Merge Checklist / 合并前检查
+## 代码质量检查
 
-### Code Quality / 代码质量
+### 静态分析
 
-- [ ] Code follows project style guidelines
-- [ ] No commented-out code or debug statements
-- [ ] Lint check passed (`npm run lint` / `cargo clippy` / etc.)
-- [ ] Type check passed (`npm run typecheck` / `mypy` / etc.)
-- [ ] No new warnings introduced
-- [ ] Code complexity is acceptable
+| 检查项 | 状态 | 结果 |
+|--------|------|------|
+| ESLint | ⬜ | - |
+| TypeScript | ⬜ | - |
+| Prettier | ⬜ | - |
 
-### Testing / 测试
+### 代码规范
 
-- [ ] Unit tests written for new code
-- [ ] Unit tests pass locally
-- [ ] Integration tests pass (if applicable)
-- [ ] E2E tests pass (if applicable)
-- [ ] Test coverage meets threshold (≥ {{COVERAGE_TARGET}}%)
-- [ ] Edge cases are covered
-- [ ] Error scenarios are tested
+- [ ] 命名规范符合项目约定
+- [ ] 无硬编码的敏感信息
+- [ ] 注释清晰（如必要）
+- [ ] 无 console.log 调试代码
 
-### Security / 安全
+## 功能测试
 
-- [ ] No hardcoded credentials or secrets
-- [ ] Input validation implemented
-- [ ] Authentication/Authorization checked (if applicable)
-- [ ] SQL injection prevention (if applicable)
-- [ ] XSS prevention (if applicable)
-- [ ] CSRF protection (if applicable)
-- [ ] Security scan passed
+### 单元测试
 
-### Performance / 性能
+| 测试文件 | 用例数 | 通过 | 失败 | 覆盖率 |
+|----------|--------|------|------|--------|
+| `xxx.test.ts` | {N} | {N} | 0 | {X}% |
+| **总计** | {N} | {N} | 0 | {X}% |
 
-- [ ] No obvious performance issues
-- [ ] Database queries optimized (if applicable)
-- [ ] No N+1 queries
-- [ ] Caching implemented where appropriate
-- [ ] Memory usage is acceptable
+### 集成测试 (如适用)
 
-### Documentation / 文档
+- [ ] API 接口测试通过
+- [ ] 组件集成测试通过
 
-- [ ] Code comments are clear and helpful
-- [ ] Public APIs are documented
-- [ ] README updated (if needed)
-- [ ] Changelog entry added
-- [ ] Migration guide written (if breaking changes)
+### 手动测试
 
-### Review / 审查
+- [ ] 核心功能: {描述}
+- [ ] 边界情况: {描述}
+- [ ] 错误处理: {描述}
 
-- [ ] Self-review completed
-- [ ] Peer review completed
-- [ ] Tech lead review (for significant changes)
-- [ ] Security review (for security-sensitive changes)
-- [ ] Architecture review (for architectural changes)
+## 安全检查 (L3 必需)
 
-## Deployment Checklist / 部署检查
+- [ ] 输入验证
+- [ ] SQL 注入防护
+- [ ] XSS 防护
+- [ ] CSRF 防护
+- [ ] 敏感数据加密
+- [ ] 权限控制
 
-### Pre-Deployment / 部署前
+## 性能检查 (如适用)
 
-- [ ] Feature flag configured (if applicable)
-- [ ] Database migrations tested
-- [ ] Environment variables documented
-- [ ] Rollback plan documented
-- [ ] Monitoring alerts configured
+- [ ] 响应时间 < {X}ms
+- [ ] 无内存泄漏
+- [ ] Bundle 大小变化: +{X}KB
 
-### Post-Deployment / 部署后
+## 兼容性检查
 
-- [ ] Smoke tests pass in staging
-- [ ] Smoke tests pass in production
-- [ ] Monitoring shows normal behavior
-- [ ] No error rate increase
-- [ ] Performance metrics normal
+- [ ] 浏览器兼容性 (如适用)
+- [ ] 向后兼容
+- [ ] API 版本兼容
 
-## Sign-Off / 签核
+## 验收标准验证
 
-| Role | Name | Date | Signature |
-|------|------|------|-----------|
-| Developer | | | |
-| Reviewer | | | |
-| QA (if required) | | | |
-| Tech Lead (if required) | | | |
+> 对照 spec.md 中的验收标准
 
-## Notes / 备注
+- [ ] {验收标准1}
+- [ ] {验收标准2}
+- [ ] {验收标准3}
 
-- 
+## 测试结论
+
+| 项目 | 结果 |
+|------|------|
+| 总体状态 | ⬜ 待测试 / ✅ 通过 / ❌ 未通过 |
+| 阻塞问题 | 无 / {描述} |
+| 建议 | {如有} |
+
+## 遗留问题
+
+| 问题 | 严重度 | 处理方式 |
+|------|--------|----------|
+| {问题1} | 高/中/低 | 本次修复 / 后续处理 |
 
 ---
-*Checklist completed: {{TIMESTAMP}}*
+*本文档在 TESTING 阶段产出，作为 DELIVERING 阶段的输入*

@@ -312,16 +312,16 @@ failure_info:
 
 ```bash
 # Get current state
-./scripts/get-status.sh --workflow-id 20240115_001_feature_user-auth
+./scripts/get-status.sh -r /project
 
 # Check if transition is valid
-./scripts/advance-stage.sh --validate --to TESTING
+./scripts/advance-stage.sh -r /project --validate --to TESTING
 
 # Get state history
-./scripts/get-status.sh --history
+./scripts/get-status.sh -r /project --history
 
-# Get blocked workflows
-./scripts/get-status.sh --filter blocked
+# Specify a particular workflow
+./scripts/get-status.sh -r /project -p /project/.trae/workflow/20240115_001_feature_user-auth
 ```
 
 ## Concurrent Workflows / 并发工作流

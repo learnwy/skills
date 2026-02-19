@@ -1,87 +1,53 @@
-# Task Breakdown / 任务拆分
-# {{NAME}}
+# 任务列表: {{NAME}}
 
-> Workflow ID: `{{WORKFLOW_ID}}`
-> Level: {{LEVEL}}
-> Created: {{TIMESTAMP}}
+> 工作流: {{WORKFLOW_ID}}
+> 创建时间: {{DATE}}
+> 来源: spec.md
 
-## Overview / 概述
+## 任务概览
 
-| Metric | Value |
-|--------|-------|
-| Total Tasks | 0 |
-| Completed | 0 |
-| In Progress | 0 |
-| Pending | 0 |
-| Blocked | 0 |
-| Completion Rate | 0% |
+| 属性 | 值 |
+|------|-----|
+| 总任务数 | {N} |
+| 预估总时长 | {X}h |
+| 优先级分布 | P0: {n}, P1: {n}, P2: {n} |
 
-## Task Legend / 图例
+## 任务列表
 
-- `[ ]` Pending / 待处理
-- `[>]` In Progress / 进行中
-- `[x]` Completed / 已完成
-- `[!]` Blocked / 阻塞
-- `[~]` Skipped / 跳过
+### Phase 1: 准备工作
 
-## Tasks / 任务列表
+| ID | 任务 | 优先级 | 估时 | 依赖 | 状态 |
+|----|------|--------|------|------|------|
+| T01 | {任务描述} | P0 | 1h | - | ⬜ |
+| T02 | {任务描述} | P0 | 2h | T01 | ⬜ |
 
-### 🔴 High Priority / 高优先级
+### Phase 2: 核心实现
 
-#### Task Group 1: [Group Name]
+| ID | 任务 | 优先级 | 估时 | 依赖 | 状态 |
+|----|------|--------|------|------|------|
+| T03 | {任务描述} | P0 | 3h | T02 | ⬜ |
+| T04 | {任务描述} | P1 | 2h | T03 | ⬜ |
 
-- [ ] **TASK-001**: Task description
-  - Estimate: 
-  - Dependencies: None
-  - Assignee: 
+### Phase 3: 测试与完善
 
-- [ ] **TASK-002**: Task description
-  - Estimate: 
-  - Dependencies: TASK-001
-  - Assignee: 
+| ID | 任务 | 优先级 | 估时 | 依赖 | 状态 |
+|----|------|--------|------|------|------|
+| T05 | {任务描述} | P1 | 1h | T04 | ⬜ |
+| T06 | {任务描述} | P2 | 1h | T05 | ⬜ |
 
-### 🟡 Medium Priority / 中优先级
-
-#### Task Group 2: [Group Name]
-
-- [ ] **TASK-003**: Task description
-  - Estimate: 
-  - Dependencies: None
-  - Assignee: 
-
-### 🟢 Low Priority / 低优先级
-
-#### Task Group 3: [Group Name]
-
-- [ ] **TASK-004**: Task description
-  - Estimate: 
-  - Dependencies: None
-  - Assignee: 
-
-## Dependencies Graph / 依赖图
+## 依赖关系图
 
 ```
-TASK-001 ─────► TASK-002
-    │              │
-    └──────────────┴─────► TASK-003
+T01 → T02 → T03 → T04 → T05 → T06
 ```
 
-## Timeline / 时间线
+## 状态说明
 
-| Task | Start | End | Status |
-|------|-------|-----|--------|
-| TASK-001 | | | Pending |
-| TASK-002 | | | Pending |
-
-## Blockers / 阻塞项
-
-| Task | Blocker | Owner | ETA |
-|------|---------|-------|-----|
-| | | | |
-
-## Notes / 备注
-
-- 
+- ⬜ 未开始
+- 🔄 进行中
+- ✅ 已完成
+- ❌ 已取消
+- ⏸️ 已暂停
 
 ---
-*Last updated: {{TIMESTAMP}}*
+*本文档在 PLANNING 阶段产出，作为 DESIGNING 和 IMPLEMENTING 阶段的输入*

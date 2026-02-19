@@ -1,316 +1,362 @@
-# Requirement Workflow Usage Guide
+# Requirement Workflow Usage Examples
 
-# 需求工作流使用指南
+实际使用示例，展示如何使用 requirement-workflow skill。
 
 ## Quick Start / 快速开始
 
-### 1. Initialize a New Workflow / 初始化新工作流
+### 1. 初始化工作流
 
 ```bash
-# Basic usage - creates L2 workflow by default
-./scripts/init-workflow.sh -n "user-authentication" -t feature
+# L1 快速修复
+./scripts/init-workflow.sh -r /project -n "fix-login-bug" -t bugfix -l L1
 
-# Specify level
-./scripts/init-workflow.sh -n "fix-login-bug" -t bugfix -l L1
+# L2 标准功能 (默认)
+./scripts/init-workflow.sh -r /project -n "user-avatar-upload" -t feature
 
-# With description and tags
-./scripts/init-workflow.sh \
-  -n "api-refactor" \
-  -t refactor \
-  -l L3 \
-  -d "Refactor authentication API for better security" \
-  --tags "security,api,breaking"
+# L3 安全功能
+./scripts/init-workflow.sh -r /project -n "oauth-integration" -t feature -l L3
 ```
 
-### 2. Check Workflow Status / 检查工作流状态
+### 2. 查看状态
 
 ```bash
-# Show status of latest workflow
-./scripts/get-status.sh --latest
-
-# Show status with history
-./scripts/get-status.sh --latest --history
-
-# List all workflows
-./scripts/get-status.sh --list
-
-# Filter by status
-./scripts/get-status.sh --list --filter IMPLEMENTING
+./scripts/get-status.sh -r /project
+./scripts/get-status.sh -r /project --history
+./scripts/get-status.sh -r /project --json
 ```
 
-### 3. Advance to Next Stage / 推进到下一阶段
+### 3. 推进阶段
 
 ```bash
-# Auto-advance to next stage
-./scripts/advance-stage.sh --latest
-
-# Advance to specific stage
-./scripts/advance-stage.sh --latest --to IMPLEMENTING
-
-# Validate only (no actual transition)
-./scripts/advance-stage.sh --latest --to TESTING --validate
+./scripts/advance-stage.sh -r /project                 # 自动下一阶段
+./scripts/advance-stage.sh -r /project --to TESTING    # 指定阶段
+./scripts/advance-stage.sh -r /project --validate      # 仅验证
 ```
 
-### 4. Inject Skills / 注入技能
+### 4. 生成报告
 
 ```bash
-# Inject a skill at a hook point
-./scripts/inject-skill.sh \
-  --latest \
-  --hook quality_gate \
-  --skill lint-checker \
-  --required
-
-# Inject with configuration
-./scripts/inject-skill.sh \
-  --latest \
-  --hook post_stage_DESIGNING \
-  --skill code-reviewer \
-  --config '{"focus": ["security"]}'
-
-# List injected skills
-./scripts/inject-skill.sh --latest --list
-
-# Remove an injected skill
-./scripts/inject-skill.sh \
-  --latest \
-  --hook quality_gate \
-  --skill lint-checker \
-  --remove
+./scripts/generate-report.sh -r /project
+./scripts/generate-report.sh -r /project --format json
+./scripts/generate-report.sh -r /project --include-logs
 ```
 
-### 5. Generate Report / 生成报告
+---
+
+## Example 1: Bug Fix (L1)
+
+### 场景
+用户报告登录按钮点击无响应。
+
+### AI 对话流程
+
+```
+User: 登录按钮点击没反应，帮我修一下
+
+AI: 这是一个明确的 bug，我使用 L1 快速流程。
+
+[执行] ./scripts/init-workflow.sh -r /project -n "fix-login-button" -t bugfix -l L1
+
+✅ Workflow: 20240115_001_bugfix_fix-login-button
+
+[PLANNING] 
+分析代码发现 onClick handler 有 typo...
+
+📋 任务:
+1. 修复 LoginButton.tsx 函数名
+
+[IMPLEMENTING]
+修改: handleLgoin → handleLogin
+
+[TESTING]
+- ✅ TypeScript 通过
+- ✅ ESLint 通过
+- ✅ 测试通过
+
+[DONE]
+✅ Bug 已修复，用时约 5 分钟
+```
+
+---
+
+## Example 2: New Feature (L2)
+
+### 场景
+需要实现用户头像上传功能。
+
+### AI 对话流程
+
+```
+User: 我需要实现一个用户头像上传功能
+
+AI: 这是标准功能开发，我使用 L2 标准流程。
+
+[执行] ./scripts/init-workflow.sh -r /project -n "user-avatar-upload" -t feature
+
+✅ Workflow: 20240115_002_feature_user-avatar-upload
+
+[ANALYZING]
+需要澄清:
+- 文件大小限制?
+- 支持格式?
+- 是否需要裁剪?
+
+User: 2MB, jpg/png, 需要圆形裁剪
+
+AI: 明白，更新 spec.md...
+
+[PLANNING]
+任务列表:
+1. 创建 AvatarUploader 组件
+2. 添加 ImageCropper 组件
+3. 实现上传 API
+4. 集成存储服务
+5. 更新 Profile 页面
+6. 添加测试
+
+[DESIGNING]
+API: POST /api/users/avatar
+存储: S3 /avatars/{userId}/{timestamp}.{ext}
+
+[IMPLEMENTING]
+✅ 任务 1-6 完成
+
+[TESTING]
+- ✅ 单元测试 12/12
+- ✅ 覆盖率 75%
+
+[DELIVERING]
+生成报告...
+
+[DONE]
+✅ 功能完成，用时 3h 45m
+```
+
+---
+
+## Example 3: Security Feature (L3)
+
+### 场景
+需要集成 OAuth 2.0 第三方登录。
+
+### AI 对话流程
+
+```
+User: 需要集成 OAuth 2.0 支持 Google/GitHub 登录
+
+AI: 这是安全敏感功能，我使用 L3 完整流程。
+
+[执行] ./scripts/init-workflow.sh -r /project -n "oauth-integration" -t feature -l L3
+
+✅ Workflow: 20240115_003_feature_oauth-integration
+
+[ANALYZING - Extended]
+执行威胁建模 (STRIDE):
+- Spoofing: 高风险 → 验证 OAuth state
+- Token 泄露: 高风险 → HttpOnly Cookie
+
+影响分析:
+- Auth Service, User Service, Frontend
+- 需要协调安全团队
+
+[PLANNING - Extended]
+时间线: ~5天
+回滚策略: Feature Flag
+
+[DESIGNING - Extended]
+安全设计:
+- State: 加密随机数 + 时间戳
+- Token: 加密存储
+- Scope: 最小权限
+
+🔒 需要审批:
+- [ ] 安全团队
+- [ ] Tech Lead
+
+User: 都已审批
+
+[IMPLEMENTING]
+启用安全扫描器...
+执行开发任务...
+
+[TESTING - Extended]
+安全测试:
+- ✅ CSRF 测试
+- ✅ Token 安全测试
+- ✅ SAST 扫描
+
+[DELIVERING - Extended]
+安全签字:
+- ✅ 安全团队
+- ✅ Tech Lead
+
+[DONE]
+✅ OAuth 集成完成，用时 5天
+```
+
+---
+
+## Example 4: 继续现有工作流
+
+### 场景
+之前创建的工作流需要继续。
+
+### AI 对话流程
+
+```
+User: 继续之前的用户头像开发
+
+AI: 让我检查当前工作流状态...
+
+[执行] ./scripts/get-status.sh -r /project
+
+📊 当前状态:
+- Workflow: user-avatar-upload
+- 级别: L2
+- 状态: IMPLEMENTING
+- 进度: 60%
+- 当前任务: 实现上传 API
+
+继续执行任务 3...
+```
+
+---
+
+## Example 5: 查看进度
+
+```
+User: 当前开发进度怎么样了
+
+AI:
+[执行] ./scripts/get-status.sh -r /project
+
+📋 Workflow: user-avatar-upload
+📊 Level: L2 (Standard)
+🔄 Status: IMPLEMENTING
+📍 Stage: 4/7 (57%)
+📝 Current: 实现上传 API
+⏰ Duration: 2h 15m
+
+Progress: [████████████░░░░░░░░] 57%
+
+下一步:
+1. 完成上传 API
+2. 集成存储服务
+```
+
+---
+
+## 脚本参数速查
+
+### init-workflow.sh
 
 ```bash
-# Generate markdown report
-./scripts/generate-report.sh --latest
+./scripts/init-workflow.sh -r <root> -n <name> [OPTIONS]
 
-# Generate JSON report
-./scripts/generate-report.sh --latest --format json
+必需:
+  -r, --root DIR      项目根目录
+  -n, --name NAME     需求名称 (英文, 短横线连接)
 
-# Include logs in report
-./scripts/generate-report.sh --latest --include-logs
+可选:
+  -t, --type TYPE     feature|bugfix|refactor|hotfix (默认: feature)
+  -l, --level LEVEL   L1|L2|L3 (默认: L2)
+  -d, --description   简要描述
+  --tags TAGS         逗号分隔的标签
 ```
 
-## Workflow Examples / 工作流示例
-
-### Example 1: Simple Bug Fix (L1) / 简单Bug修复
+### get-status.sh
 
 ```bash
-# 1. Initialize L1 workflow
-./scripts/init-workflow.sh -n "fix-null-pointer" -t bugfix -l L1
+./scripts/get-status.sh -r <root> [OPTIONS]
 
-# 2. Jump directly to implementation (L1 skips analysis/design)
-./scripts/advance-stage.sh --latest --to IMPLEMENTING
+必需:
+  -r, --root DIR      项目根目录
 
-# 3. After fixing, advance to testing
-./scripts/advance-stage.sh --latest --to TESTING
-
-# 4. Complete workflow
-./scripts/advance-stage.sh --latest --to DONE
+可选:
+  -p, --path DIR      指定工作流路径 (覆盖活动工作流)
+  --history           显示状态历史
+  --json              JSON 格式输出
 ```
 
-### Example 2: New Feature Development (L2) / 新功能开发
+### advance-stage.sh
 
 ```bash
-# 1. Initialize L2 workflow
-./scripts/init-workflow.sh \
-  -n "dark-mode-toggle" \
-  -t feature \
-  -d "Add dark mode toggle to settings page"
+./scripts/advance-stage.sh -r <root> [OPTIONS]
 
-# 2. Complete requirement analysis
-# Edit: .trae/workflow/*/spec.md
-./scripts/advance-stage.sh --latest --to ANALYZING
+必需:
+  -r, --root DIR      项目根目录
 
-# 3. Plan tasks
-# Edit: .trae/workflow/*/tasks.md
-./scripts/advance-stage.sh --latest --to PLANNING
-
-# 4. Technical design
-# Edit: .trae/workflow/*/design.md
-./scripts/advance-stage.sh --latest --to DESIGNING
-
-# 5. Implement
-./scripts/advance-stage.sh --latest --to IMPLEMENTING
-
-# 6. Test
-./scripts/advance-stage.sh --latest --to TESTING
-
-# 7. Deliver
-./scripts/advance-stage.sh --latest --to DELIVERING
-
-# 8. Generate final report
-./scripts/generate-report.sh --latest
-
-# 9. Complete
-./scripts/advance-stage.sh --latest --to DONE
+可选:
+  -p, --path DIR      指定工作流路径
+  -t, --to STAGE      目标阶段
+  --validate          仅验证不转换
+  --force             强制转换
 ```
 
-### Example 3: Security-Critical Feature (L3) / 安全关键功能
+### inject-skill.sh
 
 ```bash
-# 1. Initialize L3 workflow with security config
-./scripts/init-workflow.sh \
-  -n "oauth-integration" \
-  -t feature \
-  -l L3 \
-  -d "Integrate OAuth 2.0 for third-party authentication" \
-  --tags "security,authentication,oauth"
+./scripts/inject-skill.sh -r <root> --hook <hook> --skill <skill> [OPTIONS]
 
-# 2. Inject security skills
-./scripts/inject-skill.sh --latest --hook post_stage_DESIGNING --skill security-reviewer --required
-./scripts/inject-skill.sh --latest --hook quality_gate --skill sast-scanner --required
-./scripts/inject-skill.sh --latest --hook quality_gate --skill dependency-scanner --required
+必需:
+  -r, --root DIR      项目根目录
 
-# 3. Follow full L3 workflow...
+操作:
+  --hook HOOK         钩子点
+  --skill SKILL       技能名
+  --list              列出已注入技能
+  --remove            移除技能
+
+可选:
+  --config JSON       技能配置
+  --required          标记为必需
+  --order N           执行顺序
 ```
 
-## Using with TRAE Agent / 与 TRAE Agent 配合使用
-
-When the `requirement-workflow` skill is triggered, it will:
-
-1. **Analyze your requirement** - Determine complexity and select appropriate level
-2. **Create workflow directory** - Initialize all required files
-3. **Guide through stages** - Prompt for stage transitions
-4. **Execute injected skills** - Run validation and checks at hook points
-5. **Track progress** - Update workflow.yaml and provide status reports
-
-### Triggering the Skill / 触发技能
-
-The skill activates on keywords like:
-
-- "开发需求", "新功能", "开始开发"
-- "继续开发", "流程状态"
-- "start developing", "new feature", "workflow status"
-
-### Example Conversation / 示例对话
-
-```
-User: 我需要开发一个用户头像上传功能
-
-Agent: 让我分析这个需求的复杂度...
-
-📊 需求分析结果:
-- 影响文件: ~10个
-- 涉及模块: 2个 (用户模块, 存储模块)
-- 风险等级: 中
-- 推荐级别: L2 (Standard)
-
-我将初始化一个 L2 工作流来跟踪这个需求。
-
-✅ Workflow initialized!
-📋 ID: 20240115_001_feature_user-avatar-upload
-📁 Directory: .trae/workflow/20240115_001_feature_user-avatar-upload/
-
-让我们开始需求分析阶段...
-```
-
-## Configuration Files / 配置文件
-
-### Global Workflow Config / 全局工作流配置
-
-Create `.trae/workflow/config.yaml` for global settings:
-
-```yaml
-defaults:
-  level: L2
-  notifications:
-    on_complete: true
-  coverage_target: 80
-
-teams:
-  backend:
-    reviewers: ["alice", "bob"]
-  frontend:
-    reviewers: ["charlie", "david"]
-
-integrations:
-  slack:
-    webhook_url: "https://..."
-    channel: "#dev-notifications"
-```
-
-### Project-Specific Overrides / 项目特定覆盖
-
-Create `.trae/workflow/project.yaml` for project-specific settings:
-
-```yaml
-project: "my-app"
-default_level: L2
-required_approvers:
-  L3: ["tech-lead", "security"]
-custom_checklists:
-  api_changes: "checklists/api.md"
-  db_changes: "checklists/database.md"
-```
-
-## Best Practices / 最佳实践
-
-### 1. Choose the Right Level / 选择正确的级别
-
-- **L1**: Bug fixes, typos, config changes
-- **L2**: Most feature work, API changes, component updates
-- **L3**: Security features, breaking changes, cross-module refactoring
-
-### 2. Complete Each Stage / 完成每个阶段
-
-Don't skip stages unless using L1. Each artifact serves a purpose:
-
-- `spec.md`: Captures requirements clearly
-- `design.md`: Documents technical decisions
-- `tasks.md`: Tracks granular progress
-- `checklist.md`: Ensures quality
-
-### 3. Use Skill Injection / 使用技能注入
-
-Inject relevant skills for your workflow type:
-
-- Security features → security-reviewer, sast-scanner
-- API changes → api-doc-generator, breaking-change-checker
-- Performance work → profiler, benchmark-runner
-
-### 4. Review Before Advancing / 推进前审查
-
-Always review the current stage's artifacts before advancing:
+### generate-report.sh
 
 ```bash
-./scripts/advance-stage.sh --latest --validate
+./scripts/generate-report.sh -r <root> [OPTIONS]
+
+必需:
+  -r, --root DIR      项目根目录
+
+可选:
+  -p, --path DIR      指定工作流路径
+  --format FORMAT     markdown|json|text (默认: markdown)
+  --output FILE       输出文件
+  --include-logs      包含日志
+  --notify            发送通知
 ```
 
-### 5. Generate Reports / 生成报告
+---
 
-Generate reports at key milestones:
+## 常见问题
+
+### Q: 如何手动指定级别?
 
 ```bash
-./scripts/generate-report.sh --latest --format markdown
+./scripts/init-workflow.sh -r /project -n "simple-task" -l L3
 ```
 
-## Troubleshooting / 故障排除
-
-### Workflow Stuck / 工作流卡住
+### Q: 如何覆盖活动工作流?
 
 ```bash
-# Check current status
-./scripts/get-status.sh --latest --history
-
-# Force transition if needed
-./scripts/advance-stage.sh --latest --to IMPLEMENTING --force
+./scripts/get-status.sh -r /project -p /project/.trae/workflow/xxx
 ```
 
-### Missing Artifacts / 缺少产出物
+### Q: 如何强制推进阶段?
 
 ```bash
-# Re-create templates
-./scripts/init-workflow.sh --repair --workflow-id {id}
+./scripts/advance-stage.sh -r /project --to TESTING --force
 ```
 
-### Skill Injection Failed / 技能注入失败
+### Q: 工作流卡住了怎么办?
 
 ```bash
-# List current injections
-./scripts/inject-skill.sh --latest --list
+# 检查状态
+./scripts/get-status.sh -r /project --history
 
-# Remove problematic skill
-./scripts/inject-skill.sh --latest --hook {hook} --skill {skill} --remove
+# 强制推进
+./scripts/advance-stage.sh -r /project --force
 ```

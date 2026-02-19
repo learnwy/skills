@@ -1,191 +1,111 @@
-# Technical Design / 技术设计文档
-# {{NAME}}
+# 技术设计方案: {{NAME}}
 
-> Workflow ID: `{{WORKFLOW_ID}}`
-> Level: {{LEVEL}}
-> Author: {{AUTHOR}}
-> Created: {{TIMESTAMP}}
+> 工作流: {{WORKFLOW_ID}}
+> 创建时间: {{DATE}}
+> 来源: spec.md, tasks.md
 
-## Overview / 概述
+## 方案概述
 
-### Problem Statement / 问题陈述
+{整体技术方案的简要描述，1-2 段落}
 
+## 系统架构
 
-
-### Solution Summary / 解决方案概述
-
-
-
-## Architecture / 架构
-
-### System Context / 系统上下文
+### 组件图
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                    System Context                    │
-├─────────────────────────────────────────────────────┤
-│                                                     │
-│   [External System A] ──► [Our System] ──► [DB]   │
-│                              │                      │
-│                              ▼                      │
-│                        [External API]               │
-│                                                     │
-└─────────────────────────────────────────────────────┘
+┌─────────────┐     ┌─────────────┐
+│  Component A │────▶│  Component B │
+└─────────────┘     └─────────────┘
+        │                   │
+        ▼                   ▼
+┌─────────────┐     ┌─────────────┐
+│  Component C │────▶│  Component D │
+└─────────────┘     └─────────────┘
 ```
 
-### Component Diagram / 组件图
+### 数据流
 
-```
-┌─────────────┐     ┌─────────────┐     ┌─────────────┐
-│ Component A │────►│ Component B │────►│ Component C │
-└─────────────┘     └─────────────┘     └─────────────┘
-```
+{描述数据如何在组件之间流动}
 
-### Data Flow / 数据流
+## API 设计 (如适用)
 
-```
-1. User Action
-   │
-   ▼
-2. API Request
-   │
-   ▼
-3. Business Logic
-   │
-   ▼
-4. Data Persistence
-   │
-   ▼
-5. Response
-```
+### 接口列表
 
-## Detailed Design / 详细设计
+| 接口 | 方法 | 描述 |
+|------|------|------|
+| /api/xxx | POST | {描述} |
+| /api/yyy | GET | {描述} |
 
-### API Design / API 设计
+### 接口详情
 
-#### Endpoint 1
+#### POST /api/xxx
 
-```
-POST /api/v1/resource
-Content-Type: application/json
-
-Request:
+**请求:**
+```json
 {
-  "field1": "string",
-  "field2": 123
-}
-
-Response:
-{
-  "id": "uuid",
-  "status": "created"
+  "field1": "value1",
+  "field2": "value2"
 }
 ```
 
-### Data Model / 数据模型
-
-#### Entity 1
-
-| Field | Type | Description | Constraints |
-|-------|------|-------------|-------------|
-| id | UUID | Primary key | NOT NULL |
-| name | VARCHAR(255) | Display name | NOT NULL |
-| created_at | TIMESTAMP | Creation time | NOT NULL |
-
-### State Machine / 状态机 (if applicable)
-
-```
-[State A] ──(event1)──► [State B] ──(event2)──► [State C]
-     │                      │
-     └──────(event3)────────┘
+**响应:**
+```json
+{
+  "code": 0,
+  "data": {}
+}
 ```
 
-## Implementation Plan / 实现计划
+## 数据模型
 
-### Phase 1: Foundation
-- [ ] Task 1.1
-- [ ] Task 1.2
+### 实体定义
 
-### Phase 2: Core Features
-- [ ] Task 2.1
-- [ ] Task 2.2
+```typescript
+interface Entity {
+  id: string;
+  field1: string;
+  field2: number;
+  createdAt: Date;
+}
+```
 
-### Phase 3: Integration
-- [ ] Task 3.1
-- [ ] Task 3.2
+### 数据库变更 (如适用)
 
-## Testing Strategy / 测试策略
+{新增/修改的表结构}
 
-### Unit Tests
-| Component | Coverage Target | Key Scenarios |
-|-----------|-----------------|---------------|
-| | 80% | |
+## 关键实现
 
-### Integration Tests
-| Integration Point | Test Approach |
-|-------------------|---------------|
-| | |
+### 核心算法/逻辑
 
-### E2E Tests
-| User Journey | Priority |
-|--------------|----------|
-| | High/Medium/Low |
+{描述关键的实现逻辑}
 
-## Security Considerations / 安全考量
+### 性能考量
 
-### Authentication / 认证
-- 
+- 预期 QPS: {数值}
+- 响应时间: {目标}
+- 缓存策略: {如有}
 
-### Authorization / 授权
-- 
+## 兼容性
 
-### Data Protection / 数据保护
-- 
+### 向后兼容
 
-## Performance Considerations / 性能考量
+{是否有破坏性变更，如何兼容}
 
-### Expected Load / 预期负载
-- 
+### 迁移策略 (如适用)
 
-### Optimization Strategies / 优化策略
-- 
+{数据迁移、配置迁移等}
 
-### Monitoring / 监控
-- 
+## 风险与缓解
 
-## Migration Plan / 迁移计划 (if applicable)
+| 风险 | 概率 | 影响 | 缓解措施 |
+|------|------|------|----------|
+| {风险1} | 高/中/低 | 高/中/低 | {措施} |
 
-### Pre-Migration
-- [ ] 
+## 替代方案
 
-### Migration Steps
-1. 
-2. 
+### 方案 B
 
-### Rollback Plan
-- [ ] 
-
-## Alternatives Considered / 备选方案
-
-| Option | Pros | Cons | Decision |
-|--------|------|------|----------|
-| Option A | | | ✓ Selected |
-| Option B | | | ✗ Rejected |
-
-## Open Issues / 未决问题
-
-| # | Issue | Owner | Due Date |
-|---|-------|-------|----------|
-| 1 | | | |
-
-## Review Checklist / 审查清单
-
-- [ ] Architecture review completed
-- [ ] Security review completed
-- [ ] Performance review completed
-- [ ] API design approved
-- [ ] Data model reviewed
+{简要描述被否决的方案及原因}
 
 ---
-*Last updated: {{TIMESTAMP}}*
-*Reviewed by: [Reviewer Name]*
+*本文档在 DESIGNING 阶段产出，作为 IMPLEMENTING 阶段的输入*

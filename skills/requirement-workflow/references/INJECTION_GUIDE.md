@@ -83,15 +83,13 @@ Inject skills dynamically during workflow execution:
 
 ```bash
 # Inject a skill at a specific hook
-./scripts/inject-skill.sh \
-  --workflow-id 20240115_001_feature_user-auth \
+./scripts/inject-skill.sh -r /project \
   --hook post_stage_DESIGNING \
   --skill code-reviewer \
   --config '{"focus": ["performance"]}'
 
 # Remove an injected skill
-./scripts/inject-skill.sh \
-  --workflow-id 20240115_001_feature_user-auth \
+./scripts/inject-skill.sh -r /project \
   --hook post_stage_DESIGNING \
   --skill code-reviewer \
   --remove
@@ -385,5 +383,5 @@ debug:
 View logs:
 
 ```bash
-./scripts/get-status.sh --debug-logs --workflow-id {id}
+./scripts/get-status.sh -r /project --history
 ```
