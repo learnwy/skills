@@ -1,0 +1,191 @@
+# Technical Design / 技术设计文档
+# {{NAME}}
+
+> Workflow ID: `{{WORKFLOW_ID}}`
+> Level: {{LEVEL}}
+> Author: {{AUTHOR}}
+> Created: {{TIMESTAMP}}
+
+## Overview / 概述
+
+### Problem Statement / 问题陈述
+
+
+
+### Solution Summary / 解决方案概述
+
+
+
+## Architecture / 架构
+
+### System Context / 系统上下文
+
+```
+┌─────────────────────────────────────────────────────┐
+│                    System Context                    │
+├─────────────────────────────────────────────────────┤
+│                                                     │
+│   [External System A] ──► [Our System] ──► [DB]   │
+│                              │                      │
+│                              ▼                      │
+│                        [External API]               │
+│                                                     │
+└─────────────────────────────────────────────────────┘
+```
+
+### Component Diagram / 组件图
+
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│ Component A │────►│ Component B │────►│ Component C │
+└─────────────┘     └─────────────┘     └─────────────┘
+```
+
+### Data Flow / 数据流
+
+```
+1. User Action
+   │
+   ▼
+2. API Request
+   │
+   ▼
+3. Business Logic
+   │
+   ▼
+4. Data Persistence
+   │
+   ▼
+5. Response
+```
+
+## Detailed Design / 详细设计
+
+### API Design / API 设计
+
+#### Endpoint 1
+
+```
+POST /api/v1/resource
+Content-Type: application/json
+
+Request:
+{
+  "field1": "string",
+  "field2": 123
+}
+
+Response:
+{
+  "id": "uuid",
+  "status": "created"
+}
+```
+
+### Data Model / 数据模型
+
+#### Entity 1
+
+| Field | Type | Description | Constraints |
+|-------|------|-------------|-------------|
+| id | UUID | Primary key | NOT NULL |
+| name | VARCHAR(255) | Display name | NOT NULL |
+| created_at | TIMESTAMP | Creation time | NOT NULL |
+
+### State Machine / 状态机 (if applicable)
+
+```
+[State A] ──(event1)──► [State B] ──(event2)──► [State C]
+     │                      │
+     └──────(event3)────────┘
+```
+
+## Implementation Plan / 实现计划
+
+### Phase 1: Foundation
+- [ ] Task 1.1
+- [ ] Task 1.2
+
+### Phase 2: Core Features
+- [ ] Task 2.1
+- [ ] Task 2.2
+
+### Phase 3: Integration
+- [ ] Task 3.1
+- [ ] Task 3.2
+
+## Testing Strategy / 测试策略
+
+### Unit Tests
+| Component | Coverage Target | Key Scenarios |
+|-----------|-----------------|---------------|
+| | 80% | |
+
+### Integration Tests
+| Integration Point | Test Approach |
+|-------------------|---------------|
+| | |
+
+### E2E Tests
+| User Journey | Priority |
+|--------------|----------|
+| | High/Medium/Low |
+
+## Security Considerations / 安全考量
+
+### Authentication / 认证
+- 
+
+### Authorization / 授权
+- 
+
+### Data Protection / 数据保护
+- 
+
+## Performance Considerations / 性能考量
+
+### Expected Load / 预期负载
+- 
+
+### Optimization Strategies / 优化策略
+- 
+
+### Monitoring / 监控
+- 
+
+## Migration Plan / 迁移计划 (if applicable)
+
+### Pre-Migration
+- [ ] 
+
+### Migration Steps
+1. 
+2. 
+
+### Rollback Plan
+- [ ] 
+
+## Alternatives Considered / 备选方案
+
+| Option | Pros | Cons | Decision |
+|--------|------|------|----------|
+| Option A | | | ✓ Selected |
+| Option B | | | ✗ Rejected |
+
+## Open Issues / 未决问题
+
+| # | Issue | Owner | Due Date |
+|---|-------|-------|----------|
+| 1 | | | |
+
+## Review Checklist / 审查清单
+
+- [ ] Architecture review completed
+- [ ] Security review completed
+- [ ] Performance review completed
+- [ ] API design approved
+- [ ] Data model reviewed
+
+---
+*Last updated: {{TIMESTAMP}}*
+*Reviewed by: [Reviewer Name]*

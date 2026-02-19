@@ -1,0 +1,173 @@
+# L3 Full Workflow with Security Focus
+# L3 完整流程 - 安全导向配置
+#
+# Use case: Security-sensitive features, auth systems, data handling
+# 适用场景: 安全敏感功能、认证系统、数据处理
+
+level: L3
+name: "Security-focused Development Template"
+tags: ["security", "compliance"]
+
+# Comprehensive skill injection for security
+# 全面的安全相关技能注入
+injected_skills:
+  # Analysis Phase
+  - stage: ANALYZING
+    skill: threat-modeler
+    timing: post
+    required: true
+    config:
+      frameworks: ["STRIDE", "DREAD"]
+      output_format: "markdown"
+
+  - stage: ANALYZING
+    skill: compliance-checker
+    timing: post
+    config:
+      standards: ["OWASP", "GDPR"]
+
+  # Design Phase
+  - stage: DESIGNING
+    skill: security-reviewer
+    timing: post
+    required: true
+    config:
+      checks:
+        - "authentication"
+        - "authorization"
+        - "data_encryption"
+        - "input_validation"
+        - "session_management"
+
+  - stage: DESIGNING
+    skill: architecture-reviewer
+    timing: post
+    config:
+      focus: ["security_boundaries", "trust_zones"]
+
+  # Implementation Phase
+  - stage: IMPLEMENTING
+    skill: sast-scanner
+    timing: during
+    trigger: "on_file_save"
+    config:
+      rules: ["security"]
+      severity_threshold: "medium"
+
+  - stage: IMPLEMENTING
+    skill: dependency-scanner
+    timing: post
+    required: true
+    config:
+      check_vulnerabilities: true
+      check_licenses: true
+
+  - stage: IMPLEMENTING
+    skill: secrets-scanner
+    timing: post
+    required: true
+    config:
+      patterns: ["api_keys", "passwords", "tokens"]
+
+  # Testing Phase
+  - stage: TESTING
+    skill: security-test-runner
+    timing: during
+    required: true
+    config:
+      types:
+        - "injection"
+        - "xss"
+        - "csrf"
+        - "auth_bypass"
+
+  - stage: TESTING
+    skill: dast-scanner
+    timing: post
+    config:
+      scan_depth: "full"
+      authenticated: true
+
+  - stage: TESTING
+    skill: penetration-test-assistant
+    timing: post
+    config:
+      mode: "assisted"
+      report_format: "detailed"
+
+  # Delivery Phase
+  - stage: DELIVERING
+    skill: security-report-generator
+    timing: pre
+    required: true
+
+  - stage: DELIVERING
+    skill: compliance-attestation
+    timing: pre
+    config:
+      sign_off_required: true
+
+hooks:
+  pre_stage_DESIGNING:
+    - skill: security-checklist-loader
+      config:
+        template: "security_design_checklist"
+
+  quality_gate:
+    - skill: type-checker
+      required: true
+    - skill: lint-checker
+      required: true
+    - skill: sast-scanner
+      required: true
+      config:
+        fail_on: "high"
+    - skill: dependency-vulnerability-checker
+      required: true
+
+  on_blocked:
+    - skill: security-incident-reporter
+      config:
+        notify_team: true
+        escalate_critical: true
+
+  pre_delivery:
+    - skill: security-sign-off
+      required: true
+      config:
+        require_approvals: ["security_team", "tech_lead"]
+
+# All artifacts required for L3 security workflow
+# L3 安全流程需要所有产出物
+required_artifacts:
+  - spec.md
+  - design.md
+  - tasks.md
+  - checklist.md
+  - threat_model.md
+  - security_review.md
+
+# Extended documentation requirements
+# 扩展的文档要求
+documentation:
+  threat_model: true
+  security_controls: true
+  data_flow_diagram: true
+  compliance_mapping: true
+
+# Mandatory reviews
+# 强制审查
+reviews:
+  security_review: required
+  architecture_review: required
+  code_review: required
+  compliance_review: required
+
+# Notification settings
+# 通知设置
+notifications:
+  on_blocked: true
+  on_stage_complete: true
+  on_workflow_complete: true
+  security_alert: true
+  channels: ["slack", "email"]

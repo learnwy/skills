@@ -1,0 +1,35 @@
+id: "{{WORKFLOW_ID}}"
+name: "{{NAME}}"
+type: "{{TYPE}}"
+level: "{{LEVEL}}"
+status: "INIT"
+description: "{{DESCRIPTION}}"
+tags: [{{TAGS}}]
+created_at: "{{TIMESTAMP}}"
+updated_at: "{{TIMESTAMP}}"
+
+current_stage:
+  name: null
+  progress: 0
+  current_task: null
+  tasks_completed: 0
+  tasks_total: 0
+
+state_history:
+  - state: "INIT"
+    entered_at: "{{TIMESTAMP}}"
+    current: true
+
+injected_skills: []
+
+hooks: {}
+
+artifacts: []
+
+metadata:
+  author: "{{AUTHOR}}"
+  team: "{{TEAM}}"
+  priority: "{{PRIORITY}}"
+  deadline: null
+  related_issues: []
+  related_prs: []

@@ -1,0 +1,95 @@
+# Verification Checklist / 验收检查清单
+# {{NAME}}
+
+> Workflow ID: `{{WORKFLOW_ID}}`
+> Level: {{LEVEL}}
+> Created: {{TIMESTAMP}}
+
+## Pre-Merge Checklist / 合并前检查
+
+### Code Quality / 代码质量
+
+- [ ] Code follows project style guidelines
+- [ ] No commented-out code or debug statements
+- [ ] Lint check passed (`npm run lint` / `cargo clippy` / etc.)
+- [ ] Type check passed (`npm run typecheck` / `mypy` / etc.)
+- [ ] No new warnings introduced
+- [ ] Code complexity is acceptable
+
+### Testing / 测试
+
+- [ ] Unit tests written for new code
+- [ ] Unit tests pass locally
+- [ ] Integration tests pass (if applicable)
+- [ ] E2E tests pass (if applicable)
+- [ ] Test coverage meets threshold (≥ {{COVERAGE_TARGET}}%)
+- [ ] Edge cases are covered
+- [ ] Error scenarios are tested
+
+### Security / 安全
+
+- [ ] No hardcoded credentials or secrets
+- [ ] Input validation implemented
+- [ ] Authentication/Authorization checked (if applicable)
+- [ ] SQL injection prevention (if applicable)
+- [ ] XSS prevention (if applicable)
+- [ ] CSRF protection (if applicable)
+- [ ] Security scan passed
+
+### Performance / 性能
+
+- [ ] No obvious performance issues
+- [ ] Database queries optimized (if applicable)
+- [ ] No N+1 queries
+- [ ] Caching implemented where appropriate
+- [ ] Memory usage is acceptable
+
+### Documentation / 文档
+
+- [ ] Code comments are clear and helpful
+- [ ] Public APIs are documented
+- [ ] README updated (if needed)
+- [ ] Changelog entry added
+- [ ] Migration guide written (if breaking changes)
+
+### Review / 审查
+
+- [ ] Self-review completed
+- [ ] Peer review completed
+- [ ] Tech lead review (for significant changes)
+- [ ] Security review (for security-sensitive changes)
+- [ ] Architecture review (for architectural changes)
+
+## Deployment Checklist / 部署检查
+
+### Pre-Deployment / 部署前
+
+- [ ] Feature flag configured (if applicable)
+- [ ] Database migrations tested
+- [ ] Environment variables documented
+- [ ] Rollback plan documented
+- [ ] Monitoring alerts configured
+
+### Post-Deployment / 部署后
+
+- [ ] Smoke tests pass in staging
+- [ ] Smoke tests pass in production
+- [ ] Monitoring shows normal behavior
+- [ ] No error rate increase
+- [ ] Performance metrics normal
+
+## Sign-Off / 签核
+
+| Role | Name | Date | Signature |
+|------|------|------|-----------|
+| Developer | | | |
+| Reviewer | | | |
+| QA (if required) | | | |
+| Tech Lead (if required) | | | |
+
+## Notes / 备注
+
+- 
+
+---
+*Checklist completed: {{TIMESTAMP}}*

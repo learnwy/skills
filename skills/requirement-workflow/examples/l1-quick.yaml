@@ -1,0 +1,40 @@
+# L1 Quick Workflow Configuration
+# L1 快速流程配置
+#
+# Use case: Bug fixes, small changes, config updates
+# 适用场景: Bug修复、小改动、配置更新
+
+level: L1
+name: "Quick Fix Template"
+
+# Minimal skill injection for fast iteration
+# 最小化技能注入以快速迭代
+injected_skills:
+  - stage: IMPLEMENTING
+    skill: lint-checker
+    timing: post
+    required: true
+
+  - stage: TESTING
+    skill: test-runner
+    timing: during
+    config:
+      type: "unit"
+      fail_fast: true
+
+hooks:
+  quality_gate:
+    - skill: type-checker
+      required: true
+
+# Skip these artifacts for L1
+# L1 跳过这些产出物
+skip_artifacts:
+  - spec.md
+  - design.md
+
+# Auto-advance settings
+# 自动推进设置
+auto_advance:
+  enabled: true
+  require_confirmation: false

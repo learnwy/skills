@@ -1,0 +1,81 @@
+# L2 Standard Workflow Configuration
+# L2 标准流程配置
+#
+# Use case: Regular feature development, API changes, component updates
+# 适用场景: 常规功能开发、API变更、组件更新
+
+level: L2
+name: "Standard Development Template"
+
+# Standard skill injection for balanced workflow
+# 标准技能注入，平衡工作流
+injected_skills:
+  - stage: ANALYZING
+    skill: requirement-clarifier
+    timing: during
+    config:
+      ask_questions: true
+      max_questions: 5
+
+  - stage: DESIGNING
+    skill: code-reviewer
+    timing: post
+    config:
+      focus: ["architecture", "api_design"]
+      severity: "important"
+
+  - stage: IMPLEMENTING
+    skill: lint-checker
+    timing: post
+    required: true
+
+  - stage: IMPLEMENTING
+    skill: test-generator
+    timing: during
+    config:
+      coverage_target: 70
+      generate_edge_cases: true
+
+  - stage: TESTING
+    skill: test-runner
+    timing: during
+    config:
+      types: ["unit", "integration"]
+      parallel: true
+
+  - stage: DELIVERING
+    skill: changelog-generator
+    timing: pre
+    config:
+      format: "conventional"
+
+hooks:
+  quality_gate:
+    - skill: type-checker
+      required: true
+    - skill: lint-checker
+      required: true
+    - skill: test-coverage-checker
+      config:
+        min_coverage: 70
+
+  pre_delivery:
+    - skill: doc-checker
+      config:
+        check_readme: true
+        check_api_docs: true
+
+# Required artifacts for L2
+# L2 必需产出物
+required_artifacts:
+  - spec.md
+  - design.md
+  - tasks.md
+  - checklist.md
+
+# Notification settings
+# 通知设置
+notifications:
+  on_blocked: true
+  on_stage_complete: false
+  on_workflow_complete: true

@@ -1,0 +1,87 @@
+# Task Breakdown / 任务拆分
+# {{NAME}}
+
+> Workflow ID: `{{WORKFLOW_ID}}`
+> Level: {{LEVEL}}
+> Created: {{TIMESTAMP}}
+
+## Overview / 概述
+
+| Metric | Value |
+|--------|-------|
+| Total Tasks | 0 |
+| Completed | 0 |
+| In Progress | 0 |
+| Pending | 0 |
+| Blocked | 0 |
+| Completion Rate | 0% |
+
+## Task Legend / 图例
+
+- `[ ]` Pending / 待处理
+- `[>]` In Progress / 进行中
+- `[x]` Completed / 已完成
+- `[!]` Blocked / 阻塞
+- `[~]` Skipped / 跳过
+
+## Tasks / 任务列表
+
+### 🔴 High Priority / 高优先级
+
+#### Task Group 1: [Group Name]
+
+- [ ] **TASK-001**: Task description
+  - Estimate: 
+  - Dependencies: None
+  - Assignee: 
+
+- [ ] **TASK-002**: Task description
+  - Estimate: 
+  - Dependencies: TASK-001
+  - Assignee: 
+
+### 🟡 Medium Priority / 中优先级
+
+#### Task Group 2: [Group Name]
+
+- [ ] **TASK-003**: Task description
+  - Estimate: 
+  - Dependencies: None
+  - Assignee: 
+
+### 🟢 Low Priority / 低优先级
+
+#### Task Group 3: [Group Name]
+
+- [ ] **TASK-004**: Task description
+  - Estimate: 
+  - Dependencies: None
+  - Assignee: 
+
+## Dependencies Graph / 依赖图
+
+```
+TASK-001 ─────► TASK-002
+    │              │
+    └──────────────┴─────► TASK-003
+```
+
+## Timeline / 时间线
+
+| Task | Start | End | Status |
+|------|-------|-----|--------|
+| TASK-001 | | | Pending |
+| TASK-002 | | | Pending |
+
+## Blockers / 阻塞项
+
+| Task | Blocker | Owner | ETA |
+|------|---------|-------|-----|
+| | | | |
+
+## Notes / 备注
+
+- 
+
+---
+*Last updated: {{TIMESTAMP}}*

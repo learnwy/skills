@@ -1,0 +1,98 @@
+# Requirement Specification / 需求规格说明
+# {{NAME}}
+
+> Workflow ID: `{{WORKFLOW_ID}}`
+> Level: {{LEVEL}}
+> Type: {{TYPE}}
+> Created: {{TIMESTAMP}}
+
+## Background / 背景
+
+{{DESCRIPTION}}
+
+## Goals / 目标
+
+<!-- Define clear, measurable goals -->
+<!-- 定义清晰、可衡量的目标 -->
+
+- [ ] Goal 1: 
+- [ ] Goal 2: 
+
+## User Stories / 用户故事
+
+### Story 1
+**As a** [user type]
+**I want** [feature]
+**So that** [benefit]
+
+**Acceptance Criteria:**
+- [ ] Criterion 1
+- [ ] Criterion 2
+
+## Scope / 范围
+
+### In Scope / 范围内
+
+| Item | Description |
+|------|-------------|
+| | |
+
+### Out of Scope / 范围外
+
+| Item | Reason |
+|------|--------|
+| | |
+
+## Constraints / 约束条件
+
+### Technical Constraints / 技术约束
+- 
+
+### Business Constraints / 业务约束
+- 
+
+### Time Constraints / 时间约束
+- 
+
+## Dependencies / 依赖
+
+### Internal Dependencies / 内部依赖
+| Module | Reason | Status |
+|--------|--------|--------|
+| | | |
+
+### External Dependencies / 外部依赖
+| Service/API | Reason | Status |
+|-------------|--------|--------|
+| | | |
+
+## Risks / 风险
+
+| Risk | Impact | Probability | Mitigation |
+|------|--------|-------------|------------|
+| | High/Medium/Low | High/Medium/Low | |
+
+## Acceptance Criteria / 验收标准
+
+### Functional / 功能性
+- [ ] Criterion 1
+- [ ] Criterion 2
+
+### Non-Functional / 非功能性
+- [ ] Performance: 
+- [ ] Security: 
+- [ ] Accessibility: 
+
+## Open Questions / 待澄清问题
+
+| # | Question | Status | Answer |
+|---|----------|--------|--------|
+| 1 | | Open/Resolved | |
+
+## References / 参考资料
+
+- [Link 1](url)
+- [Link 2](url)
+
+---
+*Last updated: {{TIMESTAMP}}*
