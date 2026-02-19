@@ -1,18 +1,67 @@
 #!/bin/bash
+# =============================================================================
+# init-workflow.sh - Initialize a new requirement workflow
+# =============================================================================
+#
+# DESCRIPTION:
+#   Creates a new workflow directory with all necessary templates and state files.
+#
+# USAGE:
+#   ./scripts/init-workflow.sh -n <name> [-t <type>] [-r <root>] [-l <level>] [-d <desc>] [--tags <tags>]
+#
+# OPTIONS:
+#   -r, --root DIR          Project root directory (REQUIRED)
+#   -n, --name NAME         Requirement name (REQUIRED)
+#   -t, --type TYPE         Type: feature|bugfix|refactor|hotfix (default: feature)
+#   -l, --level LEVEL       Force level: L1|L2|L3 (default: L2)
+#   -d, --description DESC  Brief description
+#   --tags TAGS             Comma-separated tags
+#   -h, --help              Show help message
+#
+# INPUT:
+#   Command line arguments only
+#
+# OUTPUT:
+#   Creates directory: {root}/.trae/workflow/{date}_{seq}_{type}_{name}/
+#   Generated files:
+#     - workflow.yaml   (state file)
+#     - spec.md         (requirement spec template)
+#     - tasks.md        (task breakdown template)
+#     - checklist.md    (verification checklist template)
+#     - logs/           (log directory)
+#     - artifacts/      (output directory)
+#
+# EXAMPLES:
+#   # Create a new feature workflow
+#   ./scripts/init-workflow.sh -r /path/to/project -n "user-authentication" -t feature
+#   # OUTPUT:
+#   # ✅ Workflow initialized successfully!
+#   # 📋 Workflow ID: 20240115_001_feature_user-authentication
+#   # 📁 Directory: /path/to/project/.trae/workflow/20240115_001_feature_user-authentication
+#   # 📊 Level: L2
+#
+#   # Create a quick bugfix workflow (L1)
+#   ./scripts/init-workflow.sh -r . -n "fix-login-bug" -t bugfix -l L1
+#
+#   # Create with description and tags
+#   ./scripts/init-workflow.sh -r ~/projects/myapp -n "api-refactor" -t refactor -l L3 \
+#     -d "Refactor payment API" --tags "breaking,api"
+#
+# =============================================================================
 set -euo pipefail
 
-WORKFLOW_BASE=".trae/workflow"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_DIR="$(dirname "$SCRIPT_DIR")"
 
 show_help() {
     cat << EOF
-Usage: $(basename "$0") [OPTIONS]
+Usage: $(basename "$0") -r <root> -n <name> [OPTIONS]
 
 Initialize a new requirement workflow.
 
 Options:
-    -n, --name NAME         Requirement name (required)
+    -r, --root DIR          Project root directory (REQUIRED)
+    -n, --name NAME         Requirement name (REQUIRED)
     -t, --type TYPE         Type: feature|bugfix|refactor|hotfix (default: feature)
     -l, --level LEVEL       Force level: L1|L2|L3 (auto-detected if not specified)
     -d, --description DESC  Brief description
@@ -20,9 +69,9 @@ Options:
     -h, --help              Show this help message
 
 Examples:
-    $(basename "$0") -n "user-authentication" -t feature
-    $(basename "$0") -n "fix-login-bug" -t bugfix -l L1
-    $(basename "$0") -n "api-refactor" -t refactor -l L3 --tags "breaking,api"
+    $(basename "$0") -r /path/to/project -n "user-authentication" -t feature
+    $(basename "$0") -r . -n "fix-login-bug" -t bugfix -l L1
+    $(basename "$0") -r ~/myapp -n "api-refactor" -t refactor -l L3 --tags "breaking,api"
 EOF
 }
 
@@ -31,11 +80,12 @@ sanitize_name() {
 }
 
 get_next_seq() {
-    local date_prefix="$1"
+    local workflow_base="$1"
+    local date_prefix="$2"
     local max_seq=0
     
-    if [[ -d "$WORKFLOW_BASE" ]]; then
-        for dir in "$WORKFLOW_BASE"/"${date_prefix}"_*/ 2>/dev/null; do
+    if [[ -d "$workflow_base" ]]; then
+        for dir in "$workflow_base"/"${date_prefix}"_*/ 2>/dev/null; do
             if [[ -d "$dir" ]]; then
                 seq=$(basename "$dir" | cut -d'_' -f2)
                 if [[ "$seq" =~ ^[0-9]+$ ]] && [[ "$seq" -gt "$max_seq" ]]; then
@@ -204,6 +254,7 @@ EOF
 main() {
     local name=""
     local req_type="feature"
+    local project_root=""
     local level=""
     local description=""
     local tags=""
@@ -216,6 +267,10 @@ main() {
                 ;;
             -t|--type)
                 req_type="$2"
+                shift 2
+                ;;
+            -r|--root)
+                project_root="$2"
                 shift 2
                 ;;
             -l|--level)
@@ -242,6 +297,12 @@ main() {
         esac
     done
     
+    if [[ -z "$project_root" ]]; then
+        echo "Error: --root is required" >&2
+        show_help
+        exit 1
+    fi
+
     if [[ -z "$name" ]]; then
         echo "Error: --name is required" >&2
         show_help
@@ -258,11 +319,18 @@ main() {
         exit 1
     fi
     
+    project_root="${project_root%/}"
+    if [[ ! -d "$project_root" ]]; then
+        echo "Error: Project root directory does not exist: $project_root" >&2
+        exit 1
+    fi
+    
+    local workflow_base="$project_root/.trae/workflow"
     local date_str=$(date +%Y%m%d)
-    local seq=$(get_next_seq "$date_str")
+    local seq=$(get_next_seq "$workflow_base" "$date_str")
     local sanitized_name=$(sanitize_name "$name")
     local workflow_id="${date_str}_${seq}_${req_type}_${sanitized_name}"
-    local workflow_dir="$WORKFLOW_BASE/$workflow_id"
+    local workflow_dir="$workflow_base/$workflow_id"
     
     [[ -z "$level" ]] && level="L2"
     

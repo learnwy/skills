@@ -1,17 +1,83 @@
 #!/bin/bash
+# =============================================================================
+# generate-report.sh - Generate workflow summary report
+# =============================================================================
+#
+# DESCRIPTION:
+#   Generates a comprehensive report of the workflow including status,
+#   progress, task completion, state history, and artifacts.
+#
+# USAGE:
+#   ./scripts/generate-report.sh -p <workflow_dir> [--format <fmt>] [--output <file>]
+#
+# OPTIONS:
+#   -p, --path DIR          Workflow directory path (REQUIRED)
+#                           e.g., /project/.trae/workflow/20240115_001_feature_auth
+#   --format FORMAT         Output format: markdown|json|text (default: markdown)
+#   --output FILE           Output file (default: artifacts/report.md)
+#   --include-logs          Include stage logs in the report
+#   --notify                Send notification after generation
+#   -h, --help              Show help message
+#
+# INPUT:
+#   - Workflow directory path (contains workflow.yaml)
+#
+# OUTPUT (markdown):
+#   # Workflow Report
+#   ## Summary
+#   | Field | Value |
+#   |-------|-------|
+#   | Workflow ID | `20240115_001_feature_auth` |
+#   | Status | DONE |
+#   | Duration | 4h 30m 15s |
+#   ...
+#
+# OUTPUT (json):
+#   {
+#     "workflow_id": "20240115_001_feature_auth",
+#     "status": "DONE",
+#     "duration_seconds": 16215,
+#     "progress": { "tasks": {...}, "checklist": {...} }
+#   }
+#
+# OUTPUT (text):
+#   ═══════════════════════════════════════════════════════
+#                 WORKFLOW REPORT
+#   ═══════════════════════════════════════════════════════
+#   Workflow: user-authentication
+#   Status: DONE
+#   Tasks: 12 / 12 completed
+#   ...
+#
+# EXAMPLES:
+#   # Generate markdown report (default)
+#   ./scripts/generate-report.sh -p /project/.trae/workflow/20240115_001_feature_auth
+#   # OUTPUT: ✅ Report generated: .../artifacts/report.md
+#
+#   # Generate JSON report
+#   ./scripts/generate-report.sh -p /project/.trae/workflow/20240115_001_feature_auth --format json
+#
+#   # Include logs in report
+#   ./scripts/generate-report.sh -p /project/.trae/workflow/20240115_001_feature_auth --include-logs
+#
+#   # Custom output file
+#   ./scripts/generate-report.sh -p /project/.trae/workflow/20240115_001_feature_auth \
+#     --format markdown --output ./reports/auth-report.md
+#
+#   # Generate and notify
+#   ./scripts/generate-report.sh -p /project/.trae/workflow/20240115_001_feature_auth --notify
+#
+# =============================================================================
 set -euo pipefail
-
-WORKFLOW_BASE=".trae/workflow"
 
 show_help() {
   cat << EOF
-Usage: $(basename "$0") [OPTIONS]
+Usage: $(basename "$0") -p <workflow_dir> [OPTIONS]
 
 Generate a workflow summary report.
 
 Options:
-    -w, --workflow-id ID    Workflow ID (required unless --latest)
-    --latest                Use the most recent workflow
+    -p, --path DIR          Workflow directory path (REQUIRED)
     --format FORMAT         Output format: markdown|json|text (default: markdown)
     --output FILE           Output file (default: artifacts/report.md)
     --include-logs          Include stage logs in report
@@ -19,16 +85,10 @@ Options:
     -h, --help              Show this help message
 
 Examples:
-    $(basename "$0") --latest
-    $(basename "$0") -w 20240115_001_feature_auth --format json
-    $(basename "$0") --latest --include-logs --notify
+    $(basename "$0") -p /project/.trae/workflow/20240115_001_feature_auth
+    $(basename "$0") -p /project/.trae/workflow/20240115_001_feature_auth --format json
+    $(basename "$0") -p /project/.trae/workflow/20240115_001_feature_auth --include-logs --notify
 EOF
-}
-
-get_latest_workflow() {
-  if [[ -d "$WORKFLOW_BASE" ]]; then
-    ls -1d "$WORKFLOW_BASE"/*/ 2> /dev/null | sort -r | head -1 | xargs basename 2> /dev/null || echo ""
-  fi
 }
 
 read_yaml_value() {
@@ -311,8 +371,7 @@ send_notification() {
 }
 
 main() {
-  local workflow_id=""
-  local use_latest=0
+  local workflow_dir=""
   local format="markdown"
   local output=""
   local include_logs=0
@@ -320,13 +379,9 @@ main() {
 
   while [[ $# -gt 0 ]]; do
     case $1 in
-      -w | --workflow-id)
-        workflow_id="$2"
+      -p | --path)
+        workflow_dir="$2"
         shift 2
-        ;;
-      --latest)
-        use_latest=1
-        shift
         ;;
       --format)
         format="$2"
@@ -356,20 +411,18 @@ main() {
     esac
   done
 
-  if [[ $use_latest -eq 1 ]]; then
-    workflow_id=$(get_latest_workflow)
-  fi
-
-  if [[ -z "$workflow_id" ]]; then
-    echo "Error: No workflow specified" >&2
+  if [[ -z "$workflow_dir" ]]; then
+    echo "Error: --path is required" >&2
+    show_help
     exit 1
   fi
 
-  local workflow_dir="$WORKFLOW_BASE/$workflow_id"
+  workflow_dir="${workflow_dir%/}"
+  local workflow_id=$(basename "$workflow_dir")
   local workflow_file="$workflow_dir/workflow.yaml"
 
   if [[ ! -f "$workflow_file" ]]; then
-    echo "Error: Workflow not found: $workflow_id" >&2
+    echo "Error: workflow.yaml not found in: $workflow_dir" >&2
     exit 1
   fi
 

@@ -1,17 +1,67 @@
 #!/bin/bash
+# =============================================================================
+# advance-stage.sh - Advance workflow to the next stage
+# =============================================================================
+#
+# DESCRIPTION:
+#   Transitions a workflow to the next stage with validation checks.
+#   Supports auto-advance (determines next stage based on level) or manual target.
+#
+# USAGE:
+#   ./scripts/advance-stage.sh -p <workflow_dir> [-t <stage>] [--validate] [--force]
+#
+# OPTIONS:
+#   -p, --path DIR          Workflow directory path (REQUIRED)
+#                           e.g., /project/.trae/workflow/20240115_001_feature_auth
+#   -t, --to STAGE          Target stage (auto-advance if not specified)
+#   --validate              Only validate, don't actually transition
+#   --force                 Force transition even if validation fails
+#   -h, --help              Show help message
+#
+# STAGES:
+#   INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → DELIVERING → DONE
+#
+# INPUT:
+#   - Workflow directory path (contains workflow.yaml)
+#   - Optional target stage
+#
+# OUTPUT:
+#   - Updates workflow.yaml status and state_history
+#   - Executes pre/post stage hooks
+#   - Prints transition result
+#
+# EXAMPLES:
+#   # Auto-advance to next stage
+#   ./scripts/advance-stage.sh -p /project/.trae/workflow/20240115_001_feature_auth
+#   # OUTPUT:
+#   # 📍 Auto-determined next stage: ANALYZING
+#   # 📋 Workflow: 20240115_001_feature_auth
+#   # 🔄 Transition: INIT → ANALYZING
+#   # ✅ Successfully transitioned to ANALYZING
+#
+#   # Advance to specific stage
+#   ./scripts/advance-stage.sh -p /project/.trae/workflow/20240115_001_feature_auth --to IMPLEMENTING
+#
+#   # Validate only (no changes)
+#   ./scripts/advance-stage.sh -p /project/.trae/workflow/20240115_001_feature_auth --validate
+#   # OUTPUT:
+#   # ✅ Validation passed
+#   # ✅ Validation complete (no changes made)
+#
+#   # Force transition despite validation errors
+#   ./scripts/advance-stage.sh -p /project/.trae/workflow/20240115_001_feature_auth --to DESIGNING --force
+#
+# =============================================================================
 set -euo pipefail
-
-WORKFLOW_BASE=".trae/workflow"
 
 show_help() {
   cat << EOF
-Usage: $(basename "$0") [OPTIONS]
+Usage: $(basename "$0") -p <workflow_dir> [OPTIONS]
 
 Advance workflow to the next stage with validation.
 
 Options:
-    -w, --workflow-id ID    Workflow ID (required unless --latest)
-    --latest                Use the most recent workflow
+    -p, --path DIR          Workflow directory path (REQUIRED)
     -t, --to STAGE          Target stage (auto-advance if not specified)
     --validate              Only validate, don't actually transition
     --force                 Force transition even if validation fails
@@ -20,16 +70,10 @@ Options:
 Stages: INIT, ANALYZING, PLANNING, DESIGNING, IMPLEMENTING, TESTING, DELIVERING, DONE
 
 Examples:
-    $(basename "$0") --latest --to IMPLEMENTING
-    $(basename "$0") -w 20240115_001_feature_auth --validate
-    $(basename "$0") --latest  # Auto-advance to next stage
+    $(basename "$0") -p /project/.trae/workflow/20240115_001_feature_auth
+    $(basename "$0") -p /project/.trae/workflow/20240115_001_feature_auth --to IMPLEMENTING
+    $(basename "$0") -p /project/.trae/workflow/20240115_001_feature_auth --validate
 EOF
-}
-
-get_latest_workflow() {
-  if [[ -d "$WORKFLOW_BASE" ]]; then
-    ls -1d "$WORKFLOW_BASE"/*/ 2> /dev/null | sort -r | head -1 | xargs basename 2> /dev/null || echo ""
-  fi
 }
 
 read_yaml_value() {
@@ -213,21 +257,16 @@ run_hooks() {
 }
 
 main() {
-  local workflow_id=""
-  local use_latest=0
+  local workflow_dir=""
   local target_stage=""
   local validate_only=0
   local force=0
 
   while [[ $# -gt 0 ]]; do
     case $1 in
-      -w | --workflow-id)
-        workflow_id="$2"
+      -p | --path)
+        workflow_dir="$2"
         shift 2
-        ;;
-      --latest)
-        use_latest=1
-        shift
         ;;
       -t | --to)
         target_stage="$2"
@@ -253,20 +292,18 @@ main() {
     esac
   done
 
-  if [[ $use_latest -eq 1 ]]; then
-    workflow_id=$(get_latest_workflow)
-  fi
-
-  if [[ -z "$workflow_id" ]]; then
-    echo "Error: No workflow specified and no workflows found" >&2
+  if [[ -z "$workflow_dir" ]]; then
+    echo "Error: --path is required" >&2
+    show_help
     exit 1
   fi
 
-  local workflow_dir="$WORKFLOW_BASE/$workflow_id"
+  workflow_dir="${workflow_dir%/}"
   local workflow_file="$workflow_dir/workflow.yaml"
+  local workflow_id=$(basename "$workflow_dir")
 
   if [[ ! -f "$workflow_file" ]]; then
-    echo "Error: Workflow not found: $workflow_id" >&2
+    echo "Error: workflow.yaml not found in: $workflow_dir" >&2
     exit 1
   fi
 

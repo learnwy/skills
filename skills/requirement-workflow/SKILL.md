@@ -204,27 +204,80 @@ on_blocked               # When workflow is blocked
 on_error                 # When an error occurs
 ```
 
-## Helper Tools / 辅助工具
+## Helper Scripts / 辅助脚本
+
+> 📖 详细用法请参考 [Scripts Reference](references/SCRIPTS_REFERENCE.md)
+
+### 参数设计
+
+| 脚本 | 关键参数 | 说明 |
+|------|----------|------|
+| `init-workflow.sh` | `-r, --root` (必需) | 项目根目录 |
+| 其他脚本 | `-p, --path` (必需) | workflow 目录路径 |
+
+**设计说明**: `init-workflow.sh` 创建工作流后返回目录路径，其他脚本使用该路径操作。
+
+### 快速参考
+
+| 脚本 | 功能 | 常用命令 |
+|------|------|----------|
+| `init-workflow.sh` | 初始化工作流 | `./scripts/init-workflow.sh -r /project -n "name" -t feature` |
+| `get-status.sh` | 查看状态 | `./scripts/get-status.sh -p $WORKFLOW_DIR` |
+| `advance-stage.sh` | 推进阶段 | `./scripts/advance-stage.sh -p $WORKFLOW_DIR` |
+| `inject-skill.sh` | 注入技能 | `./scripts/inject-skill.sh -p $WORKFLOW_DIR --hook quality_gate --skill linter` |
+| `generate-report.sh` | 生成报告 | `./scripts/generate-report.sh -p $WORKFLOW_DIR` |
 
 ### scripts/init-workflow.sh
 
-Initialize new workflow directory and state file.
+初始化新的工作流目录和状态文件。
+
+```bash
+./scripts/init-workflow.sh -r /path/to/project -n "user-auth" -t feature
+# Output: 
+# 📁 Directory: /path/to/project/.trae/workflow/20240115_001_feature_user-auth
+# (日期和序号自动生成)
+```
 
 ### scripts/advance-stage.sh
 
-Advance workflow to next stage with validation.
+推进工作流到下一阶段（带验证）。
+
+```bash
+WORKFLOW_DIR="/project/.trae/workflow/20240115_001_feature_user-auth"
+
+./scripts/advance-stage.sh -p "$WORKFLOW_DIR"              # 自动推进到下一阶段
+./scripts/advance-stage.sh -p "$WORKFLOW_DIR" --to TESTING # 指定目标阶段
+./scripts/advance-stage.sh -p "$WORKFLOW_DIR" --validate   # 仅验证不转换
+```
 
 ### scripts/get-status.sh
 
-Get current workflow status and progress.
+获取工作流状态和进度。
+
+```bash
+./scripts/get-status.sh -p "$WORKFLOW_DIR"           # 工作流状态
+./scripts/get-status.sh -p "$WORKFLOW_DIR" --history # 显示状态历史
+./scripts/get-status.sh -p "$WORKFLOW_DIR" --json    # JSON 格式输出
+```
 
 ### scripts/inject-skill.sh
 
-Inject a skill into specific stage hook.
+在特定钩子点注入技能。
+
+```bash
+./scripts/inject-skill.sh -p "$WORKFLOW_DIR" --hook quality_gate --skill lint-checker --required
+./scripts/inject-skill.sh -p "$WORKFLOW_DIR" --list  # 列出已注入技能
+```
 
 ### scripts/generate-report.sh
 
-Generate workflow summary report.
+生成工作流摘要报告。
+
+```bash
+./scripts/generate-report.sh -p "$WORKFLOW_DIR"                    # Markdown 报告
+./scripts/generate-report.sh -p "$WORKFLOW_DIR" --format json      # JSON 报告
+./scripts/generate-report.sh -p "$WORKFLOW_DIR" --include-logs     # 包含日志
+```
 
 ## State Transitions / 状态转换
 
@@ -287,7 +340,9 @@ Next Steps:
 
 ## References / 参考文档
 
+- [Scripts Reference / 脚本参考手册](references/SCRIPTS_REFERENCE.md)
 - [Workflow Level Definitions](references/WORKFLOW_LEVELS.md)
 - [State Machine Specification](references/STATE_MACHINE.md)
 - [Skill Injection Guide](references/INJECTION_GUIDE.md)
 - [Template Files](assets/)
+- [Usage Examples](examples/USAGE.md)

@@ -1,28 +1,75 @@
 #!/bin/bash
+# =============================================================================
+# get-status.sh - Get workflow status and progress information
+# =============================================================================
+#
+# DESCRIPTION:
+#   Displays workflow status, progress, and optionally state history.
+#
+# USAGE:
+#   ./scripts/get-status.sh -p <workflow_dir> [--history] [--json]
+#
+# OPTIONS:
+#   -p, --path DIR          Workflow directory path (REQUIRED)
+#                           e.g., /project/.trae/workflow/20240115_001_feature_auth
+#   --history               Show state transition history
+#   --json                  Output in JSON format
+#   -h, --help              Show help message
+#
+# INPUT:
+#   - Workflow directory path (contains workflow.yaml)
+#
+# OUTPUT (text format):
+#   ═══════════════════════════════════════════════════════
+#   📋 Workflow: user-authentication
+#   ═══════════════════════════════════════════════════════
+#   🆔 ID: 20240115_001_feature_user-authentication
+#   📊 Level: L2 (Standard)
+#   🏷️  Type: feature
+#   💻 Status: IMPLEMENTING
+#   📈 Progress: 62%
+#   ⏰ Duration: 2h 30m
+#   
+#   Progress: [████████████░░░░░░░░] 62%
+#
+# OUTPUT (json format):
+#   {
+#     "id": "20240115_001_feature_user-authentication",
+#     "name": "user-authentication",
+#     "status": "IMPLEMENTING",
+#     "progress": 62,
+#     ...
+#   }
+#
+# EXAMPLES:
+#   # Show workflow status
+#   ./scripts/get-status.sh -p /project/.trae/workflow/20240115_001_feature_auth
+#
+#   # Show status with history
+#   ./scripts/get-status.sh -p /project/.trae/workflow/20240115_001_feature_auth --history
+#
+#   # JSON output
+#   ./scripts/get-status.sh -p /project/.trae/workflow/20240115_001_feature_auth --json
+#
+# =============================================================================
 set -euo pipefail
-
-WORKFLOW_BASE=".trae/workflow"
 
 show_help() {
   cat << EOF
-Usage: $(basename "$0") [OPTIONS]
+Usage: $(basename "$0") -p <workflow_dir> [OPTIONS]
 
 Get workflow status and progress information.
 
 Options:
-    -w, --workflow-id ID    Workflow ID (required unless --latest or --list)
-    --latest                Show status of most recent workflow
-    --list                  List all workflows
+    -p, --path DIR          Workflow directory path (REQUIRED)
     --history               Show state transition history
-    --filter STATUS         Filter workflows by status (for --list)
     --json                  Output in JSON format
-    --debug-logs            Show debug logs
     -h, --help              Show this help message
 
 Examples:
-    $(basename "$0") --latest
-    $(basename "$0") --list --filter IMPLEMENTING
-    $(basename "$0") -w 20240115_001_feature_auth --history
+    $(basename "$0") -p /project/.trae/workflow/20240115_001_feature_auth
+    $(basename "$0") -p /project/.trae/workflow/20240115_001_feature_auth --history
+    $(basename "$0") -p /project/.trae/workflow/20240115_001_feature_auth --json
 EOF
 }
 
@@ -30,12 +77,6 @@ read_yaml_value() {
   local file="$1"
   local key="$2"
   grep "^${key}:" "$file" 2> /dev/null | head -1 | sed "s/^${key}: *//" | tr -d '"'
-}
-
-get_latest_workflow() {
-  if [[ -d "$WORKFLOW_BASE" ]]; then
-    ls -1d "$WORKFLOW_BASE"/*/ 2> /dev/null | sort -r | head -1 | xargs basename 2> /dev/null || echo ""
-  fi
 }
 
 format_duration() {
@@ -80,15 +121,15 @@ get_progress() {
 }
 
 show_workflow_status() {
-  local workflow_id="$1"
+  local workflow_dir="$1"
   local show_history="${2:-0}"
   local json_output="${3:-0}"
 
-  local workflow_dir="$WORKFLOW_BASE/$workflow_id"
   local workflow_file="$workflow_dir/workflow.yaml"
+  local workflow_id=$(basename "$workflow_dir")
 
   if [[ ! -f "$workflow_file" ]]; then
-    echo "Error: Workflow not found: $workflow_id" >&2
+    echo "Error: workflow.yaml not found in: $workflow_dir" >&2
     return 1
   fi
 
@@ -219,106 +260,23 @@ EOF
   echo "═══════════════════════════════════════════════════════"
 }
 
-list_workflows() {
-  local filter="${1:-}"
-  local json_output="${2:-0}"
-
-  if [[ ! -d "$WORKFLOW_BASE" ]]; then
-    echo "No workflows found"
-    return 0
-  fi
-
-  local workflows=()
-  for dir in "$WORKFLOW_BASE"/*/; do
-    [[ -d "$dir" ]] && workflows+=("$(basename "$dir")")
-  done
-
-  if [[ ${#workflows[@]} -eq 0 ]]; then
-    echo "No workflows found"
-    return 0
-  fi
-
-  if [[ $json_output -eq 1 ]]; then
-    echo "["
-    local first=1
-    for wf in "${workflows[@]}"; do
-      local workflow_file="$WORKFLOW_BASE/$wf/workflow.yaml"
-      [[ ! -f "$workflow_file" ]] && continue
-
-      local status=$(read_yaml_value "$workflow_file" "status")
-      [[ -n "$filter" && "$status" != "$filter" ]] && continue
-
-      [[ $first -eq 0 ]] && echo ","
-      first=0
-
-      show_workflow_status "$wf" 0 1
-    done
-    echo "]"
-    return 0
-  fi
-
-  echo "═══════════════════════════════════════════════════════"
-  echo "📋 Workflow List"
-  echo "═══════════════════════════════════════════════════════"
-  echo ""
-
-  printf "%-40s %-12s %-6s %-15s\n" "ID" "STATUS" "LEVEL" "TYPE"
-  printf "%-40s %-12s %-6s %-15s\n" "----------------------------------------" "------------" "------" "---------------"
-
-  for wf in "${workflows[@]}"; do
-    local workflow_file="$WORKFLOW_BASE/$wf/workflow.yaml"
-    [[ ! -f "$workflow_file" ]] && continue
-
-    local status=$(read_yaml_value "$workflow_file" "status")
-    local level=$(read_yaml_value "$workflow_file" "level")
-    local req_type=$(read_yaml_value "$workflow_file" "type")
-
-    [[ -n "$filter" && "$status" != "$filter" ]] && continue
-
-    printf "%-40s %-12s %-6s %-15s\n" "$wf" "$status" "$level" "$req_type"
-  done
-
-  echo ""
-  echo "Total: ${#workflows[@]} workflow(s)"
-}
-
 main() {
-  local workflow_id=""
-  local use_latest=0
-  local list_all=0
+  local workflow_dir=""
   local show_history=0
-  local filter=""
   local json_output=0
-  local debug_logs=0
 
   while [[ $# -gt 0 ]]; do
     case $1 in
-      -w | --workflow-id)
-        workflow_id="$2"
+      -p | --path)
+        workflow_dir="$2"
         shift 2
-        ;;
-      --latest)
-        use_latest=1
-        shift
-        ;;
-      --list)
-        list_all=1
-        shift
         ;;
       --history)
         show_history=1
         shift
         ;;
-      --filter)
-        filter="$2"
-        shift 2
-        ;;
       --json)
         json_output=1
-        shift
-        ;;
-      --debug-logs)
-        debug_logs=1
         shift
         ;;
       -h | --help)
@@ -333,22 +291,15 @@ main() {
     esac
   done
 
-  if [[ $list_all -eq 1 ]]; then
-    list_workflows "$filter" "$json_output"
-    exit 0
-  fi
-
-  if [[ $use_latest -eq 1 ]]; then
-    workflow_id=$(get_latest_workflow)
-  fi
-
-  if [[ -z "$workflow_id" ]]; then
-    echo "Error: No workflow specified" >&2
-    echo "Use --latest, --list, or --workflow-id" >&2
+  if [[ -z "$workflow_dir" ]]; then
+    echo "Error: --path is required" >&2
+    show_help
     exit 1
   fi
 
-  show_workflow_status "$workflow_id" "$show_history" "$json_output"
+  workflow_dir="${workflow_dir%/}"
+
+  show_workflow_status "$workflow_dir" "$show_history" "$json_output"
 }
 
 main "$@"

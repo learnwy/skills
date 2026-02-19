@@ -1,19 +1,83 @@
 #!/bin/bash
+# =============================================================================
+# inject-skill.sh - Inject a skill into workflow hook points
+# =============================================================================
+#
+# DESCRIPTION:
+#   Adds or removes skills at specific workflow hook points.
+#   Skills are executed when the workflow reaches the specified hook.
+#
+# USAGE:
+#   ./scripts/inject-skill.sh -p <workflow_dir> --hook <hook> --skill <skill> [options]
+#
+# OPTIONS:
+#   -p, --path DIR          Workflow directory path (REQUIRED)
+#                           e.g., /project/.trae/workflow/20240115_001_feature_auth
+#   --hook HOOK             Hook point to inject at (REQUIRED for inject/remove)
+#   --skill SKILL           Skill name to inject (REQUIRED for inject/remove)
+#   --config CONFIG         Skill configuration (JSON string)
+#   --required              Make the skill required (blocks on failure)
+#   --order N               Execution order (lower = earlier)
+#   --remove                Remove the skill from the hook
+#   --list                  List all injected skills for the workflow
+#   -h, --help              Show help message
+#
+# AVAILABLE HOOKS:
+#   pre_stage_{STAGE}       Before entering a stage (e.g., pre_stage_TESTING)
+#   post_stage_{STAGE}      After completing a stage
+#   pre_task_{task_id}      Before executing a specific task
+#   post_task_{task_id}     After completing a specific task
+#   quality_gate            Before quality verification checks
+#   pre_delivery            Before final delivery
+#   on_blocked              When workflow enters BLOCKED state
+#   on_error                When any error occurs
+#
+# INPUT:
+#   - Workflow directory path (contains workflow.yaml)
+#   - Hook name and skill name
+#   - Optional configuration
+#
+# OUTPUT:
+#   - Updates workflow.yaml hooks section
+#   - Confirmation message
+#
+# EXAMPLES:
+#   # Inject code reviewer after design stage
+#   ./scripts/inject-skill.sh -p /project/.trae/workflow/20240115_001_feature_auth \
+#     --hook post_stage_DESIGNING --skill code-reviewer
+#   # OUTPUT: ✅ Injected skill 'code-reviewer' at hook 'post_stage_DESIGNING'
+#
+#   # Inject required lint checker at quality gate
+#   ./scripts/inject-skill.sh -p /project/.trae/workflow/20240115_001_feature_auth \
+#     --hook quality_gate --skill lint-checker --required
+#   # OUTPUT:
+#   # ✅ Injected skill 'lint-checker' at hook 'quality_gate'
+#   #    Required: yes
+#
+#   # Inject with configuration
+#   ./scripts/inject-skill.sh -p /project/.trae/workflow/20240115_001_feature_auth \
+#     --hook pre_stage_TESTING --skill unit-test-runner --config '{"coverage": 80}'
+#
+#   # List all injected skills
+#   ./scripts/inject-skill.sh -p /project/.trae/workflow/20240115_001_feature_auth --list
+#
+#   # Remove a skill
+#   ./scripts/inject-skill.sh -p /project/.trae/workflow/20240115_001_feature_auth \
+#     --hook quality_gate --skill lint-checker --remove
+#
+# =============================================================================
 set -euo pipefail
-
-WORKFLOW_BASE=".trae/workflow"
 
 show_help() {
   cat << EOF
-Usage: $(basename "$0") [OPTIONS]
+Usage: $(basename "$0") -p <workflow_dir> --hook <hook> --skill <skill> [OPTIONS]
 
 Inject a skill into a workflow at a specific hook point.
 
 Options:
-    -w, --workflow-id ID    Workflow ID (required unless --latest)
-    --latest                Use the most recent workflow
-    --hook HOOK             Hook point to inject at (required)
-    --skill SKILL           Skill name to inject (required unless --remove)
+    -p, --path DIR          Workflow directory path (REQUIRED)
+    --hook HOOK             Hook point to inject at (REQUIRED for inject/remove)
+    --skill SKILL           Skill name to inject (REQUIRED for inject/remove)
     --config CONFIG         Skill configuration (JSON string)
     --required              Make the skill required (blocks on failure)
     --order N               Execution order (lower = earlier)
@@ -32,17 +96,11 @@ Available Hooks:
     on_error                On any error
 
 Examples:
-    $(basename "$0") --latest --hook quality_gate --skill lint-checker --required
-    $(basename "$0") -w 20240115_001_feature_auth --hook post_stage_DESIGNING --skill code-reviewer
-    $(basename "$0") --latest --hook quality_gate --skill lint-checker --remove
-    $(basename "$0") --latest --list
+    $(basename "$0") -p /project/.trae/workflow/20240115_001_feature_auth --hook quality_gate --skill lint-checker --required
+    $(basename "$0") -p /project/.trae/workflow/20240115_001_feature_auth --hook post_stage_DESIGNING --skill code-reviewer
+    $(basename "$0") -p /project/.trae/workflow/20240115_001_feature_auth --hook quality_gate --skill lint-checker --remove
+    $(basename "$0") -p /project/.trae/workflow/20240115_001_feature_auth --list
 EOF
-}
-
-get_latest_workflow() {
-  if [[ -d "$WORKFLOW_BASE" ]]; then
-    ls -1d "$WORKFLOW_BASE"/*/ 2> /dev/null | sort -r | head -1 | xargs basename 2> /dev/null || echo ""
-  fi
 }
 
 read_yaml_value() {
@@ -52,12 +110,12 @@ read_yaml_value() {
 }
 
 list_injected_skills() {
-  local workflow_id="$1"
-  local workflow_dir="$WORKFLOW_BASE/$workflow_id"
+  local workflow_dir="$1"
   local workflow_file="$workflow_dir/workflow.yaml"
+  local workflow_id=$(basename "$workflow_dir")
 
   if [[ ! -f "$workflow_file" ]]; then
-    echo "Error: Workflow not found: $workflow_id" >&2
+    echo "Error: workflow.yaml not found in: $workflow_dir" >&2
     return 1
   fi
 
@@ -217,8 +275,7 @@ remove_skill_injection() {
 }
 
 main() {
-  local workflow_id=""
-  local use_latest=0
+  local workflow_dir=""
   local hook=""
   local skill=""
   local config=""
@@ -229,13 +286,9 @@ main() {
 
   while [[ $# -gt 0 ]]; do
     case $1 in
-      -w | --workflow-id)
-        workflow_id="$2"
+      -p | --path)
+        workflow_dir="$2"
         shift 2
-        ;;
-      --latest)
-        use_latest=1
-        shift
         ;;
       --hook)
         hook="$2"
@@ -277,25 +330,22 @@ main() {
     esac
   done
 
-  if [[ $use_latest -eq 1 ]]; then
-    workflow_id=$(get_latest_workflow)
-  fi
-
-  if [[ -z "$workflow_id" ]]; then
-    echo "Error: No workflow specified" >&2
+  if [[ -z "$workflow_dir" ]]; then
+    echo "Error: --path is required" >&2
+    show_help
     exit 1
   fi
 
-  local workflow_dir="$WORKFLOW_BASE/$workflow_id"
+  workflow_dir="${workflow_dir%/}"
   local workflow_file="$workflow_dir/workflow.yaml"
 
   if [[ ! -f "$workflow_file" ]]; then
-    echo "Error: Workflow not found: $workflow_id" >&2
+    echo "Error: workflow.yaml not found in: $workflow_dir" >&2
     exit 1
   fi
 
   if [[ $list -eq 1 ]]; then
-    list_injected_skills "$workflow_id"
+    list_injected_skills "$workflow_dir"
     exit 0
   fi
 
