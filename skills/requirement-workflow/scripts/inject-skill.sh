@@ -1,12 +1,15 @@
 #!/bin/bash
 # =============================================================================
-# inject-skill.sh - Inject a skill into workflow hook points
+# inject-skill.sh - Inject skills at workflow hook points (3-level support)
 # =============================================================================
 #
 # DESCRIPTION:
-#   Adds or removes skills at specific workflow hook points.
-#   Skills are executed when the workflow reaches the specified hook.
-#   By default operates on the active workflow.
+#   Manages skill injection at hook points with 3 configuration levels:
+#   - Global:   {skill_dir}/hooks.yaml (all projects using this skill)
+#   - Project:  {root}/.trae/workflow/hooks.yaml (all workflows in project)
+#   - Workflow: {workflow}/workflow.yaml (specific workflow only)
+#
+#   Hooks are resolved by merging all levels (workflow > project > global).
 #
 # USAGE:
 #   ./scripts/inject-skill.sh -r <root> --hook <hook> --skill <skill> [options]
@@ -14,91 +17,94 @@
 # OPTIONS:
 #   -r, --root DIR          Project root directory (REQUIRED)
 #   -p, --path DIR          Specific workflow path (overrides active workflow)
+#   --scope SCOPE           Injection scope: global|project|workflow (default: workflow)
 #   --hook HOOK             Hook point to inject at (REQUIRED for inject/remove)
 #   --skill SKILL           Skill name to inject (REQUIRED for inject/remove)
 #   --config CONFIG         Skill configuration (JSON string)
 #   --required              Make the skill required (blocks on failure)
 #   --order N               Execution order (lower = earlier)
 #   --remove                Remove the skill from the hook
-#   --list                  List all injected skills for the workflow
+#   --list                  List all injected skills (merged from all levels)
+#   --list-scope SCOPE      List skills for specific scope only
 #   -h, --help              Show help message
 #
 # AVAILABLE HOOKS:
 #   pre_stage_{STAGE}       Before entering a stage (e.g., pre_stage_TESTING)
 #   post_stage_{STAGE}      After completing a stage
-#   pre_task_{task_id}      Before executing a specific task
-#   post_task_{task_id}     After completing a specific task
 #   quality_gate            Before quality verification checks
 #   pre_delivery            Before final delivery
 #   on_blocked              When workflow enters BLOCKED state
 #   on_error                When any error occurs
 #
-# INPUT:
-#   - Project root directory
-#   - Hook name and skill name
-#   - Optional configuration
-#
-# OUTPUT:
-#   - Updates workflow.yaml hooks section
-#   - Confirmation message
+# CONFIG FILES:
+#   Global:   {skill_dir}/hooks.yaml
+#   Project:  {project_root}/.trae/workflow/hooks.yaml
+#   Workflow: {workflow_dir}/workflow.yaml (hooks section)
 #
 # EXAMPLES:
-#   # Inject code reviewer after design stage
-#   ./scripts/inject-skill.sh -r /path/to/project --hook post_stage_DESIGNING --skill code-reviewer
-#   # OUTPUT: ✅ Injected skill 'code-reviewer' at hook 'post_stage_DESIGNING'
+#   # Inject at workflow level (default)
+#   ./scripts/inject-skill.sh -r /project --hook quality_gate --skill lint-checker
 #
-#   # Inject required lint checker at quality gate
-#   ./scripts/inject-skill.sh -r /path/to/project --hook quality_gate --skill lint-checker --required
+#   # Inject at project level (applies to all workflows)
+#   ./scripts/inject-skill.sh -r /project --scope project --hook quality_gate --skill lint-checker
 #
-#   # Inject with configuration
-#   ./scripts/inject-skill.sh -r /path/to/project --hook pre_stage_TESTING \
-#     --skill unit-test-runner --config '{"coverage": 80}'
+#   # Inject at global level (applies to all projects)
+#   ./scripts/inject-skill.sh -r /project --scope global --hook pre_stage_TESTING --skill test-runner
 #
-#   # List all injected skills
-#   ./scripts/inject-skill.sh -r /path/to/project --list
+#   # List all hooks (merged from all levels)
+#   ./scripts/inject-skill.sh -r /project --list
 #
-#   # Remove a skill
-#   ./scripts/inject-skill.sh -r /path/to/project --hook quality_gate --skill lint-checker --remove
+#   # List hooks for specific scope
+#   ./scripts/inject-skill.sh -r /project --list-scope project
 #
 # =============================================================================
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SKILL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 source "$SCRIPT_DIR/lib/yaml-utils.sh"
+
+GLOBAL_HOOKS_FILE="$SKILL_DIR/hooks.yaml"
 
 show_help() {
   cat << EOF
 Usage: $(basename "$0") -r <root> --hook <hook> --skill <skill> [OPTIONS]
 
-Inject a skill into a workflow at a specific hook point.
+Inject skills at workflow hook points with 3-level configuration support.
+
+Scope Levels (resolution order: workflow > project > global):
+    global      {skill_dir}/hooks.yaml
+    project     {project_root}/.trae/workflow/hooks.yaml
+    workflow    {workflow_dir}/workflow.yaml
 
 Options:
     -r, --root DIR          Project root directory (REQUIRED)
     -p, --path DIR          Specific workflow path (overrides active workflow)
+    --scope SCOPE           Injection scope: global|project|workflow (default: workflow)
     --hook HOOK             Hook point to inject at (REQUIRED for inject/remove)
     --skill SKILL           Skill name to inject (REQUIRED for inject/remove)
     --config CONFIG         Skill configuration (JSON string)
     --required              Make the skill required (blocks on failure)
     --order N               Execution order (lower = earlier)
     --remove                Remove the skill from the hook
-    --list                  List injected skills for the workflow
+    --list                  List all injected skills (merged from all levels)
+    --list-scope SCOPE      List skills for specific scope only
     -h, --help              Show this help message
 
 Available Hooks:
     pre_stage_{STAGE}       Before entering a stage
     post_stage_{STAGE}      After completing a stage
-    pre_task_{task_id}      Before executing a task
-    post_task_{task_id}     After completing a task
     quality_gate            Before quality checks
     pre_delivery            Before final delivery
     on_blocked              When workflow blocked
     on_error                On any error
 
 Examples:
-    $(basename "$0") -r /path/to/project --hook quality_gate --skill lint-checker --required
-    $(basename "$0") -r /path/to/project --hook post_stage_DESIGNING --skill code-reviewer
-    $(basename "$0") -r /path/to/project --hook quality_gate --skill lint-checker --remove
-    $(basename "$0") -r /path/to/project --list
+    $(basename "$0") -r /project --hook quality_gate --skill lint-checker --required
+    $(basename "$0") -r /project --scope project --hook post_stage_DESIGNING --skill code-reviewer
+    $(basename "$0") -r /project --scope global --hook pre_stage_TESTING --skill test-runner
+    $(basename "$0") -r /project --list
+    $(basename "$0") -r /project --list-scope global
 EOF
 }
 
@@ -113,76 +119,63 @@ get_active_workflow() {
   fi
 }
 
-list_injected_skills() {
-  local workflow_dir="$1"
-  local workflow_file="$workflow_dir/workflow.yaml"
-  local workflow_id=$(basename "$workflow_dir")
-
-  if [[ ! -f "$workflow_file" ]]; then
-    echo "Error: workflow.yaml not found in: $workflow_dir" >&2
-    return 1
+ensure_hooks_file() {
+  local file="$1"
+  local dir
+  dir=$(dirname "$file")
+  
+  if [[ ! -d "$dir" ]]; then
+    mkdir -p "$dir"
   fi
-
-  echo "═══════════════════════════════════════════════════════"
-  echo "📋 Injected Skills for: $workflow_id"
-  echo "═══════════════════════════════════════════════════════"
-  echo ""
-
-  echo "📦 Configuration-based Injections:"
-  echo "-----------------------------------"
-  local in_injected=0
-  while IFS= read -r line; do
-    if [[ "$line" == "injected_skills:" ]]; then
-      in_injected=1
-      continue
-    fi
-    if [[ $in_injected -eq 1 ]]; then
-      if [[ "$line" =~ ^[a-z] && ! "$line" =~ ^\ + ]]; then
-        break
-      fi
-      if [[ "$line" =~ "- stage:" ]]; then
-        echo "  $line"
-      elif [[ "$line" =~ "skill:" || "$line" =~ "timing:" ]]; then
-        echo "  $line"
-      fi
-    fi
-  done < "$workflow_file"
-
-  echo ""
-  echo "🪝 Hook-based Injections:"
-  echo "-------------------------"
-
-  local in_hooks=0
-  while IFS= read -r line; do
-    if [[ "$line" == "hooks:" ]]; then
-      in_hooks=1
-      continue
-    fi
-    if [[ $in_hooks -eq 1 ]]; then
-      if [[ "$line" =~ ^[a-z] && ! "$line" =~ ^\ + ]]; then
-        break
-      fi
-      echo "  $line"
-    fi
-  done < "$workflow_file"
+  
+  if [[ ! -f "$file" ]]; then
+    cat > "$file" << 'EOF'
+# Skill Hooks Configuration
+# This file defines skills to be injected at specific hook points
+hooks: {}
+EOF
+  fi
 }
 
-inject_skill() {
-  local workflow_file="$1"
+get_hooks_file_for_scope() {
+  local scope="$1"
+  local project_root="$2"
+  local workflow_dir="$3"
+  
+  case "$scope" in
+    global)
+      echo "$GLOBAL_HOOKS_FILE"
+      ;;
+    project)
+      echo "$project_root/.trae/workflow/hooks.yaml"
+      ;;
+    workflow)
+      echo "$workflow_dir/workflow.yaml"
+      ;;
+  esac
+}
+
+inject_skill_to_file() {
+  local target_file="$1"
   local hook="$2"
   local skill="$3"
   local config="${4:-}"
   local required="${5:-false}"
   local order="${6:-0}"
+  local is_workflow_file="${7:-false}"
   local timestamp
   timestamp=$(yaml_get_timestamp)
+
+  if [[ "$is_workflow_file" == "false" ]]; then
+    ensure_hooks_file "$target_file"
+  fi
 
   local temp_file
   local output_file
   temp_file=$(mktemp)
   output_file=$(mktemp)
   
-  sed 's/^hooks: {}$/hooks:/' "$workflow_file" > "$temp_file"
+  sed 's/^hooks: {}$/hooks:/' "$target_file" > "$temp_file"
 
   local hooks_found=0
   local hook_found=0
@@ -238,29 +231,108 @@ inject_skill() {
     mv "$final_output" "$output_file"
   fi
 
-  yaml_write "$output_file" "updated_at" "$timestamp"
-  mv "$output_file" "$workflow_file"
+  if [[ "$is_workflow_file" == "true" ]]; then
+    yaml_write "$output_file" "updated_at" "$timestamp"
+  fi
+  
+  mv "$output_file" "$target_file"
   rm -f "$temp_file"
-
-  echo "✅ Injected skill '$skill' at hook '$hook'"
-  [[ "$required" == "true" ]] && echo "   Required: yes" || true
-  [[ -n "$config" ]] && echo "   Config: $config" || true
 }
 
-remove_skill() {
-  local workflow_file="$1"
-  local hook="$2"
-  local skill="$3"
-  local timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+list_hooks_from_file() {
+  local file="$1"
+  local scope="$2"
+  local indent="${3:-}"
+  
+  if [[ ! -f "$file" ]]; then
+    echo "${indent}(no hooks configured)"
+    return
+  fi
+  
+  local in_hooks=0
+  local has_hooks=0
+  while IFS= read -r line; do
+    if [[ "$line" == "hooks:" ]]; then
+      in_hooks=1
+      continue
+    fi
+    if [[ "$line" == "hooks: {}" ]]; then
+      continue
+    fi
+    if [[ $in_hooks -eq 1 ]]; then
+      if [[ "$line" =~ ^[a-z] && ! "$line" =~ ^[[:space:]] ]]; then
+        break
+      fi
+      if [[ -n "$line" && "$line" != "hooks: {}" ]]; then
+        echo "${indent}$line"
+        has_hooks=1
+      fi
+    fi
+  done < "$file"
+  
+  if [[ $has_hooks -eq 0 ]]; then
+    echo "${indent}(no hooks configured)"
+  fi
+}
 
-  echo "⚠️  Remove functionality not fully implemented yet"
-  echo "   Please manually edit: $workflow_file"
-  echo "   Remove skill '$skill' from hook '$hook'"
+list_all_hooks() {
+  local project_root="$1"
+  local workflow_dir="$2"
+  
+  echo "═══════════════════════════════════════════════════════"
+  echo "📋 Injected Skills Configuration"
+  echo "═══════════════════════════════════════════════════════"
+  echo ""
+  
+  echo "🌍 Global Level ($SKILL_DIR/hooks.yaml):"
+  echo "-----------------------------------------------------------"
+  list_hooks_from_file "$GLOBAL_HOOKS_FILE" "global" "  "
+  echo ""
+  
+  echo "📁 Project Level ($project_root/.trae/workflow/hooks.yaml):"
+  echo "-----------------------------------------------------------"
+  list_hooks_from_file "$project_root/.trae/workflow/hooks.yaml" "project" "  "
+  echo ""
+  
+  if [[ -n "$workflow_dir" && -d "$workflow_dir" ]]; then
+    local workflow_id
+    workflow_id=$(basename "$workflow_dir")
+    echo "📄 Workflow Level ($workflow_id):"
+    echo "-----------------------------------------------------------"
+    list_hooks_from_file "$workflow_dir/workflow.yaml" "workflow" "  "
+  else
+    echo "📄 Workflow Level: (no active workflow)"
+  fi
+  echo ""
+}
+
+list_scope_hooks() {
+  local scope="$1"
+  local project_root="$2"
+  local workflow_dir="$3"
+  
+  local file
+  file=$(get_hooks_file_for_scope "$scope" "$project_root" "$workflow_dir")
+  
+  local scope_label
+  case "$scope" in
+    global) scope_label="Global ($SKILL_DIR/hooks.yaml)" ;;
+    project) scope_label="Project ($project_root/.trae/workflow/hooks.yaml)" ;;
+    workflow) scope_label="Workflow ($(basename "$workflow_dir"))" ;;
+  esac
+  
+  echo "═══════════════════════════════════════════════════════"
+  echo "📋 $scope_label Hooks"
+  echo "═══════════════════════════════════════════════════════"
+  echo ""
+  list_hooks_from_file "$file" "$scope" ""
+  echo ""
 }
 
 main() {
   local project_root=""
   local workflow_dir=""
+  local scope="workflow"
   local hook=""
   local skill=""
   local config=""
@@ -268,6 +340,7 @@ main() {
   local order="0"
   local remove=0
   local list=0
+  local list_scope=""
 
   while [[ $# -gt 0 ]]; do
     case $1 in
@@ -277,6 +350,10 @@ main() {
         ;;
       -p | --path)
         workflow_dir="$2"
+        shift 2
+        ;;
+      --scope)
+        scope="$2"
         shift 2
         ;;
       --hook)
@@ -307,6 +384,10 @@ main() {
         list=1
         shift
         ;;
+      --list-scope)
+        list_scope="$2"
+        shift 2
+        ;;
       -h | --help)
         show_help
         exit 0
@@ -332,21 +413,32 @@ main() {
     workflow_dir=$(get_active_workflow "$project_root")
   fi
 
-  if [[ -z "$workflow_dir" ]]; then
-    echo "Error: No active workflow found. Run init-workflow.sh first." >&2
+  if [[ ! "$scope" =~ ^(global|project|workflow)$ ]]; then
+    echo "Error: Invalid scope. Must be global|project|workflow" >&2
     exit 1
   fi
 
-  local workflow_file="$workflow_dir/workflow.yaml"
-
-  if [[ ! -f "$workflow_file" ]]; then
-    echo "Error: workflow.yaml not found in: $workflow_dir" >&2
-    exit 1
+  if [[ -n "$list_scope" ]]; then
+    if [[ ! "$list_scope" =~ ^(global|project|workflow)$ ]]; then
+      echo "Error: Invalid list-scope. Must be global|project|workflow" >&2
+      exit 1
+    fi
+    if [[ "$list_scope" == "workflow" && -z "$workflow_dir" ]]; then
+      echo "Error: No active workflow found for workflow scope" >&2
+      exit 1
+    fi
+    list_scope_hooks "$list_scope" "$project_root" "$workflow_dir"
+    exit 0
   fi
 
   if [[ $list -eq 1 ]]; then
-    list_injected_skills "$workflow_dir"
+    list_all_hooks "$project_root" "$workflow_dir"
     exit 0
+  fi
+
+  if [[ "$scope" == "workflow" && -z "$workflow_dir" ]]; then
+    echo "Error: No active workflow found. Use --scope project or --scope global, or run init-workflow.sh first." >&2
+    exit 1
   fi
 
   if [[ -z "$hook" ]]; then
@@ -359,11 +451,32 @@ main() {
     exit 1
   fi
 
+  local target_file
+  target_file=$(get_hooks_file_for_scope "$scope" "$project_root" "$workflow_dir")
+  
+  local is_workflow_file="false"
+  [[ "$scope" == "workflow" ]] && is_workflow_file="true"
+
   if [[ $remove -eq 1 ]]; then
-    remove_skill "$workflow_file" "$hook" "$skill"
-  else
-    inject_skill "$workflow_file" "$hook" "$skill" "$config" "$required" "$order"
+    echo "⚠️  Remove functionality not fully implemented yet"
+    echo "   Please manually edit: $target_file"
+    echo "   Remove skill '$skill' from hook '$hook'"
+    exit 0
   fi
+
+  inject_skill_to_file "$target_file" "$hook" "$skill" "$config" "$required" "$order" "$is_workflow_file"
+
+  local scope_label
+  case "$scope" in
+    global) scope_label="global" ;;
+    project) scope_label="project" ;;
+    workflow) scope_label="workflow" ;;
+  esac
+
+  echo "✅ Injected skill '$skill' at hook '$hook' (scope: $scope_label)"
+  [[ "$required" == "true" ]] && echo "   Required: yes" || true
+  [[ -n "$config" ]] && echo "   Config: $config" || true
+  echo "   File: $target_file"
 }
 
 main "$@"

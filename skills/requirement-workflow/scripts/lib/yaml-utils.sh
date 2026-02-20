@@ -145,3 +145,49 @@ yaml_update_nested() {
 yaml_get_timestamp() {
   date -u +"%Y-%m-%dT%H:%M:%SZ"
 }
+
+yaml_get_hooks_for_point() {
+  local hook_point="$1"
+  local global_file="$2"
+  local project_file="$3"
+  local workflow_file="$4"
+  
+  local all_skills=""
+  
+  for file in "$global_file" "$project_file" "$workflow_file"; do
+    if [[ -f "$file" ]]; then
+      local in_hooks=0
+      local in_target_hook=0
+      while IFS= read -r line; do
+        if [[ "$line" == "hooks:" ]]; then
+          in_hooks=1
+          continue
+        fi
+        if [[ $in_hooks -eq 1 && "$line" == "  ${hook_point}:" ]]; then
+          in_target_hook=1
+          continue
+        fi
+        if [[ $in_target_hook -eq 1 ]]; then
+          if [[ "$line" =~ ^[[:space:]]{2}[a-z] && ! "$line" =~ ^[[:space:]]{4} ]]; then
+            in_target_hook=0
+            continue
+          fi
+          if [[ "$line" =~ ^[a-z] ]]; then
+            in_target_hook=0
+            in_hooks=0
+            continue
+          fi
+          if [[ "$line" =~ "skill:" ]]; then
+            local skill_name
+            skill_name=$(echo "$line" | sed 's/.*skill: *//' | tr -d '"')
+            if [[ -n "$skill_name" ]]; then
+              all_skills="$all_skills $skill_name"
+            fi
+          fi
+        fi
+      done < "$file"
+    fi
+  done
+  
+  echo "$all_skills" | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' '
+}
