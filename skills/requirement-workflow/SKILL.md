@@ -235,7 +235,109 @@ INIT → ANALYZING(ext) → PLANNING(ext) → DESIGNING(ext) → IMPLEMENTING �
 | `get-status.sh` | Check status | `-r ROOT` |
 | `advance-stage.sh` | Advance stage | `-r ROOT` |
 | `inject-skill.sh` | Inject skill | `-r ROOT` |
+| `get-hooks.sh` | Query injected skills | `-r ROOT` |
 | `generate-report.sh` | Generate report | `-r ROOT` |
+
+## Skill Injection System
+
+### Overview
+
+The workflow supports **3-level skill injection** to customize behavior at different stages:
+
+| Level | Config Location | Scope |
+|-------|-----------------|-------|
+| **Global** | `{skill_dir}/hooks.yaml` | All projects using this skill |
+| **Project** | `{root}/.trae/workflow/hooks.yaml` | All workflows in the project |
+| **Workflow** | `{workflow}/workflow.yaml` | Current workflow only |
+
+Resolution order: **workflow > project > global** (higher priority overrides)
+
+### Injecting Skills
+
+```bash
+# Inject at global level (affects all projects)
+./scripts/inject-skill.sh -r /project --scope global --hook pre_stage_DESIGNING --skill prd-writer
+
+# Inject at project level (affects all workflows in project)
+./scripts/inject-skill.sh -r /project --scope project --hook post_stage_DESIGNING --skill tech-design-writer
+
+# Inject at workflow level (default, current workflow only)
+./scripts/inject-skill.sh -r /project --hook quality_gate --skill lint-checker --required
+```
+
+### Available Hooks
+
+| Hook | Trigger Point | Typical Use |
+|------|---------------|-------------|
+| `pre_stage_{STAGE}` | Before entering stage | Invoke document generation skills |
+| `post_stage_{STAGE}` | After completing stage | Invoke review/validation skills |
+| `quality_gate` | Before quality checks | Lint, type check, security scan |
+| `pre_delivery` | Before final delivery | Final review, compliance check |
+
+### Using Injected Skills
+
+**When `advance-stage.sh` transitions to a new stage, it will output:**
+
+```
+✅ Successfully transitioned to DESIGNING
+
+🔌 Injected Skills for DESIGNING:
+─────────────────────────────────────────
+  📥 Before stage (pre_stage_DESIGNING):
+     → Invoke skill: prd-writer
+  📤 After stage (post_stage_DESIGNING):
+     → Invoke skill: tech-design-writer
+
+📝 Next: Document technical design in design.md
+```
+
+**AI MUST invoke listed skills at the appropriate timing:**
+
+1. **Before stage**: Invoke `pre_stage_{STAGE}` skills first
+2. **During stage**: Complete the stage work
+3. **Before moving on**: Invoke `post_stage_{STAGE}` skills
+
+### Querying Injected Skills
+
+```bash
+# List all hooks for a stage
+./scripts/get-hooks.sh -r /project --stage DESIGNING
+
+# Get specific hook
+./scripts/get-hooks.sh -r /project --hook quality_gate
+
+# Get skill names only (for programmatic use)
+./scripts/get-hooks.sh -r /project --hook pre_stage_DESIGNING --format skills-only
+```
+
+### Example: PRD and Tech Design Workflow
+
+**Setup (one-time):**
+```bash
+# Configure global hooks for document generation
+./scripts/inject-skill.sh -r /project --scope global \
+  --hook pre_stage_ANALYZING --skill prd-writer
+
+./scripts/inject-skill.sh -r /project --scope global \
+  --hook pre_stage_DESIGNING --skill tech-design-writer
+```
+
+**Workflow execution:**
+```
+1. User: "Build user authentication feature"
+
+2. AI initializes workflow (L2)
+
+3. advance-stage.sh → ANALYZING
+   Output shows: "→ Invoke skill: prd-writer"
+   AI MUST invoke prd-writer skill to generate PRD
+
+4. advance-stage.sh → DESIGNING  
+   Output shows: "→ Invoke skill: tech-design-writer"
+   AI MUST invoke tech-design-writer skill to generate design doc
+
+5. Continue workflow...
+```
 
 ## Examples
 

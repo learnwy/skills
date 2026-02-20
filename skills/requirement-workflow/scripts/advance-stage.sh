@@ -56,7 +56,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SKILL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 source "$SCRIPT_DIR/lib/yaml-utils.sh"
+
+GLOBAL_HOOKS_FILE="$SKILL_DIR/hooks.yaml"
 
 show_help() {
   cat << EOF
@@ -163,6 +166,96 @@ update_workflow_state() {
   yaml_append_history "$workflow_file" "$new_state" "$timestamp" "true"
 }
 
+get_skills_for_hook() {
+  local hook="$1"
+  local project_root="$2"
+  local workflow_dir="$3"
+  
+  local project_hooks_file="$project_root/.trae/workflow/hooks.yaml"
+  local workflow_hooks_file="$workflow_dir/workflow.yaml"
+  local skills=""
+  
+  for file in "$GLOBAL_HOOKS_FILE" "$project_hooks_file" "$workflow_hooks_file"; do
+    if [[ -f "$file" ]]; then
+      local in_hooks=0
+      local in_target_hook=0
+      while IFS= read -r line || [[ -n "$line" ]]; do
+        if [[ "$line" == "hooks:" ]]; then
+          in_hooks=1
+          continue
+        fi
+        if [[ $in_hooks -eq 1 && "$line" == "  ${hook}:" ]]; then
+          in_target_hook=1
+          continue
+        fi
+        if [[ $in_target_hook -eq 1 ]]; then
+          if [[ "$line" =~ ^[[:space:]]{2}[a-z_] && ! "$line" =~ ^[[:space:]]{4} ]]; then
+            in_target_hook=0
+            continue
+          fi
+          if [[ "$line" =~ ^[a-z] ]]; then
+            in_target_hook=0
+            in_hooks=0
+            continue
+          fi
+          if [[ "$line" =~ "- skill:" ]]; then
+            local skill_name
+            skill_name=$(echo "$line" | sed 's/.*skill: *//' | tr -d '"')
+            skills="$skills $skill_name"
+          fi
+        fi
+      done < "$file"
+    fi
+  done
+  
+  echo "$skills" | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ' || true
+}
+
+output_stage_skills() {
+  local stage="$1"
+  local project_root="$2"
+  local workflow_dir="$3"
+  
+  local pre_skills post_skills quality_skills
+  pre_skills=$(get_skills_for_hook "pre_stage_${stage}" "$project_root" "$workflow_dir")
+  post_skills=$(get_skills_for_hook "post_stage_${stage}" "$project_root" "$workflow_dir")
+  quality_skills=$(get_skills_for_hook "quality_gate" "$project_root" "$workflow_dir")
+  
+  local has_skills=0
+  
+  if [[ -n "$pre_skills" || -n "$post_skills" || -n "$quality_skills" ]]; then
+    echo ""
+    echo "🔌 Injected Skills for $stage:"
+    echo "─────────────────────────────────────────"
+    has_skills=1
+  fi
+  
+  if [[ -n "$pre_skills" ]]; then
+    echo "  📥 Before stage (pre_stage_${stage}):"
+    for skill in $pre_skills; do
+      echo "     → Invoke skill: $skill"
+    done
+  fi
+  
+  if [[ -n "$quality_skills" ]]; then
+    echo "  🔍 Quality gate:"
+    for skill in $quality_skills; do
+      echo "     → Invoke skill: $skill"
+    done
+  fi
+  
+  if [[ -n "$post_skills" ]]; then
+    echo "  📤 After stage (post_stage_${stage}):"
+    for skill in $post_skills; do
+      echo "     → Invoke skill: $skill"
+    done
+  fi
+  
+  if [[ $has_skills -eq 1 ]]; then
+    echo ""
+  fi
+}
+
 main() {
   local project_root=""
   local workflow_dir=""
@@ -265,13 +358,15 @@ main() {
   update_workflow_state "$workflow_file" "$target_stage"
   echo "✅ Successfully transitioned to $target_stage"
 
+  output_stage_skills "$target_stage" "$project_root" "$workflow_dir"
+
   case "$target_stage" in
-    ANALYZING) echo "Next: Complete requirement analysis in spec.md" ;;
-    PLANNING) echo "Next: Break down tasks in tasks.md" ;;
-    DESIGNING) echo "Next: Document technical design in design.md" ;;
-    IMPLEMENTING) echo "Next: Implement the solution" ;;
-    TESTING) echo "Next: Run tests and complete checklist.md" ;;
-    DELIVERING) echo "Next: Prepare for delivery" ;;
+    ANALYZING) echo "📝 Next: Complete requirement analysis in spec.md" ;;
+    PLANNING) echo "📝 Next: Break down tasks in tasks.md" ;;
+    DESIGNING) echo "📝 Next: Document technical design in design.md" ;;
+    IMPLEMENTING) echo "📝 Next: Implement the solution" ;;
+    TESTING) echo "📝 Next: Run tests and complete checklist.md" ;;
+    DELIVERING) echo "📝 Next: Prepare for delivery" ;;
     DONE) echo "🎉 Workflow completed!" ;;
   esac
 }
