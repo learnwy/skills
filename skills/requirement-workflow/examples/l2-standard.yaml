@@ -7,60 +7,60 @@
 level: L2
 name: "Standard Development Template"
 
-# Standard skill injection for balanced workflow
-# 标准技能注入，平衡工作流
-injected_skills:
-  - stage: ANALYZING
-    skill: requirement-clarifier
-    timing: during
-    config:
-      ask_questions: true
-      max_questions: 5
-
-  - stage: DESIGNING
-    skill: code-reviewer
-    timing: post
-    config:
-      focus: ["architecture", "api_design"]
-      severity: "important"
-
-  - stage: IMPLEMENTING
-    skill: lint-checker
-    timing: post
-    required: true
-
-  - stage: IMPLEMENTING
-    skill: test-generator
-    timing: during
-    config:
-      coverage_target: 70
-      generate_edge_cases: true
-
-  - stage: TESTING
-    skill: test-runner
-    timing: during
-    config:
-      types: ["unit", "integration"]
-      parallel: true
-
-  - stage: DELIVERING
-    skill: changelog-generator
-    timing: pre
-    config:
-      format: "conventional"
-
+# Hook-based skill injection for balanced workflow
+# 基于钩子的标准技能注入，平衡工作流
 hooks:
+  pre_stage_ANALYZING:
+    - skill: requirement-clarifier
+      required: false
+      config:
+        ask_questions: true
+        max_questions: 5
+
+  post_stage_DESIGNING:
+    - skill: code-reviewer
+      required: false
+      config:
+        focus: ["architecture", "api_design"]
+        severity: "important"
+
+  pre_stage_IMPLEMENTING:
+    - skill: test-generator
+      required: false
+      config:
+        coverage_target: 70
+        generate_edge_cases: true
+
+  post_stage_IMPLEMENTING:
+    - skill: lint-checker
+      required: true
+
+  pre_stage_TESTING:
+    - skill: test-runner
+      required: false
+      config:
+        types: ["unit", "integration"]
+        parallel: true
+
+  pre_stage_DELIVERING:
+    - skill: changelog-generator
+      required: false
+      config:
+        format: "conventional"
+
   quality_gate:
     - skill: type-checker
       required: true
     - skill: lint-checker
       required: true
     - skill: test-coverage-checker
+      required: false
       config:
         min_coverage: 70
 
   pre_delivery:
     - skill: doc-checker
+      required: false
       config:
         check_readme: true
         check_api_docs: true

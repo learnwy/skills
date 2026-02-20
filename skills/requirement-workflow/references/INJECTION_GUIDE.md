@@ -1,387 +1,272 @@
 # Skill Injection Guide
 
-# 技能注入指南
+How to inject custom skills/agents at workflow stages.
 
-## Overview / 概述
+## Overview
 
-The requirement-workflow orchestrator supports external skill injection to extend functionality at various stages. This guide explains the injection mechanisms and best practices.
+The requirement-workflow supports **3-level skill injection** to customize behavior at any stage. Injected skills are automatically displayed when transitioning stages.
 
-## Injection Mechanisms / 注入机制
-
-### 1. Configuration-based Injection / 配置式注入
-
-Define skills to be injected in `workflow.yaml`:
-
-```yaml
-injected_skills:
-  - stage: DESIGNING
-    skill: code-reviewer
-    timing: post
-    config:
-      focus: ["architecture", "security"]
-      severity: "important"
-
-  - stage: IMPLEMENTING
-    skill: unit-test-generator
-    timing: during
-    trigger: "on_file_change"
-    config:
-      coverage_target: 80
-
-  - stage: TESTING
-    skill: security-scanner
-    timing: pre
-    required: true
-    config:
-      scan_type: "full"
+```
+advance-stage.sh → DESIGNING
+         │
+         ▼
+"🔌 Injected Skills for DESIGNING:
+   📥 Before stage (pre_stage_DESIGNING):
+      → Invoke skill: tech-design-writer"
 ```
 
-**Configuration Fields:**
+## Configuration Levels
 
-| Field      | Type   | Description                      |
-| ---------- | ------ | -------------------------------- |
-| `stage`    | string | Target stage for injection       |
-| `skill`    | string | Skill name to invoke             |
-| `timing`   | enum   | `pre`, `during`, `post`          |
-| `trigger`  | string | Optional trigger condition       |
-| `required` | bool   | If true, blocks stage on failure |
-| `config`   | object | Skill-specific configuration     |
+| Level | Config File | Scope | Best For |
+|-------|-------------|-------|----------|
+| **Global** | `{skill_dir}/hooks.yaml` | All projects | PRD writer, tech design writer |
+| **Project** | `{root}/.trae/workflow/hooks.yaml` | This project | Project-specific reviewers |
+| **Workflow** | `{workflow}/workflow.yaml` | This workflow | One-time requirements |
 
-### 2. Hook-based Injection / 钩子式注入
+**Resolution Order:** workflow > project > global (higher priority wins)
 
-Register skills to specific hooks for fine-grained control:
+## Quick Setup
+
+### Recommended Global Configuration
+
+```bash
+# Document generation (run once)
+./scripts/inject-skill.sh -r /project --scope global \
+  --hook pre_stage_ANALYZING --skill prd-writer
+
+./scripts/inject-skill.sh -r /project --scope global \
+  --hook pre_stage_DESIGNING --skill tech-design-writer
+
+# Code review
+./scripts/inject-skill.sh -r /project --scope global \
+  --hook post_stage_IMPLEMENTING --skill code-reviewer
+
+# Quality gates
+./scripts/inject-skill.sh -r /project --scope global \
+  --hook quality_gate --skill lint-checker --required
+
+./scripts/inject-skill.sh -r /project --scope global \
+  --hook quality_gate --skill type-checker --required
+```
+
+### Project-Level Configuration
+
+```bash
+# Project-specific security scanner
+./scripts/inject-skill.sh -r /project --scope project \
+  --hook pre_delivery --skill security-scanner --required
+```
+
+### Workflow-Level Configuration
+
+```bash
+# One-time special requirement
+./scripts/inject-skill.sh -r /project --scope workflow \
+  --hook post_stage_TESTING --skill performance-analyzer
+```
+
+## Available Hooks
+
+### Stage Hooks
+
+| Hook | Trigger | Typical Skills |
+|------|---------|----------------|
+| `pre_stage_{STAGE}` | Before entering stage | prd-writer, tech-design-writer |
+| `post_stage_{STAGE}` | After completing stage | code-reviewer, doc-generator |
+
+**Available stages:** ANALYZING, PLANNING, DESIGNING, IMPLEMENTING, TESTING, DELIVERING
+
+### Global Hooks
+
+| Hook | Trigger | Typical Skills |
+|------|---------|----------------|
+| `quality_gate` | Before quality checks | lint-checker, type-checker, security-scanner |
+| `pre_delivery` | Before final delivery | compliance-checker, final-reviewer |
+| `on_blocked` | When workflow blocked | blocker-analyzer |
+| `on_error` | On any error | error-reporter |
+
+## Injection Commands
+
+### Add Skill
+
+```bash
+./scripts/inject-skill.sh -r <root> \
+  --scope <global|project|workflow> \
+  --hook <hook_name> \
+  --skill <skill_name> \
+  [--required] \
+  [--order <number>] \
+  [--config '<json>']
+```
+
+| Option | Description |
+|--------|-------------|
+| `--scope` | Configuration level |
+| `--hook` | Hook point name |
+| `--skill` | Skill name to invoke |
+| `--required` | Block workflow on skill failure |
+| `--order` | Execution order (lower = earlier) |
+| `--config` | JSON config passed to skill |
+
+### List Injected Skills
+
+```bash
+# List all levels
+./scripts/inject-skill.sh -r /project --list
+
+# List specific scope
+./scripts/inject-skill.sh -r /project --list-scope global
+./scripts/inject-skill.sh -r /project --list-scope project
+./scripts/inject-skill.sh -r /project --list-scope workflow
+```
+
+### Query Hooks
+
+```bash
+# Get all skills for a stage
+./scripts/get-hooks.sh -r /project --stage DESIGNING
+
+# Get specific hook
+./scripts/get-hooks.sh -r /project --hook quality_gate
+
+# Get skill names only
+./scripts/get-hooks.sh -r /project --hook pre_stage_ANALYZING --format skills-only
+```
+
+## Workflow Execution
+
+### How AI Should Handle Injected Skills
+
+When `advance-stage.sh` outputs injected skills, AI **MUST**:
+
+1. **Pre-stage skills**: Invoke BEFORE starting stage work
+2. **Stage work**: Complete the stage's main objectives
+3. **Post-stage skills**: Invoke AFTER completing stage work
+4. **Quality gate**: Invoke before moving to next stage
+
+### Example Flow
+
+```
+User: "Add user authentication"
+
+AI: ./scripts/init-workflow.sh -r /project -n "user-auth" -t feature
+
+AI: ./scripts/advance-stage.sh -r /project
+Output:
+  ✅ Successfully transitioned to ANALYZING
+  🔌 Injected Skills:
+     📥 Before stage (pre_stage_ANALYZING):
+        → Invoke skill: prd-writer
+
+AI: [Invokes prd-writer skill to generate PRD]
+AI: [Completes ANALYZING stage work]
+
+AI: ./scripts/advance-stage.sh -r /project
+Output:
+  ✅ Successfully transitioned to PLANNING
+  ...
+
+AI: ./scripts/advance-stage.sh -r /project
+Output:
+  ✅ Successfully transitioned to DESIGNING
+  🔌 Injected Skills:
+     📥 Before stage (pre_stage_DESIGNING):
+        → Invoke skill: tech-design-writer
+
+AI: [Invokes tech-design-writer skill to generate design.md]
+...
+```
+
+## Configuration File Format
+
+### hooks.yaml (Global/Project)
 
 ```yaml
+# Skill Hooks Configuration
 hooks:
-  pre_stage_IMPLEMENTING:
-    - skill: dependency-checker
-      config:
-        check_updates: true
-
-  post_task_implement_api:
-    - skill: api-doc-generator
-      config:
-        format: "openapi"
-
-  quality_gate:
-    - skill: lint-checker
-      required: true
-    - skill: type-checker
-      required: true
-    - skill: security-scanner
+  pre_stage_ANALYZING:
+    - skill: "prd-writer"
       required: false
-
-  on_blocked:
-    - skill: blocker-analyzer
-      config:
-        suggest_solutions: true
-```
-
-### 3. Runtime Injection / 运行时注入
-
-Inject skills dynamically during workflow execution:
-
-```bash
-# Inject a skill at a specific hook
-./scripts/inject-skill.sh -r /project \
-  --hook post_stage_DESIGNING \
-  --skill code-reviewer \
-  --config '{"focus": ["performance"]}'
-
-# Remove an injected skill
-./scripts/inject-skill.sh -r /project \
-  --hook post_stage_DESIGNING \
-  --skill code-reviewer \
-  --remove
-```
-
-## Available Hooks / 可用钩子
-
-### Stage Hooks / 阶段钩子
-
-| Hook Pattern             | Trigger Point          | Use Case                 |
-| ------------------------ | ---------------------- | ------------------------ |
-| `pre_stage_{STAGE}`      | Before entering stage  | Validation, preparation  |
-| `post_stage_{STAGE}`     | After completing stage | Review, documentation    |
-| `on_stage_{STAGE}_error` | On stage error         | Error handling, recovery |
-
-### Task Hooks / 任务钩子
-
-| Hook Pattern              | Trigger Point         | Use Case              |
-| ------------------------- | --------------------- | --------------------- |
-| `pre_task_{task_id}`      | Before task execution | Dependency check      |
-| `post_task_{task_id}`     | After task completion | Verification, logging |
-| `on_task_{task_id}_error` | On task error         | Error handling        |
-
-### Global Hooks / 全局钩子
-
-| Hook           | Trigger Point             | Use Case                |
-| -------------- | ------------------------- | ----------------------- |
-| `quality_gate` | Before quality checks     | Custom quality rules    |
-| `pre_delivery` | Before final delivery     | Final review            |
-| `on_blocked`   | When workflow blocked     | Blocker analysis        |
-| `on_waiting`   | When waiting for external | Status notification     |
-| `on_error`     | On any error              | Error logging, alerting |
-| `on_complete`  | Workflow completion       | Cleanup, reporting      |
-
-## Skill Interface / 技能接口
-
-### Required Interface / 必需接口
-
-Injected skills should follow this interface:
-
-```yaml
-# Skill Input
-input:
-  workflow_context:
-    id: string           # Workflow ID
-    level: string        # L1, L2, L3
-    status: string       # Current state
-    stage: string        # Current stage
-    working_dir: string  # Workflow directory path
-
-  hook_context:
-    hook_name: string    # Hook that triggered
-    timing: string       # pre, during, post
-    previous_result: any # Result from previous skill
-
-  skill_config: object   # Skill-specific config
-
-# Skill Output
-output:
-  status: success|warning|error
-  message: string
-  artifacts: []string    # Generated files
-  metrics: object        # Optional metrics
-  recommendations: []string
-  block_workflow: bool   # If true, blocks progression
-```
-
-### Example Skill Implementation / 示例实现
-
-```markdown
----
-name: "custom-validator"
-description: "Custom validation skill for injection. Invoke during quality gates."
----
-
-# Custom Validator
-
-## Input Processing
-
-1. Read `workflow_context` from injection
-2. Access workflow directory: `{working_dir}/`
-3. Read skill config for validation rules
-
-## Execution
-
-1. Load files to validate
-2. Apply custom rules from config
-3. Generate validation report
-
-## Output
-
-Return structured output:
-
-- `status`: success/warning/error
-- `message`: Validation summary
-- `artifacts`: List of generated reports
-- `block_workflow`: true if critical issues found
-```
-
-## Injection Patterns / 注入模式
-
-### Pattern 1: Sequential Validation / 顺序验证
-
-```yaml
-injected_skills:
-  - stage: IMPLEMENTING
-    skill: lint-checker
-    timing: post
-    order: 1
-    required: true
-
-  - stage: IMPLEMENTING
-    skill: type-checker
-    timing: post
-    order: 2
-    required: true
-
-  - stage: IMPLEMENTING
-    skill: test-runner
-    timing: post
-    order: 3
-    required: true
-```
-
-### Pattern 2: Parallel Execution / 并行执行
-
-```yaml
-injected_skills:
-  - stage: TESTING
-    skill: unit-test-runner
-    timing: during
-    parallel_group: "tests"
-
-  - stage: TESTING
-    skill: integration-test-runner
-    timing: during
-    parallel_group: "tests"
-
-  - stage: TESTING
-    skill: e2e-test-runner
-    timing: during
-    parallel_group: "tests"
-```
-
-### Pattern 3: Conditional Injection / 条件注入
-
-```yaml
-injected_skills:
-  - stage: DESIGNING
-    skill: security-review
-    timing: post
-    condition:
-      when: "level == 'L3' OR tags contains 'security'"
-
-  - stage: IMPLEMENTING
-    skill: performance-profiler
-    timing: post
-    condition:
-      when: "tags contains 'performance-critical'"
-```
-
-### Pattern 4: Fallback Chain / 降级链
-
-```yaml
-injected_skills:
-  - stage: TESTING
-    skill: primary-test-runner
-    timing: during
-    fallback:
-      - skill: backup-test-runner
-        on: "error"
-      - skill: manual-test-prompt
-        on: "all_failed"
-```
-
-## Configuration Templates / 配置模板
-
-### Standard L2 Workflow / 标准 L2 工作流
-
-```yaml
-# .trae/skills/requirement-workflow/examples/l2-standard.yaml
-injected_skills:
-  - stage: ANALYZING
-    skill: requirement-clarifier
-    timing: during
-
-  - stage: DESIGNING
-    skill: code-reviewer
-    timing: post
-    config:
-      focus: ["architecture"]
-
-  - stage: IMPLEMENTING
-    skill: lint-checker
-    timing: post
-    required: true
-
-  - stage: TESTING
-    skill: test-coverage-checker
-    timing: pre
-    config:
-      min_coverage: 70
-
-hooks:
+      order: 0
+      added_at: "2024-01-15T10:30:00Z"
+  
+  pre_stage_DESIGNING:
+    - skill: "tech-design-writer"
+      required: false
+      order: 0
+      added_at: "2024-01-15T10:30:00Z"
+  
   quality_gate:
-    - skill: type-checker
+    - skill: "lint-checker"
       required: true
-
-  pre_delivery:
-    - skill: changelog-generator
+      order: 1
+      added_at: "2024-01-15T10:30:00Z"
+    - skill: "type-checker"
+      required: true
+      order: 2
+      added_at: "2024-01-15T10:30:00Z"
 ```
 
-### Security-focused L3 Workflow / 安全导向 L3 工作流
+### workflow.yaml (Workflow-level)
 
 ```yaml
-# .trae/skills/requirement-workflow/examples/l3-security.yaml
-injected_skills:
-  - stage: ANALYZING
-    skill: threat-modeler
-    timing: post
-    required: true
-
-  - stage: DESIGNING
-    skill: security-reviewer
-    timing: post
-    required: true
-    config:
-      check: ["injection", "auth", "crypto"]
-
-  - stage: IMPLEMENTING
-    skill: sast-scanner
-    timing: during
-    trigger: "on_file_save"
-
-  - stage: TESTING
-    skill: dast-scanner
-    timing: during
-    required: true
-
-  - stage: DELIVERING
-    skill: compliance-checker
-    timing: pre
-    required: true
+name: "user-auth"
+type: feature
+level: L2
+status: DESIGNING
+# ... other fields ...
 
 hooks:
-  on_blocked:
-    - skill: security-incident-reporter
+  post_stage_IMPLEMENTING:
+    - skill: "special-reviewer"
+      required: false
+      order: 0
+      added_at: "2024-01-15T10:30:00Z"
 ```
 
-## Best Practices / 最佳实践
+## Best Practices
 
-### DO / 推荐
+### DO
 
-1. **Keep skills focused** - Each skill should do one thing well
-2. **Use required sparingly** - Only block workflow for critical checks
-3. **Provide fallbacks** - Handle skill failures gracefully
-4. **Document config options** - Make skill configuration clear
-5. **Log skill execution** - Enable debugging and auditing
+1. **Use global for standard skills** - PRD writer, tech design writer should be global
+2. **Mark critical skills as required** - lint-checker, type-checker should block on failure
+3. **Use order for dependencies** - Ensure lint runs before type check
+4. **Keep skills focused** - Each skill does one thing well
 
-### DON'T / 避免
+### DON'T
 
-1. **Circular dependencies** - Skill A triggers B triggers A
-2. **Long-running skills** - Keep skills under 5 minutes
-3. **Silent failures** - Always return meaningful status
-4. **Hardcoded paths** - Use workflow_context variables
-5. **Modifying workflow state directly** - Use provided interfaces
+1. **Over-inject at workflow level** - Use project/global for repeating patterns
+2. **Make everything required** - Only block for critical checks
+3. **Ignore skill output** - Skills provide valuable feedback
+4. **Skip injected skills** - AI MUST invoke them when listed
 
-## Troubleshooting / 故障排除
+## Troubleshooting
 
-### Common Issues / 常见问题
-
-| Issue                | Cause                         | Solution                           |
-| -------------------- | ----------------------------- | ---------------------------------- |
-| Skill not triggered  | Wrong hook name               | Check hook spelling                |
-| Skill fails silently | Missing required config       | Add required config                |
-| Workflow blocked     | `required: true` skill failed | Fix skill or set `required: false` |
-| Duplicate execution  | Multiple hook registrations   | Check for duplicate configs        |
-
-### Debug Mode / 调试模式
-
-Enable debug mode for detailed injection logs:
-
-```yaml
-# In workflow.yaml
-debug:
-  injection_logs: true
-  skill_traces: true
-  hook_timeline: true
-```
-
-View logs:
+### Skill Not Showing
 
 ```bash
-./scripts/get-status.sh -r /project --history
+# Check if skill is registered
+./scripts/inject-skill.sh -r /project --list
+
+# Check specific hook
+./scripts/get-hooks.sh -r /project --hook pre_stage_DESIGNING
+```
+
+### Wrong Order
+
+```bash
+# Re-inject with correct order
+./scripts/inject-skill.sh -r /project --scope global \
+  --hook quality_gate --skill lint-checker --order 1
+
+./scripts/inject-skill.sh -r /project --scope global \
+  --hook quality_gate --skill type-checker --order 2
+```
+
+### Config File Location
+
+```
+Global:   {skill_dir}/hooks.yaml
+Project:  {root}/.trae/workflow/hooks.yaml
+Workflow: {workflow_dir}/workflow.yaml
 ```

@@ -61,10 +61,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SKILL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-source "$SCRIPT_DIR/lib/yaml-utils.sh"
-
-GLOBAL_HOOKS_FILE="$SKILL_DIR/hooks.yaml"
+source "$SCRIPT_DIR/lib/common-utils.sh"
 
 show_help() {
   cat << EOF
@@ -108,17 +105,6 @@ Examples:
 EOF
 }
 
-get_active_workflow() {
-  local project_root="$1"
-  local active_file="$project_root/.trae/active_workflow"
-  
-  if [[ -f "$active_file" ]]; then
-    cat "$active_file"
-  else
-    echo ""
-  fi
-}
-
 ensure_hooks_file() {
   local file="$1"
   local dir
@@ -144,13 +130,13 @@ get_hooks_file_for_scope() {
   
   case "$scope" in
     global)
-      echo "$GLOBAL_HOOKS_FILE"
+      get_global_hooks_file
       ;;
     project)
-      echo "$project_root/.trae/workflow/hooks.yaml"
+      get_project_hooks_file "$project_root"
       ;;
     workflow)
-      echo "$workflow_dir/workflow.yaml"
+      get_workflow_hooks_file "$workflow_dir"
       ;;
   esac
 }
@@ -164,7 +150,7 @@ inject_skill_to_file() {
   local order="${6:-0}"
   local is_workflow_file="${7:-false}"
   local timestamp
-  timestamp=$(yaml_get_timestamp)
+  timestamp=$(get_timestamp)
 
   if [[ "$is_workflow_file" == "false" ]]; then
     ensure_hooks_file "$target_file"
@@ -284,14 +270,18 @@ list_all_hooks() {
   echo "═══════════════════════════════════════════════════════"
   echo ""
   
-  echo "🌍 Global Level ($SKILL_DIR/hooks.yaml):"
+  local global_file
+  global_file=$(get_global_hooks_file)
+  echo "🌍 Global Level ($global_file):"
   echo "-----------------------------------------------------------"
-  list_hooks_from_file "$GLOBAL_HOOKS_FILE" "global" "  "
+  list_hooks_from_file "$global_file" "global" "  "
   echo ""
   
-  echo "📁 Project Level ($project_root/.trae/workflow/hooks.yaml):"
+  local project_file
+  project_file=$(get_project_hooks_file "$project_root")
+  echo "📁 Project Level ($project_file):"
   echo "-----------------------------------------------------------"
-  list_hooks_from_file "$project_root/.trae/workflow/hooks.yaml" "project" "  "
+  list_hooks_from_file "$project_file" "project" "  "
   echo ""
   
   if [[ -n "$workflow_dir" && -d "$workflow_dir" ]]; then
@@ -316,8 +306,8 @@ list_scope_hooks() {
   
   local scope_label
   case "$scope" in
-    global) scope_label="Global ($SKILL_DIR/hooks.yaml)" ;;
-    project) scope_label="Project ($project_root/.trae/workflow/hooks.yaml)" ;;
+    global) scope_label="Global ($(get_global_hooks_file))" ;;
+    project) scope_label="Project ($(get_project_hooks_file "$project_root"))" ;;
     workflow) scope_label="Workflow ($(basename "$workflow_dir"))" ;;
   esac
   

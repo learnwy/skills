@@ -7,22 +7,20 @@
 level: L1
 name: "Quick Fix Template"
 
-# Minimal skill injection for fast iteration
-# 最小化技能注入以快速迭代
-injected_skills:
-  - stage: IMPLEMENTING
-    skill: lint-checker
-    timing: post
-    required: true
-
-  - stage: TESTING
-    skill: test-runner
-    timing: during
-    config:
-      type: "unit"
-      fail_fast: true
-
+# Hook-based skill injection for fast iteration
+# 基于钩子的技能注入，快速迭代
 hooks:
+  post_stage_IMPLEMENTING:
+    - skill: lint-checker
+      required: true
+
+  pre_stage_TESTING:
+    - skill: test-runner
+      required: false
+      config:
+        type: "unit"
+        fail_fast: true
+
   quality_gate:
     - skill: type-checker
       required: true

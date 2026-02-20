@@ -8,111 +8,95 @@ level: L3
 name: "Security-focused Development Template"
 tags: ["security", "compliance"]
 
-# Comprehensive skill injection for security
-# 全面的安全相关技能注入
-injected_skills:
-  # Analysis Phase
-  - stage: ANALYZING
-    skill: threat-modeler
-    timing: post
-    required: true
-    config:
-      frameworks: ["STRIDE", "DREAD"]
-      output_format: "markdown"
-
-  - stage: ANALYZING
-    skill: compliance-checker
-    timing: post
-    config:
-      standards: ["OWASP", "GDPR"]
-
-  # Design Phase
-  - stage: DESIGNING
-    skill: security-reviewer
-    timing: post
-    required: true
-    config:
-      checks:
-        - "authentication"
-        - "authorization"
-        - "data_encryption"
-        - "input_validation"
-        - "session_management"
-
-  - stage: DESIGNING
-    skill: architecture-reviewer
-    timing: post
-    config:
-      focus: ["security_boundaries", "trust_zones"]
-
-  # Implementation Phase
-  - stage: IMPLEMENTING
-    skill: sast-scanner
-    timing: during
-    trigger: "on_file_save"
-    config:
-      rules: ["security"]
-      severity_threshold: "medium"
-
-  - stage: IMPLEMENTING
-    skill: dependency-scanner
-    timing: post
-    required: true
-    config:
-      check_vulnerabilities: true
-      check_licenses: true
-
-  - stage: IMPLEMENTING
-    skill: secrets-scanner
-    timing: post
-    required: true
-    config:
-      patterns: ["api_keys", "passwords", "tokens"]
-
-  # Testing Phase
-  - stage: TESTING
-    skill: security-test-runner
-    timing: during
-    required: true
-    config:
-      types:
-        - "injection"
-        - "xss"
-        - "csrf"
-        - "auth_bypass"
-
-  - stage: TESTING
-    skill: dast-scanner
-    timing: post
-    config:
-      scan_depth: "full"
-      authenticated: true
-
-  - stage: TESTING
-    skill: penetration-test-assistant
-    timing: post
-    config:
-      mode: "assisted"
-      report_format: "detailed"
-
-  # Delivery Phase
-  - stage: DELIVERING
-    skill: security-report-generator
-    timing: pre
-    required: true
-
-  - stage: DELIVERING
-    skill: compliance-attestation
-    timing: pre
-    config:
-      sign_off_required: true
-
+# Hook-based skill injection for comprehensive security workflow
+# 基于钩子的全面安全工作流技能注入
 hooks:
+  # Analysis Phase Hooks
+  post_stage_ANALYZING:
+    - skill: threat-modeler
+      required: true
+      config:
+        frameworks: ["STRIDE", "DREAD"]
+        output_format: "markdown"
+    - skill: compliance-checker
+      required: false
+      config:
+        standards: ["OWASP", "GDPR"]
+
+  # Design Phase Hooks
   pre_stage_DESIGNING:
     - skill: security-checklist-loader
+      required: false
       config:
         template: "security_design_checklist"
 
+  post_stage_DESIGNING:
+    - skill: security-reviewer
+      required: true
+      config:
+        checks:
+          - "authentication"
+          - "authorization"
+          - "data_encryption"
+          - "input_validation"
+          - "session_management"
+    - skill: architecture-reviewer
+      required: false
+      config:
+        focus: ["security_boundaries", "trust_zones"]
+
+  # Implementation Phase Hooks
+  pre_stage_IMPLEMENTING:
+    - skill: sast-scanner
+      required: false
+      config:
+        rules: ["security"]
+        severity_threshold: "medium"
+
+  post_stage_IMPLEMENTING:
+    - skill: dependency-scanner
+      required: true
+      config:
+        check_vulnerabilities: true
+        check_licenses: true
+    - skill: secrets-scanner
+      required: true
+      config:
+        patterns: ["api_keys", "passwords", "tokens"]
+
+  # Testing Phase Hooks
+  pre_stage_TESTING:
+    - skill: security-test-runner
+      required: true
+      config:
+        types:
+          - "injection"
+          - "xss"
+          - "csrf"
+          - "auth_bypass"
+
+  post_stage_TESTING:
+    - skill: dast-scanner
+      required: false
+      config:
+        scan_depth: "full"
+        authenticated: true
+    - skill: penetration-test-assistant
+      required: false
+      config:
+        mode: "assisted"
+        report_format: "detailed"
+
+  # Delivery Phase Hooks
+  pre_stage_DELIVERING:
+    - skill: security-report-generator
+      required: true
+    - skill: compliance-attestation
+      required: false
+      config:
+        sign_off_required: true
+
+  # Quality & Security Gates
   quality_gate:
     - skill: type-checker
       required: true
@@ -125,17 +109,18 @@ hooks:
     - skill: dependency-vulnerability-checker
       required: true
 
-  on_blocked:
-    - skill: security-incident-reporter
-      config:
-        notify_team: true
-        escalate_critical: true
-
   pre_delivery:
     - skill: security-sign-off
       required: true
       config:
         require_approvals: ["security_team", "tech_lead"]
+
+  on_blocked:
+    - skill: security-incident-reporter
+      required: false
+      config:
+        notify_team: true
+        escalate_critical: true
 
 # All artifacts required for L3 security workflow
 # L3 安全流程需要所有产出物

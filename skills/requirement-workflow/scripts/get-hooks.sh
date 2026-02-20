@@ -40,10 +40,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SKILL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-source "$SCRIPT_DIR/lib/yaml-utils.sh"
-
-GLOBAL_HOOKS_FILE="$SKILL_DIR/hooks.yaml"
+source "$SCRIPT_DIR/lib/common-utils.sh"
 
 show_help() {
   cat << EOF
@@ -70,17 +67,6 @@ Examples:
     $(basename "$0") -r /project --stage DESIGNING
     $(basename "$0") -r /project --hook quality_gate --format skills-only
 EOF
-}
-
-get_active_workflow() {
-  local project_root="$1"
-  local active_file="$project_root/.trae/active_workflow"
-  
-  if [[ -f "$active_file" ]]; then
-    cat "$active_file"
-  else
-    echo ""
-  fi
 }
 
 get_skills_from_file() {
@@ -275,15 +261,19 @@ main() {
     workflow_dir=$(get_active_workflow "$project_root")
   fi
 
-  local project_hooks_file="$project_root/.trae/workflow/hooks.yaml"
+  local global_hooks_file
+  local project_hooks_file
   local workflow_hooks_file=""
-  [[ -n "$workflow_dir" ]] && workflow_hooks_file="$workflow_dir/workflow.yaml"
+  
+  global_hooks_file=$(get_global_hooks_file)
+  project_hooks_file=$(get_project_hooks_file "$project_root")
+  [[ -n "$workflow_dir" ]] && workflow_hooks_file=$(get_workflow_hooks_file "$workflow_dir")
 
   if [[ -n "$stage" ]]; then
     local hooks=("pre_stage_${stage}" "post_stage_${stage}" "quality_gate")
     for h in "${hooks[@]}"; do
       local all_skills=""
-      all_skills+=$(get_skills_from_file "$GLOBAL_HOOKS_FILE" "$h" "global")
+      all_skills+=$(get_skills_from_file "$global_hooks_file" "$h" "global")
       all_skills+=$'\n'
       all_skills+=$(get_skills_from_file "$project_hooks_file" "$h" "project")
       all_skills+=$'\n'
@@ -311,7 +301,7 @@ main() {
   fi
 
   local all_skills=""
-  all_skills+=$(get_skills_from_file "$GLOBAL_HOOKS_FILE" "$hook" "global")
+  all_skills+=$(get_skills_from_file "$global_hooks_file" "$hook" "global")
   all_skills+=$'\n'
   all_skills+=$(get_skills_from_file "$project_hooks_file" "$hook" "project")
   all_skills+=$'\n'

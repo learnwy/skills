@@ -1,20 +1,22 @@
 #!/bin/bash
 # =============================================================================
-# yaml-utils.sh - YAML utility functions for bash scripts
+# yaml-utils.sh - Pure YAML read/write/update operations
 # =============================================================================
 #
 # DESCRIPTION:
-#   Provides simple YAML read/write/update operations for bash scripts.
-#   Designed for workflow.yaml manipulation without external dependencies.
+#   Provides YAML manipulation functions without external dependencies.
+#   For workflow-specific or hooks-specific functions, see other utils files.
 #
 # USAGE:
 #   source "$(dirname "$0")/lib/yaml-utils.sh"
+#   # Or use common-utils.sh which sources all utils
 #
 # FUNCTIONS:
 #   yaml_read <file> <key>                    - Read a top-level key value
 #   yaml_write <file> <key> <value>           - Write/update a top-level key
-#   yaml_append_list <file> <list_key> <item> - Append item to a YAML list
-#   yaml_insert_after <file> <after_key> <content> - Insert content after a key
+#   yaml_append_history <file> <state> <ts>   - Append state history entry
+#   yaml_append_to_list <file> <key> <items>  - Append items to a YAML list
+#   yaml_update_nested <file> <parent> <child> <value> - Update nested key
 #
 # =============================================================================
 
@@ -140,54 +142,4 @@ yaml_update_nested() {
   
   mv "$output_file" "$file"
   rm -f "$temp_file"
-}
-
-yaml_get_timestamp() {
-  date -u +"%Y-%m-%dT%H:%M:%SZ"
-}
-
-yaml_get_hooks_for_point() {
-  local hook_point="$1"
-  local global_file="$2"
-  local project_file="$3"
-  local workflow_file="$4"
-  
-  local all_skills=""
-  
-  for file in "$global_file" "$project_file" "$workflow_file"; do
-    if [[ -f "$file" ]]; then
-      local in_hooks=0
-      local in_target_hook=0
-      while IFS= read -r line; do
-        if [[ "$line" == "hooks:" ]]; then
-          in_hooks=1
-          continue
-        fi
-        if [[ $in_hooks -eq 1 && "$line" == "  ${hook_point}:" ]]; then
-          in_target_hook=1
-          continue
-        fi
-        if [[ $in_target_hook -eq 1 ]]; then
-          if [[ "$line" =~ ^[[:space:]]{2}[a-z] && ! "$line" =~ ^[[:space:]]{4} ]]; then
-            in_target_hook=0
-            continue
-          fi
-          if [[ "$line" =~ ^[a-z] ]]; then
-            in_target_hook=0
-            in_hooks=0
-            continue
-          fi
-          if [[ "$line" =~ "skill:" ]]; then
-            local skill_name
-            skill_name=$(echo "$line" | sed 's/.*skill: *//' | tr -d '"')
-            if [[ -n "$skill_name" ]]; then
-              all_skills="$all_skills $skill_name"
-            fi
-          fi
-        fi
-      done < "$file"
-    fi
-  done
-  
-  echo "$all_skills" | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' '
 }

@@ -54,6 +54,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_DIR="$(dirname "$SCRIPT_DIR")"
+source "$SCRIPT_DIR/lib/common-utils.sh"
 
 show_help() {
     cat << EOF
@@ -135,8 +136,6 @@ state_history:
   - state: "INIT"
     entered_at: "$timestamp"
     current: true
-
-injected_skills: []
 
 hooks: {}
 

@@ -391,18 +391,24 @@ on_error               # On error
 Recommended skills for L2:
 
 ```yaml
-injected_skills:
-  - stage: DESIGNING
-    skill: code-reviewer
-    timing: post
+hooks:
+  post_stage_DESIGNING:
+    - skill: code-reviewer
+      required: false
+      config:
+        focus: ["architecture", "api_design"]
     
-  - stage: IMPLEMENTING  
-    skill: test-generator
-    timing: during
+  pre_stage_IMPLEMENTING:
+    - skill: test-generator
+      required: false
+      config:
+        coverage_target: 70
     
-  - stage: TESTING
-    skill: coverage-checker
-    timing: pre
+  pre_stage_TESTING:
+    - skill: coverage-checker
+      required: false
+      config:
+        min_coverage: 70
 ```
 
 ## Escalation to L3

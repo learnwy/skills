@@ -67,7 +67,7 @@ Advance workflow to the next stage.
 
 ### inject-skill.sh
 
-Inject skills at workflow hook points.
+Inject skills at workflow hook points (3-level: global, project, workflow).
 
 ```bash
 ./scripts/inject-skill.sh -r <root> --hook <hook> --skill <skill> [OPTIONS]
@@ -77,19 +77,26 @@ Inject skills at workflow hook points.
 |--------|-------------|
 | `-r, --root DIR` | Project root directory (required) |
 | `-p, --path DIR` | Override active workflow path |
+| `--scope SCOPE` | Injection scope: `global` \| `project` \| `workflow` (default: workflow) |
 | `--hook HOOK` | Hook point (required unless --list) |
 | `--skill SKILL` | Skill name (required unless --list/--remove) |
 | `--config JSON` | Skill configuration |
 | `--required` | Mark as required (blocks on failure) |
-| `--order N` | Execution order (lower = earlier) |
 | `--remove` | Remove skill from hook |
-| `--list` | List injected skills |
+| `--list` | List all injected skills |
+| `--list-scope` | List skills for specific scope only |
+
+**Injection Scopes (priority: workflow > project > global):**
+- `global` - Applies to all projects (stored in skill directory)
+- `project` - Applies to project (stored in `{root}/.trae/workflow/hooks.yaml`)
+- `workflow` - Applies to current workflow only
 
 **Available Hooks:**
 - `pre_stage_{STAGE}` - Before entering stage
 - `post_stage_{STAGE}` - After completing stage
 - `quality_gate` - Before quality checks
 - `pre_delivery` - Before final delivery
+- `on_blocked` - When workflow is blocked
 - `on_error` - On error
 
 ### generate-report.sh
@@ -358,7 +365,9 @@ Continuing from where we left off...
 | Initialize workflow | `./scripts/init-workflow.sh -r /project -n "name" -t feature` |
 | Check status | `./scripts/get-status.sh -r /project` |
 | Advance stage | `./scripts/advance-stage.sh -r /project` |
-| Inject skill | `./scripts/inject-skill.sh -r /project --hook quality_gate --skill linter` |
+| Inject skill (workflow) | `./scripts/inject-skill.sh -r /project --hook quality_gate --skill linter` |
+| Inject skill (global) | `./scripts/inject-skill.sh -r /project --scope global --hook pre_stage_DESIGNING --skill tech-writer` |
+| List injected skills | `./scripts/inject-skill.sh -r /project --list` |
 | Generate report | `./scripts/generate-report.sh -r /project` |
 
 ## Common Workflows

@@ -73,7 +73,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/lib/yaml-utils.sh"
+source "$SCRIPT_DIR/lib/common-utils.sh"
 
 show_help() {
   cat << EOF
@@ -95,17 +95,6 @@ Examples:
     $(basename "$0") -r /path/to/project --format json
     $(basename "$0") -r /path/to/project --include-logs --notify
 EOF
-}
-
-get_active_workflow() {
-  local project_root="$1"
-  local active_file="$project_root/.trae/active_workflow"
-  
-  if [[ -f "$active_file" ]]; then
-    cat "$active_file"
-  else
-    echo ""
-  fi
 }
 
 format_duration() {

@@ -20,8 +20,6 @@ state_history:
     entered_at: "{{TIMESTAMP}}"
     current: true
 
-injected_skills: []
-
 hooks: {}
 
 artifacts: []

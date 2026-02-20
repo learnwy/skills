@@ -56,10 +56,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SKILL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-source "$SCRIPT_DIR/lib/yaml-utils.sh"
-
-GLOBAL_HOOKS_FILE="$SKILL_DIR/hooks.yaml"
+source "$SCRIPT_DIR/lib/common-utils.sh"
 
 show_help() {
   cat << EOF
@@ -82,17 +79,6 @@ Examples:
     $(basename "$0") -r /path/to/project --to IMPLEMENTING
     $(basename "$0") -r /path/to/project --validate
 EOF
-}
-
-get_active_workflow() {
-  local project_root="$1"
-  local active_file="$project_root/.trae/active_workflow"
-  
-  if [[ -f "$active_file" ]]; then
-    cat "$active_file"
-  else
-    echo ""
-  fi
 }
 
 get_next_stage() {
@@ -159,56 +145,22 @@ update_workflow_state() {
   local workflow_file="$1"
   local new_state="$2"
   local timestamp
-  timestamp=$(yaml_get_timestamp)
+  timestamp=$(get_timestamp)
 
   yaml_write "$workflow_file" "status" "$new_state"
   yaml_write "$workflow_file" "updated_at" "$timestamp"
   yaml_append_history "$workflow_file" "$new_state" "$timestamp" "true"
 }
 
-get_skills_for_hook() {
+_get_skills_for_hook() {
   local hook="$1"
   local project_root="$2"
   local workflow_dir="$3"
   
-  local project_hooks_file="$project_root/.trae/workflow/hooks.yaml"
-  local workflow_hooks_file="$workflow_dir/workflow.yaml"
-  local skills=""
-  
-  for file in "$GLOBAL_HOOKS_FILE" "$project_hooks_file" "$workflow_hooks_file"; do
-    if [[ -f "$file" ]]; then
-      local in_hooks=0
-      local in_target_hook=0
-      while IFS= read -r line || [[ -n "$line" ]]; do
-        if [[ "$line" == "hooks:" ]]; then
-          in_hooks=1
-          continue
-        fi
-        if [[ $in_hooks -eq 1 && "$line" == "  ${hook}:" ]]; then
-          in_target_hook=1
-          continue
-        fi
-        if [[ $in_target_hook -eq 1 ]]; then
-          if [[ "$line" =~ ^[[:space:]]{2}[a-z_] && ! "$line" =~ ^[[:space:]]{4} ]]; then
-            in_target_hook=0
-            continue
-          fi
-          if [[ "$line" =~ ^[a-z] ]]; then
-            in_target_hook=0
-            in_hooks=0
-            continue
-          fi
-          if [[ "$line" =~ "- skill:" ]]; then
-            local skill_name
-            skill_name=$(echo "$line" | sed 's/.*skill: *//' | tr -d '"')
-            skills="$skills $skill_name"
-          fi
-        fi
-      done < "$file"
-    fi
-  done
-  
-  echo "$skills" | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ' || true
+  get_hooks_for_point "$hook" \
+    "$(get_global_hooks_file)" \
+    "$(get_project_hooks_file "$project_root")" \
+    "$(get_workflow_hooks_file "$workflow_dir")"
 }
 
 output_stage_skills() {
@@ -217,9 +169,9 @@ output_stage_skills() {
   local workflow_dir="$3"
   
   local pre_skills post_skills quality_skills
-  pre_skills=$(get_skills_for_hook "pre_stage_${stage}" "$project_root" "$workflow_dir")
-  post_skills=$(get_skills_for_hook "post_stage_${stage}" "$project_root" "$workflow_dir")
-  quality_skills=$(get_skills_for_hook "quality_gate" "$project_root" "$workflow_dir")
+  pre_skills=$(_get_skills_for_hook "pre_stage_${stage}" "$project_root" "$workflow_dir")
+  post_skills=$(_get_skills_for_hook "post_stage_${stage}" "$project_root" "$workflow_dir")
+  quality_skills=$(_get_skills_for_hook "quality_gate" "$project_root" "$workflow_dir")
   
   local has_skills=0
   

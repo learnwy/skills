@@ -481,36 +481,40 @@ on_approval_required      # When approval needed
 L3 recommended/required skills:
 
 ```yaml
-injected_skills:
-  - stage: ANALYZING
-    skill: threat-modeler
-    timing: post
-    required: true
+hooks:
+  post_stage_ANALYZING:
+    - skill: threat-modeler
+      required: true
+      config:
+        frameworks: ["STRIDE", "DREAD"]
 
-  - stage: DESIGNING
-    skill: security-reviewer
-    timing: post
-    required: true
+  post_stage_DESIGNING:
+    - skill: security-reviewer
+      required: true
+      config:
+        checks: ["authentication", "authorization", "encryption"]
 
-  - stage: IMPLEMENTING
-    skill: sast-scanner
-    timing: during
-    required: true
+  pre_stage_IMPLEMENTING:
+    - skill: sast-scanner
+      required: true
+      config:
+        rules: ["security"]
 
-  - stage: IMPLEMENTING
-    skill: dependency-scanner
-    timing: post
-    required: true
+  post_stage_IMPLEMENTING:
+    - skill: dependency-scanner
+      required: true
+      config:
+        check_vulnerabilities: true
 
-  - stage: TESTING
-    skill: security-test-runner
-    timing: during
-    required: true
+  pre_stage_TESTING:
+    - skill: security-test-runner
+      required: true
+      config:
+        types: ["injection", "xss", "csrf"]
 
-  - stage: DELIVERING
-    skill: compliance-checker
-    timing: pre
-    required: true
+  pre_stage_DELIVERING:
+    - skill: compliance-checker
+      required: true
 ```
 
 ## Blocked Handling
