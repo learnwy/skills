@@ -86,30 +86,12 @@ get_next_stage() {
   local level="$2"
 
   case "$current" in
-    INIT)
-      if [[ "$level" == "L1" ]]; then
-        echo "PLANNING"
-      else
-        echo "ANALYZING"
-      fi
-      ;;
+    INIT) echo "ANALYZING" ;;
     ANALYZING) echo "PLANNING" ;;
-    PLANNING)
-      if [[ "$level" == "L1" ]]; then
-        echo "IMPLEMENTING"
-      else
-        echo "DESIGNING"
-      fi
-      ;;
+    PLANNING) echo "DESIGNING" ;;
     DESIGNING) echo "IMPLEMENTING" ;;
     IMPLEMENTING) echo "TESTING" ;;
-    TESTING)
-      if [[ "$level" == "L1" ]]; then
-        echo "DONE"
-      else
-        echo "DELIVERING"
-      fi
-      ;;
+    TESTING) echo "DELIVERING" ;;
     DELIVERING) echo "DONE" ;;
     *) echo "" ;;
   esac
@@ -125,18 +107,6 @@ validate_transition() {
   if [[ "$target" == "$valid_next" ]]; then
     return 0
   fi
-
-  case "$current" in
-    INIT)
-      [[ "$target" == "ANALYZING" || "$target" == "PLANNING" ]] && return 0
-      ;;
-    PLANNING)
-      [[ "$target" == "DESIGNING" || "$target" == "IMPLEMENTING" ]] && return 0
-      ;;
-    TESTING)
-      [[ "$target" == "DELIVERING" || "$target" == "DONE" ]] && return 0
-      ;;
-  esac
 
   return 1
 }
@@ -163,7 +133,18 @@ _get_skills_for_hook() {
     "$(get_workflow_hooks_file "$workflow_dir")"
 }
 
-output_stage_skills() {
+_get_agents_for_hook() {
+  local hook="$1"
+  local project_root="$2"
+  local workflow_dir="$3"
+  
+  get_agents_for_point "$hook" \
+    "$(get_global_hooks_file)" \
+    "$(get_project_hooks_file "$project_root")" \
+    "$(get_workflow_hooks_file "$workflow_dir")"
+}
+
+output_stage_skills_and_agents() {
   local stage="$1"
   local project_root="$2"
   local workflow_dir="$3"
@@ -173,37 +154,69 @@ output_stage_skills() {
   post_skills=$(_get_skills_for_hook "post_stage_${stage}" "$project_root" "$workflow_dir")
   quality_skills=$(_get_skills_for_hook "quality_gate" "$project_root" "$workflow_dir")
   
+  local pre_agents post_agents
+  pre_agents=$(_get_agents_for_hook "pre_stage_${stage}" "$project_root" "$workflow_dir")
+  post_agents=$(_get_agents_for_hook "post_stage_${stage}" "$project_root" "$workflow_dir")
+  
   local has_skills=0
+  local has_agents=0
   
   if [[ -n "$pre_skills" || -n "$post_skills" || -n "$quality_skills" ]]; then
-    echo ""
-    echo "🔌 Injected Skills for $stage:"
-    echo "─────────────────────────────────────────"
     has_skills=1
   fi
   
-  if [[ -n "$pre_skills" ]]; then
-    echo "  📥 Before stage (pre_stage_${stage}):"
-    for skill in $pre_skills; do
-      echo "     → Invoke skill: $skill"
-    done
+  if [[ -n "$pre_agents" || -n "$post_agents" ]]; then
+    has_agents=1
   fi
   
-  if [[ -n "$quality_skills" ]]; then
-    echo "  🔍 Quality gate:"
-    for skill in $quality_skills; do
-      echo "     → Invoke skill: $skill"
-    done
-  fi
-  
-  if [[ -n "$post_skills" ]]; then
-    echo "  📤 After stage (post_stage_${stage}):"
-    for skill in $post_skills; do
-      echo "     → Invoke skill: $skill"
-    done
+  if [[ $has_agents -eq 1 ]]; then
+    echo ""
+    echo "🤖 Injected Agents for $stage:"
+    echo "─────────────────────────────────────────"
+    
+    if [[ -n "$pre_agents" ]]; then
+      echo "  📥 Before stage (pre_stage_${stage}):"
+      for agent in $pre_agents; do
+        echo "     → Launch agent: $agent"
+      done
+    fi
+    
+    if [[ -n "$post_agents" ]]; then
+      echo "  📤 After stage (post_stage_${stage}):"
+      for agent in $post_agents; do
+        echo "     → Launch agent: $agent"
+      done
+    fi
   fi
   
   if [[ $has_skills -eq 1 ]]; then
+    echo ""
+    echo "🔌 Injected Skills for $stage:"
+    echo "─────────────────────────────────────────"
+    
+    if [[ -n "$pre_skills" ]]; then
+      echo "  📥 Before stage (pre_stage_${stage}):"
+      for skill in $pre_skills; do
+        echo "     → Invoke skill: $skill"
+      done
+    fi
+    
+    if [[ -n "$quality_skills" ]]; then
+      echo "  🔍 Quality gate:"
+      for skill in $quality_skills; do
+        echo "     → Invoke skill: $skill"
+      done
+    fi
+    
+    if [[ -n "$post_skills" ]]; then
+      echo "  📤 After stage (post_stage_${stage}):"
+      for skill in $post_skills; do
+        echo "     → Invoke skill: $skill"
+      done
+    fi
+  fi
+  
+  if [[ $has_skills -eq 1 || $has_agents -eq 1 ]]; then
     echo ""
   fi
 }
@@ -310,7 +323,7 @@ main() {
   update_workflow_state "$workflow_file" "$target_stage"
   echo "✅ Successfully transitioned to $target_stage"
 
-  output_stage_skills "$target_stage" "$project_root" "$workflow_dir"
+  output_stage_skills_and_agents "$target_stage" "$project_root" "$workflow_dir"
 
   case "$target_stage" in
     ANALYZING) echo "📝 Next: Complete requirement analysis in spec.md" ;;

@@ -1,0 +1,35 @@
+# Global Hooks Configuration
+# See agents/AGENTS.md for agent details
+
+hooks: {}
+
+agents:
+  pre_stage_ANALYZING:
+    - agent: "risk-auditor"
+      required: false
+
+  post_stage_ANALYZING:
+    - agent: "iron-audit-pm"
+      required: false
+    - agent: "mvp-freeze-architect"
+      required: false
+
+  post_stage_DESIGNING:
+    - agent: "tech-design-reviewer"
+      required: false
+
+  post_stage_IMPLEMENTING:
+    - agent: "code-reviewer"
+      required: false
+
+  pre_stage_TESTING:
+    - agent: "test-strategy-advisor"
+      required: false
+
+  on_blocked:
+    - agent: "blocker-resolver"
+      required: false
+
+  on_error:
+    - agent: "error-analyzer"
+      required: false

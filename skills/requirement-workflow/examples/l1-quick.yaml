@@ -3,6 +3,9 @@
 #
 # Use case: Bug fixes, small changes, config updates
 # 适用场景: Bug修复、小改动、配置更新
+#
+# Flow: ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → DELIVERING → DONE
+# All stages required, but with brief outputs
 
 level: L1
 name: "Quick Fix Template"
@@ -14,22 +17,18 @@ hooks:
     - skill: lint-checker
       required: true
 
-  pre_stage_TESTING:
-    - skill: test-runner
-      required: false
-      config:
-        type: "unit"
-        fail_fast: true
-
   quality_gate:
     - skill: type-checker
       required: true
 
-# Skip these artifacts for L1
-# L1 跳过这些产出物
-skip_artifacts:
-  - spec.md
-  - design.md
+# Document depth settings for L1
+# L1 文档深度设置
+doc_depth:
+  spec: brief           # 1-2 paragraphs
+  design: brief         # Key decisions only
+  tasks: simple         # 3-5 tasks
+  checklist: basic      # Basic tests
+  report: brief         # Quick summary
 
 # Auto-advance settings
 # 自动推进设置

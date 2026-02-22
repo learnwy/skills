@@ -376,9 +376,12 @@ Continuing from where we left off...
 
 ```bash
 ./scripts/init-workflow.sh -r /project -n "fix-bug" -t bugfix -l L1
-./scripts/advance-stage.sh -r /project  # → PLANNING
+./scripts/advance-stage.sh -r /project  # → ANALYZING (brief spec.md)
+./scripts/advance-stage.sh -r /project  # → PLANNING (simple tasks.md)
+./scripts/advance-stage.sh -r /project  # → DESIGNING (brief design.md)
 ./scripts/advance-stage.sh -r /project  # → IMPLEMENTING
 ./scripts/advance-stage.sh -r /project  # → TESTING
+./scripts/advance-stage.sh -r /project  # → DELIVERING (brief report.md)
 ./scripts/advance-stage.sh -r /project  # → DONE
 ```
 

@@ -1,19 +1,28 @@
-# Skill Injection Guide
+# Skill & Agent Injection Guide
 
-How to inject custom skills/agents at workflow stages.
+How to inject custom skills and agents at workflow stages.
 
 ## Overview
 
-The requirement-workflow supports **3-level skill injection** to customize behavior at any stage. Injected skills are automatically displayed when transitioning stages.
+The requirement-workflow supports **3-level injection** for both **skills** (prompt-based) and **agents** (autonomous sub-agents). Injected items are automatically displayed when transitioning stages.
 
 ```
 advance-stage.sh → DESIGNING
          │
          ▼
-"🔌 Injected Skills for DESIGNING:
-   📥 Before stage (pre_stage_DESIGNING):
-      → Invoke skill: tech-design-writer"
+"🤖 Injected Agents for DESIGNING:
+   📤 After stage: tech-design-reviewer
+
+🔌 Injected Skills for DESIGNING:
+   📥 Before stage: tech-design-writer"
 ```
+
+### Agents vs Skills
+
+| Type | Purpose | Examples |
+|------|---------|----------|
+| **Agent** | Autonomous complex tasks | risk-auditor, code-reviewer, mvp-freeze-architect |
+| **Skill** | Prompt-based context/templates | prd-writer, lint-checker |
 
 ## Configuration Levels
 
@@ -27,19 +36,37 @@ advance-stage.sh → DESIGNING
 
 ## Quick Setup
 
-### Recommended Global Configuration
+### Default Agents (Pre-configured in hooks.yaml)
+
+The workflow comes with pre-configured agents:
+
+| Hook | Agent | Purpose |
+|------|-------|---------|
+| `pre_stage_ANALYZING` | risk-auditor | PRD risk assessment |
+| `post_stage_ANALYZING` | iron-audit-pm | PRD audit |
+| `post_stage_ANALYZING` | mvp-freeze-architect | MVP scope freeze |
+| `post_stage_DESIGNING` | tech-design-reviewer | Design review |
+| `post_stage_IMPLEMENTING` | code-reviewer | Code review |
+| `pre_stage_TESTING` | test-strategy-advisor | Test strategy |
+| `on_blocked` | blocker-resolver | Resolve blockers |
+| `on_error` | error-analyzer | Analyze errors |
+
+### Add Custom Agents
 
 ```bash
-# Document generation (run once)
+./scripts/inject-agent.sh -r /project --scope global \
+  --hook post_stage_DESIGNING --agent my-custom-reviewer
+```
+
+### Add Custom Skills
+
+```bash
+# Document generation
 ./scripts/inject-skill.sh -r /project --scope global \
   --hook pre_stage_ANALYZING --skill prd-writer
 
 ./scripts/inject-skill.sh -r /project --scope global \
   --hook pre_stage_DESIGNING --skill tech-design-writer
-
-# Code review
-./scripts/inject-skill.sh -r /project --scope global \
-  --hook post_stage_IMPLEMENTING --skill code-reviewer
 
 # Quality gates
 ./scripts/inject-skill.sh -r /project --scope global \
@@ -135,13 +162,13 @@ advance-stage.sh → DESIGNING
 
 ## Workflow Execution
 
-### How AI Should Handle Injected Skills
+### How AI Should Handle Injected Items
 
-When `advance-stage.sh` outputs injected skills, AI **MUST**:
+When `advance-stage.sh` outputs injected agents/skills, AI **MUST**:
 
-1. **Pre-stage skills**: Invoke BEFORE starting stage work
+1. **Pre-stage agents/skills**: Launch/invoke BEFORE starting stage work
 2. **Stage work**: Complete the stage's main objectives
-3. **Post-stage skills**: Invoke AFTER completing stage work
+3. **Post-stage agents/skills**: Launch/invoke AFTER completing stage work
 4. **Quality gate**: Invoke before moving to next stage
 
 ### Example Flow
