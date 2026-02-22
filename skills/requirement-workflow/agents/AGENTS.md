@@ -22,6 +22,9 @@ Agents are autonomous sub-agents invoked during workflow stages.
 
 ## Injection
 
+**Script path:** `{skill_root}/scripts/inject-agent.sh`
+
 ```bash
-./scripts/inject-agent.sh -r /project --scope global --hook <hook> --agent <agent>
+# Replace {skill_root} with actual skill directory path
+{skill_root}/scripts/inject-agent.sh -r /project --scope global --hook <hook> --agent <agent>
 ```

@@ -2,6 +2,8 @@
 
 # 状态机规范
 
+> **Note:** All `./scripts/` paths below are relative to `{skill_root}` (the directory containing SKILL.md). Use absolute path in actual execution.
+
 ## Overview / 概述
 
 The requirement-workflow uses a finite state machine (FSM) to manage workflow progression. This document defines all states, transitions, and rules.

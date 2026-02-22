@@ -33,6 +33,24 @@ State-machine driven development workflow with **agent/skill injection** support
 └──────────────────────────────────────────────────────────────────┘
 ```
 
+### Script Path Convention
+
+**All scripts are relative to `{skill_root}` (this SKILL.md's directory).**
+
+```
+{skill_root} = directory containing this SKILL.md
+Scripts location: {skill_root}/scripts/*.sh
+```
+
+**AI MUST resolve actual path before running:**
+```bash
+# If this skill is at: /path/to/skills/requirement-workflow/
+# Then scripts are at: /path/to/skills/requirement-workflow/scripts/
+
+# Example - use absolute path:
+/path/to/skills/requirement-workflow/scripts/init-workflow.sh -r /project ...
+```
+
 ## Execution Steps
 
 ### Step 1: Analyze & Select Level
@@ -54,14 +72,15 @@ State-machine driven development workflow with **agent/skill injection** support
 
 ### Step 2: Initialize Workflow (REQUIRED)
 
-**MUST run this command:**
+**MUST run this command (use absolute path):**
 ```bash
-./scripts/init-workflow.sh -r <project_root> -n <name> -t <type> -l <level>
+{skill_root}/scripts/init-workflow.sh -r <project_root> -n <name> -t <type> -l <level>
 ```
 
 **Example:**
 ```bash
-./scripts/init-workflow.sh -r /project -n "user-auth" -t feature -l L2
+# Assuming skill is at /home/user/.trae/skills/requirement-workflow/
+/home/user/.trae/skills/requirement-workflow/scripts/init-workflow.sh -r /project -n "user-auth" -t feature -l L2
 ```
 
 ### Step 3: Execute Stage Loop (REQUIRED)
@@ -70,7 +89,7 @@ State-machine driven development workflow with **agent/skill injection** support
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ A. Run: ./scripts/advance-stage.sh -r <project_root>            │
+│ A. Run: {skill_root}/scripts/advance-stage.sh -r <project_root> │
 │                                                                 │
 │ B. Check output for injected agents/skills                      │
 │                                                                 │
@@ -112,27 +131,30 @@ AI:
 - Scope: ~8 files (auth module, API, frontend)
 - Reason: Standard feature, multiple modules
 
+# First, resolve skill path (skill is at /home/user/.trae/skills/requirement-workflow/)
+SKILL_ROOT=/home/user/.trae/skills/requirement-workflow
+
 Initializing workflow...
 
-$ ./scripts/init-workflow.sh -r /project -n "user-auth" -t feature -l L2
+$ $SKILL_ROOT/scripts/init-workflow.sh -r /project -n "user-auth" -t feature -l L2
 ✅ Created: .trae/workflow/20240115_001_feature_user-auth/
 
-$ ./scripts/advance-stage.sh -r /project
+$ $SKILL_ROOT/scripts/advance-stage.sh -r /project
 ✅ Successfully transitioned to ANALYZING
 🤖 Injected Agents:
-  � Before stage: risk-auditor
+  📥 Before stage: risk-auditor
 
 [Launching risk-auditor agent...]
 
 Now creating spec.md...
 
-� spec.md created with:
+📄 spec.md created with:
 - Background
 - Objectives
 - Scope
 - Acceptance Criteria
 
-$ ./scripts/advance-stage.sh -r /project
+$ $SKILL_ROOT/scripts/advance-stage.sh -r /project
 ✅ Successfully transitioned to PLANNING
 
 Now creating tasks.md...
@@ -140,6 +162,8 @@ Now creating tasks.md...
 ```
 
 ## Scripts
+
+**Location:** `{skill_root}/scripts/` (resolve actual path before use)
 
 | Script | Purpose | When to Use |
 |--------|---------|-------------|

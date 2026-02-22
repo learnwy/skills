@@ -2,6 +2,8 @@
 
 Streamlined workflow for quick fixes and minor changes.
 
+> **Note:** All `./scripts/` paths below are relative to `{skill_root}` (the directory containing SKILL.md). Use absolute path in actual execution.
+
 ## Overview
 
 ```

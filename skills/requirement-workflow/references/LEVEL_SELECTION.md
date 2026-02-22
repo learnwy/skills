@@ -2,6 +2,8 @@
 
 How to determine which workflow level to use for a requirement.
 
+> **Note:** All `./scripts/` paths below are relative to `{skill_root}` (the directory containing SKILL.md). Use absolute path in actual execution.
+
 ## Quick Decision Tree
 
 ```

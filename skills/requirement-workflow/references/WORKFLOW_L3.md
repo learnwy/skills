@@ -2,6 +2,8 @@
 
 Complete workflow for complex features and security-sensitive requirements.
 
+> **Note:** All `./scripts/` paths below are relative to `{skill_root}` (the directory containing SKILL.md). Use absolute path in actual execution.
+
 ## Overview
 
 ```

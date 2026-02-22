@@ -2,6 +2,19 @@
 
 Practical examples demonstrating how to use the requirement-workflow skill.
 
+## Script Path Convention
+
+**All scripts are relative to `{skill_root}` (the directory containing SKILL.md).**
+
+```bash
+# Resolve skill root first
+SKILL_ROOT=/path/to/skills/requirement-workflow
+
+# Then use absolute paths
+$SKILL_ROOT/scripts/init-workflow.sh ...
+$SKILL_ROOT/scripts/advance-stage.sh ...
+```
+
 ## Core Concept: Active Workflow
 
 All scripts use an **active workflow** mechanism:
@@ -11,12 +24,14 @@ All scripts use an **active workflow** mechanism:
 
 ## Scripts Reference
 
+**Note:** All script paths below use `./scripts/` for brevity. In actual usage, replace with `{skill_root}/scripts/` or `$SKILL_ROOT/scripts/`.
+
 ### init-workflow.sh
 
 Initialize a new development workflow.
 
 ```bash
-./scripts/init-workflow.sh -r <root> -n <name> [OPTIONS]
+{skill_root}/scripts/init-workflow.sh -r <root> -n <name> [OPTIONS]
 ```
 
 | Option | Description |
@@ -402,43 +417,50 @@ Continuing from where we left off...
 
 ## Quick Reference
 
+**Remember:** Replace `$SKILL_ROOT` with actual skill directory path.
+
 | Task | Command |
 |------|---------|
-| Initialize workflow | `./scripts/init-workflow.sh -r /project -n "name" -t feature` |
-| Check status | `./scripts/get-status.sh -r /project` |
-| Advance stage | `./scripts/advance-stage.sh -r /project` |
-| Inject skill (workflow) | `./scripts/inject-skill.sh -r /project --hook quality_gate --skill linter` |
-| Inject skill (global) | `./scripts/inject-skill.sh -r /project --scope global --hook pre_stage_DESIGNING --skill tech-writer` |
-| List injected skills | `./scripts/inject-skill.sh -r /project --list` |
-| Generate report | `./scripts/generate-report.sh -r /project` |
+| Initialize workflow | `$SKILL_ROOT/scripts/init-workflow.sh -r /project -n "name" -t feature` |
+| Check status | `$SKILL_ROOT/scripts/get-status.sh -r /project` |
+| Advance stage | `$SKILL_ROOT/scripts/advance-stage.sh -r /project` |
+| Inject skill (workflow) | `$SKILL_ROOT/scripts/inject-skill.sh -r /project --hook quality_gate --skill linter` |
+| Inject skill (global) | `$SKILL_ROOT/scripts/inject-skill.sh -r /project --scope global --hook pre_stage_DESIGNING --skill tech-writer` |
+| List injected skills | `$SKILL_ROOT/scripts/inject-skill.sh -r /project --list` |
+| Generate report | `$SKILL_ROOT/scripts/generate-report.sh -r /project` |
 
 ## Common Workflows
 
 ### L1 Quick Fix
 
 ```bash
-./scripts/init-workflow.sh -r /project -n "fix-bug" -t bugfix -l L1
-./scripts/advance-stage.sh -r /project  # → ANALYZING (brief spec.md)
-./scripts/advance-stage.sh -r /project  # → PLANNING (simple tasks.md)
-./scripts/advance-stage.sh -r /project  # → DESIGNING (brief design.md)
-./scripts/advance-stage.sh -r /project  # → IMPLEMENTING
-./scripts/advance-stage.sh -r /project  # → TESTING
-./scripts/advance-stage.sh -r /project  # → DELIVERING (brief report.md)
-./scripts/advance-stage.sh -r /project  # → DONE
+# Set skill root first
+SKILL_ROOT=/path/to/skills/requirement-workflow
+
+$SKILL_ROOT/scripts/init-workflow.sh -r /project -n "fix-bug" -t bugfix -l L1
+$SKILL_ROOT/scripts/advance-stage.sh -r /project  # → ANALYZING (brief spec.md)
+$SKILL_ROOT/scripts/advance-stage.sh -r /project  # → PLANNING (simple tasks.md)
+$SKILL_ROOT/scripts/advance-stage.sh -r /project  # → DESIGNING (brief design.md)
+$SKILL_ROOT/scripts/advance-stage.sh -r /project  # → IMPLEMENTING
+$SKILL_ROOT/scripts/advance-stage.sh -r /project  # → TESTING
+$SKILL_ROOT/scripts/advance-stage.sh -r /project  # → DELIVERING (brief report.md)
+$SKILL_ROOT/scripts/advance-stage.sh -r /project  # → DONE
 ```
 
 ### L2 Standard Development
 
 ```bash
-./scripts/init-workflow.sh -r /project -n "new-feature" -t feature
-./scripts/advance-stage.sh -r /project  # → ANALYZING
-./scripts/advance-stage.sh -r /project  # → PLANNING
-./scripts/advance-stage.sh -r /project  # → DESIGNING
-./scripts/advance-stage.sh -r /project  # → IMPLEMENTING
-./scripts/advance-stage.sh -r /project  # → TESTING
-./scripts/advance-stage.sh -r /project  # → DELIVERING
-./scripts/generate-report.sh -r /project
-./scripts/advance-stage.sh -r /project  # → DONE
+SKILL_ROOT=/path/to/skills/requirement-workflow
+
+$SKILL_ROOT/scripts/init-workflow.sh -r /project -n "new-feature" -t feature
+$SKILL_ROOT/scripts/advance-stage.sh -r /project  # → ANALYZING
+$SKILL_ROOT/scripts/advance-stage.sh -r /project  # → PLANNING
+$SKILL_ROOT/scripts/advance-stage.sh -r /project  # → DESIGNING
+$SKILL_ROOT/scripts/advance-stage.sh -r /project  # → IMPLEMENTING
+$SKILL_ROOT/scripts/advance-stage.sh -r /project  # → TESTING
+$SKILL_ROOT/scripts/advance-stage.sh -r /project  # → DELIVERING
+$SKILL_ROOT/scripts/generate-report.sh -r /project
+$SKILL_ROOT/scripts/advance-stage.sh -r /project  # → DONE
 ```
 
 ## FAQ

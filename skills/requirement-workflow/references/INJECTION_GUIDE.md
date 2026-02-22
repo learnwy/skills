@@ -2,6 +2,8 @@
 
 How to inject custom skills and agents at workflow stages.
 
+> **Note:** All `./scripts/` paths below are relative to `{skill_root}` (the directory containing SKILL.md). Use absolute path in actual execution.
+
 ## Overview
 
 The requirement-workflow supports **3-level injection** for both **skills** (prompt-based) and **agents** (autonomous sub-agents). Injected items are automatically displayed when transitioning stages.
@@ -54,25 +56,30 @@ The workflow comes with pre-configured agents:
 ### Add Custom Agents
 
 ```bash
-./scripts/inject-agent.sh -r /project --scope global \
+# Use {skill_root} as the directory containing SKILL.md
+SKILL_ROOT=/path/to/skills/requirement-workflow
+
+$SKILL_ROOT/scripts/inject-agent.sh -r /project --scope global \
   --hook post_stage_DESIGNING --agent my-custom-reviewer
 ```
 
 ### Add Custom Skills
 
 ```bash
+SKILL_ROOT=/path/to/skills/requirement-workflow
+
 # Document generation
-./scripts/inject-skill.sh -r /project --scope global \
+$SKILL_ROOT/scripts/inject-skill.sh -r /project --scope global \
   --hook pre_stage_ANALYZING --skill prd-writer
 
-./scripts/inject-skill.sh -r /project --scope global \
+$SKILL_ROOT/scripts/inject-skill.sh -r /project --scope global \
   --hook pre_stage_DESIGNING --skill tech-design-writer
 
 # Quality gates
-./scripts/inject-skill.sh -r /project --scope global \
+$SKILL_ROOT/scripts/inject-skill.sh -r /project --scope global \
   --hook quality_gate --skill lint-checker --required
 
-./scripts/inject-skill.sh -r /project --scope global \
+$SKILL_ROOT/scripts/inject-skill.sh -r /project --scope global \
   --hook quality_gate --skill type-checker --required
 ```
 
