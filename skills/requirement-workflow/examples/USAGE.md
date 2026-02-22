@@ -127,10 +127,11 @@ User: The login button doesn't respond when clicked
 
 AI: This is a clear bug. Using L1 Quick workflow.
 
-📊 Analysis:
+📊 Requirement Analysis:
 - Type: bugfix
 - Level: L1 (Quick)
-- Impact: 1 file
+- Scope: 1 file
+- Reason: Clear issue, single file fix
 
 Initializing workflow...
 ```
@@ -141,44 +142,85 @@ Initializing workflow...
 
 ```
 ✅ Workflow: 20240115_001_bugfix_fix-login-button
-
-[PLANNING] Analyzing and planning fix
-Found: onClick handler has typo (handleLgoin)
-
-📋 Tasks:
-1. Fix typo in LoginButton.tsx
-
-[IMPLEMENTING] Executing fix
-Fixed: handleLgoin → handleLogin
-✅ Task 1 complete
 ```
 
 ```bash
-./scripts/advance-stage.sh -r /project --to IMPLEMENTING
+./scripts/advance-stage.sh -r /project  # → ANALYZING
+```
+
+```
+[ANALYZING] Brief requirements
+
+📄 spec.md (brief):
+- Background: Login button not responding
+- Scope: Fix onClick in LoginButton.tsx
+- Criteria: Button triggers login action
+```
+
+```bash
+./scripts/advance-stage.sh -r /project  # → PLANNING
+```
+
+```
+[PLANNING] Task breakdown
+
+📋 tasks.md:
+1. Locate onClick handler issue
+2. Fix the handler
+3. Verify button works
+```
+
+```bash
+./scripts/advance-stage.sh -r /project  # → DESIGNING
+```
+
+```
+[DESIGNING] Technical approach
+
+📄 design.md (brief):
+- Issue: Typo in handler name (handleLgoin → handleLogin)
+- Files: src/components/LoginButton.tsx
+```
+
+```bash
+./scripts/advance-stage.sh -r /project  # → IMPLEMENTING
+```
+
+```
+[IMPLEMENTING] Executing fix
+Fixed: handleLgoin → handleLogin
+✅ All tasks complete
+```
+
+```bash
+./scripts/advance-stage.sh -r /project  # → TESTING
 ```
 
 ```
 [TESTING] Verifying fix
-```
-
-```bash
-./scripts/advance-stage.sh -r /project --to TESTING
-```
-
-```
 - ✅ TypeScript: passed
 - ✅ ESLint: passed  
 - ✅ Tests: passed
 ```
 
 ```bash
-./scripts/advance-stage.sh -r /project --to DONE
+./scripts/advance-stage.sh -r /project  # → DELIVERING
+```
+
+```
+[DELIVERING] Report
+
+📄 report.md (brief):
+- Files changed: 1
+- Duration: ~5 minutes
+```
+
+```bash
+./scripts/advance-stage.sh -r /project  # → DONE
 ```
 
 ```
 [DONE] Workflow complete
-- Duration: ~5 minutes
-- Files changed: 1
 ```
 
 ---
