@@ -10,6 +10,7 @@ Intelligent assistant for discovering and installing AI assistant skills from th
 ## When to Use This Skill
 
 Activate this skill when the user:
+
 - Wants to find a skill for a specific purpose
 - Mentions "skill", "find skill", "search skill", "install skill"
 - Describes a problem that might be solved by a community skill
@@ -34,27 +35,30 @@ Activate this skill when the user:
 
 ## Quick Reference
 
-| Phase | Task | Reference File |
-|-------|------|----------------|
-| 1 | Search for skills | Read [phase1-search.md](references/phase1-search.md) |
-| 2 | Install skills | Read [phase2-install.md](references/phase2-install.md) |
-| 3 | Create new skills | Read [phase3-create.md](references/phase3-create.md) |
+| Phase | Task              | Reference File                                         |
+| ----- | ----------------- | ------------------------------------------------------ |
+| 1     | Search for skills | Read [phase1-search.md](references/phase1-search.md)   |
+| 2     | Install skills    | Read [phase2-install.md](references/phase2-install.md) |
+| 3     | Create new skills | Read [phase3-create.md](references/phase3-create.md)   |
 
 ## Examples
 
 Real usage examples:
+
 - [Example 1: Search and install](examples/example-search-install.md)
 - [Example 2: Create new skill](examples/example-create-skill.md)
 
 ## High-Level Execution Flow
 
 ### Phase 1: Search
+
 1. Parse user intent and extract keywords
 2. Execute `npx skills find [keywords]`
 3. Present formatted results to user
 4. **For details**: Read [phase1-search.md](references/phase1-search.md)
 
 ### Phase 2: Install
+
 1. Confirm user's skill selection
 2. Execute `npx skills add -g -y <skill-name>`
 3. Verify installation in `~/.agents/skills/`
@@ -62,6 +66,7 @@ Real usage examples:
 5. **For details**: Read [phase2-install.md](references/phase2-install.md)
 
 ### Phase 3: Create New Skill
+
 1. Ask user for skill name
 2. Execute `npx skills init <name>` to create template
 3. Guide user through SKILL.md structure
@@ -71,11 +76,13 @@ Real usage examples:
 ## Key Algorithms
 
 ### Intent Analysis
+
 - Extract keywords from natural language
 - Identify problem domain (e.g., "React performance", "code review")
 - Generate focused search terms (1-3 keywords)
 
 ### Search Result Formatting
+
 - Parse `npx skills find` output
 - Extract: skill name, owner/repo, URL
 - Present in numbered list for easy selection
@@ -83,6 +90,7 @@ Real usage examples:
 ## Error Handling
 
 Common errors and solutions:
+
 - **Network errors**: Suggest retry and check connection
 - **Skill not found**: Suggest alternative keywords or browse https://skills.sh/
 - **Installation fails**: Check npm/npx availability, network connection
@@ -105,6 +113,7 @@ Common errors and solutions:
 ## Summary
 
 This skill provides streamlined skill discovery and installation:
+
 - 🔍 **Search**: Natural language skill discovery using `npx skills find`
 - 📦 **Install**: One-command installation to `~/.agents/skills/`
 - 🆕 **Create**: Guided skill creation with `npx skills init`

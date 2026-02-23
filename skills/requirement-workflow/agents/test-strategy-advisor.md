@@ -21,6 +21,7 @@ Test strategy recommendation agent.
 ## Output
 
 Test plan with:
+
 - Priority areas
 - Recommended test types
 - Coverage targets

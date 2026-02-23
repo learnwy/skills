@@ -10,11 +10,11 @@ Complete workflow for regular feature development.
 INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → DELIVERING → DONE
 ```
 
-| Property | Value |
-|----------|-------|
-| Target Time | 1-8 hours |
-| Outputs | spec.md, design.md, tasks.md, checklist.md, report.md |
-| Best For | Most feature development |
+| Property    | Value                                                 |
+| ----------- | ----------------------------------------------------- |
+| Target Time | 1-8 hours                                             |
+| Outputs     | spec.md, design.md, tasks.md, checklist.md, report.md |
+| Best For    | Most feature development                              |
 
 ## Stages
 
@@ -23,30 +23,37 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 **Trigger:** Workflow initialization complete
 
 **AI Actions:**
+
 1. Understand user requirements
 2. Ask clarifying questions (if needed)
 3. Document requirements in `spec.md`
 
 **Output (spec.md):**
+
 ```markdown
 # Requirements: {name}
 
 ## Background
+
 {Why this feature is needed}
 
 ## Objectives
+
 {What the feature should achieve}
 
 ## Scope
+
 - In Scope: {included features}
 - Out of Scope: {explicitly excluded}
 
 ## Acceptance Criteria
+
 - [ ] {criterion_1}
 - [ ] {criterion_2}
 ```
 
 **Transition:**
+
 ```bash
 ./scripts/advance-stage.sh -r /project --to ANALYZING
 ```
@@ -56,28 +63,34 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 **Trigger:** Requirements clear, spec.md complete
 
 **AI Actions:**
+
 1. Analyze existing codebase
 2. Identify affected modules
 3. Plan technical approach
 4. Create task list (`tasks.md`)
 
 **Output (tasks.md):**
+
 ```markdown
 # Task List
 
 ## Phase 1: Preparation
+
 - [ ] Task 1.1
 - [ ] Task 1.2
 
 ## Phase 2: Core Implementation
+
 - [ ] Task 2.1
 - [ ] Task 2.2
 
 ## Phase 3: Testing and Polish
+
 - [ ] Task 3.1
 ```
 
 **Transition:**
+
 ```bash
 ./scripts/advance-stage.sh -r /project --to PLANNING
 ```
@@ -87,35 +100,43 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 **Trigger:** Task planning complete
 
 **AI Actions:**
+
 1. Design technical solution
 2. Define API interfaces (if applicable)
 3. Design data structures
 4. Document in `design.md`
 
 **Output (design.md):**
+
 ```markdown
 # Technical Design: {name}
 
 ## Solution Overview
+
 {High-level design approach}
 
 ## Component Interaction
+
 {How modules work together}
 
 ## API Design (if applicable)
+
 | Endpoint | Method | Description |
-|----------|--------|-------------|
-| /api/xxx | POST | ... |
+| -------- | ------ | ----------- |
+| /api/xxx | POST   | ...         |
 
 ## Data Model
+
 {Data structure definitions}
 
 ## Risks and Mitigations
+
 | Risk | Mitigation |
-|------|------------|
+| ---- | ---------- |
 ```
 
 **Transition:**
+
 ```bash
 ./scripts/advance-stage.sh -r /project --to DESIGNING
 ```
@@ -125,16 +146,19 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 **Trigger:** Design complete, design.md done
 
 **AI Actions:**
+
 1. Execute tasks from tasks.md in order
 2. Track with TodoWrite
 3. Update progress on each completion
 
 **Guidelines:**
+
 - Follow existing code style
 - Add necessary tests
 - Commit progress regularly
 
 **Transition:**
+
 ```bash
 ./scripts/advance-stage.sh -r /project --to IMPLEMENTING
 ```
@@ -144,6 +168,7 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 **Trigger:** All development tasks complete
 
 **AI Actions:**
+
 1. Run full test suite
 2. Execute quality checks:
    - Lint check
@@ -153,21 +178,25 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 3. Update `checklist.md`
 
 **Output (checklist.md):**
+
 ```markdown
 # Acceptance Checklist
 
 ## Functional Verification
+
 - [ ] Core functionality works
 - [ ] Edge cases handled
 - [ ] Error handling
 
 ## Quality Checks
+
 - [ ] Lint passed
 - [ ] Type check passed
 - [ ] Unit tests passed
 - [ ] Coverage >= 70%
 
 ## Documentation
+
 - [ ] API docs updated
 - [ ] README updated (if needed)
 ```
@@ -175,6 +204,7 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 **Hook Point:** `quality_gate`
 
 **Transition:**
+
 ```bash
 ./scripts/advance-stage.sh -r /project --to TESTING
 ```
@@ -184,36 +214,43 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 **Trigger:** All tests passed
 
 **AI Actions:**
+
 1. Generate change report
 2. Prepare delivery materials
 3. Update `artifacts/report.md`
 
 **Output (report.md):**
+
 ```markdown
 # Workflow Report
 
 ## Summary
-| Item | Value |
-|------|-------|
-| Workflow ID | xxx |
-| Type | feature |
-| Level | L2 |
-| Duration | 4h 30m |
+
+| Item        | Value   |
+| ----------- | ------- |
+| Workflow ID | xxx     |
+| Type        | feature |
+| Level       | L2      |
+| Duration    | 4h 30m  |
 
 ## Change Summary
+
 - Files added: 3
 - Files modified: 5
 - Files deleted: 0
 
 ## Test Results
+
 - Unit tests: Passed
 - Coverage: 78%
 
 ## Notes
+
 {Additional remarks}
 ```
 
 **Transition:**
+
 ```bash
 ./scripts/advance-stage.sh -r /project --to DELIVERING
 ```
@@ -223,11 +260,13 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 **Trigger:** Delivery materials ready
 
 **AI Actions:**
+
 1. Final confirmation all tasks complete
 2. Summarize workflow
 3. Mark complete
 
 **Transition:**
+
 ```bash
 ./scripts/advance-stage.sh -r /project --to DONE
 ```
@@ -399,13 +438,13 @@ hooks:
       required: false
       config:
         focus: ["architecture", "api_design"]
-    
+
   pre_stage_IMPLEMENTING:
     - skill: test-generator
       required: false
       config:
         coverage_target: 70
-    
+
   pre_stage_TESTING:
     - skill: coverage-checker
       required: false
@@ -416,6 +455,7 @@ hooks:
 ## Escalation to L3
 
 Escalate if you discover:
+
 - Security-sensitive operations
 - Requires cross-team approval
 - Complexity exceeds expectations

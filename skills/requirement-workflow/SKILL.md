@@ -10,12 +10,14 @@ State-machine driven development workflow with **agent/skill injection** support
 ## When to Use
 
 **Invoke when:**
+
 - Feature development: "build a user authentication system"
 - Bug fixes: "fix the login issue"
 - Refactoring: "refactor this module"
 - Keywords: `feature`, `bugfix`, `refactor`, `implement`, `develop`
 
 **Do NOT invoke when:**
+
 - Simple Q&A or code explanations
 - Single-line changes
 - User declines: "just fix it, no workflow"
@@ -43,6 +45,7 @@ Scripts location: {skill_root}/scripts/*.sh
 ```
 
 **AI MUST resolve actual path before running:**
+
 ```bash
 # If this skill is at: /path/to/skills/requirement-workflow/
 # Then scripts are at: /path/to/skills/requirement-workflow/scripts/
@@ -56,6 +59,7 @@ Scripts location: {skill_root}/scripts/*.sh
 ### Step 1: Analyze & Select Level
 
 **Output to user:**
+
 ```
 📊 Requirement Analysis:
 - Type: feature | bugfix | refactor | hotfix
@@ -64,20 +68,22 @@ Scripts location: {skill_root}/scripts/*.sh
 - Reason: {why this level}
 ```
 
-| Level | Condition | Doc Depth |
-|-------|-----------|-----------|
-| **L1** | Clear scope, ≤3 files, quick fix | Brief PRD + simple design |
-| **L2** | Standard feature, 4-15 files | Full PRD + detailed design |
-| **L3** | Security/cross-module/breaking | Comprehensive + compliance |
+| Level  | Condition                        | Doc Depth                  |
+| ------ | -------------------------------- | -------------------------- |
+| **L1** | Clear scope, ≤3 files, quick fix | Brief PRD + simple design  |
+| **L2** | Standard feature, 4-15 files     | Full PRD + detailed design |
+| **L3** | Security/cross-module/breaking   | Comprehensive + compliance |
 
 ### Step 2: Initialize Workflow (REQUIRED)
 
 **MUST run this command (use absolute path):**
+
 ```bash
 {skill_root}/scripts/init-workflow.sh -r <project_root> -n <name> -t <type> -l <level>
 ```
 
 **Example:**
+
 ```bash
 # Assuming skill is at /home/user/.trae/skills/requirement-workflow/
 /home/user/.trae/skills/requirement-workflow/scripts/init-workflow.sh -r /project -n "user-auth" -t feature -l L2
@@ -110,21 +116,21 @@ Scripts location: {skill_root}/scripts/*.sh
 
 ### Stage Document Requirements
 
-| Stage | Document | L1 Depth | L2 Depth | L3 Depth |
-|-------|----------|----------|----------|----------|
-| ANALYZING | `spec.md` | 1-2 paragraphs | Standard PRD | Comprehensive |
-| PLANNING | `tasks.md` | 3-5 tasks | 5-15 tasks | Full breakdown |
-| DESIGNING | `design.md` | Key decisions | Full design | + security |
-| IMPLEMENTING | Code | Quality code | Quality code | + security |
-| TESTING | `checklist.md` | Basic tests | Full coverage | + security tests |
-| DELIVERING | `report.md` | Brief summary | Full report | Compliance report |
+| Stage        | Document       | L1 Depth       | L2 Depth      | L3 Depth          |
+| ------------ | -------------- | -------------- | ------------- | ----------------- |
+| ANALYZING    | `spec.md`      | 1-2 paragraphs | Standard PRD  | Comprehensive     |
+| PLANNING     | `tasks.md`     | 3-5 tasks      | 5-15 tasks    | Full breakdown    |
+| DESIGNING    | `design.md`    | Key decisions  | Full design   | + security        |
+| IMPLEMENTING | Code           | Quality code   | Quality code  | + security        |
+| TESTING      | `checklist.md` | Basic tests    | Full coverage | + security tests  |
+| DELIVERING   | `report.md`    | Brief summary  | Full report   | Compliance report |
 
 ### Example Execution
 
 ```
 User: "Add user authentication feature"
 
-AI: 
+AI:
 📊 Requirement Analysis:
 - Type: feature
 - Level: L2
@@ -165,14 +171,14 @@ Now creating tasks.md...
 
 **Location:** `{skill_root}/scripts/` (resolve actual path before use)
 
-| Script | Purpose | When to Use |
-|--------|---------|-------------|
-| `init-workflow.sh` | Initialize workflow | Step 2 (once) |
-| `advance-stage.sh` | Advance stage | Step 3 (each stage) |
-| `get-status.sh` | Check status | Anytime |
-| `inject-agent.sh` | Manage agents | Setup |
-| `inject-skill.sh` | Manage skills | Setup |
-| `generate-report.sh` | Generate report | DELIVERING stage |
+| Script               | Purpose             | When to Use         |
+| -------------------- | ------------------- | ------------------- |
+| `init-workflow.sh`   | Initialize workflow | Step 2 (once)       |
+| `advance-stage.sh`   | Advance stage       | Step 3 (each stage) |
+| `get-status.sh`      | Check status        | Anytime             |
+| `inject-agent.sh`    | Manage agents       | Setup               |
+| `inject-skill.sh`    | Manage skills       | Setup               |
+| `generate-report.sh` | Generate report     | DELIVERING stage    |
 
 ## References
 

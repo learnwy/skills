@@ -1,6 +1,6 @@
 # Skills Repository Agent
 
-This repository contains reusable skills for AI assistants.
+This repository contains reusable skills following the [Agent Skills Specification](https://agentskills.io/specification).
 
 ## Repository Structure
 
@@ -9,85 +9,164 @@ skills/
 ├── AGENT.md              # This file - project guidelines
 ├── LICENSE
 └── skills/               # Individual skill directories
-    ├── requirement-workflow/   # State-machine driven development workflow
-    └── skill-finder/           # Skill discovery and installation
+    ├── requirement-workflow/
+    └── skill-finder/
 ```
 
-## Skill Structure Standard
+## Agent Skills Specification
 
-Each skill MUST follow this structure:
+### Directory Structure
+
+A skill is a directory containing at minimum a `SKILL.md` file:
 
 ```
 {skill-name}/
-├── SKILL.md              # REQUIRED: Main skill definition (frontmatter + content)
-├── hooks.yaml            # Optional: Default hooks/agents configuration
-├── agents/               # Optional: Agent definitions
-│   └── *.md
-├── references/           # Optional: Detailed reference documents
-│   └── *.md
-├── examples/             # Optional: Usage examples
-│   └── *.md
-├── assets/               # Optional: Templates and static files
-│   └── *.template
-└── scripts/              # Optional: Shell scripts
-    └── *.sh
+├── SKILL.md              # REQUIRED: Skill definition
+├── scripts/              # Optional: Executable code
+├── references/           # Optional: Additional documentation
+└── assets/               # Optional: Static resources (templates, data)
 ```
 
-## SKILL.md Requirements
+### SKILL.md Format
 
 ```markdown
 ---
 name: "{skill-name}"
-description: "{What it does}. {When to invoke it}. Keep under 200 chars."
+description: "{What it does and when to use it}"
+license: "Apache-2.0"                    # Optional
+compatibility: "Requires git, docker"    # Optional
+metadata:                                 # Optional
+  author: "example-org"
+  version: "1.0"
 ---
 
 # {Skill Title}
 
-{Detailed instructions}
+{Instructions, examples, edge cases}
 ```
 
-### Critical Fields
+### Required Fields
 
-| Field | Location | Requirement |
-|-------|----------|-------------|
-| `name` | frontmatter | Unique identifier |
-| `description` | frontmatter | MUST include: what + when to invoke |
-| Content | body | Execution steps, examples |
+| Field | Constraints |
+|-------|-------------|
+| `name` | 1-64 chars. Lowercase letters, numbers, hyphens only. Must match directory name. |
+| `description` | 1-1024 chars. MUST describe what + when to use. |
 
-## Script Path Convention
+### name Field Rules
 
-**All script paths are relative to `{skill_root}` (the directory containing SKILL.md).**
+```yaml
+# ✅ Valid
+name: pdf-processing
+name: data-analysis
+name: code-review
+
+# ❌ Invalid
+name: PDF-Processing    # uppercase not allowed
+name: -pdf              # cannot start with hyphen
+name: pdf--processing   # consecutive hyphens not allowed
+```
+
+### description Field Best Practice
+
+```yaml
+# ✅ Good - describes what AND when
+description: "State-machine driven orchestrator for structured software development. Triggers: 'build a feature', 'fix this bug', 'implement', 'develop'."
+
+# ❌ Poor - too vague
+description: "Helps with development."
+```
+
+## Progressive Disclosure
+
+Skills should be structured for efficient context usage:
+
+| Level | Token Budget | When Loaded |
+|-------|--------------|-------------|
+| **Metadata** | ~100 tokens | Startup (all skills) |
+| **Instructions** | < 5000 tokens | Skill activation |
+| **Resources** | As needed | On demand |
+
+**Guidelines:**
+- Keep `SKILL.md` under **500 lines**
+- Move detailed reference material to `references/`
+- Scripts and assets load only when needed
+
+## Our Extensions
+
+Beyond the official spec, this repo uses:
+
+### agents/ Directory
+
+For agent injection system:
+```
+{skill-name}/
+└── agents/
+    ├── AGENTS.md         # Agent index
+    └── {agent-name}.md   # Individual agent definitions
+```
+
+### hooks.yaml
+
+Default hook configuration:
+```yaml
+hooks: {}
+agents:
+  pre_stage_ANALYZING:
+    - agent: "risk-auditor"
+      required: false
+```
+
+### Script Path Convention
+
+**All script paths are relative to `{skill_root}` (the SKILL.md directory).**
 
 ```bash
 # AI must resolve actual path before running:
-{skill_root}/scripts/init-workflow.sh ...
+{skill_root}/scripts/init-workflow.sh -r /project
 
-# Example with absolute path:
-/path/to/skills/requirement-workflow/scripts/init-workflow.sh -r /project
+# In docs, use relative paths:
+./scripts/init-workflow.sh -r /project
+
+# Note in references:
+> All `./scripts/` paths are relative to `{skill_root}`. Use absolute path in execution.
 ```
 
 ## Development Guidelines
 
-### Adding a New Skill
+### Creating a New Skill
 
 1. Create directory: `skills/{skill-name}/`
-2. Create `SKILL.md` with proper frontmatter
-3. Add reference docs to `references/` if needed
-4. Add scripts to `scripts/` if needed
-5. Test the skill
+2. Create `SKILL.md` with valid frontmatter
+3. Verify name matches directory name
+4. Keep SKILL.md < 500 lines
+5. Add `references/` for detailed docs
+6. Add `scripts/` for executable code
 
 ### Modifying Existing Skills
 
-1. Keep SKILL.md concise (~100-200 lines)
-2. Move detailed content to `references/`
-3. Ensure script path conventions are documented
-4. Test changes before committing
+1. Validate frontmatter fields
+2. Keep description under 1024 chars
+3. Ensure name follows naming rules
+4. Test script path conventions
+5. Check line count (< 500 recommended)
 
 ### Code Style
 
-- No comments in code unless explicitly requested
-- Use English for code, Chinese for user-facing docs (unless specified otherwise)
+- No comments unless explicitly requested
+- English for code, match user language for docs
 - Keep files focused and single-purpose
+
+## Checklist
+
+Before committing skill changes:
+
+- [ ] `name` field matches directory name
+- [ ] `name` is lowercase with hyphens only
+- [ ] `description` describes what AND when to use
+- [ ] `description` < 1024 characters
+- [ ] SKILL.md < 500 lines
+- [ ] Script paths documented with `{skill_root}` convention
+- [ ] Detailed content in `references/` not SKILL.md
 
 ## Available Skills
 
@@ -95,24 +174,16 @@ description: "{What it does}. {When to invoke it}. Keep under 200 chars."
 
 State-machine driven orchestrator for structured software development.
 
-**Triggers:** `feature`, `bugfix`, `refactor`, `implement`, `develop`
-
-**Key Features:**
-- 3-level workflows (L1/L2/L3)
-- Agent/Skill injection at hook points
-- Document generation at each stage
+```yaml
+name: requirement-workflow
+description: "State-machine driven orchestrator for structured software development. Supports skill/agent injection at each stage. Triggers: 'build a feature', 'fix this bug', 'implement', 'develop', 'refactor'."
+```
 
 ### skill-finder
 
 Intelligent skill discovery and installation assistant.
 
-**Triggers:** User wants to find or install skills
-
-## Testing
-
-When making changes to skills:
-
-1. Verify SKILL.md frontmatter is valid
-2. Test scripts with actual project paths
-3. Ensure examples in docs are accurate
-4. Check script path conventions are followed
+```yaml
+name: skill-finder
+description: "Intelligent skill discovery and installation assistant. Helps users find community skills and install them."
+```

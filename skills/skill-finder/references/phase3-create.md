@@ -1,12 +1,15 @@
 # Phase 3: Skill Creation
 
 ## Objective
+
 Help users create new custom skills using `npx skills init`. Users own and manage created skills in their own repositories.
 
 ## Steps
 
 ### 1. Initiate Creation
+
 Ask user for skill name:
+
 ```
 Let's create a new skill!
 
@@ -15,6 +18,7 @@ Example: my-custom-reviewer, api-tester, sql-optimizer
 ```
 
 ### 2. Execute Init
+
 ```bash
 npx skills init <skill-name>
 ```
@@ -24,7 +28,9 @@ This creates a template SKILL.md in the current directory: `./<skill-name>/SKILL
 **Recommended location**: User's own skill repository
 
 ### 3. Guide Structure
+
 Explain required sections:
+
 ```
 I've created a template at ./<skill-name>/SKILL.md
 
@@ -32,11 +38,11 @@ Required sections:
 1. Frontmatter (---name: <skill-name>...)
    - name: <skill-name>
    - description: What does this skill do?
-   
+
 2. When to Use This Skill
    - List trigger conditions
    - When should the AI activate this?
-   
+
 3. Core Instructions
    - Step-by-step instructions for the AI
    - Examples of expected behavior
@@ -49,7 +55,9 @@ Optional but recommended:
 ```
 
 ### 4. Provide Template Example
+
 Show user what a good SKILL.md looks like:
+
 ```markdown
 ---
 name: my-skill
@@ -61,6 +69,7 @@ description: Brief description of what this skill does
 ## When to Use This Skill
 
 Activate when:
+
 - User mentions X
 - User asks about Y
 - Context indicates Z
@@ -77,6 +86,7 @@ Activate when:
 ```
 
 ### 5. Installation Guidance
+
 ```
 Your skill template is ready at ./<skill-name>/SKILL.md
 
@@ -95,7 +105,9 @@ To update it:
 ```
 
 ### 6. Validation Checklist
+
 Remind user to check:
+
 ```
 Before using your skill, verify:
 - [ ] Frontmatter present with name and description
@@ -110,6 +122,7 @@ Before using your skill, verify:
 **User**: "Help me create a skill for SQL optimization"
 
 **Assistant**:
+
 ```
 I'll help you create a SQL optimization skill.
 
@@ -138,6 +151,7 @@ Would you like me to help with any specific section?
 ```
 
 ## Tools Used
+
 - **RunCommand**: Execute `npx skills init`
 - **Read**: Read created SKILL.md template
 - **AskUserQuestion**: Get skill name

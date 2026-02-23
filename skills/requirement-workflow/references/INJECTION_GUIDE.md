@@ -21,18 +21,18 @@ advance-stage.sh → DESIGNING
 
 ### Agents vs Skills
 
-| Type | Purpose | Examples |
-|------|---------|----------|
-| **Agent** | Autonomous complex tasks | risk-auditor, code-reviewer, mvp-freeze-architect |
-| **Skill** | Prompt-based context/templates | prd-writer, lint-checker |
+| Type      | Purpose                        | Examples                                          |
+| --------- | ------------------------------ | ------------------------------------------------- |
+| **Agent** | Autonomous complex tasks       | risk-auditor, code-reviewer, mvp-freeze-architect |
+| **Skill** | Prompt-based context/templates | prd-writer, lint-checker                          |
 
 ## Configuration Levels
 
-| Level | Config File | Scope | Best For |
-|-------|-------------|-------|----------|
-| **Global** | `{skill_dir}/hooks.yaml` | All projects | PRD writer, tech design writer |
-| **Project** | `{root}/.trae/workflow/hooks.yaml` | This project | Project-specific reviewers |
-| **Workflow** | `{workflow}/workflow.yaml` | This workflow | One-time requirements |
+| Level        | Config File                        | Scope         | Best For                       |
+| ------------ | ---------------------------------- | ------------- | ------------------------------ |
+| **Global**   | `{skill_dir}/hooks.yaml`           | All projects  | PRD writer, tech design writer |
+| **Project**  | `{root}/.trae/workflow/hooks.yaml` | This project  | Project-specific reviewers     |
+| **Workflow** | `{workflow}/workflow.yaml`         | This workflow | One-time requirements          |
 
 **Resolution Order:** workflow > project > global (higher priority wins)
 
@@ -42,16 +42,16 @@ advance-stage.sh → DESIGNING
 
 The workflow comes with pre-configured agents:
 
-| Hook | Agent | Purpose |
-|------|-------|---------|
-| `pre_stage_ANALYZING` | risk-auditor | PRD risk assessment |
-| `post_stage_ANALYZING` | iron-audit-pm | PRD audit |
-| `post_stage_ANALYZING` | mvp-freeze-architect | MVP scope freeze |
-| `post_stage_DESIGNING` | tech-design-reviewer | Design review |
-| `post_stage_IMPLEMENTING` | code-reviewer | Code review |
-| `pre_stage_TESTING` | test-strategy-advisor | Test strategy |
-| `on_blocked` | blocker-resolver | Resolve blockers |
-| `on_error` | error-analyzer | Analyze errors |
+| Hook                      | Agent                 | Purpose             |
+| ------------------------- | --------------------- | ------------------- |
+| `pre_stage_ANALYZING`     | risk-auditor          | PRD risk assessment |
+| `post_stage_ANALYZING`    | iron-audit-pm         | PRD audit           |
+| `post_stage_ANALYZING`    | mvp-freeze-architect  | MVP scope freeze    |
+| `post_stage_DESIGNING`    | tech-design-reviewer  | Design review       |
+| `post_stage_IMPLEMENTING` | code-reviewer         | Code review         |
+| `pre_stage_TESTING`       | test-strategy-advisor | Test strategy       |
+| `on_blocked`              | blocker-resolver      | Resolve blockers    |
+| `on_error`                | error-analyzer        | Analyze errors      |
 
 ### Add Custom Agents
 
@@ -103,21 +103,21 @@ $SKILL_ROOT/scripts/inject-skill.sh -r /project --scope global \
 
 ### Stage Hooks
 
-| Hook | Trigger | Typical Skills |
-|------|---------|----------------|
-| `pre_stage_{STAGE}` | Before entering stage | prd-writer, tech-design-writer |
-| `post_stage_{STAGE}` | After completing stage | code-reviewer, doc-generator |
+| Hook                 | Trigger                | Typical Skills                 |
+| -------------------- | ---------------------- | ------------------------------ |
+| `pre_stage_{STAGE}`  | Before entering stage  | prd-writer, tech-design-writer |
+| `post_stage_{STAGE}` | After completing stage | code-reviewer, doc-generator   |
 
 **Available stages:** ANALYZING, PLANNING, DESIGNING, IMPLEMENTING, TESTING, DELIVERING
 
 ### Global Hooks
 
-| Hook | Trigger | Typical Skills |
-|------|---------|----------------|
+| Hook           | Trigger               | Typical Skills                               |
+| -------------- | --------------------- | -------------------------------------------- |
 | `quality_gate` | Before quality checks | lint-checker, type-checker, security-scanner |
-| `pre_delivery` | Before final delivery | compliance-checker, final-reviewer |
-| `on_blocked` | When workflow blocked | blocker-analyzer |
-| `on_error` | On any error | error-reporter |
+| `pre_delivery` | Before final delivery | compliance-checker, final-reviewer           |
+| `on_blocked`   | When workflow blocked | blocker-analyzer                             |
+| `on_error`     | On any error          | error-reporter                               |
 
 ## Injection Commands
 
@@ -133,14 +133,14 @@ $SKILL_ROOT/scripts/inject-skill.sh -r /project --scope global \
   [--config '<json>']
 ```
 
-| Option | Description |
-|--------|-------------|
-| `--scope` | Configuration level |
-| `--hook` | Hook point name |
-| `--skill` | Skill name to invoke |
-| `--required` | Block workflow on skill failure |
-| `--order` | Execution order (lower = earlier) |
-| `--config` | JSON config passed to skill |
+| Option       | Description                       |
+| ------------ | --------------------------------- |
+| `--scope`    | Configuration level               |
+| `--hook`     | Hook point name                   |
+| `--skill`    | Skill name to invoke              |
+| `--required` | Block workflow on skill failure   |
+| `--order`    | Execution order (lower = earlier) |
+| `--config`   | JSON config passed to skill       |
 
 ### List Injected Skills
 
@@ -223,13 +223,13 @@ hooks:
       required: false
       order: 0
       added_at: "2024-01-15T10:30:00Z"
-  
+
   pre_stage_DESIGNING:
     - skill: "tech-design-writer"
       required: false
       order: 0
       added_at: "2024-01-15T10:30:00Z"
-  
+
   quality_gate:
     - skill: "lint-checker"
       required: true

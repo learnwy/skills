@@ -21,6 +21,7 @@ Is the requirement clear with small scope?
 ### L1: Quick
 
 **Select when ALL of the following are true:**
+
 - [ ] Affects ≤ 3 files
 - [ ] Involves only 1 module
 - [ ] Risk level: Low
@@ -29,6 +30,7 @@ Is the requirement clear with small scope?
 - [ ] Estimated time < 1 hour
 
 **Typical Scenarios:**
+
 - Bug fixes (root cause is clear)
 - UI tweaks
 - Configuration changes
@@ -38,6 +40,7 @@ Is the requirement clear with small scope?
 ### L2: Standard
 
 **Select when MOST of the following are true:**
+
 - [ ] Affects 4-15 files
 - [ ] Involves 1-3 modules
 - [ ] Risk level: Medium
@@ -46,6 +49,7 @@ Is the requirement clear with small scope?
 - [ ] Estimated time 1-8 hours
 
 **Typical Scenarios:**
+
 - New feature development
 - API additions/modifications
 - Component refactoring
@@ -54,6 +58,7 @@ Is the requirement clear with small scope?
 ### L3: Full
 
 **Select when ANY of the following are true:**
+
 - [ ] Affects > 15 files
 - [ ] Involves > 3 modules
 - [ ] Risk level: High
@@ -63,6 +68,7 @@ Is the requirement clear with small scope?
 - [ ] Estimated time > 8 hours
 
 **Typical Scenarios:**
+
 - Security/authentication features
 - Payment/transaction features
 - System architecture changes
@@ -91,13 +97,13 @@ Total:
 
 Even if scoring suggests a lower level, **force upgrade** for:
 
-| Condition | Minimum Level |
-|-----------|---------------|
-| User authentication involved | ≥ L2 |
-| Payment/financial involved | L3 |
-| Personal data (GDPR) involved | L3 |
-| Compliance audit required | L3 |
-| Team policy requires | Per policy |
+| Condition                     | Minimum Level |
+| ----------------------------- | ------------- |
+| User authentication involved  | ≥ L2          |
+| Payment/financial involved    | L3            |
+| Personal data (GDPR) involved | L3            |
+| Compliance audit required     | L3            |
+| Team policy requires          | Per policy    |
 
 ## Examples
 

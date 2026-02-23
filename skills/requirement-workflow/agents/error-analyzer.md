@@ -21,6 +21,7 @@ Error analysis and fix suggestion agent.
 ## Output
 
 Error report with:
+
 - Error details
 - Root cause
 - Suggested fixes
@@ -35,7 +36,7 @@ config:
 
 ## Example Invocation
 
-```
+````
 AI: Launching error-analyzer...
 
 ❌ Error Analysis:
@@ -51,9 +52,13 @@ Suggested Fix:
 ```typescript
 // Add at top of file
 /// <reference lib="dom" />
-```
+````
 
 Prevention:
+
 - Add tsconfig lib check to CI
 - Update project template
+
+```
+
 ```

@@ -22,6 +22,7 @@ Comprehensive code review agent.
 ## Output
 
 Code review report with:
+
 - Issues by severity
 - Suggestions
 - Files reviewed

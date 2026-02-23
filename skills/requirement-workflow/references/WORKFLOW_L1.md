@@ -10,12 +10,12 @@ Streamlined workflow for quick fixes and minor changes.
 INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → DELIVERING → DONE
 ```
 
-| Property | Value |
-|----------|-------|
-| Target Time | < 1 hour |
-| Outputs | spec.md (brief), design.md (brief), tasks.md, checklist.md, report.md |
-| Doc Depth | Brief, 1-2 paragraphs per section |
-| Best For | Bug fixes, minor changes, config updates |
+| Property    | Value                                                                 |
+| ----------- | --------------------------------------------------------------------- |
+| Target Time | < 1 hour                                                              |
+| Outputs     | spec.md (brief), design.md (brief), tasks.md, checklist.md, report.md |
+| Doc Depth   | Brief, 1-2 paragraphs per section                                     |
+| Best For    | Bug fixes, minor changes, config updates                              |
 
 ## Stages
 
@@ -24,27 +24,33 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 **Trigger:** Workflow initialization complete
 
 **AI Actions:**
+
 1. Quick analysis of issue/requirement
 2. Document brief PRD in `spec.md`
 3. Define scope and acceptance criteria
 
 **Output (spec.md - Brief):**
+
 ```markdown
 # Requirements: {name}
 
 ## Background
+
 {1-2 sentences: why this is needed}
 
 ## Scope
+
 - Fix: {what needs to be fixed}
 - Files: {estimated files affected}
 
 ## Acceptance Criteria
+
 - [ ] {primary criterion}
 - [ ] {secondary criterion if any}
 ```
 
 **Transition:**
+
 ```bash
 ./scripts/advance-stage.sh -r /project
 ```
@@ -54,10 +60,12 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 **Trigger:** Brief requirements documented
 
 **AI Actions:**
+
 1. Analyze issue/code
 2. Create simple task list (`tasks.md`)
 
 **Output (tasks.md):**
+
 ```markdown
 # Tasks
 
@@ -68,6 +76,7 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 ```
 
 **Transition:**
+
 ```bash
 ./scripts/advance-stage.sh -r /project
 ```
@@ -77,26 +86,32 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 **Trigger:** Task planning complete
 
 **AI Actions:**
+
 1. Document key technical decisions
 2. Brief solution approach in `design.md`
 
 **Output (design.md - Brief):**
+
 ```markdown
 # Technical Design: {name}
 
 ## Solution
+
 {1-2 paragraphs: what will be changed and why}
 
 ## Key Decisions
+
 - {decision 1}: {reason}
 - {decision 2}: {reason if any}
 
 ## Files to Change
+
 - {file1}: {change description}
 - {file2}: {change description}
 ```
 
 **Transition:**
+
 ```bash
 ./scripts/advance-stage.sh -r /project
 ```
@@ -106,11 +121,13 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 **Trigger:** Design documented
 
 **AI Actions:**
+
 1. Execute tasks sequentially
 2. Track progress with TodoWrite
 3. Mark each task ✅ when done
 
 **Transition:**
+
 ```bash
 ./scripts/advance-stage.sh -r /project
 ```
@@ -120,6 +137,7 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 **Trigger:** All tasks complete
 
 **AI Actions:**
+
 1. Run relevant tests
 2. Execute basic quality checks:
    - Lint check
@@ -127,6 +145,7 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 3. Update `checklist.md`
 
 **Output (checklist.md):**
+
 ```markdown
 # Checklist
 
@@ -137,6 +156,7 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 ```
 
 **Transition:**
+
 ```bash
 ./scripts/advance-stage.sh -r /project
 ```
@@ -146,26 +166,32 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 **Trigger:** All checks passed
 
 **AI Actions:**
+
 1. Generate brief change report
 2. Update `report.md`
 
 **Output (report.md - Brief):**
+
 ```markdown
 # Workflow Report
 
 ## Summary
+
 - Type: bugfix
 - Level: L1
 - Duration: ~{X} minutes
 
 ## Changes
+
 - {file1}: {change description}
 
 ## Verification
+
 - Tests: Passed
 ```
 
 **Transition:**
+
 ```bash
 ./scripts/advance-stage.sh -r /project
 ```
@@ -175,10 +201,12 @@ INIT → ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → D
 **Trigger:** Report generated
 
 **AI Actions:**
+
 1. Final summary of changes
 2. Mark workflow complete
 
 **Transition:**
+
 ```bash
 ./scripts/advance-stage.sh -r /project
 ```

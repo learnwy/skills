@@ -18,6 +18,7 @@ $SKILL_ROOT/scripts/advance-stage.sh ...
 ## Core Concept: Active Workflow
 
 All scripts use an **active workflow** mechanism:
+
 - `init-workflow.sh` creates a workflow and sets it as active
 - Other scripts automatically read the active workflow from `.trae/active_workflow`
 - Use `-p` to override with a specific workflow path
@@ -34,17 +35,18 @@ Initialize a new development workflow.
 {skill_root}/scripts/init-workflow.sh -r <root> -n <name> [OPTIONS]
 ```
 
-| Option | Description |
-|--------|-------------|
-| `-r, --root DIR` | Project root directory (required) |
-| `-n, --name NAME` | Requirement name, lowercase hyphenated (required) |
-| `-t, --type TYPE` | `feature` \| `bugfix` \| `refactor` \| `hotfix` (default: feature) |
-| `-l, --level LEVEL` | `L1` \| `L2` \| `L3` (default: L2) |
-| `-d, --description` | Brief description |
-| `--tags TAGS` | Comma-separated tags |
-| `-h, --help` | Show help |
+| Option              | Description                                                        |
+| ------------------- | ------------------------------------------------------------------ |
+| `-r, --root DIR`    | Project root directory (required)                                  |
+| `-n, --name NAME`   | Requirement name, lowercase hyphenated (required)                  |
+| `-t, --type TYPE`   | `feature` \| `bugfix` \| `refactor` \| `hotfix` (default: feature) |
+| `-l, --level LEVEL` | `L1` \| `L2` \| `L3` (default: L2)                                 |
+| `-d, --description` | Brief description                                                  |
+| `--tags TAGS`       | Comma-separated tags                                               |
+| `-h, --help`        | Show help                                                          |
 
 **Output:**
+
 - Creates: `{root}/.trae/workflow/{date}_{seq}_{type}_{name}/`
 - Sets: `{root}/.trae/active_workflow`
 - Generates: workflow.yaml, spec.md, tasks.md, checklist.md, logs/, artifacts/
@@ -57,12 +59,12 @@ Check workflow status and progress.
 ./scripts/get-status.sh -r <root> [OPTIONS]
 ```
 
-| Option | Description |
-|--------|-------------|
+| Option           | Description                       |
+| ---------------- | --------------------------------- |
 | `-r, --root DIR` | Project root directory (required) |
-| `-p, --path DIR` | Override active workflow path |
-| `--history` | Show stage transition history |
-| `--json` | Output in JSON format |
+| `-p, --path DIR` | Override active workflow path     |
+| `--history`      | Show stage transition history     |
+| `--json`         | Output in JSON format             |
 
 ### advance-stage.sh
 
@@ -72,13 +74,13 @@ Advance workflow to the next stage.
 ./scripts/advance-stage.sh -r <root> [OPTIONS]
 ```
 
-| Option | Description |
-|--------|-------------|
-| `-r, --root DIR` | Project root directory (required) |
-| `-p, --path DIR` | Override active workflow path |
+| Option           | Description                                  |
+| ---------------- | -------------------------------------------- |
+| `-r, --root DIR` | Project root directory (required)            |
+| `-p, --path DIR` | Override active workflow path                |
 | `-t, --to STAGE` | Target stage (auto-advance if not specified) |
-| `--validate` | Validate only, don't transition |
-| `--force` | Force transition (skip validation) |
+| `--validate`     | Validate only, don't transition              |
+| `--force`        | Force transition (skip validation)           |
 
 ### inject-skill.sh
 
@@ -88,25 +90,27 @@ Inject skills at workflow hook points (3-level: global, project, workflow).
 ./scripts/inject-skill.sh -r <root> --hook <hook> --skill <skill> [OPTIONS]
 ```
 
-| Option | Description |
-|--------|-------------|
-| `-r, --root DIR` | Project root directory (required) |
-| `-p, --path DIR` | Override active workflow path |
-| `--scope SCOPE` | Injection scope: `global` \| `project` \| `workflow` (default: workflow) |
-| `--hook HOOK` | Hook point (required unless --list) |
-| `--skill SKILL` | Skill name (required unless --list/--remove) |
-| `--config JSON` | Skill configuration |
-| `--required` | Mark as required (blocks on failure) |
-| `--remove` | Remove skill from hook |
-| `--list` | List all injected skills |
-| `--list-scope` | List skills for specific scope only |
+| Option           | Description                                                              |
+| ---------------- | ------------------------------------------------------------------------ |
+| `-r, --root DIR` | Project root directory (required)                                        |
+| `-p, --path DIR` | Override active workflow path                                            |
+| `--scope SCOPE`  | Injection scope: `global` \| `project` \| `workflow` (default: workflow) |
+| `--hook HOOK`    | Hook point (required unless --list)                                      |
+| `--skill SKILL`  | Skill name (required unless --list/--remove)                             |
+| `--config JSON`  | Skill configuration                                                      |
+| `--required`     | Mark as required (blocks on failure)                                     |
+| `--remove`       | Remove skill from hook                                                   |
+| `--list`         | List all injected skills                                                 |
+| `--list-scope`   | List skills for specific scope only                                      |
 
 **Injection Scopes (priority: workflow > project > global):**
+
 - `global` - Applies to all projects (stored in skill directory)
 - `project` - Applies to project (stored in `{root}/.trae/workflow/hooks.yaml`)
 - `workflow` - Applies to current workflow only
 
 **Available Hooks:**
+
 - `pre_stage_{STAGE}` - Before entering stage
 - `post_stage_{STAGE}` - After completing stage
 - `quality_gate` - Before quality checks
@@ -122,14 +126,14 @@ Generate workflow summary report.
 ./scripts/generate-report.sh -r <root> [OPTIONS]
 ```
 
-| Option | Description |
-|--------|-------------|
-| `-r, --root DIR` | Project root directory (required) |
-| `-p, --path DIR` | Override active workflow path |
+| Option            | Description                                        |
+| ----------------- | -------------------------------------------------- |
+| `-r, --root DIR`  | Project root directory (required)                  |
+| `-p, --path DIR`  | Override active workflow path                      |
 | `--format FORMAT` | `markdown` \| `json` \| `text` (default: markdown) |
-| `--output FILE` | Output file (default: artifacts/report.md) |
-| `--include-logs` | Include stage logs in report |
-| `--notify` | Send notification after generation |
+| `--output FILE`   | Output file (default: artifacts/report.md)         |
+| `--include-logs`  | Include stage logs in report                       |
+| `--notify`        | Send notification after generation                 |
 
 ---
 
@@ -214,7 +218,7 @@ Fixed: handleLgoin → handleLogin
 ```
 [TESTING] Verifying fix
 - ✅ TypeScript: passed
-- ✅ ESLint: passed  
+- ✅ ESLint: passed
 - ✅ Tests: passed
 ```
 
@@ -419,15 +423,15 @@ Continuing from where we left off...
 
 **Remember:** Replace `$SKILL_ROOT` with actual skill directory path.
 
-| Task | Command |
-|------|---------|
-| Initialize workflow | `$SKILL_ROOT/scripts/init-workflow.sh -r /project -n "name" -t feature` |
-| Check status | `$SKILL_ROOT/scripts/get-status.sh -r /project` |
-| Advance stage | `$SKILL_ROOT/scripts/advance-stage.sh -r /project` |
-| Inject skill (workflow) | `$SKILL_ROOT/scripts/inject-skill.sh -r /project --hook quality_gate --skill linter` |
-| Inject skill (global) | `$SKILL_ROOT/scripts/inject-skill.sh -r /project --scope global --hook pre_stage_DESIGNING --skill tech-writer` |
-| List injected skills | `$SKILL_ROOT/scripts/inject-skill.sh -r /project --list` |
-| Generate report | `$SKILL_ROOT/scripts/generate-report.sh -r /project` |
+| Task                    | Command                                                                                                         |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Initialize workflow     | `$SKILL_ROOT/scripts/init-workflow.sh -r /project -n "name" -t feature`                                         |
+| Check status            | `$SKILL_ROOT/scripts/get-status.sh -r /project`                                                                 |
+| Advance stage           | `$SKILL_ROOT/scripts/advance-stage.sh -r /project`                                                              |
+| Inject skill (workflow) | `$SKILL_ROOT/scripts/inject-skill.sh -r /project --hook quality_gate --skill linter`                            |
+| Inject skill (global)   | `$SKILL_ROOT/scripts/inject-skill.sh -r /project --scope global --hook pre_stage_DESIGNING --skill tech-writer` |
+| List injected skills    | `$SKILL_ROOT/scripts/inject-skill.sh -r /project --list`                                                        |
+| Generate report         | `$SKILL_ROOT/scripts/generate-report.sh -r /project`                                                            |
 
 ## Common Workflows
 

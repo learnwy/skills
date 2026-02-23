@@ -15,6 +15,7 @@ User: "Help me create a skill for testing REST APIs"
 ## Assistant Response
 
 **Step 1: Initiate Creation**
+
 ```
 I'll help you create an API testing skill!
 
@@ -23,11 +24,13 @@ Suggestion: api-tester or rest-api-helper
 ```
 
 **Step 2: User Provides Name**
+
 ```
 User: "api-tester"
 ```
 
 **Step 3: Execute Init**
+
 ```
 Creating skill template...
 
@@ -37,6 +40,7 @@ Executing: npx skills init api-tester
 ```
 
 **Step 4: Guide Structure**
+
 ```
 Your skill template is ready! Let's set it up:
 
@@ -63,11 +67,13 @@ Would you like me to help with any specific section?
 ```
 
 **Step 5: User Edits and Tests**
+
 ```
 User: "I've filled in the SKILL.md. How do I test it?"
 ```
 
 **Step 6: Testing Guidance**
+
 ```
 Great! Let's test your skill:
 
@@ -111,6 +117,7 @@ description: Helps test and validate REST API endpoints with automated checks
 ## When to Use This Skill
 
 Activate when:
+
 - User mentions "test API" or "API testing"
 - User shows API endpoints to test
 - User asks for help validating API responses
@@ -147,6 +154,7 @@ Activate when:
 → [AI validates responses]
 
 ## Tools Required
+
 - RunCommand: Execute curl or HTTP requests
 - Read: Read API specification files
 ```
@@ -154,10 +162,12 @@ Activate when:
 ## Result
 
 User now has:
+
 - ✅ Custom API testing skill
 - ✅ Template ready for customization
 - ✅ Clear testing workflow
 - ✅ Managed in own repository
 
 ## Time: ~10 minutes
+
 ## Outcome: Fully functional custom skill

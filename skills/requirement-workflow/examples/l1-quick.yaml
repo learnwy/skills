@@ -24,11 +24,11 @@ hooks:
 # Document depth settings for L1
 # L1 文档深度设置
 doc_depth:
-  spec: brief           # 1-2 paragraphs
-  design: brief         # Key decisions only
-  tasks: simple         # 3-5 tasks
-  checklist: basic      # Basic tests
-  report: brief         # Quick summary
+  spec: brief # 1-2 paragraphs
+  design: brief # Key decisions only
+  tasks: simple # 3-5 tasks
+  checklist: basic # Basic tests
+  report: brief # Quick summary
 
 # Auto-advance settings
 # 自动推进设置

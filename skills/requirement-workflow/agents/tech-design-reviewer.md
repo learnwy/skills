@@ -22,6 +22,7 @@ Technical design and architecture review agent.
 ## Output
 
 Design review report with:
+
 - Issues found
 - Recommendations
 - Approval status

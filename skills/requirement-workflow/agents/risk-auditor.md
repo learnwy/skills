@@ -21,6 +21,7 @@ PRD/feature risk assessment agent.
 ## Output
 
 Risk matrix with:
+
 - Risk category
 - Severity level (Critical/High/Medium/Low)
 - Mitigation suggestions
@@ -30,7 +31,7 @@ Risk matrix with:
 ```yaml
 config:
   focus: ["policy", "cost", "execution"]
-  depth: "comprehensive"  # or "quick"
+  depth: "comprehensive" # or "quick"
 ```
 
 ## Example Invocation

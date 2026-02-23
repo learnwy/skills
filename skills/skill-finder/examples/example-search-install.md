@@ -11,6 +11,7 @@ User: "I need help optimizing my React app's performance"
 ## Assistant Response
 
 **Step 1: Parse Intent and Search**
+
 ```
 I'll search for React performance optimization skills.
 
@@ -18,6 +19,7 @@ Executing: npx skills find react, performance
 ```
 
 **Step 2: Present Results**
+
 ```
 Found 5 skills:
 
@@ -35,11 +37,13 @@ Which skill would you like to install? (Enter number 1-5)
 ```
 
 **Step 3: User Selection**
+
 ```
 User: "1"
 ```
 
 **Step 4: Install**
+
 ```
 Installing skill: react-performance-optimization
 
@@ -49,6 +53,7 @@ Executing: npx skills add -g -y nickcrew/claude-ctx-plugin@react-performance-opt
 ```
 
 **Step 5: Verify Installation**
+
 ```
 Verifying installation...
 
@@ -64,7 +69,7 @@ The skill is now available for the AI assistant to use.
 
 If you want to customize this skill:
 1. Create your own skill repository
-2. Copy and modify the skill as needed: 
+2. Copy and modify the skill as needed:
    cp -r ~/.agents/skills/react-performance-optimization ~/my-skills/
 3. Manage versions with your own git workflow
 4. Copy updated versions back to ~/.agents/skills/ when needed
@@ -82,5 +87,7 @@ If you want to customize this skill:
 ## User Customization Workflow (Optional)
 
 If user wants to customize:
+
 ```
 User: "I want to add my own examples to this skill"
+```

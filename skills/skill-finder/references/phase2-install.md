@@ -1,34 +1,41 @@
 # Phase 2: Skill Installation
 
 ## Objective
+
 Install the selected skill to `~/.agents/skills/` only. Users manage customizations in their own repositories.
 
 ## Steps
 
 ### 1. Confirm Selection
+
 Get user's choice (number or skill name) and confirm the installation.
 
 ### 2. Execute Installation
+
 ```bash
 npx skills add -g -y <owner/repo@skill-name>
 ```
 
 **Example**:
+
 ```bash
 npx skills add -g -y nickcrew/claude-ctx-plugin@react-performance-optimization
 ```
 
 ### 3. Verify Installation
+
 ```bash
 ls ~/.agents/skills/<skill-name>
 ```
 
 Check that:
+
 - SKILL.md exists
 - Skill directory is properly created
 - Optional: references/ directory exists
 
 ### 4. Confirm Success
+
 ```
 ✅ Successfully installed <skill-name>!
 
@@ -45,6 +52,7 @@ If you want to customize this skill:
 ## Installation Verification
 
 After installation, verify the skill structure:
+
 ```bash
 cd ~/.agents/skills/<skill-name>
 ls -la
@@ -58,6 +66,7 @@ ls -la
 ## Error Handling
 
 ### Installation Fails
+
 ```
 ❌ Installation failed
 
@@ -75,6 +84,7 @@ Solutions:
 ```
 
 ### Permission Denied
+
 ```
 ❌ Permission denied writing to ~/.agents/skills
 
@@ -85,6 +95,7 @@ Solutions:
 ```
 
 ### Skill Already Exists
+
 ```
 ⚠️ Skill <skill-name> already exists in ~/.agents/skills/
 
@@ -97,6 +108,7 @@ Options:
 ## Update Existing Skill
 
 To update a skill to the latest version:
+
 ```bash
 # Check for updates
 npx skills check
@@ -111,6 +123,7 @@ npx skills add -g -y <owner/repo@skill-name>
 ## Remove Skill
 
 To remove an installed skill:
+
 ```bash
 # Interactive remove
 npx skills remove
@@ -123,6 +136,7 @@ rm -rf ~/.agents/skills/<skill-name>
 ```
 
 ## Tools Used
+
 - **RunCommand**: Execute npx commands
 - **AskUserQuestion**: Confirm installation
 - **Read**: Verify SKILL.md exists

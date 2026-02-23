@@ -21,6 +21,7 @@ PRD audit and feature pruning agent.
 ## Output
 
 Refined PRD with:
+
 - Core value statement
 - Essential features only
 - Deferred features list

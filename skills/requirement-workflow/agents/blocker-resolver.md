@@ -21,6 +21,7 @@ Blocking issue analysis and resolution agent.
 ## Output
 
 Resolution plan with:
+
 - Blocker details
 - Suggested actions
 - Workarounds

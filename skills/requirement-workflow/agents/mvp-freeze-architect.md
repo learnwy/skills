@@ -21,6 +21,7 @@ MVP scope definition and feature freezing agent.
 ## Output
 
 MVP freeze spec with:
+
 - V1 feature list (locked)
 - Frozen/deferred features
 - Risk-driven cuts
