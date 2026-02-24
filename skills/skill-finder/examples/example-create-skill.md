@@ -1,10 +1,6 @@
-# Example 2: Create New Skill
+# Example: Create New Skill
 
-This example shows how to create a custom skill from scratch.
-
-## Scenario
-
-User wants to create a skill for API testing assistance.
+Complete workflow for creating a custom skill with `AskUserQuestion`.
 
 ## User Query
 
@@ -12,162 +8,104 @@ User wants to create a skill for API testing assistance.
 User: "Help me create a skill for testing REST APIs"
 ```
 
-## Assistant Response
+## Step 1: Use AskUserQuestion for Skill Name
 
-**Step 1: Initiate Creation**
+**CRITICAL**: Use `AskUserQuestion` to get skill name:
+
+```json
+{
+  "questions": [{
+    "question": "What would you like to name your skill? (use kebab-case)",
+    "header": "Skill Name",
+    "options": [
+      {"label": "api-tester", "description": "Suggested: General API testing"},
+      {"label": "rest-api-helper", "description": "Suggested: REST-specific helper"},
+      {"label": "http-validator", "description": "Suggested: HTTP validation focus"}
+    ],
+    "multiSelect": false
+  }]
+}
+```
+
+## Step 2: User Selects Name
 
 ```
-I'll help you create an API testing skill!
-
-What would you like to name your skill? (use-kebab-case)
-Suggestion: api-tester or rest-api-helper
+User selected: "api-tester"
 ```
 
-**Step 2: User Provides Name**
+## Step 3: Execute Init
 
 ```
-User: "api-tester"
-```
-
-**Step 3: Execute Init**
-
-```
-Creating skill template...
+Assistant: Creating skill template...
 
 Executing: npx skills init api-tester
 
 ✅ Created template at ./api-tester/SKILL.md
 ```
 
-**Step 4: Guide Structure**
+## Step 4: Guide Structure
 
 ```
-Your skill template is ready! Let's set it up:
+Your skill template is ready! Here's the structure:
 
-1. Open ./api-tester/SKILL.md
+./api-tester/
+└── SKILL.md
 
-2. Update the frontmatter:
+Required sections in SKILL.md:
+
+1. Frontmatter (YAML):
    ---
    name: api-tester
-   description: Helps test and validate REST API endpoints with automated checks
+   description: Helps test and validate REST API endpoints
    ---
 
-3. Add trigger conditions in "When to Use":
+2. When to Use This Skill:
    - User mentions "test API" or "API testing"
    - User shows API endpoints to test
    - User asks for API validation help
 
-4. Add your testing logic:
+3. Instructions:
    - Parse API endpoint information
    - Generate test cases
    - Validate responses
-   - Check status codes, headers, body format
+   - Check status codes, headers, body
 
-Would you like me to help with any specific section?
+Would you like me to help edit any specific section?
 ```
 
-**Step 5: User Edits and Tests**
+## Step 5: Testing Guidance
 
 ```
 User: "I've filled in the SKILL.md. How do I test it?"
 ```
 
-**Step 6: Testing Guidance**
-
 ```
-Great! Let's test your skill:
+Assistant: Great! To test your api-tester skill:
 
-1. Copy to AI assistant skills directory:
-   cp -r ./api-tester ~/.agents/skills/
+1. **Verify skill loads**:
+   - Open a new chat session
+   - Ask: "Can you help me test an API?"
+   - The skill should activate based on triggers
 
-2. Test by asking a question that should trigger it:
-   "Can you help me test this API endpoint: GET /api/users"
+2. **Test with a sample request**:
+   - Provide an endpoint: "Test GET https://api.example.com/users"
+   - Verify the skill follows your instructions
 
-3. If it works, commit to your repository:
-   cd ~/my-skills-repo
-   cp -r ./api-tester .
-   git add api-tester/
-   git commit -m "Add API tester skill"
-
-4. To update later:
-   - Edit in your repository
-   - Copy updated version: cp -r ~/my-skills-repo/api-tester ~/.agents/skills/
+3. **Iterate and refine**:
+   - Adjust SKILL.md instructions as needed
+   - Test edge cases (POST, PUT, DELETE)
 ```
 
-## Complete Workflow Summary
+## Step 6: Removal Example
 
-1. User requests skill creation
-2. AI helps choose skill name
-3. AI executes `npx skills init`
-4. AI guides through SKILL.md structure
-5. User edits the skill
-6. User tests by copying to ~/.agents/skills/
-7. User manages in own git repository
+To remove a skill you no longer need:
 
-## Template Generated
+```bash
+# Delete the skill directory
+rm -rf ./api-tester/
 
-```markdown
----
-name: api-tester
-description: Helps test and validate REST API endpoints with automated checks
----
-
-# API Tester
-
-## When to Use This Skill
-
-Activate when:
-
-- User mentions "test API" or "API testing"
-- User shows API endpoints to test
-- User asks for help validating API responses
-
-## Instructions
-
-1. Parse the API endpoint information
-   - Method (GET, POST, PUT, DELETE, etc.)
-   - URL and parameters
-   - Headers and authentication
-   - Expected request/response format
-
-2. Generate test cases
-   - Happy path scenarios
-   - Edge cases
-   - Error conditions
-
-3. Provide testing commands
-   - curl examples
-   - HTTP client code snippets
-   - Validation checks
-
-4. Analyze responses
-   - Status codes
-   - Response headers
-   - Body format and content
-   - Performance metrics
-
-## Examples
-
-[User provides endpoint]
-→ [AI generates test cases]
-→ [AI provides curl commands]
-→ [AI validates responses]
-
-## Tools Required
-
-- RunCommand: Execute curl or HTTP requests
-- Read: Read API specification files
+# Or move it elsewhere for backup
+mv ./api-tester/ ~/skill-backups/
 ```
 
-## Result
-
-User now has:
-
-- ✅ Custom API testing skill
-- ✅ Template ready for customization
-- ✅ Clear testing workflow
-- ✅ Managed in own repository
-
-## Time: ~10 minutes
-
-## Outcome: Fully functional custom skill
+**Note**: Simply removing the skill directory will disable it. No uninstall command is needed.

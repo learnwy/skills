@@ -1,121 +1,189 @@
 ---
 name: skill-finder
-description: Intelligent skill discovery and installation assistant. Helps users find community skills and install them to ~/.agents/skills/. Users manage customizations in their own repositories.
+description: "Intelligent skill discovery, installation, and management assistant using the npx skills CLI. Helps users: (1) Find skills from community with 'npx skills find', (2) Install skills with 'npx skills add', (3) Remove skills with 'npx skills remove', (4) List installed skills with 'npx skills list', (5) Check/update skills with 'npx skills check/update', (6) Create new skills with 'npx skills init'. Triggers on: 'find skill', 'install skill', 'remove skill', 'list skills', 'create skill', or any skill management query."
 ---
 
 # Skill Finder
 
-Intelligent assistant for discovering and installing AI assistant skills from the community repository.
+Intelligent assistant for discovering, installing, and managing AI assistant skills using the `npx skills` CLI.
 
 ## When to Use This Skill
 
-Activate this skill when the user:
+Activate when the user:
 
-- Wants to find a skill for a specific purpose
-- Mentions "skill", "find skill", "search skill", "install skill"
-- Describes a problem that might be solved by a community skill
-- Wants to create a new custom skill using `npx skills init`
-- Asks about available skills or skill installation
+- Wants to find/search for a skill
+- Wants to install or add a skill
+- Wants to remove/uninstall a skill
+- Wants to list installed skills
+- Wants to check for or apply updates
+- Wants to create a new custom skill
+- Mentions "skill" with management intent
 
-## Core Capabilities
+## Command Reference
 
-1. **Intelligent Search**: Parse natural language queries to find relevant skills
-2. **Automated Installation**: Install skills to `~/.agents/skills/`
-3. **Skill Creation**: Guide users in creating new skills with `npx skills init`
+| Command   | Purpose                          | Reference                                    |
+| --------- | -------------------------------- | -------------------------------------------- |
+| `find`    | Search for skills                | [cmd-find.md](references/cmd-find.md)        |
+| `add`     | Install a skill                  | [cmd-add.md](references/cmd-add.md)          |
+| `remove`  | Remove installed skills          | [cmd-remove.md](references/cmd-remove.md)    |
+| `list`    | List installed skills            | [cmd-list.md](references/cmd-list.md)        |
+| `check`   | Check for updates                | [cmd-check.md](references/cmd-check.md)      |
+| `update`  | Update all skills                | [cmd-update.md](references/cmd-update.md)    |
+| `init`    | Create new skill template        | [cmd-init.md](references/cmd-init.md)        |
 
-## Workflow Overview
+## Quick Usage
+
+```bash
+npx skills find [query]           # Search skills
+npx skills add -g <package>       # Install globally
+npx skills remove [skill]         # Remove skill
+npx skills list -g                # List global skills
+npx skills check                  # Check for updates
+npx skills update                 # Update all skills
+npx skills init <name>            # Create new skill
+```
+
+## Core Workflows
+
+### 1. Find and Install Skills
 
 ```
-[Search] → [Install to ~/.agents/skills/] → Done
-              ↓
-   User manages customizations in own repo
-
-[Create] → [Guide structure] → User owns and manages
+User: "Find me a React performance skill"
+     ↓
+[Parse intent] → [npx skills find react performance]
+     ↓
+[Present results] → [AskUserQuestion for selection]
+     ↓
+[npx skills add -g -y <selected>] → Done
 ```
 
-## Quick Reference
+**Key**: Use `AskUserQuestion` to let user select which skill to install.
 
-| Phase | Task              | Reference File                                         |
-| ----- | ----------------- | ------------------------------------------------------ |
-| 1     | Search for skills | Read [phase1-search.md](references/phase1-search.md)   |
-| 2     | Install skills    | Read [phase2-install.md](references/phase2-install.md) |
-| 3     | Create new skills | Read [phase3-create.md](references/phase3-create.md)   |
+### 2. Remove Skills
+
+```
+User: "Remove the code-review skill"
+     ↓
+[npx skills ls -g] → [Show installed skills]
+     ↓
+[AskUserQuestion to confirm removal]
+     ↓
+[npx skills remove -g -y <selected>] → Done
+```
+
+**Key**: Use `AskUserQuestion` to confirm which skill(s) to remove.
+
+### 3. Create New Skills
+
+```
+User: "Help me create a skill for SQL optimization"
+     ↓
+[AskUserQuestion for skill name]
+     ↓
+[npx skills init <name>] → [Guide structure]
+     ↓
+[User edits] → [cp -r ./<name> ~/.agents/skills/]
+```
+
+## AskUserQuestion Integration
+
+**IMPORTANT**: Always use `AskUserQuestion` for user decisions:
+
+### Skill Selection (after find)
+
+Use `multiSelect: true` to allow installing multiple skills at once:
+
+```json
+{
+  "questions": [{
+    "question": "Which skill(s) would you like to install? (can select multiple)",
+    "header": "Install",
+    "options": [
+      {"label": "skill-1", "description": "owner/repo - description"},
+      {"label": "skill-2", "description": "owner/repo - description"},
+      {"label": "skill-3", "description": "owner/repo - description"},
+      {"label": "Search again", "description": "Try different keywords"}
+    ],
+    "multiSelect": true
+  }]
+}
+```
+
+### Installation Scope (if user hasn't specified)
+
+```json
+{
+  "questions": [{
+    "question": "Where should the skill(s) be installed?",
+    "header": "Scope",
+    "options": [
+      {"label": "Project (Recommended)", "description": "Install to ./.agents/skills/ for this project only"},
+      {"label": "Global", "description": "Install to ~/.agents/skills/ for all projects"}
+    ],
+    "multiSelect": false
+  }]
+}
+```
+
+### Removal Confirmation
+
+```json
+{
+  "questions": [{
+    "question": "Which skill(s) would you like to remove?",
+    "header": "Remove",
+    "options": [
+      {"label": "skill-name", "description": "~/.agents/skills/skill-name"},
+      {"label": "All listed", "description": "Remove all skills shown"},
+      {"label": "Cancel", "description": "Don't remove any"}
+    ],
+    "multiSelect": true
+  }]
+}
+```
+
+## Default Configuration
+
+| Setting       | Default Value | Description                          |
+| ------------- | ------------- | ------------------------------------ |
+| Scope         | Project       | `-g` for global, none for project    |
+| Agent         | All           | `-a <agent>` for specific agent only |
+
+**Supported Agents**: `trae-cn`, `trae`, `cursor`, `claude-code`, `qwen-code`
+
+When user doesn't specify, ask or use defaults:
+- **Scope**: Default to project-level unless user says "global" or "for all projects"
+- **Agent**: Default installs to all detected agents; use `-a` to target specific agent
+
+## Installation Locations
+
+| Scope   | Flag | Location                |
+| ------- | ---- | ----------------------- |
+| Global  | `-g` | `~/.agents/skills/`     |
+| Project | none | `./.agents/skills/`     |
 
 ## Examples
 
-Real usage examples:
-
-- [Example 1: Search and install](examples/example-search-install.md)
-- [Example 2: Create new skill](examples/example-create-skill.md)
-
-## High-Level Execution Flow
-
-### Phase 1: Search
-
-1. Parse user intent and extract keywords
-2. Execute `npx skills find [keywords]`
-3. Present formatted results to user
-4. **For details**: Read [phase1-search.md](references/phase1-search.md)
-
-### Phase 2: Install
-
-1. Confirm user's skill selection
-2. Execute `npx skills add -g -y <skill-name>`
-3. Verify installation in `~/.agents/skills/`
-4. Provide success message
-5. **For details**: Read [phase2-install.md](references/phase2-install.md)
-
-### Phase 3: Create New Skill
-
-1. Ask user for skill name
-2. Execute `npx skills init <name>` to create template
-3. Guide user through SKILL.md structure
-4. User owns and manages the skill in their own repository
-5. **For details**: Read [phase3-create.md](references/phase3-create.md)
-
-## Key Algorithms
-
-### Intent Analysis
-
-- Extract keywords from natural language
-- Identify problem domain (e.g., "React performance", "code review")
-- Generate focused search terms (1-3 keywords)
-
-### Search Result Formatting
-
-- Parse `npx skills find` output
-- Extract: skill name, owner/repo, URL
-- Present in numbered list for easy selection
+- [Search and Install](examples/example-search-install.md)
+- [Remove Skills](examples/example-remove-skill.md)
+- [Create New Skill](examples/example-create-skill.md)
 
 ## Error Handling
 
-Common errors and solutions:
-
-- **Network errors**: Suggest retry and check connection
-- **Skill not found**: Suggest alternative keywords or browse https://skills.sh/
-- **Installation fails**: Check npm/npx availability, network connection
-- **Permission denied**: Provide guidance on fixing permissions
+| Error              | Solution                                           |
+| ------------------ | -------------------------------------------------- |
+| Network error      | Check connection, retry command                    |
+| Skill not found    | Try broader keywords, browse https://skills.sh/    |
+| Permission denied  | Check `~/.agents` permissions, use chmod 755       |
+| npm/npx not found  | Install Node.js                                    |
 
 ## Tools Required
 
-- **RunCommand**: Execute shell commands (npx)
-- **AskUserQuestion**: Interactive prompts for skill selection
-- **Grep**: Parse command output
-- **Read**: Read created SKILL.md templates
+- **RunCommand**: Execute `npx skills` commands
+- **AskUserQuestion**: Interactive selection and confirmation
+- **Read**: Verify SKILL.md files
 
-## Important Notes
+## Resources
 
-1. **User Manages Customizations**: Users maintain their own skill repositories
-2. **No Version Management**: Users handle updates via their own git workflow
-3. **Simple Installation**: Skills are only installed to `~/.agents/skills/`
-4. **User Owns Created Skills**: Skills created with `npx skills init` belong to the user
-
-## Summary
-
-This skill provides streamlined skill discovery and installation:
-
-- 🔍 **Search**: Natural language skill discovery using `npx skills find`
-- 📦 **Install**: One-command installation to `~/.agents/skills/`
-- 🆕 **Create**: Guided skill creation with `npx skills init`
-
-Users manage skill customizations and versions in their own repositories.
+- Community skills: https://skills.sh/
+- CLI documentation: `npx skills --help`
