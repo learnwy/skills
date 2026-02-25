@@ -1,30 +1,59 @@
 # Rule Types Reference
 
-## Type Selection Guide
+Guide for selecting appropriate rule types based on project analysis.
 
-| Category     | Rule Type         | When to Use                                     |
-| ------------ | ----------------- | ----------------------------------------------- |
-| Code Style   | Always Apply      | Enforced across all code                        |
-| Framework    | File-Specific     | Only for specific file types                    |
-| Architecture | Intelligent       | Context-dependent decisions                     |
-| Security     | Always Apply      | Critical constraints                            |
-| Testing      | File-Specific     | Test files only                                 |
-| Documentation| Intelligent       | When writing docs                               |
+## Analysis → Rule Type Mapping
 
-## Rule Categories
+| What You Find in Project        | Recommended Rule Type | Application Mode      |
+| ------------------------------- | --------------------- | --------------------- |
+| Consistent naming patterns      | Code Style            | Always Apply          |
+| Specific framework usage        | Framework             | File-Specific (globs) |
+| Clear layer boundaries          | Architecture          | Apply Intelligently   |
+| Test file conventions           | Testing               | File-Specific (globs) |
+| Security-sensitive code         | Security              | Always Apply          |
+| Business domain patterns        | Domain                | Apply Intelligently   |
 
-### Code Style Rules
+## Rule Categories by Project Aspect
 
-Enforce consistent coding patterns across the project.
+### 1. Architecture Rules
 
-**Key elements:**
+**Analyze for:**
 
-- Naming conventions (camelCase, PascalCase, snake_case)
-- Indentation and formatting
+- Directory structure (src/, lib/, core/, infra/)
+- Layer separation (UI, Domain, Data)
+- Module boundaries
+- Dependency direction
+
+**Rule example:**
+
+```markdown
+---
+description: Apply when designing modules or reviewing architecture
+alwaysApply: false
+---
+
+# Architecture Guidelines
+
+## Layer Boundaries
+- UI → Domain → Data (unidirectional)
+- Domain layer has no external dependencies
+- Use dependency injection for cross-layer communication
+
+## Module Structure
+- One responsibility per module
+- Explicit public interface via index.ts
+```
+
+### 2. Code Style Rules
+
+**Analyze for:**
+
+- Variable naming (camelCase, snake_case, PascalCase)
+- File naming conventions
 - Import organization
-- Comment style
+- Formatting preferences
 
-**Example:**
+**Rule example:**
 
 ```markdown
 ---
@@ -33,30 +62,28 @@ alwaysApply: true
 
 # Code Style
 
-## Naming
-- Variables: camelCase
+## Naming Conventions
+- Variables/functions: camelCase
+- Classes/Types/Components: PascalCase
 - Constants: UPPER_SNAKE_CASE
-- Classes/Types: PascalCase
-- Private: prefix with `_`
+- Private fields: prefix with _
 
-## Formatting
-- 2 spaces indentation
-- Max line length: 100
-- Trailing commas in multiline
+## Import Order
+1. External packages
+2. Internal modules (@/)
+3. Relative imports (./)
 ```
 
-### Framework Rules
+### 3. Framework-Specific Rules
 
-Framework-specific guidelines and patterns.
+**Analyze for:**
 
-**Key elements:**
+- Framework version and patterns
+- Component structure
+- State management approach
+- API patterns
 
-- Framework version constraints
-- Preferred patterns (hooks, composition)
-- Anti-patterns to avoid
-- Import preferences
-
-**Example:**
+**Rule example (React):**
 
 ```markdown
 ---
@@ -64,87 +91,29 @@ globs: "*.tsx,*.jsx"
 alwaysApply: false
 ---
 
-# React Guidelines
+# React Patterns
 
-## Patterns
-- Prefer functional components with hooks
-- Use composition over inheritance
-- Extract logic to custom hooks
+## Components
+- Functional components with hooks
+- Extract logic to custom hooks when reused
+- Use composition over prop drilling
 
-## Anti-patterns
-- Avoid prop drilling beyond 2 levels
-- No inline styles for reusable components
+## State
+- Local state for UI-only concerns
+- Context for cross-component state
+- External store for global state
 ```
 
-### Architecture Rules
+### 4. Testing Rules
 
-System design and module organization.
+**Analyze for:**
 
-**Key elements:**
+- Test file patterns (*.test.ts, *.spec.ts)
+- Testing framework (Jest, Vitest, etc.)
+- Test structure (describe/it, AAA pattern)
+- Mock patterns
 
-- Layer boundaries
-- Dependency direction
-- Module responsibilities
-- Communication patterns
-
-**Example:**
-
-```markdown
----
-description: Apply when designing new modules or refactoring architecture
-alwaysApply: false
----
-
-# Architecture Guidelines
-
-## Layers
-- UI → Domain → Data (unidirectional)
-- Domain layer has no external dependencies
-
-## Modules
-- One responsibility per module
-- Explicit public interface (index.ts)
-```
-
-### Security Rules
-
-Security constraints and practices.
-
-**Key elements:**
-
-- Input validation
-- Authentication/Authorization
-- Data handling
-- API security
-
-**Example:**
-
-```markdown
----
-alwaysApply: true
----
-
-# Security Rules
-
-## CRITICAL
-- Never log sensitive data (passwords, tokens, PII)
-- Always validate user input
-- Use parameterized queries (no string concatenation)
-- Escape output for XSS prevention
-```
-
-### Testing Rules
-
-Testing practices and patterns.
-
-**Key elements:**
-
-- Test structure (AAA pattern)
-- Coverage requirements
-- Mock strategies
-- Test naming
-
-**Example:**
+**Rule example:**
 
 ```markdown
 ---
@@ -155,71 +124,86 @@ alwaysApply: false
 # Testing Guidelines
 
 ## Structure
-- Arrange: Set up test data and mocks
-- Act: Execute the function under test
-- Assert: Verify expected outcomes
+- Follow AAA: Arrange, Act, Assert
+- One assertion concept per test
+- Descriptive test names
 
-## Naming
-- Pattern: `should_[expected]_when_[condition]`
-- Descriptive, readable names
+## Mocking
+- Mock external dependencies only
+- Reset mocks between tests
+- Use dependency injection for testability
 ```
 
-### Documentation Rules
+### 5. Security Rules
 
-Documentation standards.
+**Analyze for:**
 
-**Key elements:**
+- Authentication patterns
+- Data validation
+- Sensitive data handling
+- API security
 
-- Comment requirements
-- JSDoc/TSDoc format
-- README structure
-- API documentation
-
-**Example:**
+**Rule example:**
 
 ```markdown
 ---
-description: Apply when writing documentation or public APIs
+alwaysApply: true
+---
+
+# Security Practices
+
+## CRITICAL
+- Never log sensitive data (passwords, tokens, PII)
+- Always validate user input at entry points
+- Use parameterized queries for database operations
+- Sanitize output to prevent XSS
+```
+
+### 6. Domain Rules
+
+**Analyze for:**
+
+- Business entity names
+- Workflow patterns
+- Domain terminology
+- Business constraints
+
+**Rule example:**
+
+```markdown
+---
+description: Apply when working with business logic or domain entities
 alwaysApply: false
 ---
 
-# Documentation Guidelines
+# Domain Guidelines
 
-## Comments
-- Explain WHY, not WHAT
-- Document public APIs with JSDoc
-- Keep comments up-to-date with code
+## Entity Naming
+- User, Account, Transaction (not usr, acct, txn)
+- Use domain terminology consistently
 
-## Public APIs
-- Describe parameters and return values
-- Include usage examples
-- Note edge cases and errors
+## Business Rules
+- All monetary values in cents (integer)
+- Dates in UTC, display in user timezone
 ```
 
-## Combining Rules
-
-Rules can work together:
+## Application Mode Selection
 
 ```
-┌─────────────────────────────────────────────────────┐
-│ Always Apply: Code Style, Security                   │
-│                                                     │
-│ ┌─────────────────────────────────────────────────┐ │
-│ │ File-Specific: *.tsx → React Guidelines         │ │
-│ │ File-Specific: *.test.ts → Testing Guidelines   │ │
-│ └─────────────────────────────────────────────────┘ │
-│                                                     │
-│ Intelligent: Architecture (when designing)          │
-│ Intelligent: Documentation (when documenting)       │
-└─────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│ Question: When should this rule apply?                          │
+├─────────────────────────────────────────────────────────────────┤
+│ Always, for all code?           → alwaysApply: true             │
+│ Only for specific file types?   → globs: "*.ts" + alwaysApply: false │
+│ When AI thinks it's relevant?   → description: "..." + alwaysApply: false │
+│ Only when explicitly mentioned? → alwaysApply: false (no globs) │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-## Priority Order
-
-When multiple rules apply:
+## Priority When Multiple Rules Apply
 
 1. User Rules (global preferences)
-2. Always Apply (project-wide)
-3. File-Specific (when globs match)
-4. Intelligent (when AI determines relevant)
-5. Manual (`#RuleName` reference)
+2. Always Apply rules (project-wide)
+3. File-Specific rules (when globs match)
+4. Intelligent rules (when AI determines relevant)
+5. Manual rules (`#RuleName` reference)

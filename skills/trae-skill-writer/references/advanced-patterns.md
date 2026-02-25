@@ -1,104 +1,136 @@
 # Advanced Skill Patterns
 
-Reference for complex skill design patterns. Load when creating sophisticated skills with multiple variants or workflows.
+Patterns for creating project-specific skills based on analysis.
 
-## Pattern 1: Multi-Variant Skills
+## Analysis → Skill Pattern Mapping
 
-For skills supporting multiple frameworks/options, keep selection logic in SKILL.md and variant details in references:
+| What You Find in Project         | Recommended Skill Pattern    | Example                      |
+| -------------------------------- | ---------------------------- | ---------------------------- |
+| Multi-step workflows             | Workflow Automation          | Order processing, deployment |
+| Complex business domain          | Domain Knowledge Injection   | Pricing rules, entity models |
+| Repetitive code generation       | Template/Scaffold Generation | Component creation, API stubs|
+| CLI tools with specific usage    | Tool Integration             | Database migration, testing  |
+| Multiple variants (frameworks)   | Multi-Variant Selection      | Cloud providers, DB types    |
+
+## Pattern 1: Workflow Automation Skills
+
+**When to use:** Project has repetitive multi-step processes.
+
+**Structure:**
 
 ```
-cloud-deploy/
-├── SKILL.md (workflow + provider selection)
-└── references/
-    ├── aws.md
-    ├── gcp.md
-    └── azure.md
+workflow-skill/
+├── SKILL.md (overview + stage flow)
+├── references/
+│   ├── stage-details.md
+│   └── error-handling.md
+└── scripts/
+    └── validate.sh
 ```
 
-**SKILL.md example:**
+**SKILL.md pattern:**
 
 ```markdown
-## Cloud Provider Selection
+## Workflow
 
-| Provider | Use When                    | Reference                        |
-| -------- | --------------------------- | -------------------------------- |
-| AWS      | Team uses AWS, EKS, Lambda  | [aws.md](references/aws.md)      |
-| GCP      | Team uses GCP, GKE, Cloud Run | [gcp.md](references/gcp.md)    |
-| Azure    | Team uses Azure, AKS        | [azure.md](references/azure.md)  |
-
-Select provider based on user's context, then load specific reference.
-```
-
-## Pattern 2: Domain-Specific Organization
-
-Organize by domain to avoid loading irrelevant context:
-
-```
-analytics-skill/
-├── SKILL.md (overview + navigation)
-└── references/
-    ├── finance.md (revenue, billing)
-    ├── sales.md (opportunities, pipeline)
-    ├── product.md (usage, features)
-    └── marketing.md (campaigns, attribution)
-```
-
-When user asks about sales metrics, AI only reads `sales.md`.
-
-## Pattern 3: Conditional Details
-
-Show basic content, link to advanced content:
-
-```markdown
-## Creating Documents
-
-Use docx-js for new documents. Basic example:
-
-\`\`\`javascript
-const doc = new Document({ sections: [...] });
+\`\`\`
+[Stage 1: Analyze]
+       ↓
+[Stage 2: Validate]
+       ↓
+[Stage 3: Execute]
+       ↓
+[Stage 4: Verify]
 \`\`\`
 
-**For tracked changes**: See [REDLINING.md](references/REDLINING.md)
-**For OOXML details**: See [OOXML.md](references/OOXML.md)
+## Stage Details
+
+| Stage    | Input         | Output        | Reference                         |
+| -------- | ------------- | ------------- | --------------------------------- |
+| Analyze  | User request  | Requirements  | [details.md](references/stage-details.md#analyze) |
+| Validate | Requirements  | Validation OK | [details.md](references/stage-details.md#validate) |
 ```
 
-## Pattern 4: Layered Workflow Skills
+## Pattern 2: Domain Knowledge Skills
 
-For complex workflows with multiple stages:
+**When to use:** Project has complex business logic that AI needs to understand.
 
-```
-requirement-workflow/
-├── SKILL.md (overview + stage loop)
-├── references/
-│   ├── WORKFLOW_L1.md (quick workflow)
-│   ├── WORKFLOW_L2.md (standard workflow)
-│   └── WORKFLOW_L3.md (complex workflow)
-├── agents/
-│   ├── AGENTS.md (agent overview)
-│   ├── code-reviewer.md
-│   └── risk-auditor.md
-├── scripts/
-│   └── init-workflow.sh
-└── assets/
-    ├── spec.md.template
-    └── tasks.md.template
-```
-
-## Pattern 5: CLI Tool Integration
-
-For skills wrapping CLI tools:
+**Structure:**
 
 ```
-skill-finder/
+domain-skill/
+├── SKILL.md (domain overview)
+└── references/
+    ├── entities.md (entity models)
+    ├── rules.md (business rules)
+    └── terminology.md (domain vocabulary)
+```
+
+**SKILL.md pattern:**
+
+```markdown
+## Domain Model
+
+| Entity      | Key Attributes        | Rules                           |
+| ----------- | --------------------- | ------------------------------- |
+| Order       | id, status, items     | [rules.md#order](references/rules.md#order) |
+| Payment     | amount, method        | [rules.md#payment](references/rules.md#payment) |
+
+## Terminology
+
+- **SKU**: Stock Keeping Unit, unique product identifier
+- **Fulfillment**: Process of preparing and shipping order
+
+See [terminology.md](references/terminology.md) for complete glossary.
+```
+
+## Pattern 3: Multi-Variant Selection
+
+**When to use:** Skill needs to support multiple frameworks/variants.
+
+**Structure:**
+
+```
+multi-variant-skill/
+├── SKILL.md (selection logic + quick start)
+└── references/
+    ├── variant-a.md
+    ├── variant-b.md
+    └── variant-c.md
+```
+
+**SKILL.md pattern:**
+
+```markdown
+## Variant Selection
+
+| Variant | Use When                      | Reference                        |
+| ------- | ----------------------------- | -------------------------------- |
+| AWS     | Team uses AWS infrastructure  | [aws.md](references/aws.md)      |
+| GCP     | Team uses GCP                 | [gcp.md](references/gcp.md)      |
+| Azure   | Team uses Azure               | [azure.md](references/azure.md)  |
+
+**Selection logic:**
+1. Check existing infrastructure in project
+2. Look for existing cloud config files
+3. Ask user if unclear
+```
+
+## Pattern 4: Tool Integration Skills
+
+**When to use:** Project uses CLI tools with specific patterns.
+
+**Structure:**
+
+```
+tool-skill/
 ├── SKILL.md (overview + quick usage)
 ├── references/
-│   ├── cmd-find.md
-│   ├── cmd-add.md
-│   ├── cmd-remove.md
-│   └── cmd-list.md
-└── examples/
-    ├── search-install.md
-    └── create-skill.md
+│   ├── cmd-x.md
+│   ├── cmd-y.md
+│   └── cmd-z.md
+└── scripts/
+    └── wrapper.sh
 ```
 
 **SKILL.md pattern:**
@@ -106,78 +138,70 @@ skill-finder/
 ```markdown
 ## Command Reference
 
-| Command  | Purpose              | Reference                           |
-| -------- | -------------------- | ----------------------------------- |
-| `find`   | Search for skills    | [cmd-find.md](references/cmd-find.md) |
-| `add`    | Install a skill      | [cmd-add.md](references/cmd-add.md)   |
+| Command | Purpose              | Reference                      |
+| ------- | -------------------- | ------------------------------ |
+| `init`  | Initialize           | [cmd-init.md](references/cmd-init.md) |
+| `run`   | Execute              | [cmd-run.md](references/cmd-run.md)   |
 
 ## Quick Usage
 
 \`\`\`bash
-npx skills find [query]
-npx skills add -g <package>
+# Most common commands
+tool init <name>
+tool run <target>
 \`\`\`
 ```
 
-## Freedom Levels
+## Pattern 5: Template Generation Skills
 
-Match specificity to task fragility:
+**When to use:** Project needs standardized file generation.
 
-| Freedom | When to Use              | Format             | Example                  |
-| ------- | ------------------------ | ------------------ | ------------------------ |
-| High    | Multiple valid approaches | Text instructions  | Architecture decisions   |
-| Medium  | Preferred pattern exists | Pseudocode/params  | Code templates           |
-| Low     | Fragile/critical ops     | Specific scripts   | Database migrations      |
-
-## Progressive Disclosure Guidelines
-
-### Keep SKILL.md Lean
+**Structure:**
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│ SKILL.md (< 500 lines)                                          │
-│ ├── When to Use / Do NOT invoke when                            │
-│ ├── Quick workflow overview                                     │
-│ ├── Command/reference table                                     │
-│ └── Links to detailed references                                │
-└─────────────────────────────────────────────────────────────────┘
-         ↓ (if needed)
-┌─────────────────────────────────────────────────────────────────┐
-│ references/*.md                                                  │
-│ ├── One file per domain/variant/command                         │
-│ ├── Include TOC for files > 100 lines                           │
-│ └── Link back to SKILL.md for context                           │
-└─────────────────────────────────────────────────────────────────┘
+template-skill/
+├── SKILL.md (generation rules)
+└── assets/
+    ├── component.tsx.template
+    ├── test.tsx.template
+    └── style.css.template
 ```
 
-### Reference File Structure
-
-For files > 100 lines, include table of contents:
+**SKILL.md pattern:**
 
 ```markdown
-# API Reference
+## Generation Rules
 
-## Table of Contents
+1. Analyze target location
+2. Select appropriate template
+3. Fill template with context
+4. Create file at correct path
 
-- [Authentication](#authentication)
-- [Endpoints](#endpoints)
-- [Error Handling](#error-handling)
+## Templates
 
-## Authentication
-
-...
-
-## Endpoints
-
-...
+| Type      | Template                          | Output Location        |
+| --------- | --------------------------------- | ---------------------- |
+| Component | [component.tsx](assets/component.tsx.template) | src/components/{name}/ |
+| Test      | [test.tsx](assets/test.tsx.template) | src/components/{name}/__tests__/ |
 ```
+
+## Project Analysis Checklist
+
+Before creating any skill, analyze:
+
+- [ ] What workflows are repetitive?
+- [ ] What domain knowledge is project-specific?
+- [ ] What tools does the project use?
+- [ ] What conventions exist?
+- [ ] What templates would help?
+- [ ] What patterns exist in existing `.trae/skills/`?
 
 ## Anti-Patterns to Avoid
 
-| Anti-Pattern               | Problem                        | Solution                          |
-| -------------------------- | ------------------------------ | --------------------------------- |
-| Deeply nested references   | Hard to navigate               | Keep references 1 level deep      |
-| Everything in SKILL.md     | Token bloat                    | Split to references/              |
-| No "When to Use" section   | Inconsistent triggering        | Always include explicit triggers  |
-| Vague description          | Won't trigger correctly        | Include specific keywords         |
-| README/CHANGELOG           | Not for AI agents              | Delete these files                |
+| Anti-Pattern                 | Problem                     | Solution                         |
+| ---------------------------- | --------------------------- | -------------------------------- |
+| Generic skills               | Don't match project         | Analyze project first            |
+| Vague triggers               | Won't activate correctly    | Specific keywords in description |
+| Everything in SKILL.md       | Token bloat                 | Split to references/             |
+| Imposing new patterns        | Conflicts with project      | Match existing conventions       |
+| README/docs files            | Not for AI                  | Delete these files               |
