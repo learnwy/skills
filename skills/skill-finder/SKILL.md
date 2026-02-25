@@ -1,189 +1,110 @@
 ---
 name: skill-finder
-description: "Helps users discover and install agent skills when they ask questions like 'how do I do X', 'find a skill for X', 'is there a skill that can...', or express interest in extending capabilities. This skill should be used when the user is looking for functionality that might exist as an installable skill."
+description: "Discover, install, and manage AI assistant skills using npx skills CLI. Use when user wants to find a skill, install a skill, remove skills, list installed skills, or create new skills. Triggers on: 'find a skill', 'install skill', 'remove skill', 'list skills', 'how do I do X', 'is there a skill for'."
 ---
 
 # Skill Finder
 
-Intelligent assistant for discovering, installing, and managing AI assistant skills using the `npx skills` CLI.
+Manage AI assistant skills using `npx skills` CLI.
 
-## When to Use This Skill
-
-Activate when the user:
-
-- Wants to find/search for a skill
-- Wants to install or add a skill
-- Wants to remove/uninstall a skill
-- Wants to list installed skills
-- Wants to check for or apply updates
-- Wants to create a new custom skill
-- Mentions "skill" with management intent
-
-## Command Reference
-
-| Command   | Purpose                          | Reference                                    |
-| --------- | -------------------------------- | -------------------------------------------- |
-| `find`    | Search for skills                | [cmd-find.md](references/cmd-find.md)        |
-| `add`     | Install a skill                  | [cmd-add.md](references/cmd-add.md)          |
-| `remove`  | Remove installed skills          | [cmd-remove.md](references/cmd-remove.md)    |
-| `list`    | List installed skills            | [cmd-list.md](references/cmd-list.md)        |
-| `check`   | Check for updates                | [cmd-check.md](references/cmd-check.md)      |
-| `update`  | Update all skills                | [cmd-update.md](references/cmd-update.md)    |
-| `init`    | Create new skill template        | [cmd-init.md](references/cmd-init.md)        |
-
-## Quick Usage
+## Commands
 
 ```bash
 npx skills find [query]           # Search skills
 npx skills add -g <package>       # Install globally
-npx skills remove [skill]         # Remove skill
+npx skills add <package>          # Install to project
+npx skills remove -g [skill]      # Remove global skill
 npx skills list -g                # List global skills
+npx skills list                   # List project skills
 npx skills check                  # Check for updates
 npx skills update                 # Update all skills
 npx skills init <name>            # Create new skill
 ```
 
-## Core Workflows
+## Workflows
 
-### 1. Find and Install Skills
-
-```
-User: "Find me a React performance skill"
-     ↓
-[Parse intent] → [npx skills find react performance]
-     ↓
-[Present results] → [AskUserQuestion for selection]
-     ↓
-[npx skills add -g -y <selected>] → Done
-```
-
-**Key**: Use `AskUserQuestion` to let user select which skill to install.
-
-### 2. Remove Skills
+### Find and Install (3-Step Questions)
 
 ```
-User: "Remove the code-review skill"
-     ↓
-[npx skills ls -g] → [Show installed skills]
-     ↓
-[AskUserQuestion to confirm removal]
-     ↓
-[npx skills remove -g -y <selected>] → Done
+1. npx skills find <query>
+2. AskUserQuestion #1: Which skill(s) to install? (multiSelect)
+3. AskUserQuestion #2: Where to install? (scope: -g or not)
+4. AskUserQuestion #3: Which AI IDE(s)? (agent: -a <agents>)
+5. npx skills add [-g] [-a <agents>] -y <selected>
 ```
 
-**Key**: Use `AskUserQuestion` to confirm which skill(s) to remove.
+**Important:** Ask ALL three questions:
+- Q1: Skill selection (can select multiple)
+- Q2: Scope selection (global vs project)
+- Q3: Agent/IDE selection (which AI assistants)
 
-### 3. Create New Skills
+### Remove Skills
 
 ```
-User: "Help me create a skill for SQL optimization"
-     ↓
-[AskUserQuestion for skill name]
-     ↓
-[npx skills init <name>] → [Guide structure]
-     ↓
-[User edits] → [cp -r ./<name> ~/.agents/skills/]
+1. npx skills list [-g]
+2. AskUserQuestion: Which to remove? (multiSelect)
+3. npx skills remove [-g] -y <selected>
 ```
 
-## AskUserQuestion Integration
+## AskUserQuestion Patterns
 
-**IMPORTANT**: Always use `AskUserQuestion` for user decisions:
-
-### Skill Selection (after find)
-
-Use `multiSelect: true` to allow installing multiple skills at once:
-
+### Q1: Skill Selection (FIRST)
 ```json
 {
-  "questions": [{
-    "question": "Which skill(s) would you like to install? (can select multiple)",
-    "header": "Install",
-    "options": [
-      {"label": "skill-1", "description": "owner/repo - description"},
-      {"label": "skill-2", "description": "owner/repo - description"},
-      {"label": "skill-3", "description": "owner/repo - description"},
-      {"label": "Search again", "description": "Try different keywords"}
-    ],
-    "multiSelect": true
-  }]
+  "question": "Which skill(s) would you like to install?",
+  "header": "Skills",
+  "options": [
+    {"label": "skill-1", "description": "owner/repo - description"},
+    {"label": "skill-2", "description": "owner/repo - description"},
+    {"label": "Search again", "description": "Try different keywords"}
+  ],
+  "multiSelect": true
 }
 ```
 
-### Installation Scope (if user hasn't specified)
-
+### Q2: Scope Selection (SECOND)
 ```json
 {
-  "questions": [{
-    "question": "Where should the skill(s) be installed?",
-    "header": "Scope",
-    "options": [
-      {"label": "Project (Recommended)", "description": "Install to ./.agents/skills/ for this project only"},
-      {"label": "Global", "description": "Install to ~/.agents/skills/ for all projects"}
-    ],
-    "multiSelect": false
-  }]
+  "question": "Where should the skill(s) be installed?",
+  "header": "Scope", 
+  "options": [
+    {"label": "Project", "description": "Install to ./.agents/skills/ - tied to this project"},
+    {"label": "Global (Recommended)", "description": "Install to ~/.agents/skills/ - available everywhere"}
+  ],
+  "multiSelect": false
 }
 ```
 
-### Removal Confirmation
-
+### Q3: Agent/IDE Selection (THIRD)
 ```json
 {
-  "questions": [{
-    "question": "Which skill(s) would you like to remove?",
-    "header": "Remove",
-    "options": [
-      {"label": "skill-name", "description": "~/.agents/skills/skill-name"},
-      {"label": "All listed", "description": "Remove all skills shown"},
-      {"label": "Cancel", "description": "Don't remove any"}
-    ],
-    "multiSelect": true
-  }]
+  "question": "Which AI IDE(s) should have access to this skill?",
+  "header": "AI IDE", 
+  "options": [
+    {"label": "All (Recommended)", "description": "Install for all detected AI assistants"},
+    {"label": "Trae", "description": "trae-cn, trae"},
+    {"label": "Claude Code", "description": "claude-code"},
+    {"label": "Cursor", "description": "cursor"},
+    {"label": "Qwen Code", "description": "qwen-code"}
+  ],
+  "multiSelect": true
 }
 ```
 
-## Default Configuration
+**Supported Agents:** `trae-cn`, `trae`, `cursor`, `claude-code`, `qwen-code`
 
-| Setting       | Default Value | Description                          |
-| ------------- | ------------- | ------------------------------------ |
-| Scope         | Project       | `-g` for global, none for project    |
-| Agent         | All           | `-a <agent>` for specific agent only |
+**Note:** 
+- Project scope installs to `./.agents/skills/` - only available in that project
+- Use `-a *` or omit for all agents, use `-a claude-code cursor` for specific ones
 
-**Supported Agents**: `trae-cn`, `trae`, `cursor`, `claude-code`, `qwen-code`
+## Locations
 
-When user doesn't specify, ask or use defaults:
-- **Scope**: Default to project-level unless user says "global" or "for all projects"
-- **Agent**: Default installs to all detected agents; use `-a` to target specific agent
-
-## Installation Locations
-
-| Scope   | Flag | Location                |
-| ------- | ---- | ----------------------- |
-| Global  | `-g` | `~/.agents/skills/`     |
-| Project | none | `./.agents/skills/`     |
-
-## Examples
-
-- [Search and Install](examples/example-search-install.md)
-- [Remove Skills](examples/example-remove-skill.md)
-- [Create New Skill](examples/example-create-skill.md)
-
-## Error Handling
-
-| Error              | Solution                                           |
-| ------------------ | -------------------------------------------------- |
-| Network error      | Check connection, retry command                    |
-| Skill not found    | Try broader keywords, browse https://skills.sh/    |
-| Permission denied  | Check `~/.agents` permissions, use chmod 755       |
-| npm/npx not found  | Install Node.js                                    |
-
-## Tools Required
-
-- **RunCommand**: Execute `npx skills` commands
-- **AskUserQuestion**: Interactive selection and confirmation
-- **Read**: Verify SKILL.md files
+| Scope   | Flag | Location            |
+| ------- | ---- | ------------------- |
+| Global  | `-g` | `~/.agents/skills/` |
+| Project | none | `./.agents/skills/` |
 
 ## Resources
 
 - Community skills: https://skills.sh/
-- CLI documentation: `npx skills --help`
+- Command references: `references/cmd-*.md`

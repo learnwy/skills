@@ -1,190 +1,89 @@
 ---
 name: requirement-workflow
-description: "State-machine driven orchestrator for structured software development with spec/tasks/design/test documents. MUST trigger when user wants to: build a feature, fix a bug, implement something substantial, refactor code, or develop new functionality. Also trigger on: '开发功能', '实现这个', 'build this feature', 'implement user auth', or 'add new module'. Creates workflow in .trae/workflow/ with stages: ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → DELIVERING."
+description: "State-machine driven orchestrator for structured software development. Use when user wants to build a feature, fix a bug, implement something substantial, refactor code, or develop new functionality. Triggers on: '开发功能', '实现这个', 'build this feature', 'implement', 'add new module'. Creates workflow in .trae/workflow/ with stages: ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → DELIVERING."
 ---
 
 # Requirement Workflow Orchestrator
 
-State-machine driven development workflow with **agent/skill injection** support.
+State-machine driven development workflow with agent/skill injection support.
 
-## When to Use
-
-**Invoke when:**
-
-- Feature development: "build a user authentication system"
-- Bug fixes: "fix the login issue"
-- Refactoring: "refactor this module"
-- Keywords: `feature`, `bugfix`, `refactor`, `implement`, `develop`
-
-**Do NOT invoke when:**
-
-- Simple Q&A or code explanations
-- Single-line changes
-- User declines: "just fix it, no workflow"
-
-## ⚠️ CRITICAL: Execution Rules
-
-**AI MUST follow these steps IN ORDER. Skipping steps is NOT allowed.**
+## Execution Flow
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│ 1. MUST run init-workflow.sh to create workflow                  │
-│ 2. MUST run advance-stage.sh to transition each stage            │
-│ 3. MUST create stage document BEFORE advancing to next stage     │
-│ 4. MUST launch injected agents at indicated timing               │
-└──────────────────────────────────────────────────────────────────┘
+1. ANALYZE & SELECT LEVEL → Run init-workflow.sh
+2. STAGE LOOP → Run advance-stage.sh for each stage
+3. CREATE DOCUMENTS → spec.md → tasks.md → design.md → checklist.md → report.md
 ```
 
-### Script Path Convention
+## Step 1: Analyze & Select Level
 
-**All scripts are relative to `{skill_root}` (this SKILL.md's directory).**
+| Level  | Condition                        | Doc Depth          |
+| ------ | -------------------------------- | ------------------ |
+| **L1** | ≤3 files, quick fix              | Brief + simple     |
+| **L2** | 4-15 files, standard feature     | Full PRD + design  |
+| **L3** | Security/cross-module/breaking   | Comprehensive      |
 
-```
-{skill_root} = directory containing this SKILL.md
-Scripts location: {skill_root}/scripts/*.sh
-```
-
-**AI MUST resolve actual path before running:**
-
-```bash
-# If this skill is at: /path/to/skills/requirement-workflow/
-# Then scripts are at: /path/to/skills/requirement-workflow/scripts/
-
-# Example - use absolute path:
-/path/to/skills/requirement-workflow/scripts/init-workflow.sh -r /project ...
-```
-
-## Execution Steps
-
-### Step 1: Analyze & Select Level
-
-**Output to user:**
-
-```
-📊 Requirement Analysis:
-- Type: feature | bugfix | refactor | hotfix
-- Level: L1 | L2 | L3
-- Scope: {affected files/modules}
-- Reason: {why this level}
-```
-
-| Level  | Condition                        | Doc Depth                  |
-| ------ | -------------------------------- | -------------------------- |
-| **L1** | Clear scope, ≤3 files, quick fix | Brief PRD + simple design  |
-| **L2** | Standard feature, 4-15 files     | Full PRD + detailed design |
-| **L3** | Security/cross-module/breaking   | Comprehensive + compliance |
-
-### Step 2: Initialize Workflow (REQUIRED)
-
-**MUST run this command (use absolute path):**
+## Step 2: Initialize Workflow
 
 ```bash
 {skill_root}/scripts/init-workflow.sh -r <project_root> -n <name> -t <type> -l <level>
 ```
 
-**Example:**
+**Types:** `feature`, `bugfix`, `refactor`, `hotfix`
 
-```bash
-# Assuming skill is at /home/user/.trae/skills/requirement-workflow/
-/home/user/.trae/skills/requirement-workflow/scripts/init-workflow.sh -r /project -n "user-auth" -t feature -l L2
+## Step 3: Execute Stage Loop
+
+For EACH stage:
+```
+A. Run: {skill_root}/scripts/advance-stage.sh -r <project_root>
+B. Check for injected agents (pre_stage/post_stage)
+C. Create stage document
+D. Repeat until status = DONE
 ```
 
-### Step 3: Execute Stage Loop (REQUIRED)
+### Stage Documents
 
-**For EACH stage, follow this pattern:**
+| Stage        | Document       | Content                |
+| ------------ | -------------- | ---------------------- |
+| ANALYZING    | `spec.md`      | Requirements, scope    |
+| PLANNING     | `tasks.md`     | Task breakdown         |
+| DESIGNING    | `design.md`    | Technical design       |
+| IMPLEMENTING | Code           | Implementation         |
+| TESTING      | `checklist.md` | Test checklist         |
+| DELIVERING   | `report.md`    | Summary report         |
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ A. Run: {skill_root}/scripts/advance-stage.sh -r <project_root> │
-│                                                                 │
-│ B. Check output for injected agents/skills                      │
-│                                                                 │
-│ C. Launch pre_stage agents (if any)                             │
-│                                                                 │
-│ D. Complete stage work and CREATE DOCUMENT:                     │
-│    - ANALYZING → Create spec.md                                 │
-│    - PLANNING  → Create tasks.md                                │
-│    - DESIGNING → Create design.md                               │
-│    - TESTING   → Create checklist.md                            │
-│    - DELIVERING → Create report.md                              │
-│                                                                 │
-│ E. Launch post_stage agents (if any)                            │
-│                                                                 │
-│ F. Repeat until status = DONE                                   │
-└─────────────────────────────────────────────────────────────────┘
-```
+## Scripts
 
-### Stage Document Requirements
+| Script               | Purpose             |
+| -------------------- | ------------------- |
+| `init-workflow.sh`   | Initialize workflow |
+| `advance-stage.sh`   | Advance to next stage |
+| `get-status.sh`      | Check current status |
+| `inject-agent.sh`    | Add agent injection |
+| `generate-report.sh` | Generate final report |
 
-| Stage        | Document       | L1 Depth       | L2 Depth      | L3 Depth          |
-| ------------ | -------------- | -------------- | ------------- | ----------------- |
-| ANALYZING    | `spec.md`      | 1-2 paragraphs | Standard PRD  | Comprehensive     |
-| PLANNING     | `tasks.md`     | 3-5 tasks      | 5-15 tasks    | Full breakdown    |
-| DESIGNING    | `design.md`    | Key decisions  | Full design   | + security        |
-| IMPLEMENTING | Code           | Quality code   | Quality code  | + security        |
-| TESTING      | `checklist.md` | Basic tests    | Full coverage | + security tests  |
-| DELIVERING   | `report.md`    | Brief summary  | Full report   | Compliance report |
-
-### Example Execution
+## Example
 
 ```
 User: "Add user authentication feature"
 
-AI:
-📊 Requirement Analysis:
-- Type: feature
-- Level: L2
-- Scope: ~8 files (auth module, API, frontend)
-- Reason: Standard feature, multiple modules
-
-# First, resolve skill path (skill is at /home/user/.trae/skills/requirement-workflow/)
-SKILL_ROOT=/home/user/.trae/skills/requirement-workflow
-
-Initializing workflow...
-
-$ $SKILL_ROOT/scripts/init-workflow.sh -r /project -n "user-auth" -t feature -l L2
+$ {skill_root}/scripts/init-workflow.sh -r /project -n "user-auth" -t feature -l L2
 ✅ Created: .trae/workflow/20240115_001_feature_user-auth/
 
-$ $SKILL_ROOT/scripts/advance-stage.sh -r /project
-✅ Successfully transitioned to ANALYZING
-🤖 Injected Agents:
-  📥 Before stage: risk-auditor
+$ {skill_root}/scripts/advance-stage.sh -r /project
+✅ Transitioned to ANALYZING
+🤖 Injected: risk-auditor (pre_stage)
 
-[Launching risk-auditor agent...]
+[Create spec.md...]
 
-Now creating spec.md...
-
-📄 spec.md created with:
-- Background
-- Objectives
-- Scope
-- Acceptance Criteria
-
-$ $SKILL_ROOT/scripts/advance-stage.sh -r /project
-✅ Successfully transitioned to PLANNING
-
-Now creating tasks.md...
+$ {skill_root}/scripts/advance-stage.sh -r /project
+✅ Transitioned to PLANNING
 ...
 ```
 
-## Scripts
-
-**Location:** `{skill_root}/scripts/` (resolve actual path before use)
-
-| Script               | Purpose             | When to Use         |
-| -------------------- | ------------------- | ------------------- |
-| `init-workflow.sh`   | Initialize workflow | Step 2 (once)       |
-| `advance-stage.sh`   | Advance stage       | Step 3 (each stage) |
-| `get-status.sh`      | Check status        | Anytime             |
-| `inject-agent.sh`    | Manage agents       | Setup               |
-| `inject-skill.sh`    | Manage skills       | Setup               |
-| `generate-report.sh` | Generate report     | DELIVERING stage    |
-
 ## References
 
-- [Agents](agents/AGENTS.md) - Available agents
-- [L1 Workflow](references/WORKFLOW_L1.md) - Quick workflow details
-- [L2 Workflow](references/WORKFLOW_L2.md) - Standard workflow details
-- [L3 Workflow](references/WORKFLOW_L3.md) - Complex workflow details
+- [L1 Workflow](references/WORKFLOW_L1.md) - Quick workflow
+- [L2 Workflow](references/WORKFLOW_L2.md) - Standard workflow  
+- [L3 Workflow](references/WORKFLOW_L3.md) - Complex workflow
 - [Injection Guide](references/INJECTION_GUIDE.md) - Agent/Skill injection
-- [Usage Examples](examples/USAGE.md) - More examples
