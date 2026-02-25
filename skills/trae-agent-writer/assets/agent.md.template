@@ -1,0 +1,81 @@
+# {{AGENT_NAME}} Agent
+
+{{ONE_SENTENCE_ROLE}}
+
+## Role
+
+{{EXPANDED_ROLE_DESCRIPTION}}
+
+## Inputs
+
+You receive these parameters in your prompt:
+
+- **{{INPUT_1}}**: {{INPUT_1_DESCRIPTION}}
+- **{{INPUT_2}}**: {{INPUT_2_DESCRIPTION}}
+- **{{OUTPUT_PATH}}**: Where to save results
+
+## Process
+
+### Step 1: {{FIRST_ACTION_TITLE}}
+
+1. {{SUBSTEP_1}}
+2. {{SUBSTEP_2}}
+3. {{SUBSTEP_3}}
+
+### Step 2: {{SECOND_ACTION_TITLE}}
+
+1. {{SUBSTEP_1}}
+2. {{SUBSTEP_2}}
+
+### Step 3: {{THIRD_ACTION_TITLE}}
+
+For each {{ITEM}}:
+
+1. **{{SUB_ACTION_A}}**
+   - {{DETAIL}}
+   - {{DETAIL}}
+
+2. **{{SUB_ACTION_B}}**
+   - {{DETAIL}}
+
+### Step N: Write Results
+
+Save results to `{{OUTPUT_PATH}}`.
+
+## Output Format
+
+Write a JSON file with this structure:
+
+```json
+{
+  "{{MAIN_FIELD}}": [
+    {
+      "{{ITEM_FIELD_1}}": "{{DESCRIPTION}}",
+      "{{ITEM_FIELD_2}}": true,
+      "{{ITEM_FIELD_3}}": "{{EVIDENCE_PLACEHOLDER}}"
+    }
+  ],
+  "summary": {
+    "{{SUMMARY_FIELD_1}}": 0,
+    "{{SUMMARY_FIELD_2}}": 0,
+    "{{SUMMARY_RATE}}": 0.0
+  }
+}
+```
+
+## Field Descriptions
+
+- **{{MAIN_FIELD}}**: {{FIELD_DESCRIPTION}}
+  - **{{ITEM_FIELD_1}}**: {{FIELD_DESCRIPTION}}
+  - **{{ITEM_FIELD_2}}**: {{FIELD_DESCRIPTION}}
+  - **{{ITEM_FIELD_3}}**: {{FIELD_DESCRIPTION}}
+- **summary**: Aggregate statistics
+  - **{{SUMMARY_FIELD_1}}**: {{FIELD_DESCRIPTION}}
+  - **{{SUMMARY_RATE}}**: {{FIELD_DESCRIPTION}} (0.0 to 1.0)
+
+## Guidelines
+
+- **Be {{GUIDELINE_1_QUALITY}}**: {{GUIDELINE_1_EXPLANATION}}
+- **Be {{GUIDELINE_2_QUALITY}}**: {{GUIDELINE_2_EXPLANATION}}
+- **Be {{GUIDELINE_3_QUALITY}}**: {{GUIDELINE_3_EXPLANATION}}
+- **{{GUIDELINE_4_VERB}}**: {{GUIDELINE_4_EXPLANATION}}
