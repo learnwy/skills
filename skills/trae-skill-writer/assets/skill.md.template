@@ -1,0 +1,51 @@
+---
+name: {{SKILL_NAME}}
+description: "{{DESCRIPTION}}. Use when {{USE_CASES}}. Triggers on '{{TRIGGER1}}', '{{TRIGGER2}}', '{{TRIGGER3}}'."
+---
+
+# {{SKILL_TITLE}}
+
+{{BRIEF_INTRO}}
+
+## When to Use
+
+**Invoke when:**
+
+- {{CONDITION_1}}
+- {{CONDITION_2}}
+- {{CONDITION_3}}
+
+**Do NOT invoke when:**
+
+- {{EXCEPTION_1}}
+- {{EXCEPTION_2}}
+
+## Workflow
+
+```
+[{{STEP_1}}]
+       ↓
+[{{STEP_2}}]
+       ↓
+[{{STEP_3}}]
+       ↓
+[{{STEP_4}}]
+```
+
+## Quick Reference
+
+| {{COL1}} | {{COL2}} | {{COL3}} |
+| -------- | -------- | -------- |
+| {{VAL1}} | {{VAL2}} | {{VAL3}} |
+
+## References
+
+- [{{REF_1}}](references/{{REF_1_FILE}}) - {{REF_1_DESC}}
+- [{{REF_2}}](references/{{REF_2_FILE}}) - {{REF_2_DESC}}
+
+## Error Handling
+
+| Issue      | Solution        |
+| ---------- | --------------- |
+| {{ISSUE1}} | {{SOLUTION1}}   |
+| {{ISSUE2}} | {{SOLUTION2}}   |

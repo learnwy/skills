@@ -1,0 +1,33 @@
+---
+description: {{DESCRIPTION}}
+globs: "{{GLOBS}}"
+alwaysApply: {{ALWAYS_APPLY}}
+---
+
+# {{RULE_TITLE}}
+
+## Overview
+
+{{OVERVIEW}}
+
+## Guidelines
+
+{{GUIDELINES}}
+
+## Examples
+
+### Good
+
+```{{LANG}}
+{{GOOD_EXAMPLE}}
+```
+
+### Bad
+
+```{{LANG}}
+{{BAD_EXAMPLE}}
+```
+
+## Exceptions
+
+{{EXCEPTIONS}}
