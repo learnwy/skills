@@ -1,119 +1,184 @@
 ---
 name: english-prompt-optimizer
-description: "Automatically detect and optimize non-English prompts into clear, well-structured English before processing. Triggers when: (1) User's message is in a non-English language (Chinese, Japanese, Korean, Spanish, etc.), (2) User explicitly asks to translate/optimize their prompt, (3) Prompt contains mixed languages with majority non-English. The skill translates, restructures for clarity, and then proceeds with the optimized English prompt."
+description: "Optimize and restructure user prompts for better AI responses. MUST use this skill when: (1) User writes in Chinese, Japanese, Korean, or other non-English languages - translate and optimize before proceeding, (2) User's request is vague or unclear - restructure for clarity, (3) User explicitly asks to improve/optimize their prompt. Also trigger when you see requests like '帮我', '请帮忙', 'お願い', or any non-English complex request. The goal is to produce a clear, structured English prompt that yields better results."
 ---
 
 # English Prompt Optimizer
 
-Automatically convert non-English user prompts into optimized English, then proceed with the task.
+Transform vague or non-English prompts into clear, structured requests that produce better AI responses.
 
-## Workflow
+## Why This Matters
 
-```
-[Detect non-English input]
-       ↓
-[Translate to English]
-       ↓
-[Optimize prompt structure]
-       ↓
-[Show optimized prompt to user]
-       ↓
-[Execute task with optimized prompt]
-```
+Clear prompts → Better results. When a user writes:
+- In non-English: Translation + optimization ensures no nuance is lost
+- Vaguely: Restructuring adds missing context and specificity
+- Implicitly: Making requirements explicit prevents misunderstandings
 
-## When This Triggers
+## When to Trigger
 
-1. User's message is primarily non-English
-2. User explicitly requests prompt translation/optimization
-3. Mixed-language input with majority non-English
+**ALWAYS trigger when:**
+- User's primary language is NOT English (Chinese, Japanese, Korean, Spanish, etc.)
+- Request contains implicit requirements that should be explicit
+- Task is complex with multiple parts that need structure
 
-## Process
+**Examples that MUST trigger:**
+- `帮我分析一下这个代码` → Optimize before analyzing
+- `这个功能怎么实现比较好` → Clarify requirements first
+- `帮我写个报告` → Structure the report requirements
+- Any message starting with `帮我`, `请`, `能不能`
 
-### Step 1: Detect Language
+**Do NOT trigger when:**
+- User explicitly says "just do it, don't optimize"
+- Simple yes/no questions
+- User is asking ABOUT translation (not requesting a task)
 
-Identify the primary language of user's input. Trigger if:
-- Primary language is not English
-- Contains significant non-English content (>50%)
-
-### Step 2: Translate and Optimize
-
-Convert to English while improving:
-
-| Aspect | Optimization |
-| ------ | ------------ |
-| Clarity | Remove ambiguity, be specific |
-| Structure | Clear task → context → constraints |
-| Completeness | Add implicit requirements |
-| Conciseness | Remove redundancy |
-
-### Step 3: Show Optimized Prompt
-
-Present the optimized English prompt to user:
+## Optimization Process
 
 ```
-📝 Optimized Prompt:
----
-[Translated and optimized English prompt here]
----
-
-Proceeding with this prompt...
+┌────────────────────────────────────────────────────────────┐
+│ 1. DETECT: Is this non-English or vague?                   │
+│ 2. ANALYZE: What does user actually want?                  │
+│ 3. OPTIMIZE: Create clear, structured English prompt       │
+│ 4. CONFIRM: Show optimized prompt to user                  │
+│ 5. EXECUTE: Proceed with the optimized version             │
+└────────────────────────────────────────────────────────────┘
 ```
 
-### Step 4: Execute
+## Step 1: Detect & Analyze
 
-Use the optimized English prompt to complete the user's task.
+Identify:
+- Primary language of input
+- Implicit requirements (what user assumes AI knows)
+- Missing context (what, why, how, constraints)
+- Output format expectations
 
-## Optimization Patterns
+## Step 2: Optimize Prompt
 
-### Before → After Examples
-
-**Chinese → English:**
-```
-Before: 帮我写一个函数，要能处理各种情况
-After: Write a function that handles edge cases including null inputs, empty arrays, and invalid data types. Include input validation and appropriate error messages.
-```
-
-**Vague → Specific:**
-```
-Before: 做一个好看的页面
-After: Create a visually appealing landing page with: modern typography, consistent color scheme, responsive layout for mobile/desktop, and clear call-to-action buttons.
-```
-
-**Incomplete → Complete:**
-```
-Before: 优化这段代码
-After: Optimize this code for: 1) Performance (reduce time complexity), 2) Readability (clear variable names, comments), 3) Maintainability (modular structure). Preserve existing functionality.
-```
-
-## Response Format
-
-When this skill triggers, respond with:
-
-1. **Brief acknowledgment** in user's original language
-2. **Optimized English prompt** in a code block
-3. **Proceed with task** using the optimized prompt
-
-Example response:
+Transform using this structure:
 
 ```
-我会用优化后的英文提示词来完成任务：
-
-📝 Optimized Prompt:
----
-Create a React component for a user profile card that displays:
-- Avatar image with fallback
-- Username and bio
-- Social media links
-- Follow/unfollow button with loading state
-Use TypeScript and Tailwind CSS.
----
-
-Now implementing this component...
+[TASK]: Clear statement of what to do
+[CONTEXT]: Background information
+[REQUIREMENTS]: Specific criteria
+[OUTPUT FORMAT]: Expected deliverable
+[CONSTRAINTS]: Limitations or preferences
 ```
 
-## Do NOT Trigger When
+### Optimization Rules
 
-- User's message is already in clear English
-- User explicitly says "respond in [language]"
-- The task is about translation itself (e.g., "translate this document")
-- Simple greetings or short confirmations
+| Problem | Solution |
+|---------|----------|
+| Vague task | Add specific action verb + object |
+| Missing context | Ask or infer from conversation |
+| No format specified | Suggest appropriate format |
+| Implicit constraints | Make them explicit |
+
+## Step 3: Show Optimized Prompt
+
+Present in user's original language + optimized English:
+
+```
+🔄 I'll optimize your request for better results:
+
+**Original:** [原始请求]
+
+**Optimized Prompt:**
+───────────────────
+[Clear English version with structure]
+───────────────────
+
+Proceeding with this optimized request...
+```
+
+## Examples
+
+### Example 1: Chinese Analysis Request
+
+**Original:**
+```
+帮我分析一下这个改动，由程序员改，和由 ai 改；分析一下人效；给出结论和分析依据? 用来分享
+```
+
+**Optimized:**
+```
+TASK: Analyze code changes and compare human vs AI development efficiency
+
+CONTEXT: 
+- There are code modifications made by both a human programmer and AI
+- Need to evaluate and compare the efficiency of each approach
+
+REQUIREMENTS:
+- Compare: code quality, time spent, correctness
+- Calculate: lines of code, complexity, potential issues
+- Analyze: human efficiency metrics vs AI assistance metrics
+
+OUTPUT FORMAT: Shareable report with:
+- Executive summary
+- Side-by-side comparison table
+- Efficiency analysis with metrics
+- Conclusions with supporting evidence
+- Visual charts if applicable
+
+CONSTRAINTS: Report should be presentation-ready for sharing
+```
+
+### Example 2: Vague Implementation Request
+
+**Original:**
+```
+这个功能怎么实现比较好
+```
+
+**Optimized:**
+```
+TASK: Recommend the best implementation approach for [specific feature]
+
+REQUIREMENTS:
+- Analyze multiple implementation options
+- Compare trade-offs (performance, maintainability, complexity)
+- Recommend best approach with reasoning
+
+OUTPUT FORMAT:
+- Options comparison table
+- Recommended approach
+- Implementation steps
+- Code example (if applicable)
+```
+
+### Example 3: Report Request
+
+**Original:**
+```
+帮我写个周报
+```
+
+**Optimized:**
+```
+TASK: Generate a weekly status report
+
+CONTEXT: [Need to know: project name, time period, key activities]
+
+REQUIREMENTS:
+- Completed tasks this week
+- In-progress items
+- Blockers or challenges
+- Next week's plan
+
+OUTPUT FORMAT: Professional weekly report template
+
+MISSING INFO NEEDED:
+- What project/team is this for?
+- What were the main activities this week?
+- Any issues to highlight?
+```
+
+## Response Behavior
+
+1. **Brief acknowledgment** in user's language
+2. **Show optimized prompt** in structured format
+3. **Ask for missing info** if critical context is unclear
+4. **Proceed with task** using optimized version
+
+## Integration Note
+
+This skill improves outcomes by ensuring Claude works with clear, complete requirements rather than interpreting vague requests. The optimization happens transparently - user sees what's being executed.
