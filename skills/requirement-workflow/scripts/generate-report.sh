@@ -154,9 +154,9 @@ generate_markdown_report() {
   [[ $total_checks -gt 0 ]] && check_rate=$((done_checks * 100 / total_checks))
 
   cat << EOF
-# Workflow Report / 工作流报告
+# Workflow Report
 
-## Summary / 概要
+## Summary
 
 | Field | Value |
 |-------|-------|
@@ -169,23 +169,23 @@ generate_markdown_report() {
 | **Created** | $created_at |
 | **Updated** | $updated_at |
 
-## Description / 描述
+## Description
 
 $description
 
-## Progress / 进度
+## Progress
 
-### Tasks / 任务
+### Tasks
 - Total: $total_tasks
 - Completed: $done_tasks
 - Completion Rate: ${task_rate}%
 
-### Checklist / 检查清单
+### Checklist
 - Total: $total_checks
 - Completed: $done_checks
 - Completion Rate: ${check_rate}%
 
-## Files / 文件
+## Files
 
 - [Spec](spec.md)
 - [Tasks](tasks.md)
@@ -194,7 +194,7 @@ $description
 EOF
 
   if [[ $include_logs -eq 1 && -d "$workflow_dir/logs" ]]; then
-    echo "## Logs / 日志"
+    echo "## Logs"
     echo ""
     shopt -s nullglob
     for log in "$workflow_dir/logs"/*.log; do

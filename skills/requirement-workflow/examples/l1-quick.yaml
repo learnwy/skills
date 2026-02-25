@@ -1,37 +1,47 @@
-# L1 Quick Workflow Configuration
-# L1 快速流程配置
-#
-# Use case: Bug fixes, small changes, config updates
-# 适用场景: Bug修复、小改动、配置更新
-#
-# Flow: ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → DELIVERING → DONE
-# All stages required, but with brief outputs
+id: "20240115_001_bugfix_login-fix"
+name: "fix-login-button"
+type: "bugfix"
+level: "L1"
+status: "DONE"
+description: "Fix login button not responding on mobile"
+tags: [quick-fix, mobile, ui]
+project_root: "/path/to/project"
+created_at: "2024-01-15T09:00:00Z"
+updated_at: "2024-01-15T09:45:00Z"
 
-level: L1
-name: "Quick Fix Template"
+current_stage:
+  name: DONE
+  progress: 100
 
-# Hook-based skill injection for fast iteration
-# 基于钩子的技能注入，快速迭代
-hooks:
-  post_stage_IMPLEMENTING:
-    - skill: lint-checker
-      required: true
+state_history:
+  - state: "INIT"
+    entered_at: "2024-01-15T09:00:00Z"
+    exited_at: "2024-01-15T09:02:00Z"
+    duration_seconds: 120
+    
+  - state: "PLANNING"
+    entered_at: "2024-01-15T09:02:00Z"
+    exited_at: "2024-01-15T09:10:00Z"
+    duration_seconds: 480
+    artifacts:
+      - tasks.md
+      
+  - state: "IMPLEMENTING"
+    entered_at: "2024-01-15T09:10:00Z"
+    exited_at: "2024-01-15T09:35:00Z"
+    duration_seconds: 1500
+    
+  - state: "TESTING"
+    entered_at: "2024-01-15T09:35:00Z"
+    exited_at: "2024-01-15T09:45:00Z"
+    duration_seconds: 600
+    artifacts:
+      - checklist.md
+      
+  - state: "DONE"
+    entered_at: "2024-01-15T09:45:00Z"
+    current: true
 
-  quality_gate:
-    - skill: type-checker
-      required: true
-
-# Document depth settings for L1
-# L1 文档深度设置
-doc_depth:
-  spec: brief # 1-2 paragraphs
-  design: brief # Key decisions only
-  tasks: simple # 3-5 tasks
-  checklist: basic # Basic tests
-  report: brief # Quick summary
-
-# Auto-advance settings
-# 自动推进设置
-auto_advance:
-  enabled: true
-  require_confirmation: false
+artifacts:
+  - tasks.md
+  - checklist.md

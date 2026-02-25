@@ -1,88 +1,42 @@
-# 测试检查清单: {{NAME}}
+# Verification Checklist: {{NAME}}
 
-> 工作流: {{WORKFLOW_ID}}
-> 测试时间: {{DATE}}
-> 来源: impl.md, 代码文件
+## Code Quality
 
-## 代码质量检查
+- [ ] Lint check passed
+- [ ] Type check passed
+- [ ] No new warnings introduced
+- [ ] Code follows project conventions
 
-### 静态分析
+## Testing
 
-| 检查项 | 状态 | 结果 |
-|--------|------|------|
-| ESLint | ⬜ | - |
-| TypeScript | ⬜ | - |
-| Prettier | ⬜ | - |
+- [ ] Unit tests pass
+- [ ] Integration tests pass (if applicable)
+- [ ] E2E tests pass (if applicable)
+- [ ] Manual testing completed
+- [ ] Edge cases tested
 
-### 代码规范
+## Documentation
 
-- [ ] 命名规范符合项目约定
-- [ ] 无硬编码的敏感信息
-- [ ] 注释清晰（如必要）
-- [ ] 无 console.log 调试代码
+- [ ] Code comments updated
+- [ ] API documentation updated (if applicable)
+- [ ] README updated (if applicable)
+- [ ] Changelog entry added
 
-## 功能测试
+## Review
 
-### 单元测试
+- [ ] Self-review completed
+- [ ] Peer review completed (if required)
+- [ ] Security review completed (if required)
 
-| 测试文件 | 用例数 | 通过 | 失败 | 覆盖率 |
-|----------|--------|------|------|--------|
-| `xxx.test.ts` | {N} | {N} | 0 | {X}% |
-| **总计** | {N} | {N} | 0 | {X}% |
+## Deployment
 
-### 集成测试 (如适用)
+- [ ] No breaking changes OR migration documented
+- [ ] Environment variables documented (if any)
+- [ ] Feature flags configured (if any)
+- [ ] Monitoring/alerts configured (if any)
 
-- [ ] API 接口测试通过
-- [ ] 组件集成测试通过
+## Final Verification
 
-### 手动测试
-
-- [ ] 核心功能: {描述}
-- [ ] 边界情况: {描述}
-- [ ] 错误处理: {描述}
-
-## 安全检查 (L3 必需)
-
-- [ ] 输入验证
-- [ ] SQL 注入防护
-- [ ] XSS 防护
-- [ ] CSRF 防护
-- [ ] 敏感数据加密
-- [ ] 权限控制
-
-## 性能检查 (如适用)
-
-- [ ] 响应时间 < {X}ms
-- [ ] 无内存泄漏
-- [ ] Bundle 大小变化: +{X}KB
-
-## 兼容性检查
-
-- [ ] 浏览器兼容性 (如适用)
-- [ ] 向后兼容
-- [ ] API 版本兼容
-
-## 验收标准验证
-
-> 对照 spec.md 中的验收标准
-
-- [ ] {验收标准1}
-- [ ] {验收标准2}
-- [ ] {验收标准3}
-
-## 测试结论
-
-| 项目 | 结果 |
-|------|------|
-| 总体状态 | ⬜ 待测试 / ✅ 通过 / ❌ 未通过 |
-| 阻塞问题 | 无 / {描述} |
-| 建议 | {如有} |
-
-## 遗留问题
-
-| 问题 | 严重度 | 处理方式 |
-|------|--------|----------|
-| {问题1} | 高/中/低 | 本次修复 / 后续处理 |
-
----
-*本文档在 TESTING 阶段产出，作为 DELIVERING 阶段的输入*
+- [ ] All acceptance criteria met
+- [ ] All tasks completed
+- [ ] Ready for deployment

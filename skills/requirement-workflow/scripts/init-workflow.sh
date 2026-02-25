@@ -24,7 +24,7 @@
 #
 # OUTPUT:
 #   Creates directory: {root}/.trae/workflow/{date}_{seq}_{type}_{name}/
-#   Updates: {root}/.trae/active_workflow (记录当前活动工作流路径)
+#   Updates: {root}/.trae/active_workflow (records current active workflow path)
 #   Generated files:
 #     - workflow.yaml   (state file)
 #     - spec.md         (requirement spec template)
@@ -149,39 +149,35 @@ create_spec_template() {
     local description="$3"
     
     cat > "$workflow_dir/spec.md" << EOF
-# Requirement Specification / 需求规格说明
-# $name
+# Requirement Specification: $name
 
-## Background / 背景
+## Background
 
 $description
 
-## Goals / 目标
-
-<!-- Define clear, measurable goals -->
-<!-- 定义清晰、可衡量的目标 -->
+## Goals
 
 - [ ] Goal 1
 - [ ] Goal 2
 
-## Scope / 范围
+## Scope
 
-### In Scope / 范围内
+### In Scope
 - 
 
-### Out of Scope / 范围外
+### Out of Scope
 - 
 
-## Constraints / 约束条件
+## Constraints
 
 - 
 
-## Acceptance Criteria / 验收标准
+## Acceptance Criteria
 
 - [ ] Criterion 1
 - [ ] Criterion 2
 
-## Open Questions / 待澄清问题
+## Open Questions
 
 - 
 EOF
@@ -191,31 +187,28 @@ create_tasks_template() {
     local workflow_dir="$1"
     
     cat > "$workflow_dir/tasks.md" << EOF
-# Task Breakdown / 任务拆分
+# Task Breakdown
 
-## Overview / 概述
+## Overview
 
-| Status | Count |
-|--------|-------|
-| Total  | 0     |
-| Done   | 0     |
-| In Progress | 0 |
-| Pending | 0    |
+| Status      | Count |
+|-------------|-------|
+| Total       | 0     |
+| Done        | 0     |
+| In Progress | 0     |
+| Pending     | 0     |
 
-## Tasks / 任务列表
+## Tasks
 
-<!-- Tasks will be populated during PLANNING phase -->
-<!-- 任务将在规划阶段填充 -->
-
-### High Priority / 高优先级
+### High Priority
 
 - [ ] 
 
-### Medium Priority / 中优先级
+### Medium Priority
 
 - [ ] 
 
-### Low Priority / 低优先级
+### Low Priority
 
 - [ ] 
 EOF
@@ -225,32 +218,32 @@ create_checklist_template() {
     local workflow_dir="$1"
     
     cat > "$workflow_dir/checklist.md" << EOF
-# Verification Checklist / 验收检查清单
+# Verification Checklist
 
-## Code Quality / 代码质量
+## Code Quality
 
 - [ ] Lint check passed
 - [ ] Type check passed
 - [ ] No new warnings introduced
 
-## Testing / 测试
+## Testing
 
 - [ ] Unit tests pass
 - [ ] Integration tests pass (if applicable)
 - [ ] Manual testing completed
 
-## Documentation / 文档
+## Documentation
 
 - [ ] Code comments updated
 - [ ] API documentation updated (if applicable)
 - [ ] Changelog entry added
 
-## Review / 审查
+## Review
 
 - [ ] Self-review completed
 - [ ] Peer review completed (if required)
 
-## Deployment / 部署
+## Deployment
 
 - [ ] No breaking changes OR migration documented
 - [ ] Environment variables documented (if any)

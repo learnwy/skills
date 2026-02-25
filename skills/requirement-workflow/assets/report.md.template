@@ -1,131 +1,70 @@
-# 交付报告: {{NAME}}
+# Workflow Report: {{NAME}}
 
-> 工作流: {{WORKFLOW_ID}}
-> 完成时间: {{DATE}}
-> 级别: {{LEVEL}}
+## Summary
 
-## 摘要
+| Field       | Value             |
+|-------------|-------------------|
+| Workflow ID | {{WORKFLOW_ID}}   |
+| Name        | {{NAME}}          |
+| Type        | {{TYPE}}          |
+| Level       | {{LEVEL}}         |
+| Status      | {{STATUS}}        |
+| Duration    | {{DURATION}}      |
+| Created     | {{CREATED_AT}}    |
+| Completed   | {{COMPLETED_AT}}  |
 
-| 项目 | 值 |
-|------|-----|
-| 需求名称 | {{NAME}} |
-| 需求类型 | {{TYPE}} |
-| 工作流级别 | {{LEVEL}} |
-| 开始时间 | {{START_DATE}} |
-| 完成时间 | {{END_DATE}} |
-| 总耗时 | {X}h |
-| 状态 | ✅ 完成 |
+## Description
 
-## 需求回顾
+{{DESCRIPTION}}
 
-### 原始需求
-{简要描述原始需求}
+## Progress
 
-### 最终实现
-{简要描述最终实现的功能}
+### Tasks
 
-### 范围变更 (如有)
-| 变更 | 原因 |
-|------|------|
-| {变更1} | {原因} |
+- Total: {{TASKS_TOTAL}}
+- Completed: {{TASKS_DONE}}
+- Completion Rate: {{TASKS_RATE}}%
 
-## 任务完成情况
+### Checklist
 
-| Phase | 计划任务 | 完成任务 | 完成率 |
-|-------|----------|----------|--------|
-| 准备工作 | {N} | {N} | 100% |
-| 核心实现 | {N} | {N} | 100% |
-| 测试完善 | {N} | {N} | 100% |
-| **总计** | **{N}** | **{N}** | **100%** |
+- Total: {{CHECKS_TOTAL}}
+- Completed: {{CHECKS_DONE}}
+- Completion Rate: {{CHECKS_RATE}}%
 
-## 代码变更
+## Stage Timeline
 
-### 统计
+| Stage        | Duration | Status    |
+|--------------|----------|-----------|
+| INIT         |          | Completed |
+| ANALYZING    |          |           |
+| PLANNING     |          |           |
+| DESIGNING    |          |           |
+| IMPLEMENTING |          |           |
+| TESTING      |          |           |
+| DELIVERING   |          |           |
 
-| 指标 | 值 |
-|------|-----|
-| 新增文件 | {N} |
-| 修改文件 | {N} |
-| 删除文件 | {N} |
-| 代码行变化 | +{N} / -{N} |
+## Key Deliverables
 
-### 变更文件列表
+- [Specification](spec.md)
+- [Task Breakdown](tasks.md)
+- [Technical Design](design.md)
+- [Verification Checklist](checklist.md)
+- [Implementation Record](impl.md)
 
-<details>
-<summary>新增文件 ({N})</summary>
+## Blockers Encountered
 
-- `src/xxx.ts`
-- `src/yyy.ts`
+| Blocker | Duration | Resolution |
+|---------|----------|------------|
+|         |          |            |
 
-</details>
+## Lessons Learned
 
-<details>
-<summary>修改文件 ({N})</summary>
+- 
 
-- `src/aaa.ts`
-- `src/bbb.ts`
+## Recommendations
 
-</details>
-
-## 测试结果
-
-| 测试类型 | 结果 |
-|----------|------|
-| 单元测试 | ✅ 通过 ({N}/{N}) |
-| 集成测试 | ✅ 通过 |
-| 代码覆盖率 | {X}% |
-| ESLint | ✅ 通过 |
-| TypeScript | ✅ 通过 |
-
-## 验收标准达成
-
-| 验收标准 | 状态 |
-|----------|------|
-| {标准1} | ✅ |
-| {标准2} | ✅ |
-| {标准3} | ✅ |
-
-## 阶段耗时分析
-
-| 阶段 | 计划 | 实际 | 偏差 |
-|------|------|------|------|
-| ANALYZING | {X}h | {X}h | - |
-| PLANNING | {X}h | {X}h | - |
-| DESIGNING | {X}h | {X}h | - |
-| IMPLEMENTING | {X}h | {X}h | +{X}h |
-| TESTING | {X}h | {X}h | - |
-| DELIVERING | {X}h | {X}h | - |
-| **总计** | **{X}h** | **{X}h** | **+{X}h** |
-
-## 遗留问题
-
-| 问题 | 严重度 | 后续计划 |
-|------|--------|----------|
-| {问题1} | 低 | 下个迭代处理 |
-
-## 技术债务
-
-| 债务 | 计划处理时间 |
-|------|--------------|
-| {债务1} | 下个迭代 |
-
-## 经验总结
-
-### 做得好的
-- {经验1}
-- {经验2}
-
-### 待改进的
-- {改进点1}
-- {改进点2}
-
-## 相关文档
-
-- [需求规格](spec.md)
-- [技术设计](design.md)
-- [任务列表](tasks.md)
-- [测试清单](checklist.md)
-- [开发日志](logs/impl.md)
+- 
 
 ---
-*本文档在 DELIVERING 阶段产出，作为工作流的最终产出物*
+
+*Report generated at {{GENERATED_AT}}*

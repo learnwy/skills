@@ -1,16 +1,14 @@
 # State Machine Specification
 
-# 状态机规范
-
 > **Note:** All `./scripts/` paths below are relative to `{skill_root}` (the directory containing SKILL.md). Use absolute path in actual execution.
 
-## Overview / 概述
+## Overview
 
 The requirement-workflow uses a finite state machine (FSM) to manage workflow progression. This document defines all states, transitions, and rules.
 
-## State Definitions / 状态定义
+## State Definitions
 
-### Primary States / 主要状态
+### Primary States
 
 | State          | Description            | Entry Condition         | Exit Condition   |
 | -------------- | ---------------------- | ----------------------- | ---------------- |
@@ -23,7 +21,7 @@ The requirement-workflow uses a finite state machine (FSM) to manage workflow pr
 | `DELIVERING`   | Final delivery         | From TESTING (L2/L3)    | Report generated |
 | `DONE`         | Workflow complete      | From TESTING/DELIVERING | Terminal state   |
 
-### Secondary States / 次要状态
+### Secondary States
 
 | State     | Description          | Trigger            | Resolution          |
 | --------- | -------------------- | ------------------ | ------------------- |
@@ -32,7 +30,7 @@ The requirement-workflow uses a finite state machine (FSM) to manage workflow pr
 | `PAUSED`  | User requested pause | User action        | User resume         |
 | `FAILED`  | Unrecoverable error  | Critical failure   | Manual intervention |
 
-## State Diagram / 状态图
+## State Diagram
 
 ```
                               ┌─────────────────────────────────────────┐
@@ -75,9 +73,9 @@ The requirement-workflow uses a finite state machine (FSM) to manage workflow pr
                                [Previous State]
 ```
 
-## Transition Rules / 转换规则
+## Transition Rules
 
-### Valid Transitions / 有效转换
+### Valid Transitions
 
 ```yaml
 transitions:
@@ -146,7 +144,7 @@ transitions:
       condition: "user resume"
 ```
 
-### Invalid Transitions / 无效转换
+### Invalid Transitions
 
 ```yaml
 invalid_transitions:
@@ -167,9 +165,9 @@ invalid_transitions:
     reason: "Must complete implementation cycle"
 ```
 
-## State Persistence / 状态持久化
+## State Persistence
 
-### workflow.yaml Structure / 结构
+### workflow.yaml Structure
 
 ```yaml
 id: "20240115_001_feature_user-auth"
@@ -192,24 +190,6 @@ state_history:
     artifacts:
       - spec.md
 
-  - state: PLANNING
-    entered_at: "2024-01-15T09:30:00Z"
-    exited_at: "2024-01-15T10:00:00Z"
-    duration_seconds: 1800
-    artifacts:
-      - tasks.md
-
-  - state: DESIGNING
-    entered_at: "2024-01-15T10:00:00Z"
-    exited_at: "2024-01-15T14:00:00Z"
-    duration_seconds: 14400
-    artifacts:
-      - design.md
-    blocked_periods:
-      - reason: "Waiting for API spec clarification"
-        started_at: "2024-01-15T11:00:00Z"
-        resolved_at: "2024-01-15T13:00:00Z"
-
   - state: IMPLEMENTING
     entered_at: "2024-01-15T14:00:00Z"
     current: true
@@ -222,9 +202,9 @@ current_stage:
   tasks_total: 5
 ```
 
-## State Hooks / 状态钩子
+## State Hooks
 
-### Hook Execution Order / 钩子执行顺序
+### Hook Execution Order
 
 ```
 1. pre_transition_{from}_{to}
@@ -234,7 +214,7 @@ current_stage:
 5. post_transition_{from}_{to}
 ```
 
-### Hook Definition / 钩子定义
+### Hook Definition
 
 ```yaml
 hooks:
@@ -265,9 +245,9 @@ hooks:
       template: "blocked_alert"
 ```
 
-## Error States / 错误状态
+## Error States
 
-### BLOCKED State / 阻塞状态
+### BLOCKED State
 
 ```yaml
 blocked_info:
@@ -281,7 +261,7 @@ blocked_info:
   resolution_status: pending|in_progress|resolved
 ```
 
-### WAITING State / 等待状态
+### WAITING State
 
 ```yaml
 waiting_info:
@@ -292,7 +272,7 @@ waiting_info:
   contact: "reviewer@example.com"
 ```
 
-### FAILED State / 失败状态
+### FAILED State
 
 ```yaml
 failure_info:
@@ -308,9 +288,9 @@ failure_info:
     - "Manual database fix required"
 ```
 
-## State Queries / 状态查询
+## State Queries
 
-### Query Examples / 查询示例
+### Query Examples
 
 ```bash
 # Get current state
@@ -326,7 +306,7 @@ failure_info:
 ./scripts/get-status.sh -r /project -p /project/.trae/workflow/20240115_001_feature_user-auth
 ```
 
-## Concurrent Workflows / 并发工作流
+## Concurrent Workflows
 
 Multiple workflows can run concurrently. Each maintains independent state:
 

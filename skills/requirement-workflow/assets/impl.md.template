@@ -1,87 +1,77 @@
-# 开发日志: {{NAME}}
+# Implementation Record: {{NAME}}
 
-> 工作流: {{WORKFLOW_ID}}
-> 开始时间: {{DATE}}
-> 来源: design.md, tasks.md
+## Summary
 
-## 实现进度
+| Field         | Value                    |
+|---------------|--------------------------|
+| Workflow ID   | {{WORKFLOW_ID}}          |
+| Implementation Start | {{START_DATE}}     |
+| Implementation End   | {{END_DATE}}       |
+| Files Changed | {{FILE_COUNT}}           |
+| Lines Added   | {{LINES_ADDED}}          |
+| Lines Removed | {{LINES_REMOVED}}        |
 
-| 任务 | 状态 | 实际耗时 | 备注 |
-|------|------|----------|------|
-| T01 | ✅ | 1h | - |
-| T02 | ✅ | 2.5h | 比预期多 30min |
-| T03 | 🔄 | - | 进行中 |
+## Changes
 
-## 开发记录
+### Files Modified
 
-### {{DATE}} - Day 1
+| File | Change Type | Description |
+|------|-------------|-------------|
+|      |             |             |
 
-#### 完成任务
-- [x] T01: {任务描述}
-- [x] T02: {任务描述}
+### Key Changes
 
-#### 遇到的问题
+#### Change 1: {{TITLE}}
 
-**问题 1: {问题描述}**
-- 原因: {分析}
-- 解决: {解决方案}
-- 影响: {对进度的影响}
+- **Files:** 
+- **Description:** 
+- **Impact:** 
 
-#### 明日计划
-- [ ] T03: {任务描述}
+## Implementation Notes
 
----
+### Technical Details
 
-### {{DATE+1}} - Day 2
+- 
 
-{继续记录...}
+### Challenges Encountered
 
----
+| Challenge | Solution |
+|-----------|----------|
+|           |          |
 
-## 代码变更摘要
+### Deviations from Design
 
-### 新增文件
-| 文件 | 说明 |
-|------|------|
-| `src/components/Xxx.tsx` | 新组件 |
-| `src/api/xxx.ts` | API 接口 |
+| Original Design | Actual Implementation | Reason |
+|-----------------|----------------------|--------|
+|                 |                      |        |
 
-### 修改文件
-| 文件 | 变更说明 |
-|------|----------|
-| `src/App.tsx` | 添加路由 |
-| `src/types.ts` | 新增类型定义 |
+## Test Results
 
-### 删除文件
-| 文件 | 原因 |
-|------|------|
-| - | - |
+### Unit Tests
 
-## 设计偏离
+```
+Tests: XX passed, XX failed
+Coverage: XX%
+```
 
-{如果实现与设计有偏离，记录原因}
+### Integration Tests
 
-| 设计 | 实际 | 原因 |
-|------|------|------|
-| {原设计} | {实际实现} | {为什么改变} |
+```
+Tests: XX passed, XX failed
+```
 
-## 技术债务
+## Performance Impact
 
-{开发过程中产生的技术债务，需要后续处理}
+| Metric | Before | After | Change |
+|--------|--------|-------|--------|
+|        |        |       |        |
 
-- [ ] {债务1}: {描述}
-- [ ] {债务2}: {描述}
+## Dependencies Added
 
-## 统计
+| Package | Version | Reason |
+|---------|---------|--------|
+|         |         |        |
 
-| 指标 | 值 |
-|------|-----|
-| 总耗时 | {X}h |
-| 新增代码行 | +{N} |
-| 修改代码行 | ~{N} |
-| 删除代码行 | -{N} |
-| 新增文件 | {N} |
-| 修改文件 | {N} |
+## Follow-up Items
 
----
-*本文档在 IMPLEMENTING 阶段持续更新，作为 TESTING 阶段的参考*
+- [ ] 

@@ -1,111 +1,86 @@
-# 技术设计方案: {{NAME}}
+# Technical Design: {{NAME}}
 
-> 工作流: {{WORKFLOW_ID}}
-> 创建时间: {{DATE}}
-> 来源: spec.md, tasks.md
+> **Author:**   
+> **Date:** {{DATE}}  
+> **Status:** Draft/Review/Approved
 
-## 方案概述
+## Overview
 
-{整体技术方案的简要描述，1-2 段落}
+Brief description of the technical design.
 
-## 系统架构
+## Architecture
 
-### 组件图
+### Component Diagram
 
 ```
 ┌─────────────┐     ┌─────────────┐
-│  Component A │────▶│  Component B │
-└─────────────┘     └─────────────┘
-        │                   │
-        ▼                   ▼
-┌─────────────┐     ┌─────────────┐
-│  Component C │────▶│  Component D │
+│ Component A │────►│ Component B │
 └─────────────┘     └─────────────┘
 ```
 
-### 数据流
+### Data Flow
 
-{描述数据如何在组件之间流动}
-
-## API 设计 (如适用)
-
-### 接口列表
-
-| 接口 | 方法 | 描述 |
-|------|------|------|
-| /api/xxx | POST | {描述} |
-| /api/yyy | GET | {描述} |
-
-### 接口详情
-
-#### POST /api/xxx
-
-**请求:**
-```json
-{
-  "field1": "value1",
-  "field2": "value2"
-}
+```
+Input → Process → Output
 ```
 
-**响应:**
-```json
-{
-  "code": 0,
-  "data": {}
-}
-```
+## Implementation Details
 
-## 数据模型
+### Core Components
 
-### 实体定义
+#### Component 1
 
-```typescript
-interface Entity {
-  id: string;
-  field1: string;
-  field2: number;
-  createdAt: Date;
-}
-```
+- **Responsibility:** 
+- **Interface:** 
+- **Dependencies:** 
 
-### 数据库变更 (如适用)
+### API Changes
 
-{新增/修改的表结构}
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+|          |        |             |
 
-## 关键实现
+### Database Changes
 
-### 核心算法/逻辑
+| Table | Change Type | Description |
+|-------|-------------|-------------|
+|       |             |             |
 
-{描述关键的实现逻辑}
+## Technical Decisions
 
-### 性能考量
+### Decision 1: {{TITLE}}
 
-- 预期 QPS: {数值}
-- 响应时间: {目标}
-- 缓存策略: {如有}
+- **Context:** 
+- **Options Considered:**
+  1. Option A
+  2. Option B
+- **Decision:** 
+- **Rationale:** 
 
-## 兼容性
+## Security Considerations
 
-### 向后兼容
+- 
 
-{是否有破坏性变更，如何兼容}
+## Performance Considerations
 
-### 迁移策略 (如适用)
+- 
 
-{数据迁移、配置迁移等}
+## Testing Strategy
 
-## 风险与缓解
+- Unit Tests: 
+- Integration Tests: 
+- E2E Tests: 
 
-| 风险 | 概率 | 影响 | 缓解措施 |
-|------|------|------|----------|
-| {风险1} | 高/中/低 | 高/中/低 | {措施} |
+## Migration Plan
 
-## 替代方案
+1. Step 1
+2. Step 2
 
-### 方案 B
+## Rollback Plan
 
-{简要描述被否决的方案及原因}
+1. Step 1
+2. Step 2
 
----
-*本文档在 DESIGNING 阶段产出，作为 IMPLEMENTING 阶段的输入*
+## Open Questions
+
+- 

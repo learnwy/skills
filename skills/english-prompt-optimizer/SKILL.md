@@ -41,7 +41,7 @@ Transform vague or non-English prompts into clear, structured requests.
 ```
 🔄 Optimizing your request:
 
-**Original:** [原始请求]
+**Original:** [Original request in user's language]
 
 **Optimized:**
 ───────────────────

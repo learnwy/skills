@@ -1,81 +1,67 @@
-# L2 Standard Workflow Configuration
-# L2 标准流程配置
-#
-# Use case: Regular feature development, API changes, component updates
-# 适用场景: 常规功能开发、API变更、组件更新
+id: "20240115_002_feature_user-auth"
+name: "user-authentication"
+type: "feature"
+level: "L2"
+status: "IMPLEMENTING"
+description: "Implement user authentication with JWT and OAuth"
+tags: [auth, security, api]
+project_root: "/path/to/project"
+created_at: "2024-01-15T08:00:00Z"
+updated_at: "2024-01-15T16:30:00Z"
 
-level: L2
-name: "Standard Development Template"
+current_stage:
+  name: IMPLEMENTING
+  progress: 60
+  current_task: "task_004"
+  tasks_completed: 6
+  tasks_total: 10
 
-# Hook-based skill injection for balanced workflow
-# 基于钩子的标准技能注入，平衡工作流
+state_history:
+  - state: "INIT"
+    entered_at: "2024-01-15T08:00:00Z"
+    exited_at: "2024-01-15T08:05:00Z"
+    duration_seconds: 300
+    
+  - state: "ANALYZING"
+    entered_at: "2024-01-15T08:05:00Z"
+    exited_at: "2024-01-15T09:00:00Z"
+    duration_seconds: 3300
+    artifacts:
+      - spec.md
+      
+  - state: "PLANNING"
+    entered_at: "2024-01-15T09:00:00Z"
+    exited_at: "2024-01-15T10:00:00Z"
+    duration_seconds: 3600
+    artifacts:
+      - tasks.md
+      
+  - state: "DESIGNING"
+    entered_at: "2024-01-15T10:00:00Z"
+    exited_at: "2024-01-15T14:00:00Z"
+    duration_seconds: 14400
+    artifacts:
+      - design.md
+    blocked_periods:
+      - reason: "Waiting for security team review"
+        started_at: "2024-01-15T11:00:00Z"
+        resolved_at: "2024-01-15T13:00:00Z"
+        duration_seconds: 7200
+      
+  - state: "IMPLEMENTING"
+    entered_at: "2024-01-15T14:00:00Z"
+    current: true
+
 hooks:
-  pre_stage_ANALYZING:
-    - skill: requirement-clarifier
-      required: false
-      config:
-        ask_questions: true
-        max_questions: 5
+  on_exit_DESIGNING:
+    - action: "invoke_agent"
+      agent: "tech-design-reviewer"
+      target: "design.md"
+  on_enter_TESTING:
+    - action: "invoke_agent"
+      agent: "test-strategy-advisor"
 
-  post_stage_DESIGNING:
-    - skill: code-reviewer
-      required: false
-      config:
-        focus: ["architecture", "api_design"]
-        severity: "important"
-
-  pre_stage_IMPLEMENTING:
-    - skill: test-generator
-      required: false
-      config:
-        coverage_target: 70
-        generate_edge_cases: true
-
-  post_stage_IMPLEMENTING:
-    - skill: lint-checker
-      required: true
-
-  pre_stage_TESTING:
-    - skill: test-runner
-      required: false
-      config:
-        types: ["unit", "integration"]
-        parallel: true
-
-  pre_stage_DELIVERING:
-    - skill: changelog-generator
-      required: false
-      config:
-        format: "conventional"
-
-  quality_gate:
-    - skill: type-checker
-      required: true
-    - skill: lint-checker
-      required: true
-    - skill: test-coverage-checker
-      required: false
-      config:
-        min_coverage: 70
-
-  pre_delivery:
-    - skill: doc-checker
-      required: false
-      config:
-        check_readme: true
-        check_api_docs: true
-
-# Required artifacts for L2
-# L2 必需产出物
-required_artifacts:
+artifacts:
   - spec.md
-  - design.md
   - tasks.md
-  - checklist.md
-
-# Notification settings
-# 通知设置
-notifications:
-  on_blocked: true
-  on_stage_complete: false
-  on_workflow_complete: true
+  - design.md

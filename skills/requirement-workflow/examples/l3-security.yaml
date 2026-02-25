@@ -1,158 +1,87 @@
-# L3 Full Workflow with Security Focus
-# L3 完整流程 - 安全导向配置
-#
-# Use case: Security-sensitive features, auth systems, data handling
-# 适用场景: 安全敏感功能、认证系统、数据处理
+id: "20240115_003_feature_payment-system"
+name: "payment-system"
+type: "feature"
+level: "L3"
+status: "DESIGNING"
+description: "Implement secure payment processing with PCI compliance"
+tags: [payment, security, pci, compliance]
+project_root: "/path/to/project"
+created_at: "2024-01-14T08:00:00Z"
+updated_at: "2024-01-16T10:00:00Z"
 
-level: L3
-name: "Security-focused Development Template"
-tags: ["security", "compliance"]
+current_stage:
+  name: DESIGNING
+  progress: 40
+  waiting_for: "Security architecture review"
 
-# Hook-based skill injection for comprehensive security workflow
-# 基于钩子的全面安全工作流技能注入
+state_history:
+  - state: "INIT"
+    entered_at: "2024-01-14T08:00:00Z"
+    exited_at: "2024-01-14T08:10:00Z"
+    duration_seconds: 600
+    
+  - state: "ANALYZING"
+    entered_at: "2024-01-14T08:10:00Z"
+    exited_at: "2024-01-14T14:00:00Z"
+    duration_seconds: 21000
+    artifacts:
+      - spec.md
+    injected_agents:
+      pre_stage:
+        - risk-auditor
+      post_stage:
+        - mvp-freeze-architect
+      
+  - state: "PLANNING"
+    entered_at: "2024-01-14T14:00:00Z"
+    exited_at: "2024-01-15T10:00:00Z"
+    duration_seconds: 72000
+    artifacts:
+      - tasks.md
+    injected_skills:
+      - iron-audit-pm
+      
+  - state: "DESIGNING"
+    entered_at: "2024-01-15T10:00:00Z"
+    current: true
+    blocked_periods:
+      - reason: "Waiting for PCI compliance consultation"
+        started_at: "2024-01-15T14:00:00Z"
+        resolved_at: "2024-01-16T09:00:00Z"
+        duration_seconds: 68400
+
 hooks:
-  # Analysis Phase Hooks
-  post_stage_ANALYZING:
-    - skill: threat-modeler
-      required: true
+  pre_stage:
+    ANALYZING:
+      - agent: "risk-auditor"
+        config:
+          focus: ["security", "compliance", "cost"]
+    DESIGNING:
+      - agent: "tech-design-reviewer"
+        config:
+          strict_mode: true
+  post_stage:
+    ANALYZING:
+      - agent: "mvp-freeze-architect"
+    IMPLEMENTING:
+      - agent: "code-reviewer"
+        config:
+          security_focus: true
+  on_enter_TESTING:
+    - action: "invoke_agent"
+      agent: "test-strategy-advisor"
       config:
-        frameworks: ["STRIDE", "DREAD"]
-        output_format: "markdown"
-    - skill: compliance-checker
-      required: false
-      config:
-        standards: ["OWASP", "GDPR"]
+        include_security_tests: true
+        include_penetration_tests: true
 
-  # Design Phase Hooks
-  pre_stage_DESIGNING:
-    - skill: security-checklist-loader
-      required: false
-      config:
-        template: "security_design_checklist"
+waiting_info:
+  dependency_type: "review"
+  description: "Waiting for security architecture review"
+  waiting_since: "2024-01-16T09:00:00Z"
+  expected_resolution: "2024-01-16T14:00:00Z"
+  contact: "security-team@company.com"
 
-  post_stage_DESIGNING:
-    - skill: security-reviewer
-      required: true
-      config:
-        checks:
-          - "authentication"
-          - "authorization"
-          - "data_encryption"
-          - "input_validation"
-          - "session_management"
-    - skill: architecture-reviewer
-      required: false
-      config:
-        focus: ["security_boundaries", "trust_zones"]
-
-  # Implementation Phase Hooks
-  pre_stage_IMPLEMENTING:
-    - skill: sast-scanner
-      required: false
-      config:
-        rules: ["security"]
-        severity_threshold: "medium"
-
-  post_stage_IMPLEMENTING:
-    - skill: dependency-scanner
-      required: true
-      config:
-        check_vulnerabilities: true
-        check_licenses: true
-    - skill: secrets-scanner
-      required: true
-      config:
-        patterns: ["api_keys", "passwords", "tokens"]
-
-  # Testing Phase Hooks
-  pre_stage_TESTING:
-    - skill: security-test-runner
-      required: true
-      config:
-        types:
-          - "injection"
-          - "xss"
-          - "csrf"
-          - "auth_bypass"
-
-  post_stage_TESTING:
-    - skill: dast-scanner
-      required: false
-      config:
-        scan_depth: "full"
-        authenticated: true
-    - skill: penetration-test-assistant
-      required: false
-      config:
-        mode: "assisted"
-        report_format: "detailed"
-
-  # Delivery Phase Hooks
-  pre_stage_DELIVERING:
-    - skill: security-report-generator
-      required: true
-    - skill: compliance-attestation
-      required: false
-      config:
-        sign_off_required: true
-
-  # Quality & Security Gates
-  quality_gate:
-    - skill: type-checker
-      required: true
-    - skill: lint-checker
-      required: true
-    - skill: sast-scanner
-      required: true
-      config:
-        fail_on: "high"
-    - skill: dependency-vulnerability-checker
-      required: true
-
-  pre_delivery:
-    - skill: security-sign-off
-      required: true
-      config:
-        require_approvals: ["security_team", "tech_lead"]
-
-  on_blocked:
-    - skill: security-incident-reporter
-      required: false
-      config:
-        notify_team: true
-        escalate_critical: true
-
-# All artifacts required for L3 security workflow
-# L3 安全流程需要所有产出物
-required_artifacts:
+artifacts:
   - spec.md
-  - design.md
   - tasks.md
-  - checklist.md
-  - threat_model.md
-  - security_review.md
-
-# Extended documentation requirements
-# 扩展的文档要求
-documentation:
-  threat_model: true
-  security_controls: true
-  data_flow_diagram: true
-  compliance_mapping: true
-
-# Mandatory reviews
-# 强制审查
-reviews:
-  security_review: required
-  architecture_review: required
-  code_review: required
-  compliance_review: required
-
-# Notification settings
-# 通知设置
-notifications:
-  on_blocked: true
-  on_stage_complete: true
-  on_workflow_complete: true
-  security_alert: true
-  channels: ["slack", "email"]
+  - design.md (in progress)
