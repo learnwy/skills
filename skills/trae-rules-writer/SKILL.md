@@ -1,188 +1,198 @@
 ---
 name: trae-rules-writer
-description: "Create and manage Trae IDE rules (user rules and project rules). Use when creating new rules for AI behavior, code style guidelines, project conventions, or editing existing .trae/rules/*.md files. Triggers on 'create rule', 'write rule', 'trae rule', 'project rule', 'user rule', 'AI behavior rule'."
+description: Create and manage Trae IDE rules for AI behavior guidance. Use this skill whenever the user mentions rules, project rules, user rules, code style guidelines, AI constraints, .trae/rules/, or wants to customize how AI behaves in their project. Also use when you see AGENTS.md, CLAUDE.md, or any conversation about standardizing AI behavior across a codebase.
 ---
 
 # Trae Rules Writer
 
-Create well-structured Trae IDE rules by analyzing the target project first.
+Create well-structured Trae IDE rules by analyzing the target project first, then designing rules that match the project's actual conventions.
 
 ## When to Use
 
 **Invoke when:**
-
-- User wants to create a new project rule
-- User wants to define AI behavior guidelines for a project
-- User mentions: `create rule`, `write rule`, `project rule`, `code style rule`
-- User wants to edit `.trae/rules/*.md` files
+- User wants to create rules for a project
+- User mentions: "create rule", "project rule", "code style", "AI guideline"
+- User wants to customize AI behavior for specific files or contexts
+- User asks about `.trae/rules/`, AGENTS.md, or CLAUDE.md
 
 **Do NOT invoke when:**
-
-- User wants to create a skill (use trae-skill-writer)
+- User wants to create a skill (use trae-skill-writer instead)
 - Simple Q&A about rules without creation intent
 
-## ⚠️ CRITICAL: Workflow
+## Why Analyze First?
 
-**MUST analyze target project BEFORE creating rules.**
+Rules should reflect what's already working in the project, not impose external standards. A rule that contradicts existing patterns creates friction. By scanning the codebase first, you capture the implicit conventions the team already follows and make them explicit for AI.
+
+## Workflow
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│ 1. ANALYZE target project code first                             │
-│ 2. IDENTIFY patterns: arch, code style, lang, domain, layers    │
-│ 3. DESIGN rules based on project's actual conventions           │
-│ 4. CREATE rules following Trae's official format                │
-└──────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│ 1. ANALYZE → Scan project structure, code style, patterns   │
+│ 2. IDENTIFY → What conventions exist? What needs guidance?  │
+│ 3. DESIGN  → Choose rule type and application mode          │
+│ 4. CREATE  → Write rules in Trae's official format          │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ## Step 1: Analyze Target Project
 
-**MUST scan project to understand:**
+Scan these aspects before creating any rules:
 
-| Aspect         | What to Analyze                                      | Tools        |
-| -------------- | ---------------------------------------------------- | ------------ |
-| Architecture   | Directory structure, module organization, layers     | LS, Glob     |
-| Code Style     | Naming conventions, formatting, import patterns      | Read, Grep   |
-| Language       | Primary languages, frameworks, libraries             | Glob, Read   |
-| Domain         | Business logic patterns, terminology                 | Read         |
-| Existing Rules | Current `.trae/rules/`, AGENTS.md, CLAUDE.md         | Glob, Read   |
+| Aspect           | What to Look For                              | How                        |
+| ---------------- | --------------------------------------------- | -------------------------- |
+| Structure        | Directory layout, module boundaries           | `ls`, `tree`               |
+| Languages        | Primary languages, frameworks                 | File extensions, imports   |
+| Naming           | Variables, functions, files, components       | Read sample files          |
+| Imports          | Absolute vs relative, aliases                 | Check import statements    |
+| Existing Rules   | `.trae/rules/`, AGENTS.md, CLAUDE.md          | `ls .trae/rules/`          |
 
-**Example analysis commands:**
-
+Quick scan commands:
 ```bash
-# Check project structure
-ls -la <project_root>
+# Project structure
+ls -la <project>
 
-# Find existing rules
-ls -la <project_root>/.trae/rules/ 2>/dev/null
+# Languages used
+find <project> -type f -name "*.ts" -o -name "*.py" | head -10
 
-# Identify primary languages
-find <project_root> -name "*.ts" -o -name "*.tsx" | head -20
-
-# Check for existing conventions
-cat <project_root>/AGENTS.md 2>/dev/null
-cat <project_root>/.editorconfig 2>/dev/null
+# Existing rules
+cat <project>/.trae/rules/*.md 2>/dev/null
+cat <project>/AGENTS.md 2>/dev/null
 ```
 
-## Step 2: Identify Rule Categories
+## Step 2: Identify Rule Needs
 
-Based on analysis, determine which rules to create:
+Based on analysis, determine which rules would help:
 
-| Category       | When to Create                        | Example                         |
-| -------------- | ------------------------------------- | ------------------------------- |
-| Code Style     | Project has consistent patterns       | Naming, formatting, imports     |
-| Architecture   | Clear layer boundaries exist          | Layer dependencies, module rules|
-| Framework      | Specific framework conventions        | React patterns, API styles      |
-| Security       | Sensitive data handling needed        | Auth, data validation           |
-| Testing        | Test files have patterns              | Test structure, coverage        |
-| Domain         | Business-specific terminology         | Entity naming, workflow rules   |
+| Category     | When to Create                                | Example                        |
+| ------------ | --------------------------------------------- | ------------------------------ |
+| Code Style   | Consistent naming, formatting patterns exist  | camelCase, PascalCase rules    |
+| Architecture | Clear layer/module boundaries exist           | "Don't import from X in Y"     |
+| Framework    | Specific patterns used (React, Django, etc.)  | "Use hooks, not class comps"   |
+| Security     | Sensitive data handling needed                | "Never log secrets"            |
+| Domain       | Business terminology, workflow rules          | "Orders must have customer_id" |
 
-## Step 3: Create Rules Following Trae Format
+## Step 3: Choose Rule Type & Mode
 
 ### Rule Types
 
-| Type         | Scope        | Location               | Loading     |
-| ------------ | ------------ | ---------------------- | ----------- |
-| User Rules   | All projects | Settings > Rules & Skills | Full       |
-| Project Rules| Current project | `.trae/rules/`       | Conditional |
+| Type          | Location                  | Scope           |
+| ------------- | ------------------------- | --------------- |
+| User Rules    | Settings > Rules & Skills | All projects    |
+| Project Rules | `.trae/rules/*.md`        | Current project |
 
-### Project Rule Structure (Trae Official Format)
+### Application Modes
+
+| Mode                | frontmatter                             | When to Use                          |
+| ------------------- | --------------------------------------- | ------------------------------------ |
+| Always Apply        | `alwaysApply: true`                     | Global conventions (naming, etc.)    |
+| File-Specific       | `globs: "*.tsx,*.jsx"`                  | Language/framework-specific rules    |
+| Apply Intelligently | `description: "When doing X..."`        | Context-dependent guidance           |
+| Manual Only         | (no frontmatter)                        | Rarely used, invoke with `#RuleName` |
+
+## Step 4: Create Rules
+
+### Project Rule Format
 
 ```markdown
 ---
-description: When to use this rule (for intelligent application)
-globs: "*.ts,src/**/*.js"  # File patterns (for file-specific)
-alwaysApply: false         # true = always, false = conditional
+description: When to apply this rule (for intelligent mode)
+globs: "*.ts,*.tsx"
+alwaysApply: false
 ---
 
 # Rule Title
 
-Rule content in Markdown
+Concise guidance for AI.
 ```
 
-### Application Modes
-
-| Mode                    | alwaysApply | Additional Config                         |
-| ----------------------- | ----------- | ----------------------------------------- |
-| Always Apply            | `true`      | None                                      |
-| Apply to Specific Files | `false`     | `globs: "*.ts,*.tsx"`                     |
-| Apply Intelligently     | `false`     | `description: "Use case description"`     |
-| Apply Manually          | `false`     | Reference via `#RuleName` in chat         |
-
-## Step 4: Output Rules
-
-Create rules at `.trae/rules/<rule-name>.md`:
+### Output Location
 
 ```
-<project_root>/
+<project>/
 └── .trae/
     └── rules/
-        ├── code-style.md       # Always Apply
-        ├── typescript.md       # Apply to *.ts,*.tsx
-        ├── testing.md          # Apply to *.test.ts
-        └── architecture.md     # Apply Intelligently
+        ├── code-style.md       # alwaysApply: true
+        ├── react-patterns.md   # globs: "*.tsx"
+        └── api-design.md       # description: "When creating APIs"
 ```
 
-## Example: Complete Workflow
+## Example: Complete Flow
 
 ```
-User: "Create rules for this React TypeScript project"
+User: "Create rules for this TypeScript React project"
 
-AI:
-1. Analyzing project structure...
-   - Found: src/, components/, hooks/, services/
+1. Analyzing project...
+   - Structure: src/components/, src/hooks/, src/services/
    - Languages: TypeScript, TSX
-   - Framework: React with hooks
-   - Testing: Jest with @testing-library
+   - Naming: PascalCase components, camelCase functions
+   - Imports: Using @/ path alias
+   - No existing .trae/rules/
 
-2. Identified patterns:
-   - Naming: camelCase for functions, PascalCase for components
-   - Imports: Absolute paths with @/ alias
-   - Components: Functional with hooks pattern
+2. Identified conventions:
+   - Functional components with hooks (no class components)
+   - Custom hooks in hooks/ directory
+   - Services return typed responses
 
 3. Creating rules:
 
-📄 .trae/rules/code-style.md
+📁 .trae/rules/
+
+📄 code-style.md
 ---
 alwaysApply: true
 ---
 # Code Style
-- Use camelCase for variables/functions
-- Use PascalCase for components/types
+- PascalCase for components and types
+- camelCase for functions and variables
 - Prefer const over let
-...
 
-📄 .trae/rules/react-patterns.md
+📄 react-patterns.md
 ---
 globs: "*.tsx,*.jsx"
 alwaysApply: false
 ---
 # React Patterns
 - Use functional components with hooks
-- Extract reusable logic to custom hooks
-...
+- Custom hooks go in src/hooks/
+- No inline styles - use CSS modules
+
+📄 api-design.md
+---
+description: When creating API endpoints or service functions
+alwaysApply: false
+---
+# API Design
+- Services return { data, error } tuples
+- Use TypeScript generics for response types
 ```
 
 ## Compatible Files
 
-Trae also supports:
+Trae also recognizes these files at project root:
 
-| File              | Location     | Description                    |
-| ----------------- | ------------ | ------------------------------ |
-| `AGENTS.md`       | Project root | Reusable across IDEs           |
-| `CLAUDE.md`       | Project root | Compatible with Claude Code    |
-| `CLAUDE.local.md` | Project root | Local-only config              |
+| File              | Description                    |
+| ----------------- | ------------------------------ |
+| `AGENTS.md`       | Reusable across IDEs           |
+| `CLAUDE.md`       | Compatible with Claude Code    |
+| `CLAUDE.local.md` | Local-only, gitignored         |
 
 Enable via Settings > Rules > Import Settings.
 
-## References
-
-- [Rule Types Guide](references/rule-types.md) - Detailed type selection
-- [Application Mode Examples](examples/application-modes.md) - Mode usage examples
-- [Rule Template](assets/rule.md.template) - Starter template
-
 ## Best Practices
 
-- **Analyze first**: Always scan project before creating rules
-- **Match project style**: Rules should reflect existing conventions, not impose new ones
-- **Keep focused**: One concern per rule file
-- **Test in new chat**: Start new chat after rule changes to verify
+**DO:**
+- Analyze before creating - rules should match existing patterns
+- One concern per rule file - easier to toggle and maintain
+- Use descriptive filenames - `react-testing.md` not `rule1.md`
+- Test after creating - start new chat to verify rules load
+
+**DON'T:**
+- Impose external standards the project doesn't follow
+- Create overly restrictive rules that fight the AI
+- Duplicate what AI already knows (basic syntax, etc.)
+
+## References
+
+For detailed examples, read:
+- [Application Mode Examples](examples/application-modes.md) - Complete examples of each mode
+- [Rule Template](assets/rule.md.template) - Starter template

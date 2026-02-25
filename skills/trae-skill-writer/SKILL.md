@@ -1,244 +1,251 @@
 ---
 name: trae-skill-writer
-description: "Create and manage Trae IDE skills (SKILL.md files). Use when creating new skills for AI agent capabilities, editing existing skills, or setting up skill directories. Triggers on 'create skill', 'write skill', 'trae skill', 'new skill', 'SKILL.md', 'agent capability'."
+description: Create and manage Trae IDE skills for reusable AI capabilities. Use this skill whenever the user mentions skills, SKILL.md, agent capabilities, workflow automation, or wants to encapsulate repetitive tasks into reusable AI instructions. Also use when you see .trae/skills/, discussions about making AI follow specific processes, or requests to standardize how AI handles certain tasks.
 ---
 
 # Trae Skill Writer
 
-Create well-structured Trae IDE skills by analyzing the target project first.
+Create well-structured Trae IDE skills by analyzing the target project first, identifying repetitive patterns worth automating, then designing skills that match the project's actual workflows.
 
 ## When to Use
 
 **Invoke when:**
-
-- User wants to create a new skill for a project
-- User wants to define AI agent capabilities
-- User mentions: `create skill`, `write skill`, `new skill`, `SKILL.md`
-- User wants to edit `.trae/skills/` content
+- User wants to create a skill for a project
+- User mentions: "create skill", "SKILL.md", "agent capability", "automate this workflow"
+- User wants AI to follow a specific process repeatedly
+- User asks about `.trae/skills/` or global skills
 
 **Do NOT invoke when:**
-
-- User wants to create a rule (use trae-rules-writer)
+- User wants to create a rule (use trae-rules-writer instead)
 - Simple Q&A about skills without creation intent
 
-## ⚠️ CRITICAL: Workflow
+## Skills vs Rules
 
-**MUST analyze target project BEFORE creating skills.**
+Understanding the difference prevents choosing the wrong tool:
+
+| Aspect    | Rules                          | Skills                              |
+| --------- | ------------------------------ | ----------------------------------- |
+| Loading   | Always in context (full load)  | On-demand (loaded when triggered)   |
+| Purpose   | Constraints & guidelines       | Capabilities & workflows            |
+| Tokens    | Consume context continuously   | Only when invoked                   |
+| Best For  | "Always do X"                  | "When user asks for Y, do Z"        |
+
+**Rule of thumb:** If the guidance applies to every interaction, make it a rule. If it's a specific capability triggered by certain requests, make it a skill.
+
+## Why Analyze First?
+
+Skills should automate what the team actually does, not impose theoretical workflows. By scanning the project first, you discover:
+- Repetitive patterns worth automating
+- Domain-specific terminology to include
+- Existing scripts that could be bundled
+- Workflows that would benefit from standardization
+
+## Workflow
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│ 1. ANALYZE target project: arch, patterns, workflows, domain     │
-│ 2. IDENTIFY skill opportunities: repetitive tasks, conventions   │
-│ 3. DESIGN skill structure based on project's needs               │
-│ 4. CREATE skill following Trae's official SKILL.md format        │
-└──────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│ 1. ANALYZE  → Scan project for repetitive patterns          │
+│ 2. IDENTIFY → What workflows need automation?               │
+│ 3. DESIGN   → Structure skill for on-demand loading         │
+│ 4. CREATE   → Write SKILL.md with clear triggers            │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ## Step 1: Analyze Target Project
 
-**MUST scan project to identify skill opportunities:**
+Look for automation opportunities:
 
-| Aspect              | What to Analyze                                   | Tools        |
-| ------------------- | ------------------------------------------------- | ------------ |
-| Workflows           | Repetitive multi-step processes                   | Read, Grep   |
-| Conventions         | Project-specific patterns worth standardizing     | Read         |
-| Domain Knowledge    | Business rules, terminology, constraints          | Read         |
-| Tooling             | CLI tools, scripts, build processes               | LS, Read     |
-| Existing Skills     | Current `.trae/skills/`, patterns to follow       | Glob, Read   |
+| Aspect            | What to Look For                          | How                      |
+| ----------------- | ----------------------------------------- | ------------------------ |
+| Scripts           | Existing automation, build processes      | `ls scripts/`            |
+| Workflows         | Multi-step processes done repeatedly      | Ask user, read docs      |
+| Domain            | Business logic, terminology               | Read domain code         |
+| Existing Skills   | `.trae/skills/` patterns to follow        | `ls .trae/skills/`       |
+| TODOs/Comments    | Common patterns marked for automation     | `grep -r "TODO"`         |
 
-**Example analysis:**
-
+Quick scan:
 ```bash
-# Check existing skills
-ls -la <project_root>/.trae/skills/ 2>/dev/null
+# Check for existing skills
+ls -la <project>/.trae/skills/ 2>/dev/null
 
-# Find repetitive patterns
-grep -r "TODO:" <project_root>/src | head -10
+# Find scripts
+ls <project>/scripts/ <project>/tools/ 2>/dev/null
 
-# Identify workflow scripts
-ls <project_root>/scripts/
-
-# Check for domain entities
-ls <project_root>/src/domain/ 2>/dev/null
+# Look for workflow documentation
+cat <project>/docs/*.md 2>/dev/null | head -50
 ```
 
 ## Step 2: Identify Skill Opportunities
 
-Based on analysis, determine what skills would help:
+Good candidates for skills:
 
-| Opportunity Type     | When to Create Skill                     | Example                          |
-| -------------------- | ---------------------------------------- | -------------------------------- |
-| Workflow Automation  | Repetitive multi-step tasks              | Code review, deployment          |
-| Domain Knowledge     | Complex business logic                   | Order processing, pricing rules  |
-| Convention Enforcement| Project-specific standards              | Component creation, API design   |
-| Tool Integration     | CLI tools with specific patterns         | Database migration, testing      |
-| Template Generation  | Standardized output formats              | Report generation, scaffolding   |
+| Pattern                  | Why It's a Good Skill                    | Example                        |
+| ------------------------ | ---------------------------------------- | ------------------------------ |
+| Multi-step workflow      | AI can execute entire process            | Code review, deployment        |
+| Complex domain logic     | Encapsulates business rules              | Order processing, pricing      |
+| Repetitive task          | Saves time on common operations          | Report generation, migrations  |
+| Tool integration         | Guides AI on using specific tools        | Database setup, test running   |
+| Output standardization   | Ensures consistent format                | Documentation, changelogs      |
+
+**Anti-patterns (don't make skills for):**
+- Simple one-step tasks (AI handles these fine)
+- Generic knowledge AI already has
+- Things better suited as rules (continuous constraints)
 
 ## Step 3: Design Skill Structure
 
-### Skill Types (Trae Official)
+### Skill Types
 
-| Type    | Location            | Scope              | Use Case                    |
-| ------- | ------------------- | ------------------ | --------------------------- |
-| Global  | `~/.trae/skills/`   | All projects       | General dev paradigms       |
-| Project | `.trae/skills/`     | Current project    | Project-specific workflows  |
+| Type    | Location            | Scope           | Use Case                    |
+| ------- | ------------------- | --------------- | --------------------------- |
+| Global  | `~/.trae/skills/`   | All projects    | General dev workflows       |
+| Project | `.trae/skills/`     | Current project | Project-specific automation |
 
-### Skill vs Rule vs MCP
-
-| Feature | Loading    | Purpose                      |
-| ------- | ---------- | ---------------------------- |
-| Rules   | Full       | Constraints & guidelines     |
-| Skills  | On-demand  | Capabilities & workflows     |
-| MCP     | Tools      | External tool integration    |
-
-### Skill Directory Structure
+### Directory Structure
 
 ```
 skill-name/
-├── SKILL.md              # (Required) Core instructions
-├── references/           # (Optional) Detailed docs, loaded on-demand
-├── examples/             # (Optional) Input/output samples
-├── scripts/              # (Optional) Executable automation
-└── assets/               # (Optional) Templates, not loaded to context
+├── SKILL.md               # (Required) Core instructions
+├── scripts/               # (Optional) Executable automation
+├── references/            # (Optional) Detailed docs, loaded on-demand
+├── templates/             # (Optional) Output templates
+└── examples/              # (Optional) Input/output samples
 ```
 
-## Step 4: Create Skill Following Trae Format
+### Progressive Disclosure
 
-### SKILL.md Structure (Trae Official Format)
+Skills load in three levels to conserve tokens:
+
+| Level    | Content              | Size          | When Loaded              |
+| -------- | -------------------- | ------------- | ------------------------ |
+| Metadata | name + description   | ~100 words    | Always scanned           |
+| Body     | SKILL.md content     | <500 lines    | When skill triggers      |
+| Resources| references/, etc.    | Unlimited     | When AI needs them       |
+
+## Step 4: Create the Skill
+
+### SKILL.md Format
 
 ```markdown
 ---
 name: skill-name
-description: "What it does. When to use. Trigger keywords: 'x', 'y', 'z'."
+description: What it does. When to use. Include trigger phrases like "X", "Y", "Z".
 ---
 
 # Skill Name
 
-Brief intro.
+Brief intro explaining capability.
 
 ## When to Use
 
 **Invoke when:**
-- Condition 1
-- Condition 2
+- Trigger condition 1
+- Trigger condition 2
 
 **Do NOT invoke when:**
 - Exception 1
 
 ## Workflow
 
-[Steps or flowchart]
+[Steps, flowchart, or process]
 
 ## Quick Reference
 
-[Tables, commands]
+[Tables, commands, key info]
 
 ## References
 
-- [Detail](references/doc.md) - Purpose
+- [Detailed Doc](references/doc.md) - When to read this
 ```
 
-### Key Principles
+### Description is Critical
+
+The description field is **the primary trigger mechanism**. Include:
+- What the skill does
+- When to use it
+- Specific trigger phrases
+
+**Good:** "Generate database migration files. Use when creating, modifying, or rolling back database schema changes. Triggers on 'migration', 'schema change', 'add column', 'create table', 'database update'."
+
+**Bad:** "Helps with database stuff."
+
+## Example: Complete Flow
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│ 1. CONCISE IS KEY - Only add what AI doesn't already know        │
-│ 2. TRIGGERS IN DESCRIPTION - All trigger conditions in metadata  │
-│ 3. PROGRESSIVE DISCLOSURE - Metadata → Body → Resources          │
-│ 4. PROJECT-SPECIFIC - Reflect the actual project patterns        │
-└──────────────────────────────────────────────────────────────────┘
-```
+User: "Create a skill for our code review process"
 
-## Example: Complete Workflow
-
-```
-User: "Create a skill for this e-commerce project"
-
-AI:
 1. Analyzing project...
-   - Found: src/orders/, src/products/, src/payments/
-   - Domain: E-commerce with order processing workflow
-   - Existing scripts: scripts/seed-data.sh, scripts/run-tests.sh
-   - Patterns: Repository pattern, Domain events
+   - Found: scripts/lint.sh, .github/workflows/ci.yml
+   - Patterns: TypeScript, Jest tests, ESLint
+   - Workflow: lint → test → review checklist
 
-2. Identified skill opportunities:
-   - Order processing workflow (multi-step, repetitive)
-   - Product management conventions
-   - Payment integration patterns
+2. Identified opportunity:
+   - Code review is multi-step (lint, test, checklist)
+   - Done repeatedly for every PR
+   - Has project-specific checklist items
 
 3. Creating skill:
 
-📁 .trae/skills/order-workflow/
+📁 .trae/skills/code-review/
 
 📄 SKILL.md
 ---
-name: order-workflow
-description: "Manage order processing workflows. Use when creating, updating, or handling order state transitions. Triggers on 'order', 'checkout', 'payment processing', 'order status'."
+name: code-review
+description: Perform comprehensive code review for this project. Use when reviewing PRs, checking code quality, or when user asks for code feedback. Triggers on 'review', 'PR', 'code quality', 'check this code'.
 ---
 
-# Order Processing Workflow
+# Code Review
 
-Handle order lifecycle in this e-commerce project.
+Automated code review following project standards.
 
 ## When to Use
 
 **Invoke when:**
-- Creating new order handling code
-- Implementing order state transitions
-- Adding payment processing logic
+- User asks to review code or a PR
+- User wants code quality feedback
+- Before merging significant changes
 
 **Do NOT invoke when:**
-- Simple product queries
-- User authentication (not order-related)
+- Simple syntax questions
+- Explaining existing code (not reviewing)
 
-## Order States
+## Workflow
 
-| State     | Transitions To        | Trigger                    |
-| --------- | --------------------- | -------------------------- |
-| PENDING   | CONFIRMED, CANCELLED  | Payment result             |
-| CONFIRMED | SHIPPED, CANCELLED    | Fulfillment action         |
-| SHIPPED   | DELIVERED             | Delivery confirmation      |
-| DELIVERED | COMPLETED             | Auto after 7 days          |
+1. Run linter: `npm run lint`
+2. Run tests: `npm test`
+3. Check against review checklist
 
-## Domain Rules
+## Review Checklist
 
-- All prices in cents (integer)
-- Order ID format: ORD-{timestamp}-{random}
-- State changes emit domain events
+- [ ] No TypeScript errors
+- [ ] Tests pass and coverage maintained
+- [ ] No console.log in production code
+- [ ] API changes documented
+- [ ] Error handling present
 
 ## References
 
-- [State Machine](references/order-states.md) - Detailed state rules
+- [Style Guide](references/style-guide.md) - Detailed style rules
 ```
-
-## Progressive Disclosure
-
-Skills load in three levels:
-
-| Level    | Content           | Size       | When Loaded           |
-| -------- | ----------------- | ---------- | --------------------- |
-| Metadata | name + description| ~100 words | Always in context     |
-| Body     | SKILL.md content  | <5k words  | When skill triggers   |
-| Resources| references/, etc  | Unlimited  | As needed by AI       |
 
 ## Best Practices
 
-- **Analyze first**: Always scan project before creating skills
-- **Match project patterns**: Skills should reflect existing workflows
-- **Keep SKILL.md lean**: Under 500 lines, split to references/
-- **Clear triggers**: Put ALL trigger conditions in description field
-- **No extra docs**: No README.md, CHANGELOG.md - skills are for AI
+**DO:**
+- Analyze project before creating skills
+- Make description "pushy" - err on side of triggering
+- Explain WHY, not just WHAT - AI understands reasoning
+- Bundle scripts the AI would write repeatedly
+- Keep SKILL.md under 500 lines, split to references/
+
+**DON'T:**
+- Create skills for things AI handles well already
+- Use heavy-handed MUST/NEVER without explaining why
+- Duplicate content between rules and skills
+- Create README.md or CHANGELOG.md (skills are for AI, not humans)
 
 ## References
 
-- [Advanced Patterns](references/advanced-patterns.md) - Multi-variant, domain organization
-- [Complete Example](examples/workflow-skill.md) - End-to-end skill creation
-- [SKILL.md Template](assets/skill.md.template) - Starter template
-
-## Do NOT Create
-
-- README.md
-- CHANGELOG.md
-- INSTALLATION_GUIDE.md
-
-Skills are for AI agents, not human documentation.
+For advanced patterns, read:
+- [Advanced Patterns](references/advanced-patterns.md) - Multi-variant skills, domain organization
+- [Workflow Example](examples/workflow-skill.md) - Complete skill creation walkthrough
+- [Skill Template](assets/skill.md.template) - Starter template
