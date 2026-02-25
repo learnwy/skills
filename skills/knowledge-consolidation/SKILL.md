@@ -1,6 +1,6 @@
 ---
 name: knowledge-consolidation
-description: "Proactively summarize and consolidate knowledge from AI conversation sessions. Auto-triggers when: (1) Starting a new session after meaningful previous work, (2) Session contains significant learnings worth preserving. Captures debugging insights, architecture decisions, patterns, configs, and lessons learned into structured knowledge documents. Explicit triggers: 'summarize', 'consolidate', 'save knowledge', 'document this'."
+description: "Proactively summarize and consolidate knowledge from AI conversation sessions. MUST use this skill when: (1) User asks to 'summarize', 'consolidate', 'save this', 'document this', 'capture this knowledge', or 'write this down', (2) User says '总结一下', '记录下来', '保存这个知识', (3) Session contains significant debugging insights, architecture decisions, or lessons learned worth preserving. Also proactively trigger at end of substantial debug sessions or when user says 'we figured it out' or 'that was hard to solve'. Saves knowledge to .trae/knowledges/, .claude/knowledges/, or .cursor/knowledges/ based on detected AI IDE."
 ---
 
 # Knowledge Consolidation

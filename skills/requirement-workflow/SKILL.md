@@ -1,6 +1,6 @@
 ---
-name: "requirement-workflow"
-description: "State-machine driven orchestrator for structured software development. Supports skill/agent injection at each stage. Triggers: 'build a feature', 'fix this bug', 'implement', 'develop', 'refactor'."
+name: requirement-workflow
+description: "State-machine driven orchestrator for structured software development with spec/tasks/design/test documents. MUST trigger when user wants to: build a feature, fix a bug, implement something substantial, refactor code, or develop new functionality. Also trigger on: '开发功能', '实现这个', 'build this feature', 'implement user auth', or 'add new module'. Creates workflow in .trae/workflow/ with stages: ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → DELIVERING."
 ---
 
 # Requirement Workflow Orchestrator

@@ -1,6 +1,6 @@
 ---
 name: trae-rules-writer
-description: Create and manage Trae IDE rules for AI behavior guidance. Use this skill whenever the user mentions rules, project rules, user rules, code style guidelines, AI constraints, .trae/rules/, or wants to customize how AI behaves in their project. Also use when you see AGENTS.md, CLAUDE.md, or any conversation about standardizing AI behavior across a codebase.
+description: "Create Trae IDE rules (.trae/rules/*.md) for AI behavior constraints. MUST trigger when user wants to: create a project rule, set up code style guidelines, enforce naming conventions, make AI always do X, or customize AI behavior for specific files. Also trigger on: '创建 rule', 'project rule', '.trae/rules/', 'AGENTS.md', 'CLAUDE.md', or 'make AI always use PascalCase'. Do NOT trigger for skills (reusable workflows) or agents (independent workers)."
 ---
 
 # Trae Rules Writer

@@ -1,6 +1,6 @@
 ---
 name: skill-finder
-description: "Intelligent skill discovery, installation, and management assistant using the npx skills CLI. Helps users: (1) Find skills from community with 'npx skills find', (2) Install skills with 'npx skills add', (3) Remove skills with 'npx skills remove', (4) List installed skills with 'npx skills list', (5) Check/update skills with 'npx skills check/update', (6) Create new skills with 'npx skills init'. Triggers on: 'find skill', 'install skill', 'remove skill', 'list skills', 'create skill', or any skill management query."
+description: "Helps users discover and install agent skills when they ask questions like 'how do I do X', 'find a skill for X', 'is there a skill that can...', or express interest in extending capabilities. This skill should be used when the user is looking for functionality that might exist as an installable skill."
 ---
 
 # Skill Finder

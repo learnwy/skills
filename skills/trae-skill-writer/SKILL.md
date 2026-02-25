@@ -1,6 +1,6 @@
 ---
 name: trae-skill-writer
-description: Create and manage Trae IDE skills for reusable AI capabilities. Use this skill whenever the user mentions skills, SKILL.md, agent capabilities, workflow automation, or wants to encapsulate repetitive tasks into reusable AI instructions. Also use when you see .trae/skills/, discussions about making AI follow specific processes, or requests to standardize how AI handles certain tasks.
+description: "Create Trae IDE skills (SKILL.md files) for reusable AI capabilities. MUST trigger when user wants to: create a skill, make a reusable workflow, automate repetitive tasks, turn a conversation into a skill, or encapsulate a process for AI to follow. Also trigger on: '创建 skill', 'write a SKILL.md', 'make this reusable', '.trae/skills/', or requests like 'I keep doing the same thing every time - can we automate this'. Do NOT trigger for rules (constraints), agents (independent workers), or installing existing skills."
 ---
 
 # Trae Skill Writer

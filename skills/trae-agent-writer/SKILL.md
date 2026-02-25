@@ -1,6 +1,6 @@
 ---
 name: trae-agent-writer
-description: Create specialized subagent definitions for AI workflows. Use this skill whenever the user wants to create agents, subagents, autonomous AI workers, specialized evaluators, or any modular AI component that performs a focused task. Also use when you see agents/, discussions about spawning subagents, grading outputs, comparing results, or creating AI workers with specific roles.
+description: "Create subagent definitions (agent.md files) for independent AI workers. MUST trigger when user wants to: create an agent, build a grader/evaluator, make an A/B comparator, spawn independent workers, or create something that runs in isolation. Also trigger on: '创建 agent', 'subagent', 'grade outputs independently', 'blind comparison', or 'run this in parallel'. Do NOT trigger for skills (on-demand capabilities) or rules (constraints)."
 ---
 
 # Trae Agent Writer
