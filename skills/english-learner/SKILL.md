@@ -21,12 +21,16 @@ Personal vocabulary learning assistant with persistent storage and mastery track
 ```
 1. CHECK KEYWORD    → If "学习"/"review"/"quiz" → Learning Mode
 2. PARSE INPUT      → Understand user intent (clarify if ambiguous)
-3. IDENTIFY CONTENT → Extract word(s)/phrase(s)/sentence(s)
-4. IF MULTIPLE      → AskUserQuestion to confirm before processing
-5. LOOKUP/GENERATE  → Get data from storage or AI
-6. STORE            → Save new entries
-7. RESPOND          → Unified format output
+3. IDENTIFY CONTENT → Extract word(s)/phrase(s)/sentence(s) into a list
+4. IF AMBIGUOUS     → AskUserQuestion to confirm before processing
+5. BATCH LOOKUP     → python vocab_manager.py batch_get '["word1", "word2", ...]'
+6. AI GENERATES     → For each "not_found" word, AI provides definition/phonetic/examples
+7. BATCH SAVE       → python vocab_manager.py batch_save '[{...}, {...}]'
+8. LOG QUERY        → python vocab_manager.py log_query <query> <type>
+9. RESPOND          → Unified format output
 ```
+
+**CRITICAL:** Step 7 is MANDATORY. Every word/phrase MUST be saved before responding.
 
 ### Input Clarification
 
@@ -47,7 +51,7 @@ AskUserQuestion:
 All scripts in `{skill_root}/scripts/`. Data in `~/.english-learner/`.
 
 ```bash
-# vocab_manager.py
+# vocab_manager.py - Single operations
 python vocab_manager.py get_word <word>
 python vocab_manager.py save_word <word> <definition> [phonetic] [examples_json]
 python vocab_manager.py get_phrase "<phrase>"
@@ -55,6 +59,10 @@ python vocab_manager.py save_phrase "<phrase>" <definition> [phonetic] [examples
 python vocab_manager.py log_query <query> <type>
 python vocab_manager.py stats
 python vocab_manager.py update_mastery <item> <is_word:true/false> <correct:true/false>
+
+# vocab_manager.py - Batch operations (PREFERRED for multiple words)
+python vocab_manager.py batch_get '["word1", "word2", ...]'
+python vocab_manager.py batch_save '[{"word": "...", "definition": "...", "phonetic": "...", "examples": [...]}]'
 
 # sentence_parser.py
 python sentence_parser.py classify <text>
@@ -283,3 +291,47 @@ When user says `学习` / `review` / `quiz`:
   "mastery": 40
 }
 ```
+
+## Stats Response Format
+
+When user says `stats` / `统计`:
+
+```
+📊 **学习统计**
+
+| 类别 | 数量 |
+|------|------|
+| 总词汇 | {total_words} |
+| 总短语 | {total_phrases} |
+| 已掌握 (≥80%) | {mastered_words} |
+| 学习中 (30-79%) | {learning_words} |
+| 新词汇 (<30%) | {new_words} |
+| 总查询次数 | {total_lookups} |
+```
+
+## Learning Mode - Empty Vocabulary
+
+If quiz_manager.py returns empty list (no words to review):
+
+```
+📚 **词库为空**
+
+还没有添加任何词汇。试试查询一些单词或句子吧！
+
+**示例:**
+- 输入 `apple` 查询单词
+- 输入 `break the ice` 查询短语
+- 输入一句英文或中文来翻译和学习
+```
+
+## Execution Checklist (AI MUST Follow)
+
+Before responding to user, verify:
+
+- [ ] **All words extracted** from input (EN or CN)
+- [ ] **Batch lookup executed** via `batch_get`
+- [ ] **New words SAVED** via `batch_save` (NOT optional!)
+- [ ] **Query logged** via `log_query`
+- [ ] **Response uses unified format**
+
+**Common Mistake:** Only logging query without saving words. FIX: Always run batch_save for new words.

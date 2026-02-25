@@ -214,11 +214,95 @@ def get_stats() -> dict:
     
     return stats
 
+def batch_get_words(words: list) -> dict:
+    """
+    Get multiple words at once. More efficient than multiple get_word calls.
+    
+    Returns: {"found": {word: data, ...}, "not_found": [word, ...]}
+    """
+    result = {"found": {}, "not_found": []}
+    
+    file_cache = {}
+    for word in words:
+        filepath = get_word_file(word)
+        if filepath not in file_cache:
+            file_cache[filepath] = load_json(filepath)
+        
+        key = word.lower()
+        if key in file_cache[filepath]:
+            result["found"][word] = file_cache[filepath][key]
+            increment_lookup(word)
+        else:
+            result["not_found"].append(word)
+    
+    return result
+
+def batch_save_words(words_data: list) -> dict:
+    """
+    Save multiple words at once. More efficient than multiple save_word calls.
+    
+    Args:
+        words_data: List of dicts, each containing:
+            {"word": "...", "definition": "...", "phonetic": "...", "examples": [...]}
+    
+    Returns: {"saved": [word, ...], "count": N}
+    """
+    ensure_dirs()
+    
+    file_cache = {}
+    saved = []
+    now = datetime.now().isoformat()
+    
+    for item in words_data:
+        word = item.get("word", "").lower()
+        if not word:
+            continue
+            
+        filepath = get_word_file(word)
+        if filepath not in file_cache:
+            file_cache[filepath] = load_json(filepath)
+        
+        existing = file_cache[filepath].get(word, {})
+        
+        definition = item.get("definition", "")
+        definitions = item.get("definitions")
+        if definitions:
+            entry_definitions = definitions
+        elif definition:
+            entry_definitions = [{
+                "pos": item.get("pos", ""),
+                "meaning": definition,
+                "examples": item.get("examples", [])
+            }]
+        else:
+            entry_definitions = existing.get("definitions", [])
+        
+        entry = {
+            "word": word,
+            "definitions": entry_definitions,
+            "phonetic": item.get("phonetic", "") or existing.get("phonetic", ""),
+            "synonyms": item.get("synonyms", []) or existing.get("synonyms", []),
+            "antonyms": item.get("antonyms", []) or existing.get("antonyms", []),
+            "created_at": existing.get("created_at", now),
+            "updated_at": now,
+            "lookup_count": existing.get("lookup_count", 0),
+            "mastery": existing.get("mastery", 0),
+        }
+        
+        file_cache[filepath][word] = entry
+        saved.append(word)
+    
+    for filepath, data in file_cache.items():
+        save_json(filepath, data)
+    
+    return {"saved": saved, "count": len(saved)}
+
 def main():
     """CLI interface for vocab_manager."""
     if len(sys.argv) < 2:
         print("Usage: vocab_manager.py <command> [args]")
         print("Commands: get_word, save_word, get_phrase, save_phrase, log_query, stats")
+        print("Batch: batch_get <words_json>, batch_save <words_data_json>")
         sys.exit(1)
     
     cmd = sys.argv[1]
@@ -268,6 +352,16 @@ def main():
         correct = sys.argv[4].lower() == "true"
         new_mastery = update_mastery(item, is_word, correct)
         print(json.dumps({"mastery": new_mastery}))
+    
+    elif cmd == "batch_get" and len(sys.argv) >= 3:
+        words = json.loads(sys.argv[2])
+        result = batch_get_words(words)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
+    
+    elif cmd == "batch_save" and len(sys.argv) >= 3:
+        words_data = json.loads(sys.argv[2])
+        result = batch_save_words(words_data)
+        print(json.dumps(result, ensure_ascii=False, indent=2))
     
     else:
         print(json.dumps({"error": "invalid_command"}))
