@@ -51,10 +51,23 @@ def get_word(word: str) -> dict | None:
     key = word.lower()
     return data.get(key)
 
-def save_word(word: str, definition: str, phonetic: str = "", 
+def save_word(word: str, definition: str = None, phonetic: str = "", 
               examples: list = None, pos: str = "", synonyms: list = None,
-              antonyms: list = None) -> dict:
-    """Save or update a word."""
+              antonyms: list = None, definitions: list = None) -> dict:
+    """
+    Save or update a word.
+    
+    Args:
+        word: The English word
+        definition: Simple definition string (legacy, for single meaning)
+        phonetic: IPA phonetic transcription
+        examples: List of example sentences (legacy)
+        pos: Part of speech (legacy)
+        synonyms: List of synonyms
+        antonyms: List of antonyms
+        definitions: List of definition objects for multi-meaning words:
+            [{"pos": "v.", "meaning": "跑", "examples": ["I run."]}]
+    """
     ensure_dirs()
     filepath = get_word_file(word)
     data = load_json(filepath)
@@ -63,12 +76,17 @@ def save_word(word: str, definition: str, phonetic: str = "",
     now = datetime.now().isoformat()
     existing = data.get(key, {})
     
+    if definitions:
+        entry_definitions = definitions
+    elif definition:
+        entry_definitions = [{"pos": pos or "", "meaning": definition, "examples": examples or []}]
+    else:
+        entry_definitions = existing.get("definitions", [])
+    
     entry = {
         "word": word.lower(),
-        "definition": definition,
+        "definitions": entry_definitions,
         "phonetic": phonetic or existing.get("phonetic", ""),
-        "pos": pos or existing.get("pos", ""),
-        "examples": examples or existing.get("examples", []),
         "synonyms": synonyms or existing.get("synonyms", []),
         "antonyms": antonyms or existing.get("antonyms", []),
         "created_at": existing.get("created_at", now),

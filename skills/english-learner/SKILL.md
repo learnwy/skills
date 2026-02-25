@@ -7,33 +7,47 @@ description: "Personal English vocabulary learning assistant. Use when user quer
 
 Personal vocabulary learning assistant with persistent storage and mastery tracking.
 
+## Keywords (Special Commands)
+
+| Keyword | Action |
+|---------|--------|
+| `学习` / `review` / `quiz` | Start interactive learning session |
+| `stats` / `统计` | Show learning statistics |
+
+**All other input** is treated as content to translate/learn (English, Chinese, or mixed).
+
 ## Workflow
 
 ```
-1. CLASSIFY → Run sentence_parser.py classify <input>
-2. PROCESS  → Based on type: word/phrase/sentence
-3. LOOKUP   → Run vocab_manager.py get_word/get_phrase
-4. STORE    → If not found, get data and save
-5. RESPOND  → Format and return to user
+1. CHECK KEYWORD    → If "学习"/"review"/"quiz" → Learning Mode
+2. PARSE INPUT      → Understand user intent (clarify if ambiguous)
+3. IDENTIFY CONTENT → Extract word(s)/phrase(s)/sentence(s)
+4. IF MULTIPLE      → AskUserQuestion to confirm before processing
+5. LOOKUP/GENERATE  → Get data from storage or AI
+6. STORE            → Save new entries
+7. RESPOND          → Unified format output
 ```
 
-## Quick Reference
+### Input Clarification
 
-| Input Type | Action |
-|------------|--------|
-| Single word | Lookup → Save if new → Return definition |
-| Phrase (2-5 words) | Lookup phrase → Save if new → Return meaning |
-| Sentence | Translate → Extract words → Lookup each → Return all |
-| "quiz" / "review" | Generate quiz from low-mastery items |
-| "stats" | Show learning statistics |
+If input is unclear or contains multiple items:
+
+```
+AskUserQuestion:
+- question: "我理解你想查询以下内容，请确认："
+- header: "确认"
+- options:
+  - label: "单词: apple, banana", description: "分别查询这两个单词"
+  - label: "短语: break the ice", description: "查询这个短语"
+  - label: "全部", description: "查询所有内容"
+```
 
 ## Scripts
 
-All scripts are in `{skill_root}/scripts/`. Data stored in `~/.english-learner/`.
-
-### vocab_manager.py
+All scripts in `{skill_root}/scripts/`. Data in `~/.english-learner/`.
 
 ```bash
+# vocab_manager.py
 python vocab_manager.py get_word <word>
 python vocab_manager.py save_word <word> <definition> [phonetic] [examples_json]
 python vocab_manager.py get_phrase "<phrase>"
@@ -41,162 +55,231 @@ python vocab_manager.py save_phrase "<phrase>" <definition> [phonetic] [examples
 python vocab_manager.py log_query <query> <type>
 python vocab_manager.py stats
 python vocab_manager.py update_mastery <item> <is_word:true/false> <correct:true/false>
+
+# sentence_parser.py
+python sentence_parser.py classify <text>
+python sentence_parser.py parse <sentence>
+python sentence_parser.py batch_check <words>
+
+# quiz_manager.py
+python quiz_manager.py generate [count] [type] [focus]
+python quiz_manager.py review [limit]
+python quiz_manager.py summary
 ```
 
-### sentence_parser.py
+## Unified Response Format
 
-```bash
-python sentence_parser.py classify <text>       # Returns: word/phrase/sentence
-python sentence_parser.py parse <sentence>      # Extract and check words
-python sentence_parser.py extract <sentence>    # Extract words only
-python sentence_parser.py batch_check <words>   # Check multiple words
-```
+### Word (单词)
 
-### quiz_manager.py
-
-```bash
-python quiz_manager.py generate [count] [type:word/phrase/all] [focus:low_mastery/high_lookup/random/new]
-python quiz_manager.py review [limit]           # Get items needing review
-python quiz_manager.py summary                  # Learning summary
-```
-
-## Processing Workflows
-
-### Word Query
+**Required fields:** English, phonetic, definitions (all meanings), examples
 
 ```
-1. python sentence_parser.py classify "apple"
-   → {"type": "word"}
+📖 **{english}** {phonetic}
 
-2. python vocab_manager.py get_word apple
-   → If found: return data (auto-increments lookup_count)
-   → If not found: {"error": "not_found"}
+**词义 Definitions:**
 
-3. If not found:
-   - AI provides: definition, phonetic, examples, pos, synonyms
-   - python vocab_manager.py save_word apple "苹果" "/ˈæp.əl/" '["I ate an apple"]'
+1. **{pos1}** {chinese1}
+   - {example1_en}
+   - {example1_cn}
 
-4. python vocab_manager.py log_query "apple" "word"
+2. **{pos2}** {chinese2}
+   - {example2_en}
+   - {example2_cn}
+
+**同义词:** {synonyms}
+**反义词:** {antonyms}
+
+---
+📊 查询次数: {lookup_count} | 掌握度: {mastery}%
 ```
 
-### Phrase Query
-
+**Example:**
 ```
-1. python sentence_parser.py classify "break the ice"
-   → {"type": "phrase"}
+📖 **run** /rʌn/
 
-2. python vocab_manager.py get_phrase "break the ice"
-   → If found: return data
-   → If not found: {"error": "not_found"}
+**词义 Definitions:**
 
-3. If not found:
-   - AI provides: definition, phonetic, examples, literal meaning
-   - python vocab_manager.py save_phrase "break the ice" "打破僵局" ...
+1. **v.** 跑，奔跑
+   - I run every morning.
+   - 我每天早上跑步。
 
-4. python vocab_manager.py log_query "break the ice" "phrase"
-```
+2. **v.** 运行，运转
+   - The program runs smoothly.
+   - 程序运行顺畅。
 
-### Sentence Query
+3. **v.** 经营，管理
+   - She runs a small business.
+   - 她经营一家小公司。
 
-```
-1. python sentence_parser.py classify "The quick brown fox jumps."
-   → {"type": "sentence"}
+4. **n.** 跑步；一段路程
+   - I went for a run.
+   - 我去跑了一圈。
 
-2. python sentence_parser.py parse "The quick brown fox jumps."
-   → {"words": [...], "known": [...], "unknown": [...]}
+**同义词:** sprint, jog, operate
+**反义词:** walk, stop
 
-3. AI translates full sentence
-
-4. For each unknown word:
-   - AI provides definition
-   - python vocab_manager.py save_word <word> <definition> ...
-
-5. Return: translation + word breakdowns
+---
+📊 查询次数: 5 | 掌握度: 40%
 ```
 
-### Quiz Mode
+### Phrase (短语)
+
+**Required fields:** English, phonetic, meaning, literal meaning, examples
 
 ```
-1. python quiz_manager.py generate 10 all low_mastery
-   → Returns quiz items
+📖 **{english_phrase}** {phonetic}
 
-2. Present each item to user, get answer
+**释义:** {chinese_meaning}
+**字面意思:** {literal_meaning}
 
-3. python vocab_manager.py update_mastery <item> <is_word> <correct>
-   → Updates mastery score
+**例句:**
+- {example1_en}
+  {example1_cn}
+- {example2_en}
+  {example2_cn}
+
+---
+📊 查询次数: {lookup_count} | 掌握度: {mastery}%
 ```
 
-## Response Format
-
-### Word Response
-
+**Example:**
 ```
-📖 **apple** /ˈæp.əl/
+📖 **break the ice** /breɪk ðə aɪs/
 
-**Definition:** 苹果; a round fruit with red/green skin
+**释义:** 打破僵局；打破沉默
+**字面意思:** 打破冰块
 
-**Part of Speech:** noun
+**例句:**
+- He told a joke to break the ice at the meeting.
+  他在会上讲了个笑话来打破僵局。
+- A good question can help break the ice.
+  一个好问题可以帮助打破沉默。
 
-**Examples:**
-- I ate an apple for breakfast.
-- Apple pie is my favorite dessert.
-
-**Synonyms:** -
-**Lookup Count:** 3 | **Mastery:** 60%
+---
+📊 查询次数: 2 | 掌握度: 60%
 ```
 
-### Sentence Response
+### Sentence (句子)
+
+**Required fields:** Original, translation, phonetic guide, word/phrase breakdown
 
 ```
-📝 **Sentence Analysis**
+📝 **句子分析**
 
-**Original:** The quick brown fox jumps over the lazy dog.
-**Translation:** 敏捷的棕色狐狸跳过懒狗。
+**原文:** {original}
+**译文:** {translation}
+**朗读:** {phonetic_guide}
 
-**Words Breakdown:**
-| Word | Definition | Mastery |
-|------|------------|---------|
-| quick | 快的 | 80% |
-| brown | 棕色的 | 90% |
-| fox | 狐狸 | 40% |
-| ...  | ... | ... |
+---
 
-**Unknown Words Saved:** fox, lazy
+**词汇拆解:**
+
+{For each key word/phrase, use Word/Phrase format above}
+```
+
+**Example:**
+```
+📝 **句子分析**
+
+**原文:** The early bird catches the worm.
+**译文:** 早起的鸟儿有虫吃。（比喻：勤奋的人有收获）
+**朗读:** /ðə ˈɜːli bɜːd ˈkætʃɪz ðə wɜːm/
+
+---
+
+**词汇拆解:**
+
+📖 **early** /ˈɜːli/
+
+**词义 Definitions:**
+1. **adj.** 早的，提前的
+   - I'm an early riser.
+   - 我是个早起的人。
+
+---
+
+📖 **catch** /kætʃ/
+
+**词义 Definitions:**
+1. **v.** 抓住，捕获
+   - The cat caught a mouse.
+   - 猫抓住了一只老鼠。
+2. **v.** 赶上（车、飞机等）
+   - I need to catch the 8am train.
+   - 我需要赶上早上8点的火车。
+
+---
+
+📖 **worm** /wɜːm/
+
+**词义 Definitions:**
+1. **n.** 虫，蠕虫
+   - Birds eat worms.
+   - 鸟吃虫子。
+
+---
+📊 新增词汇: early, catch, worm
+```
+
+## Learning Mode (学习)
+
+When user says `学习` / `review` / `quiz`:
+
+```
+1. python quiz_manager.py generate 5 all low_mastery
+
+2. For EACH item:
+   
+   AskUserQuestion #1:
+   - question: "📖 **{word}** 的意思是什么？"
+   - header: "Quiz"
+   - options:
+     - label: "认识", description: "我知道这个词的意思"
+     - label: "模糊", description: "有点印象但不确定"
+     - label: "不认识", description: "完全不知道"
+   
+3. Show answer (unified Word/Phrase format)
+
+4. AskUserQuestion #2:
+   - question: "掌握程度如何？"
+   - header: "Mastery"
+   - options:
+     - label: "完全掌握", description: "+10 mastery"
+     - label: "基本掌握", description: "+5 mastery"
+     - label: "需要加强", description: "-5 mastery"
+
+5. python vocab_manager.py update_mastery <item> true <result>
+
+6. Continue or show summary
 ```
 
 ## Data Structure
 
 ```
 ~/.english-learner/
-├── words/
-│   ├── ap.json          # Words starting with "ap": apple, apply...
-│   ├── br.json          # Words starting with "br": break, brown...
-│   └── ...
-├── phrases/
-│   ├── break.json       # Phrases starting with "break"
-│   └── ...
-├── history/
-│   ├── 2024-01-15.json  # Daily query logs
-│   └── ...
+├── words/{prefix}.json     # Words grouped by first 2 letters
+├── phrases/{first_word}.json
+├── history/{date}.json     # Daily query logs
 └── memory/
-    ├── SOUL.md          # Skill-specific AI context
-    └── USER.md          # User learning preferences
+    ├── SOUL.md
+    └── USER.md
 ```
 
 ## Word Data Schema
 
 ```json
 {
-  "word": "apple",
-  "definition": "苹果; a round fruit",
-  "phonetic": "/ˈæp.əl/",
-  "pos": "noun",
-  "examples": ["I ate an apple."],
-  "synonyms": [],
-  "antonyms": [],
+  "word": "run",
+  "definitions": [
+    {"pos": "v.", "meaning": "跑，奔跑", "examples": ["I run every morning."]},
+    {"pos": "v.", "meaning": "运行，运转", "examples": ["The program runs."]},
+    {"pos": "n.", "meaning": "跑步", "examples": ["I went for a run."]}
+  ],
+  "phonetic": "/rʌn/",
+  "synonyms": ["sprint", "jog"],
+  "antonyms": ["walk", "stop"],
   "created_at": "2024-01-15T10:00:00",
-  "updated_at": "2024-01-15T10:00:00",
   "lookup_count": 5,
-  "mastery": 60
+  "mastery": 40
 }
 ```
