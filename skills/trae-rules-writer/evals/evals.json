@@ -1,0 +1,35 @@
+{
+  "skill_name": "trae-rules-writer",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create a project rule for our TypeScript React project that enforces PascalCase for components and camelCase for functions",
+      "expected_output": "Creates .trae/rules/code-style.md with alwaysApply: true and proper naming conventions",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Set up security rules for our project - never log passwords, always validate input at entry points",
+      "expected_output": "Creates .trae/rules/security.md with alwaysApply: true and security guidelines from official docs",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Make AI always use TypeScript interfaces instead of types for object definitions",
+      "expected_output": "Creates a rule with globs: *.ts,*.tsx enforcing interface usage for objects",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "创建一个规则，让AI在写测试时必须遵循AAA模式",
+      "expected_output": "Creates .trae/rules/testing.md with globs for test files and AAA pattern guidelines",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "I need a rule that only applies to Python files enforcing snake_case for variables",
+      "expected_output": "Creates .trae/rules/python-style.md with globs: *.py and snake_case conventions",
+      "files": []
+    }
+  ]
+}
