@@ -1,0 +1,10 @@
+# Memory Manager - Private Data
+# NEVER commit memory/ to version control
+
+# All memory data
+memory/
+
+# Keep skill definition files
+!SKILL.md
+!README.md
+!.gitignore
