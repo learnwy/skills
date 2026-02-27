@@ -109,14 +109,14 @@ Keep under 2000 tokens. Update after each significant session.
 
 ## Session End Protocol
 
-Before the session ends, **update `memory/USER.md` and `memory/SOUL.md`** if necessary:
+Before the session ends, **update `{skill_dir}/memory/USER.md` and `{skill_dir}/memory/SOUL.md`** if necessary:
 - Memories and lessons learned are up-to-date with latest context
 - Important details are not forgotten across sessions
 - Outdated or irrelevant information is cleaned up
 
 ### Step 1: Create History
 
-Create `memory/history/history-YYYY-MM-DD-N.md`:
+Create `{skill_dir}/memory/history/history-YYYY-MM-DD-N.md`:
 
 ```markdown
 # Session History: YYYY-MM-DD #N
@@ -176,18 +176,6 @@ Dense, telegraphic short sentences. No filler words ("You are", "You should"). C
 
 ## Notes
 
-- All files under `memory/` **must be written in English**, except for user-language-specific proper nouns.
+- All files under `{skill_dir}/memory/` **must be written in English**, except for user-language-specific proper nouns.
 - **Keep each file under 2000 tokens.** Be ruthless about deduplication and conciseness.
-- Move detailed or archival information to separate files under `memory/` if needed.
-
-## Privacy
-
-Memory contains personal data. `.gitignore` protects `memory/`. **NEVER commit memory/ to git.**
-
-## Cross-IDE Sharing
-
-Symlink this folder to share memory across IDEs:
-```bash
-ln -s ~/.trae-cn/skills/memory-manager ~/.claude/skills/memory-manager
-ln -s ~/.trae-cn/skills/memory-manager ~/.cursor/skills/memory-manager
-```
+- Move detailed or archival information to separate files under `{skill_dir}/memory/` if needed.
