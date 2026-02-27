@@ -87,7 +87,7 @@ alwaysApply: true
 
 ```markdown
 ---
-globs: "*.tsx,*.jsx"
+globs: *.tsx,*.jsx
 alwaysApply: false
 ---
 
@@ -117,7 +117,7 @@ alwaysApply: false
 
 ```markdown
 ---
-globs: "*.test.ts,*.spec.ts,__tests__/**"
+globs: *.test.ts,*.spec.ts,__tests__/**
 alwaysApply: false
 ---
 
@@ -194,7 +194,7 @@ alwaysApply: false
 │ Question: When should this rule apply?                          │
 ├─────────────────────────────────────────────────────────────────┤
 │ Always, for all code?           → alwaysApply: true             │
-│ Only for specific file types?   → globs: "*.ts" + alwaysApply: false │
+│ Only for specific file types?   → globs: *.ts + alwaysApply: false │
 │ When AI thinks it's relevant?   → description: "..." + alwaysApply: false │
 │ Only when explicitly mentioned? → alwaysApply: false (no globs) │
 └─────────────────────────────────────────────────────────────────┘

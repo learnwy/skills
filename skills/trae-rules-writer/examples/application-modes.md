@@ -57,7 +57,7 @@ Start new chat and write any code - security rules will apply.
 
 ```markdown
 ---
-globs: "*.ts,*.tsx"
+globs: *.ts,*.tsx
 alwaysApply: false
 ---
 
@@ -198,7 +198,7 @@ User: "Using #experimental-patterns, implement the new checkout flow"
 | Mode           | Config                                | Activation                   |
 | -------------- | ------------------------------------- | ---------------------------- |
 | Always Apply   | `alwaysApply: true`                   | Every chat in project        |
-| File-Specific  | `globs: "*.ts"` + `alwaysApply: false`| When matching files involved |
+| File-Specific  | `globs: *.ts` + `alwaysApply: false`  | When matching files involved |
 | Intelligent    | `description: "..."` + `alwaysApply: false` | AI determines relevance |
 | Manual         | `alwaysApply: false` (no globs/desc)  | `#RuleName` in chat          |
 

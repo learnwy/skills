@@ -21,7 +21,7 @@ Create Trae IDE rules by analyzing project conventions first, then designing rul
 ```markdown
 ---
 description: When to apply this rule (for intelligent mode)
-globs: "*.ts,*.tsx"
+globs: *.ts,*.tsx
 alwaysApply: false
 ---
 
@@ -35,7 +35,7 @@ Concise guidance for AI.
 | Mode                | Frontmatter                      | Use Case                      |
 | ------------------- | -------------------------------- | ----------------------------- |
 | Always Apply        | `alwaysApply: true`              | Global conventions (naming)   |
-| File-Specific       | `globs: "*.tsx,*.jsx"`           | Language-specific rules       |
+| File-Specific       | `globs: *.tsx,*.jsx`             | Language-specific rules       |
 | Apply Intelligently | `description: "When doing X..."` | Context-dependent guidance    |
 | Manual Only         | (no frontmatter)                 | Invoke with `#RuleName`       |
 
@@ -76,7 +76,7 @@ alwaysApply: true
 
 📄 react-patterns.md
 ---
-globs: "*.tsx,*.jsx"
+globs: *.tsx,*.jsx
 ---
 # React Patterns
 - Use functional components with hooks

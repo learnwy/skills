@@ -1,6 +1,6 @@
 ---
 description: {{DESCRIPTION}}
-globs: "{{GLOBS}}"
+globs: {{GLOBS}}
 alwaysApply: {{ALWAYS_APPLY}}
 ---
 
