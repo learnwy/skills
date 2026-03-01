@@ -84,6 +84,17 @@ Skills should reference agents at appropriate workflow stages:
 - `{output_path}` - Agent output parameter
 - Relative paths: `./`, `../`, `src/`
 
+## Globs Format (CRITICAL)
+
+When creating rules with `globs`, **NEVER use quotes**:
+
+| Correct ✅ | Wrong ❌ |
+|------------|----------|
+| `globs: *.ts,*.tsx` | `globs: "*.ts,*.tsx"` |
+| `globs: *.test.ts,*.spec.ts` | `globs: ["*.test.ts"]` |
+
+Trae does NOT recognize standard YAML arrays or quoted strings for globs.
+
 ## Quality Standards
 
 When creating/editing skills:
@@ -96,3 +107,9 @@ When creating/editing skills:
 - [ ] References link to existing files
 - [ ] Agents use local paths (`agents/` not `../`)
 - [ ] **NO absolute paths** - Use relative paths or placeholders
+- [ ] **Globs NO quotes** - `globs: *.ts,*.tsx` NOT `globs: "*.ts,*.tsx"`
+
+When creating/editing rules:
+
+- [ ] **Description ALWAYS included** - Even for `alwaysApply: true` rules
+- [ ] **Globs NO quotes** - `globs: *.ts,*.tsx` NOT `globs: "*.ts,*.tsx"`

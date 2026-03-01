@@ -30,12 +30,12 @@ Analyze project patterns, design skill specs with code-first approach, then dele
 
 | Format | Example | Explanation |
 |--------|---------|-------------|
-| `{prefix}-{domain}` | `scp-style` | scp = search_card_pack |
+| `{prefix}-{domain}` | `app-style` | app = your project name |
 | `{prefix}-{domain}` | `trae-rules` | trae = trae-related |
 | `{prefix}-{domain}` | `fe-component` | fe = frontend |
 
-**Good names:** `scp-scene-general`, `scp-bff-review`, `trae-skill-writer`
-**Bad names:** `search-card-pack-general-search-scene-template` (too long)
+**Good names:** `app-scene-general`, `app-bff-review`, `trae-skill-writer`
+**Bad names:** `my-app-general-search-scene-template` (too long)
 
 ## Language Consistency (CRITICAL)
 
@@ -47,11 +47,11 @@ Analyze project patterns, design skill specs with code-first approach, then dele
 
 ```yaml
 # Good - all English
-name: scp-style
+name: app-style
 description: "Style system guide for TextStyle/BaseStyle. Use when..."
 
 # Bad - mixed languages
-name: scp-style
+name: app-style
 description: "Style 系统指南. Use when 使用样式时..."
 ```
 
@@ -146,8 +146,8 @@ Project context:
 
 **Single Responsibility**: Each skill should focus on ONE specific domain.
 
-- Good: `scp-style` (only style system), `scp-monitor` (only monitoring)
-- Bad: `scp-style-and-component` (too broad)
+- Good: `app-style` (only style system), `app-monitor` (only monitoring)
+- Bad: `app-style-and-component` (too broad)
 
 **Cross-Reference**: Use "Related Skills" section to connect related concepts.
 - Don't duplicate content across skills
@@ -168,13 +168,13 @@ Before delegating to skill-creator, verify spec has:
 ## Example
 
 ```
-User: "Create skills for our search_card_pack project"
+User: "Create skills for our ecommerce-app project"
 
 Phase 1 - Project Overview:
 - Tech stack: Go, internal frameworks
-- Domains identified: style, scene, monitor, bff
+- Domains identified: style, component, monitor, api
 
-Phase 2 - Sequential Deep-Dive for scp-style:
+Phase 2 - Sequential Deep-Dive for app-style:
 
 READ CODE:
 - internal/style/text_style.go (150 lines)
@@ -182,7 +182,7 @@ READ CODE:
 - Found: TextStyle, BaseStyle, FontSize constants
 
 DESIGN (skill spec):
-- Name: scp-style (prefix: scp)
+- Name: app-style (prefix: app)
 - Language: English
 - Key Files: internal/style/*.go
 - Purpose: Style system guide for TextStyle/BaseStyle
@@ -192,10 +192,10 @@ DESIGN (skill spec):
 DELEGATE:
 "Use skill `skill-creator` to create the skill with this spec:
 
-**Skill Name:** scp-style
-**Purpose:** Style system guide for TextStyle/BaseStyle in search_card_pack
+**Skill Name:** app-style
+**Purpose:** Style system guide for TextStyle/BaseStyle in ecommerce-app
 **Triggers:** 'style', 'TextStyle', 'BaseStyle', 'font', 'color'
-**Exclusions:** layout, animation (see scp-layout)
+**Exclusions:** layout, animation (see app-layout)
 **Language:** English
 **Key Files:**
 - internal/style/text_style.go
@@ -204,16 +204,16 @@ DELEGATE:
 1. Identify style type needed (Text vs Base)
 2. Apply correct style constants
 3. Follow naming conventions
-**Location:** .trae/skills/scp-style/
+**Location:** .trae/skills/app-style/
 
 Project context:
 - Tech stack: Go
 - Patterns: TextStyle struct, BaseStyle interface
-- Related skills: scp-layout, scp-component"
+- Related skills: app-layout, app-component"
 
 Phase 3 - Cross-Reference:
-- scp-style ↔ scp-layout (related)
-- scp-style ↔ scp-component (related)
+- app-style ↔ app-layout (related)
+- app-style ↔ app-component (related)
 ```
 
 ## References
