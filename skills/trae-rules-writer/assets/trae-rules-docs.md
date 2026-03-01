@@ -1,44 +1,106 @@
-# TRAE IDE Rules Documentation
+# Trae IDE Rules Documentation
+
+> Source: https://docs.trae.ai/ide/rules
 
 ## Overview
-"Establish rules to regulate AI's behavior within TRAE, making output better aligned with personal preferences."
+
+Rules regulate AI behavior within Trae IDE, making output better aligned with personal preferences and project requirements.
+
+## Use Cases
+
+1. **Efficiency Improvement**: Transform personal experience into reusable rules
+2. **Standardization**: Structure team guidelines into consistent rules
+3. **Quality Assurance**: Ensure AI understands project constraints
 
 ## Types of Rules
-1. **User Rules**: "Customized for personal habits and needs, applying to all projects."
-2. **Project Rules**: "Located in .trae/rules directory, only effective within current project."
 
-## Creating Rules
-- **User Rules**: Settings > Rules & Skills > User Rules > "+ Create"
-- **Project Rules**: Settings > Rules & Skills > Project Rules > "+ Create"
+| Type          | Location                  | Scope           |
+| ------------- | ------------------------- | --------------- |
+| User Rules    | Settings > Rules & Skills | All projects    |
+| Project Rules | `.trae/rules/*.md`        | Current project |
 
 ## Application Modes
-- "Always Apply": Effective for all AI chats within project
-- "Apply to Specific Files": Uses globs field for file matching
-- "Apply Intelligently": AI determines relevance based on description
-- "Apply Manually": Only when mentioned with #Rule
 
-## Referencing Rules
-- "Always Apply" rules display in chat input box
-- "Apply Manually" referenced using #Rule syntax
+| Mode                   | Frontmatter Setting              | Behavior                                |
+| ---------------------- | -------------------------------- | --------------------------------------- |
+| Always Apply           | `alwaysApply: true`              | Effective for all AI chats in project   |
+| Apply to Specific Files| `globs: *.ts,*.tsx`              | Active when matching files are involved |
+| Apply Intelligently    | `description: "When doing X..."` | AI determines relevance based on context|
+| Apply Manually         | `alwaysApply: false` (no globs)  | Only when referenced with #RuleName     |
 
-## Best Practices
-- "Control granularity of each rule to keep it clear"
-- "Rules must not conflict or override each other"
-- "Use relative paths based on project root directory"
+## Rule File Format
 
-## Special Files
-- "AGENTS.md: Provides behavioral guidance to AI agents"
-- "CLAUDE.md & CLAUDE.local.md: Compatible rule files"
-
-## Example Rules
 ```markdown
-# Coding rules
+---
+description: When to apply this rule (for intelligent mode)
+globs: *.ts,*.tsx
+alwaysApply: false
+---
 
-## General rules
-- Avoid unnecessary object copying
-- Use appropriate concurrency control
+# Rule Title
+
+Your rule content here.
 ```
 
+### Frontmatter Properties
+
+| Property     | Type    | Description                                      |
+| ------------ | ------- | ------------------------------------------------ |
+| description  | string  | Explains when to apply (for intelligent mode)    |
+| globs        | string  | Comma-separated file patterns (no quotes)        |
+| alwaysApply  | boolean | true = always active, false = conditional        |
+
+### Globs Format
+
+- **Correct**: `globs: *.ts,*.tsx` (comma-separated, no quotes)
+- **Incorrect**: `globs: "*.ts,*.tsx"` (do not use quotes)
+
+Examples:
+- `globs: *.ts,*.tsx` - TypeScript files
+- `globs: *.test.ts,*.spec.ts,__tests__/**` - Test files
+- `globs: src/**/*.jsx,src/**/*.tsx` - JSX/TSX in src folder
+
+## Creating Rules
+
+### User Rules
+1. Open Settings (gear icon)
+2. Select "Rules & Skills" in left navigation
+3. In "User Rules" section, click "+ Create"
+4. Enter rule content and save
+
+### Project Rules
+1. Open Settings
+2. Select "Rules & Skills"
+3. In "Project Rules" section, click "+ Create"
+4. Enter rule name and confirm
+5. System creates `.trae/rules/<name>.md`
+6. Edit the rule file in the editor
+
+## Referencing Rules
+
+- **Always Apply**: Automatically displayed in chat input box
+- **File-Specific**: Auto-activated when matching files are mentioned
+- **Intelligent**: AI decides based on conversation context
+- **Manual**: Reference using `#RuleName` in chat
+
+## Compatible Files
+
+| File              | Description                           |
+| ----------------- | ------------------------------------- |
+| `AGENTS.md`       | Behavioral guidance, reusable across IDEs |
+| `CLAUDE.md`       | Compatible with Claude Code           |
+| `CLAUDE.local.md` | Local-only rules, typically gitignored |
+
+## Best Practices
+
+1. **Control Granularity**: Keep each rule clear and focused
+2. **Avoid Conflicts**: Rules must not override each other
+3. **Use Relative Paths**: Reference files relative to project root
+4. **Be Specific**: Provide clear, actionable guidance
+5. **Include Examples**: Show good and bad patterns when helpful
+
 ## Import Settings
-- "Include AGENTS.md in the context"
-- "Include CLAUDE.md in context"
+
+In Settings > Rules & Skills:
+- "Include AGENTS.md in the context" - Enable to read AGENTS.md
+- "Include CLAUDE.md in context" - Enable for Claude compatibility

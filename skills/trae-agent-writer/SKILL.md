@@ -136,5 +136,7 @@ Save to `{output_path}/grading.json`
 
 ## References
 
+- [Trae Agent Documentation](assets/trae-agent-docs.md) - Official documentation
 - [Agent Patterns](references/agent-patterns.md) - Common archetypes
 - [Agent Template](assets/agent.md.template) - Starter template
+- [Grader Agent Example](examples/grader-agent.md) - Complete end-to-end example

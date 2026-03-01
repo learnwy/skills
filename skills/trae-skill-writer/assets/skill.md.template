@@ -1,6 +1,6 @@
 ---
 name: {{SKILL_NAME}}
-description: "{{DESCRIPTION}}. Use when {{USE_CASES}}. Triggers on '{{TRIGGER1}}', '{{TRIGGER2}}', '{{TRIGGER3}}'."
+description: "{{DESCRIPTION}}. Use when {{USE_CASES}}. Triggers on '{{TRIGGER1}}', '{{TRIGGER2}}', '{{TRIGGER3}}'. Do NOT use for {{EXCEPTIONS}}."
 ---
 
 # {{SKILL_TITLE}}
@@ -38,14 +38,14 @@ description: "{{DESCRIPTION}}. Use when {{USE_CASES}}. Triggers on '{{TRIGGER1}}
 | -------- | -------- | -------- |
 | {{VAL1}} | {{VAL2}} | {{VAL3}} |
 
-## References
-
-- [{{REF_1}}](references/{{REF_1_FILE}}) - {{REF_1_DESC}}
-- [{{REF_2}}](references/{{REF_2_FILE}}) - {{REF_2_DESC}}
-
 ## Error Handling
 
 | Issue      | Solution        |
 | ---------- | --------------- |
 | {{ISSUE1}} | {{SOLUTION1}}   |
 | {{ISSUE2}} | {{SOLUTION2}}   |
+
+## References
+
+- [{{REF_1}}](references/{{REF_1_FILE}}) - {{REF_1_DESC}}
+- [{{REF_2}}](assets/{{REF_2_FILE}}) - {{REF_2_DESC}}
