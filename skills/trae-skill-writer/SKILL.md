@@ -5,257 +5,138 @@ license: "MIT"
 compatibility: "Requires Trae IDE"
 metadata:
   author: "learnwy"
-  version: "1.1"
+  version: "1.3"
 ---
 
 # Trae Skill Writer
 
-Create Trae IDE skills by analyzing project patterns first, then designing skills that automate real workflows.
+Analyze project patterns and design skill specs, then delegate to `skill-creator` for SKILL.md creation.
 
 ## Workflow
 
 ```
 0. SIZE CHECK → Is project too large? If yes, ask user to specify folders
-1. ANALYZE    → Scan project (spawn Project Scanner Agent for deep analysis)
-2. IDENTIFY   → What workflows need automation? (use Tech Stack Analyzer for domain-specific patterns)
-3. DESIGN     → Structure skill for on-demand loading
-4. CREATE     → Write SKILL.md with clear triggers
-5. VERIFY     → Validate skill (spawn Quality Validator Agent)
+1. ANALYZE    → Scan project (spawn Project Scanner Agent)
+2. IDENTIFY   → What workflows need automation?
+3. DESIGN     → Structure skill requirements and triggers
+4. DELEGATE   → Hand off to skill-creator (DO NOT write SKILL.md yourself)
+5. VERIFY     → Validate skill after creation
+```
+
+## Delegation to skill-creator (CRITICAL)
+
+**After DESIGN step, ALWAYS delegate to `skill-creator` for actual SKILL.md creation.**
+
+This skill focuses on: **Analysis & Design**
+- Project scanning
+- Pattern identification
+- Requirements gathering
+- Skill spec creation
+
+`skill-creator` handles: **Creation & Testing**
+- Writing SKILL.md
+- Test prompts
+- Evaluations
+- Iterative improvement
+
+### Delegation Template
+
+```
+Use skill `skill-creator` to create the skill with this spec:
+
+**Skill Name:** {name}
+**Purpose:** {what it does}
+**Triggers:** {phrases that should activate it}
+**Exclusions:** {when NOT to use}
+**Workflow:** {numbered steps}
+**Location:** .trae/skills/{name}/ or ~/.trae/skills/{name}/
+
+Project context:
+- Tech stack: {detected tech}
+- Patterns found: {patterns}
+- Existing automation: {scripts, CI/CD}
 ```
 
 ## Agent-Enhanced Analysis
 
-For deeper project analysis, spawn specialized agents:
-
 | Stage | Agent | When to Use |
 |-------|-------|-------------|
 | ANALYZE | [Project Scanner](agents/project-scanner.md) | Large/unfamiliar projects |
-| ANALYZE | [Tech Stack Analyzer](agents/tech-stack-analyzer.md) | Domain-specific analysis (iOS, Go, React) |
-| VERIFY | [Quality Validator](agents/quality-validator.md) | Comprehensive skill validation |
-
-**How to use:**
-```
-Spawn agent with Task tool:
-- Agent: agents/project-scanner.md
-- Input: {project_path: "/path/to/project", output_path: "/tmp/analysis"}
-- Wait for structured JSON output
-- Use analysis results to inform skill design
-```
+| ANALYZE | [Tech Stack Analyzer](agents/tech-stack-analyzer.md) | Domain-specific (iOS, Go, React) |
+| VERIFY | [Quality Validator](agents/quality-validator.md) | Post-creation validation |
 
 ## Large Project Handling
 
-**Before analyzing, check project size.** If the project is too large (many folders, monorepo, >50 top-level items):
+If project is too large (>50 top-level items, monorepo):
 
-1. **STOP** - Do not attempt to analyze the entire project
-2. **INFORM** - Tell user the project is too large for comprehensive analysis
-3. **ASK** - Use `AskUserQuestion` to request target folders:
-   - "Which folders should I focus on for creating skills?"
-   - "Please provide 1-3 specific directories (e.g., `src/features/`, `scripts/`)"
-4. **SCOPE** - Only create skills for the user-specified folders
-
-**Example response for large projects:**
-```
-This project appears to be large (I see 20+ top-level directories).
-To create focused, useful skills, please specify which folders I should analyze:
-- Which directories contain workflows you want to automate?
-- Any specific areas with repetitive tasks?
-
-Example: "Focus on src/api/ and scripts/"
-```
-
-**Indicators of "too large":**
-- Monorepo with multiple packages
-- >50 files/folders at root level
-- Multiple independent modules or services
-- No clear single entry point
-
-## User Interaction Guidelines
-
-**When to ask user for clarification:**
-- Project scope is unclear (large project, monorepo)
-- Multiple valid skill designs are possible
-- User's intent is ambiguous
-- Choosing between global vs project skill
-
-**Use `AskUserQuestion` tool with options like:**
-```
-Question: "What type of skill scope do you prefer?"
-Options:
-- "Global skill (~/.trae/skills/)" - Available in all projects
-- "Project skill (.trae/skills/)" - Only for this project
-```
+1. **STOP** - Don't analyze entire project
+2. **ASK** - Use `AskUserQuestion` for target folders
+3. **SCOPE** - Only analyze user-specified folders
 
 ## Path Conventions
 
-**NEVER use absolute paths** in generated skills. Use relative paths or placeholders:
+**NEVER use absolute paths.** Use relative paths or placeholders:
 
 | Bad ❌ | Good ✅ |
 |--------|---------|
 | `/Users/john/project/src/` | `src/` or `{project_root}/src/` |
-| `/home/dev/repo/.trae/skills/` | `.trae/skills/` |
-| `~/Documents/code/lib/` | `lib/` or `{git_root}/lib/` |
+| `/home/dev/repo/.trae/` | `.trae/` |
 
-**Path placeholders:**
-- `{project_root}` - Current project root directory
-- `{git_root}` - Git repository root
-- `{skill_dir}` - Current skill's directory
-- Relative paths like `./`, `../`, `src/`
-
-**Why:** Skills are shared across team members with different usernames, clone paths, and environments. Absolute paths break portability.
-
-## Skill Structure
-
-```
-skill-name/
-├── SKILL.md               # Required - Core instructions (<500 lines)
-├── scripts/               # Optional - Executable automation
-├── references/            # Optional - Detailed docs (loaded on-demand)
-└── assets/                # Optional - Templates, files for output
-```
-
-## SKILL.md Format
-
-```markdown
----
-name: skill-name
-description: "What it does. When to use. Trigger phrases. Do NOT use for X."
----
-
-# Skill Name
-
-Brief intro.
-
-## When to Use
-
-**Invoke when:**
-- [Condition 1]
-- [Condition 2]
-
-**Do NOT invoke when:**
-- [Exception 1]
-- [Exception 2]
-
-## Workflow
-
-[Steps or flowchart]
-
-## Quick Reference
-
-[Tables, commands]
-
-## Error Handling
-
-| Issue | Solution |
-|-------|----------|
-| [Issue 1] | [Solution 1] |
-
-## References
-
-- [doc.md](references/doc.md) - When to read
-```
-
-**Description is the primary trigger mechanism.** Include:
-- What the skill does
-- When to use it (specific phrases)
-- When NOT to use it
-
-## Skill Types
-
-| Type    | Location            | Scope           |
-| ------- | ------------------- | --------------- |
-| Global  | `~/.trae/skills/`   | All projects    |
-| Project | `.trae/skills/`     | Current project |
+Placeholders: `{project_root}`, `{git_root}`, `{skill_dir}`, relative paths
 
 ## Good Skill Candidates
 
 - Multi-step workflows (code review, deployment)
-- Complex domain logic (order processing, pricing)
-- Repetitive tasks (report generation, migrations)
-- Tool integration (database setup, test running)
+- Complex domain logic (order processing)
+- Repetitive tasks (report generation)
+- Tool integration (database setup)
 
-**Don't make skills for:** Simple one-step tasks, generic AI knowledge, continuous constraints (use rules instead).
+**NOT good for:** Simple one-step tasks, generic AI knowledge, continuous constraints (use rules).
 
 ## Example
 
 ```
 User: "Create a skill for our code review process"
 
-Analysis:
+ANALYZE:
+- Tech stack: TypeScript, React
 - Found: scripts/lint.sh, .github/workflows/ci.yml
-- Workflow: lint → test → review checklist
 
-Creating: .trae/skills/code-review/SKILL.md
+DESIGN (skill spec):
+- Name: code-review
+- Purpose: Automate code review workflow
+- Triggers: 'review', 'PR', 'check this code'
+- Exclusions: simple syntax questions
+- Workflow: lint → test → checklist
 
----
-name: code-review
-description: "Code review for this project. Use when reviewing PRs or checking code quality. Triggers on 'review', 'PR', 'check this code'. Do NOT use for simple syntax questions."
----
+DELEGATE:
+"Use skill `skill-creator` to create the skill with this spec:
 
-# Code Review
-
-Automated code review workflow for this project.
-
-## When to Use
-
-**Invoke when:**
-- Reviewing pull requests
-- Checking code quality before commit
-- Running pre-merge validation
-
-**Do NOT invoke when:**
-- Simple syntax questions
-- Non-code file reviews
-
-## Workflow
-
-1. Run linter: `npm run lint`
-2. Run tests: `npm test`
+**Skill Name:** code-review
+**Purpose:** Automate code review workflow for TypeScript/React
+**Triggers:** 'review', 'PR', 'check this code'
+**Exclusions:** simple syntax questions
+**Workflow:**
+1. Run linter: npm run lint
+2. Run tests: npm test
 3. Check review checklist
+**Location:** .trae/skills/code-review/
 
-## Checklist
+Project context:
+- Tech stack: TypeScript, React
+- Patterns: lint.sh, GitHub Actions CI"
 
-- [ ] No TypeScript errors
-- [ ] Tests pass
-- [ ] No console.log in production
-
-## Error Handling
-
-| Issue | Solution |
-|-------|----------|
-| Lint fails | Fix reported issues first |
-| Tests fail | Check test output for details |
+VERIFY: After skill-creator completes
 ```
-
-## Validation Checklist
-
-After creating a skill, verify:
-
-- [ ] **Frontmatter**: Has `name` and `description` fields
-- [ ] **Description**: Includes trigger phrases and "Do NOT use for"
-- [ ] **Workflow**: Has clear numbered steps
-- [ ] **When to Use**: Specifies both positive and negative conditions
-- [ ] **Error Handling**: Documents common issues and solutions
-- [ ] **References**: Links to detailed docs if needed
-- [ ] **No README.md**: Skills don't need separate documentation files
-
-## Testing Skills
-
-1. **Start new chat** - Skills don't apply retroactively
-2. **Use trigger phrase** - Say something matching the description
-3. **Verify activation** - Skill should load and follow workflow
-4. **Test edge cases** - Try "Do NOT use" scenarios
 
 ## References
 
-- [Trae Skills Documentation](assets/trae-skills-docs.md) - Official documentation
-- [Best Practices](assets/trae-skill-best-practices.md) - How to write good skills
-- [Advanced Patterns](references/advanced-patterns.md) - Multi-variant skills, domain organization
-- [Skill Template](assets/skill.md.template) - Starter template
-- [Workflow Example](examples/workflow-skill.md) - Complete end-to-end example
+- [Trae Skills Documentation](assets/trae-skills-docs.md) - Official docs
+- [Best Practices](assets/trae-skill-best-practices.md) - Writing good skills
 
 ## Agents
 
-- [Project Scanner](agents/project-scanner.md) - Deep project structure analysis
-- [Tech Stack Analyzer](agents/tech-stack-analyzer.md) - Language-specific analysis (iOS, Go, React)
-- [Convention Detector](agents/convention-detector.md) - Extract naming/style conventions
-- [Quality Validator](agents/quality-validator.md) - Skill/rule validation
+- [Project Scanner](agents/project-scanner.md)
+- [Tech Stack Analyzer](agents/tech-stack-analyzer.md)
+- [Convention Detector](agents/convention-detector.md)
+- [Quality Validator](agents/quality-validator.md)
