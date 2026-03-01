@@ -16,11 +16,30 @@ Create Trae IDE skills by analyzing project patterns first, then designing skill
 
 ```
 0. SIZE CHECK → Is project too large? If yes, ask user to specify folders
-1. ANALYZE    → Scan project for repetitive patterns (ls scripts/, .trae/skills/)
-2. IDENTIFY   → What workflows need automation?
+1. ANALYZE    → Scan project (spawn Project Scanner Agent for deep analysis)
+2. IDENTIFY   → What workflows need automation? (use Tech Stack Analyzer for domain-specific patterns)
 3. DESIGN     → Structure skill for on-demand loading
 4. CREATE     → Write SKILL.md with clear triggers
-5. VERIFY     → Validate skill structure and test activation
+5. VERIFY     → Validate skill (spawn Quality Validator Agent)
+```
+
+## Agent-Enhanced Analysis
+
+For deeper project analysis, spawn specialized agents:
+
+| Stage | Agent | When to Use |
+|-------|-------|-------------|
+| ANALYZE | [Project Scanner](agents/project-scanner.md) | Large/unfamiliar projects |
+| ANALYZE | [Tech Stack Analyzer](agents/tech-stack-analyzer.md) | Domain-specific analysis (iOS, Go, React) |
+| VERIFY | [Quality Validator](agents/quality-validator.md) | Comprehensive skill validation |
+
+**How to use:**
+```
+Spawn agent with Task tool:
+- Agent: agents/project-scanner.md
+- Input: {project_path: "/path/to/project", output_path: "/tmp/analysis"}
+- Wait for structured JSON output
+- Use analysis results to inform skill design
 ```
 
 ## Large Project Handling
@@ -215,3 +234,10 @@ After creating a skill, verify:
 - [Advanced Patterns](references/advanced-patterns.md) - Multi-variant skills, domain organization
 - [Skill Template](assets/skill.md.template) - Starter template
 - [Workflow Example](examples/workflow-skill.md) - Complete end-to-end example
+
+## Agents
+
+- [Project Scanner](agents/project-scanner.md) - Deep project structure analysis
+- [Tech Stack Analyzer](agents/tech-stack-analyzer.md) - Language-specific analysis (iOS, Go, React)
+- [Convention Detector](agents/convention-detector.md) - Extract naming/style conventions
+- [Quality Validator](agents/quality-validator.md) - Skill/rule validation

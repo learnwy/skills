@@ -16,13 +16,32 @@ Create Trae IDE rules by analyzing project conventions first, then designing rul
 
 ```
 0. SIZE CHECK → Is project too large? If yes, ask user to specify folders
-1. ANALYZE    → Scan project structure, code style (ls .trae/rules/, cat AGENTS.md)
-2. IDENTIFY   → What conventions exist? What needs guidance?
+1. ANALYZE    → Scan project structure (spawn Project Scanner Agent for deep analysis)
+2. IDENTIFY   → Extract conventions (spawn Convention Detector Agent)
 3. DESIGN     → Choose rule type and application mode based on needs
 4. CREATE     → Write rules in Trae's official format
-5. VALIDATE   → Ensure no conflicts, proper granularity
+5. VALIDATE   → Ensure no conflicts (spawn Quality Validator Agent)
 6. VERIFY     → Check syntax and test rule activation
 7. REFRESH    → Start new chat for rules to take effect
+```
+
+## Agent-Enhanced Analysis
+
+For deeper project analysis, spawn specialized agents:
+
+| Stage | Agent | When to Use |
+|-------|-------|-------------|
+| ANALYZE | [Project Scanner](agents/project-scanner.md) | Large/unfamiliar projects |
+| IDENTIFY | [Convention Detector](agents/convention-detector.md) | Extract naming/style conventions |
+| VALIDATE | [Quality Validator](agents/quality-validator.md) | Comprehensive rule validation |
+
+**How to use:**
+```
+Spawn agent with Task tool:
+- Agent: agents/convention-detector.md
+- Input: {project_path: "/path/to/project", file_types: ["*.ts", "*.tsx"], output_path: "/tmp/conventions"}
+- Wait for structured JSON output with suggested_rules
+- Use suggested rules as starting point
 ```
 
 ## Large Project Handling
@@ -218,3 +237,9 @@ After creating rules:
 - [Application Mode Examples](examples/application-modes.md) - Complete examples
 - [Rule Template](assets/rule.md.template) - Starter template
 - [Rule Types Reference](references/rule-types.md) - Selecting appropriate rule types
+
+## Agents
+
+- [Project Scanner](agents/project-scanner.md) - Deep project structure analysis
+- [Convention Detector](agents/convention-detector.md) - Extract naming/style conventions
+- [Quality Validator](agents/quality-validator.md) - Rule validation
