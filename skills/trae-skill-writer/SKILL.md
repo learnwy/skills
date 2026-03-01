@@ -5,56 +5,124 @@ license: "MIT"
 compatibility: "Requires Trae IDE"
 metadata:
   author: "learnwy"
-  version: "1.3"
+  version: "1.4"
 ---
 
 # Trae Skill Writer
 
-Analyze project patterns and design skill specs, then delegate to `skill-creator` for SKILL.md creation.
+Analyze project patterns, design skill specs with code-first approach, then delegate to `skill-creator`.
 
 ## Workflow
 
 ```
-0. SIZE CHECK → Is project too large? If yes, ask user to specify folders
-1. ANALYZE    → Scan project (spawn Project Scanner Agent)
-2. IDENTIFY   → What workflows need automation?
-3. DESIGN     → Structure skill requirements and triggers
-4. DELEGATE   → Hand off to skill-creator (DO NOT write SKILL.md yourself)
-5. VERIFY     → Validate skill after creation
+0. SIZE CHECK   → Is project too large? Ask user to specify folders
+1. ANALYZE      → Scan project structure (spawn Project Scanner Agent)
+2. READ CODE    → Deep-dive into domain-specific code (2-5 key files)
+3. IDENTIFY     → Extract real patterns, constants, conventions from code
+4. DESIGN       → Structure skill spec with real code examples
+5. DELEGATE     → Hand off to skill-creator (DO NOT write SKILL.md yourself)
+6. VERIFY       → Validate skill after creation
 ```
 
-## Delegation to skill-creator (CRITICAL)
+## Naming Convention (CRITICAL)
+
+**Every skill MUST use a project prefix** to avoid namespace collision.
+
+| Format | Example | Explanation |
+|--------|---------|-------------|
+| `{prefix}-{domain}` | `scp-style` | scp = search_card_pack |
+| `{prefix}-{domain}` | `trae-rules` | trae = trae-related |
+| `{prefix}-{domain}` | `fe-component` | fe = frontend |
+
+**Good names:** `scp-scene-general`, `scp-bff-review`, `trae-skill-writer`
+**Bad names:** `search-card-pack-general-search-scene-template` (too long)
+
+## Language Consistency (CRITICAL)
+
+**All content within a skill MUST be in ONE language.**
+
+- Title, description, headings, code comments, explanations - ALL same language
+- Prefer English for code projects
+- Do NOT mix Chinese and English in the same skill file
+
+```yaml
+# Good - all English
+name: scp-style
+description: "Style system guide for TextStyle/BaseStyle. Use when..."
+
+# Bad - mixed languages
+name: scp-style
+description: "Style 系统指南. Use when 使用样式时..."
+```
+
+## Code-First Approach (CRITICAL)
+
+**Before writing any skill, you MUST read actual codebase files.**
+
+### Study Workflow (for each skill)
+
+```
+1. Identify key files for this domain
+2. Read 2-5 source files deeply (100-200 lines each)
+3. Extract actual patterns, types, constants
+4. Use real code examples from the codebase
+```
+
+### Code Examples Must Be Real
+
+- Every code example should come from or closely mirror actual codebase patterns
+- Include file paths as comments when referencing specific patterns
+- Use actual constant names, function signatures, and type definitions
+
+```go
+// From: internal/style/text_style.go
+type TextStyle struct {
+    FontSize  int
+    FontColor string
+}
+```
+
+## Batch Skill Creation Workflow
+
+When creating multiple skills for a project:
+
+### Phase 1 - Project Overview
+- Understand overall project architecture
+- Identify major domains/modules
+- Plan skill breakdown (avoid overlap)
+
+### Phase 2 - Sequential Deep-Dive
+- Process ONE skill at a time (not parallel)
+- For each skill: read code → understand patterns → design spec
+- Maintain overall coherence while focusing on specific domain
+
+### Phase 3 - Cross-Reference Pass
+- Ensure "Related Skills" sections are accurate
+- Check for content duplication
+- Verify trigger keywords don't overlap excessively
+
+## Delegation to skill-creator
 
 **After DESIGN step, ALWAYS delegate to `skill-creator` for actual SKILL.md creation.**
-
-This skill focuses on: **Analysis & Design**
-- Project scanning
-- Pattern identification
-- Requirements gathering
-- Skill spec creation
-
-`skill-creator` handles: **Creation & Testing**
-- Writing SKILL.md
-- Test prompts
-- Evaluations
-- Iterative improvement
 
 ### Delegation Template
 
 ```
 Use skill `skill-creator` to create the skill with this spec:
 
-**Skill Name:** {name}
+**Skill Name:** {prefix}-{domain}
 **Purpose:** {what it does}
 **Triggers:** {phrases that should activate it}
 **Exclusions:** {when NOT to use}
+**Language:** English (or specify)
+**Key Files:** {list of files this skill is based on}
 **Workflow:** {numbered steps}
 **Location:** .trae/skills/{name}/ or ~/.trae/skills/{name}/
 
 Project context:
 - Tech stack: {detected tech}
-- Patterns found: {patterns}
-- Existing automation: {scripts, CI/CD}
+- Patterns found: {patterns from actual code}
+- Related skills: {other skills to cross-reference}
 ```
 
 ## Agent-Enhanced Analysis
@@ -65,14 +133,6 @@ Project context:
 | ANALYZE | [Tech Stack Analyzer](agents/tech-stack-analyzer.md) | Domain-specific (iOS, Go, React) |
 | VERIFY | [Quality Validator](agents/quality-validator.md) | Post-creation validation |
 
-## Large Project Handling
-
-If project is too large (>50 top-level items, monorepo):
-
-1. **STOP** - Don't analyze entire project
-2. **ASK** - Use `AskUserQuestion` for target folders
-3. **SCOPE** - Only analyze user-specified folders
-
 ## Path Conventions
 
 **NEVER use absolute paths.** Use relative paths or placeholders:
@@ -82,51 +142,78 @@ If project is too large (>50 top-level items, monorepo):
 | `/Users/john/project/src/` | `src/` or `{project_root}/src/` |
 | `/home/dev/repo/.trae/` | `.trae/` |
 
-Placeholders: `{project_root}`, `{git_root}`, `{skill_dir}`, relative paths
+## Skill Granularity
 
-## Good Skill Candidates
+**Single Responsibility**: Each skill should focus on ONE specific domain.
 
-- Multi-step workflows (code review, deployment)
-- Complex domain logic (order processing)
-- Repetitive tasks (report generation)
-- Tool integration (database setup)
+- Good: `scp-style` (only style system), `scp-monitor` (only monitoring)
+- Bad: `scp-style-and-component` (too broad)
 
-**NOT good for:** Simple one-step tasks, generic AI knowledge, continuous constraints (use rules).
+**Cross-Reference**: Use "Related Skills" section to connect related concepts.
+- Don't duplicate content across skills
+- Reference other skills for adjacent knowledge
+
+## Quality Checklist
+
+Before delegating to skill-creator, verify spec has:
+
+- [ ] **Naming**: Has project prefix, kebab-case, concise
+- [ ] **Language**: 100% consistent language decided
+- [ ] **Code Study**: Based on actual codebase reading
+- [ ] **Key Files**: List of source files this skill is based on
+- [ ] **Examples**: Real code patterns extracted
+- [ ] **Paths**: Uses relative paths only
+- [ ] **Related Skills**: Links to adjacent skills
 
 ## Example
 
 ```
-User: "Create a skill for our code review process"
+User: "Create skills for our search_card_pack project"
 
-ANALYZE:
-- Tech stack: TypeScript, React
-- Found: scripts/lint.sh, .github/workflows/ci.yml
+Phase 1 - Project Overview:
+- Tech stack: Go, internal frameworks
+- Domains identified: style, scene, monitor, bff
+
+Phase 2 - Sequential Deep-Dive for scp-style:
+
+READ CODE:
+- internal/style/text_style.go (150 lines)
+- internal/style/base_style.go (200 lines)
+- Found: TextStyle, BaseStyle, FontSize constants
 
 DESIGN (skill spec):
-- Name: code-review
-- Purpose: Automate code review workflow
-- Triggers: 'review', 'PR', 'check this code'
-- Exclusions: simple syntax questions
-- Workflow: lint → test → checklist
+- Name: scp-style (prefix: scp)
+- Language: English
+- Key Files: internal/style/*.go
+- Purpose: Style system guide for TextStyle/BaseStyle
+- Triggers: 'style', 'TextStyle', 'font'
+- Exclusions: layout, animation
 
 DELEGATE:
 "Use skill `skill-creator` to create the skill with this spec:
 
-**Skill Name:** code-review
-**Purpose:** Automate code review workflow for TypeScript/React
-**Triggers:** 'review', 'PR', 'check this code'
-**Exclusions:** simple syntax questions
+**Skill Name:** scp-style
+**Purpose:** Style system guide for TextStyle/BaseStyle in search_card_pack
+**Triggers:** 'style', 'TextStyle', 'BaseStyle', 'font', 'color'
+**Exclusions:** layout, animation (see scp-layout)
+**Language:** English
+**Key Files:**
+- internal/style/text_style.go
+- internal/style/base_style.go
 **Workflow:**
-1. Run linter: npm run lint
-2. Run tests: npm test
-3. Check review checklist
-**Location:** .trae/skills/code-review/
+1. Identify style type needed (Text vs Base)
+2. Apply correct style constants
+3. Follow naming conventions
+**Location:** .trae/skills/scp-style/
 
 Project context:
-- Tech stack: TypeScript, React
-- Patterns: lint.sh, GitHub Actions CI"
+- Tech stack: Go
+- Patterns: TextStyle struct, BaseStyle interface
+- Related skills: scp-layout, scp-component"
 
-VERIFY: After skill-creator completes
+Phase 3 - Cross-Reference:
+- scp-style ↔ scp-layout (related)
+- scp-style ↔ scp-component (related)
 ```
 
 ## References
