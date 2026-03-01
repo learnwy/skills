@@ -85,6 +85,24 @@ Options:
 - "Project skill (.trae/skills/)" - Only for this project
 ```
 
+## Path Conventions
+
+**NEVER use absolute paths** in generated skills. Use relative paths or placeholders:
+
+| Bad ❌ | Good ✅ |
+|--------|---------|
+| `/Users/john/project/src/` | `src/` or `{project_root}/src/` |
+| `/home/dev/repo/.trae/skills/` | `.trae/skills/` |
+| `~/Documents/code/lib/` | `lib/` or `{git_root}/lib/` |
+
+**Path placeholders:**
+- `{project_root}` - Current project root directory
+- `{git_root}` - Git repository root
+- `{skill_dir}` - Current skill's directory
+- Relative paths like `./`, `../`, `src/`
+
+**Why:** Skills are shared across team members with different usernames, clone paths, and environments. Absolute paths break portability.
+
 ## Skill Structure
 
 ```

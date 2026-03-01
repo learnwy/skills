@@ -89,6 +89,23 @@ Options:
 - "Manual Only" - Only when explicitly invoked with #RuleName
 ```
 
+## Path Conventions
+
+**NEVER use absolute paths** in generated rules. Use relative paths or placeholders:
+
+| Bad ❌ | Good ✅ |
+|--------|---------|
+| `/Users/john/project/src/` | `src/` or `{project_root}/src/` |
+| `/home/dev/repo/.trae/rules/` | `.trae/rules/` |
+| `~/Documents/code/lib/` | `lib/` or `{git_root}/lib/` |
+
+**Path placeholders:**
+- `{project_root}` - Current project root directory
+- `{git_root}` - Git repository root
+- Relative paths like `./`, `../`, `src/`
+
+**Why:** Rules are shared across team members with different usernames, clone paths, and environments. Absolute paths break portability.
+
 ## Rule Creation Methods
 
 ### Method 1: Direct File Creation (Recommended)

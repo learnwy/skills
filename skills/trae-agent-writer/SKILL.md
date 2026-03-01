@@ -69,6 +69,25 @@ Save to `{output_path}`.
 - `.trae/agents/` - Project-level agents
 - `~/.trae/agents/` - Global agents
 
+## Path Conventions
+
+**NEVER use absolute paths** in generated agents. Use relative paths or placeholders:
+
+| Bad ❌ | Good ✅ |
+|--------|---------|
+| `/Users/john/project/src/` | `src/` or `{project_root}/src/` |
+| `/home/dev/repo/agents/` | `agents/` or `{skill_dir}/agents/` |
+| `~/Documents/code/output/` | `{output_path}` (as input parameter) |
+
+**Path placeholders:**
+- `{project_root}` - Current project root directory
+- `{git_root}` - Git repository root
+- `{skill_dir}` - Parent skill's directory
+- `{output_path}` - Use as agent input parameter
+- Relative paths like `./`, `../`, `src/`
+
+**Why:** Agents are shared across team members with different usernames, clone paths, and environments. Absolute paths break portability.
+
 ## Good Agent Candidates
 
 | Pattern      | Why Agent?                  | Example              |

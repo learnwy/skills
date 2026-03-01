@@ -67,6 +67,23 @@ Skills should reference agents at appropriate workflow stages:
 - **examples/*.md** - Usage examples (kebab-case)
 - **references/*.md** - Reference docs (kebab-case)
 
+## Path Conventions (CRITICAL)
+
+**NEVER use absolute paths** in skills, rules, or agents. They break portability across team members.
+
+| Bad ❌ | Good ✅ |
+|--------|---------|
+| `/Users/john/project/src/` | `src/` or `{project_root}/src/` |
+| `/home/dev/repo/.trae/` | `.trae/` |
+| `~/Documents/code/` | `{git_root}/` |
+
+**Path placeholders:**
+- `{project_root}` - Current project root
+- `{git_root}` - Git repository root
+- `{skill_dir}` - Current skill's directory
+- `{output_path}` - Agent output parameter
+- Relative paths: `./`, `../`, `src/`
+
 ## Quality Standards
 
 When creating/editing skills:
@@ -78,3 +95,4 @@ When creating/editing skills:
 - [ ] Error Handling section exists
 - [ ] References link to existing files
 - [ ] Agents use local paths (`agents/` not `../`)
+- [ ] **NO absolute paths** - Use relative paths or placeholders
