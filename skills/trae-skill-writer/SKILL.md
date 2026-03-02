@@ -127,11 +127,13 @@ These mistakes break skills. **Always check:**
 
 | Wrong ❌ | Correct ✅ | Why |
 |----------|------------|-----|
-| `/Users/john/src/` | `src/` | Absolute paths break for others |
+| `/Users/john/project/src/` | `src/` | NO absolute paths! Use relative paths only |
+| `/home/dev/lib/utils.go` | `lib/utils.go` | Paths start from project root, no leading `/` |
 | `globs: "*.ts"` | `globs: *.ts,*.tsx` | No quotes in globs |
 | Mixed 中英文 | Single language | Confuses AI |
 | `super-long-name` | `app-style` | prefix + short domain |
-| No business context | Include domain terms | AI needs to understand "why" |
+
+**Path Rule:** Always use paths relative to project root. Just `src/file.ts`, never `/absolute/path/src/file.ts`.
 
 ### Quality Checklist
 

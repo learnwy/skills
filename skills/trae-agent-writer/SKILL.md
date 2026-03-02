@@ -137,10 +137,13 @@ These mistakes break agents. **Always check:**
 
 | Wrong ❌ | Correct ✅ | Why |
 |----------|------------|-----|
-| `/Users/john/` | `{project_root}/` | Absolute paths break |
+| `/Users/john/project/src/` | `src/` | NO absolute paths! |
+| `/home/dev/output/` | `output/` or use `{output_path}` param | Paths from project root |
 | `agent.md` | `review-grader.md` | Descriptive names |
 | Mixed 中英文 | Single language | Confuses AI |
 | Missing inputs | Document all params | Agent needs context |
+
+**Path Rule:** Use relative paths like `src/file.ts`. For dynamic paths, use input parameters like `{output_path}`.
 
 ### Quality Checklist
 

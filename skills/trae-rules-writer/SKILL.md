@@ -121,9 +121,12 @@ These mistakes break rules. **Always check:**
 |----------|------------|-----|
 | `globs: "*.ts,*.tsx"` | `globs: *.ts,*.tsx` | **No quotes in globs** |
 | `globs: ["*.ts"]` | `globs: *.ts,*.tsx` | **No YAML arrays** |
-| `/Users/john/src/` | `src/` | Absolute paths break |
+| `/Users/john/project/src/` | `src/` | NO absolute paths! |
+| `/home/dev/lib/file.ts` | `lib/file.ts` | Paths from project root, no `/` prefix |
 | Mixed 中英文 | Single language | Confuses AI |
 | Missing `description` | Always include | Even for alwaysApply |
+
+**Path Rule:** Always use paths relative to project root. Just `src/file.ts`, never `/absolute/path/`.
 
 ### Globs Format (CRITICAL)
 

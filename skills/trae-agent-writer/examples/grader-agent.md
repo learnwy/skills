@@ -184,17 +184,19 @@ Write a JSON file with this structure:
 Task to Code Quality Grader:
 
 Inputs:
-- output_path: /project/analysis/lint-report.json
+- output_path: analysis/lint-report.json
 - expectations: [
     "Identifies unused imports",
     "Warns about deprecated API usage",
     "Suggests performance improvements for the loop on line 45"
   ]
-- code_path: /project/src/main.py
-- grading_output_path: /project/eval/grading.json
+- code_path: src/main.py
+- grading_output_path: eval/grading.json
 
 Execute the grading process and save results.
 ```
+
+**Note:** All paths are relative to project root. Never use absolute paths like `/project/...`.
 
 **Expected output:**
 
