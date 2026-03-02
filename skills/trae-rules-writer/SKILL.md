@@ -111,14 +111,17 @@ If project is too large (>50 top-level items, monorepo):
 2. **ASK** - Use `AskUserQuestion` for target folders
 3. **SCOPE** - Only analyze user-specified folders
 
-## Path Conventions
+## Path Conventions (CRITICAL)
 
-**NEVER use absolute paths.** Use relative paths or placeholders:
+**NEVER use absolute paths in rules.** This breaks portability across team members.
 
-| Bad ❌ | Good ✅ |
-|--------|---------|
-| `/Users/john/project/src/` | `src/` or `{project_root}/src/` |
+| Wrong ❌ | Correct ✅ |
+|----------|------------|
+| `/Users/john/project/src/` | `src/` |
 | `/home/dev/repo/.trae/` | `.trae/` |
+| `~/Documents/code/lib/` | `lib/` |
+
+**Why:** Rules are shared via git - absolute paths break for other users, expose private info.
 
 ## Rule Format
 

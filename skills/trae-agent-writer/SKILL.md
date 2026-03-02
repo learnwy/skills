@@ -123,16 +123,19 @@ Save to `{output_path}`.
 | `.trae/agents/` | Project-level agents |
 | `~/.trae/agents/` | Global agents |
 
-## Path Conventions
+## Path Conventions (CRITICAL)
 
-**NEVER use absolute paths.** Use relative paths or placeholders:
+**NEVER use absolute paths in agents.** This breaks portability across team members.
 
-| Bad ❌ | Good ✅ |
-|--------|---------|
+| Wrong ❌ | Correct ✅ |
+|----------|------------|
 | `/Users/john/project/` | `{project_root}/` |
 | `/home/dev/output/` | `{output_path}` (as input) |
+| `~/Documents/code/` | Relative path or placeholder |
 
-Placeholders: `{project_root}`, `{git_root}`, `{skill_dir}`, `{output_path}`
+**Why:** Agents are shared via git - absolute paths break for other users, expose private info.
+
+**Use placeholders:** `{project_root}`, `{git_root}`, `{skill_dir}`, `{output_path}`
 
 ## Good Agent Candidates
 

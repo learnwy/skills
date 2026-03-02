@@ -24,6 +24,26 @@ Analyze project patterns, design skill specs with code-first approach, then dele
 6. VERIFY       → Validate skill after creation
 ```
 
+## Path Conventions (CRITICAL - READ FIRST)
+
+**NEVER use absolute paths in skills.** This breaks portability across team members.
+
+| Wrong ❌ | Correct ✅ |
+|----------|------------|
+| `/Users/john/project/src/` | `src/` |
+| `/home/dev/repo/.trae/` | `.trae/` |
+| `~/Documents/code/lib/` | `lib/` |
+| `file:///absolute/path` | Relative path only |
+
+**Why this matters:**
+- Skills are shared via git - absolute paths break for other users
+- Each developer has different usernames and clone locations
+- Absolute paths expose private information
+
+**Use these instead:**
+- Relative paths: `src/`, `internal/`, `.trae/skills/`
+- Placeholders: `{project_root}`, `{git_root}`, `{skill_dir}`
+
 ## Naming Convention (CRITICAL)
 
 **Every skill MUST use a project prefix** to avoid namespace collision.
@@ -133,15 +153,6 @@ Project context:
 | ANALYZE | [Tech Stack Analyzer](agents/tech-stack-analyzer.md) | Domain-specific (iOS, Go, React) |
 | VERIFY | [Quality Validator](agents/quality-validator.md) | Post-creation validation |
 
-## Path Conventions
-
-**NEVER use absolute paths.** Use relative paths or placeholders:
-
-| Bad ❌ | Good ✅ |
-|--------|---------|
-| `/Users/john/project/src/` | `src/` or `{project_root}/src/` |
-| `/home/dev/repo/.trae/` | `.trae/` |
-
 ## Skill Granularity
 
 **Single Responsibility**: Each skill should focus on ONE specific domain.
@@ -157,12 +168,12 @@ Project context:
 
 Before delegating to skill-creator, verify spec has:
 
+- [ ] **NO ABSOLUTE PATHS** - Check all file references use relative paths
 - [ ] **Naming**: Has project prefix, kebab-case, concise
 - [ ] **Language**: 100% consistent language decided
 - [ ] **Code Study**: Based on actual codebase reading
-- [ ] **Key Files**: List of source files this skill is based on
+- [ ] **Key Files**: List of source files (relative paths!)
 - [ ] **Examples**: Real code patterns extracted
-- [ ] **Paths**: Uses relative paths only
 - [ ] **Related Skills**: Links to adjacent skills
 
 ## Example
