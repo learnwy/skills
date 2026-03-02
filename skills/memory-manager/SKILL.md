@@ -9,6 +9,19 @@ description: Cross-session memory for AI. ALWAYS load this skill at session star
 
 Persistent memory system for AI assistants. **Load this skill at the start of every session.**
 
+## ⚠️ CRITICAL: File Operation Rules
+
+Due to AI IDE sandbox restrictions, **NEVER use Write/SearchReplace tools** to modify memory files.
+
+**MUST use `RunCommand` tool to execute bash scripts:**
+```
+RunCommand: bash {skill_dir}/scripts/write-memory.sh SOUL.md "content"
+RunCommand: bash {skill_dir}/scripts/append-history.sh "history-YYYY-MM-DD-N.md" "content"
+RunCommand: bash {skill_dir}/scripts/backup-history.sh --all
+```
+
+If you skip scripts and use Write tool directly, you will get "sandbox restriction" errors.
+
 ## Memory Path
 
 Memory files are stored at: `~/.learnwy/ai/memory/`
@@ -20,17 +33,14 @@ This path is **outside** the skill directory to:
 
 ## Session Start (ALWAYS DO THIS)
 
-At the beginning of every conversation, read memory files:
+At the beginning of every conversation, read memory files using Read tool:
 
 ```
-First read `SOUL.md` to recall who you are, your identity, principles, and capabilities.
-@~/.learnwy/ai/memory/SOUL.md
-
-Then read `USER.md` to recall who the user is, his preferences, ongoing context, and important history.
-@~/.learnwy/ai/memory/USER.md
+Read: ~/.learnwy/ai/memory/SOUL.md
+Read: ~/.learnwy/ai/memory/USER.md
 ```
 
-This ensures continuity across sessions. Without loading memory, you lose all context from previous conversations.
+This ensures continuity across sessions.
 
 ## Directory Structure
 
@@ -38,7 +48,7 @@ This ensures continuity across sessions. Without loading memory, you lose all co
 ~/.learnwy/ai/memory/
 ├── SOUL.md          # AI's soul - identity, principles, learned wisdom
 ├── USER.md          # User's profile - preferences, context, history
-├── history/         # Session history files
+├── history/         # Session history files (max 3, then consolidate)
 └── archive/         # Consolidated history
 
 memory-manager/      # Skill directory (this skill)
@@ -49,60 +59,50 @@ memory-manager/      # Skill directory (this skill)
     ├── write-memory.sh      # Write SOUL.md/USER.md (whitelist only)
     ├── append-history.sh    # Create session history
     ├── backup-history.sh    # Backup history to archive
-    └── cleanup-history.sh   # Clean old history files
+    └── memory-status.sh     # View memory status
 ```
 
 ## Scripts Reference
 
-Due to AI IDE sandbox limitations, **use the bundled scripts** for all file operations.
+**All scripts MUST be executed via `RunCommand` tool, not bash code blocks!**
 
 ### init-memory.sh - Initialize
 
-Initialize memory directory (run once on first use):
-```bash
-bash {skill_dir}/scripts/init-memory.sh
+```
+RunCommand: bash {skill_dir}/scripts/init-memory.sh
 ```
 
 ### write-memory.sh - Write Memory Files
 
 **Security: Only allows writing to SOUL.md and USER.md**
 
-```bash
-bash {skill_dir}/scripts/write-memory.sh SOUL.md "content"
-bash {skill_dir}/scripts/write-memory.sh USER.md "content"
+```
+RunCommand: bash {skill_dir}/scripts/write-memory.sh SOUL.md "content"
+RunCommand: bash {skill_dir}/scripts/write-memory.sh USER.md "content"
 ```
 
 ### append-history.sh - Save Session History
 
 **Format required: `history-YYYY-MM-DD-N.md`**
 
-```bash
-bash {skill_dir}/scripts/append-history.sh "history-2024-01-15-1.md" "content"
+```
+RunCommand: bash {skill_dir}/scripts/append-history.sh "history-2024-01-15-1.md" "content"
 ```
 
 ### backup-history.sh - Backup History
 
 Archive history files to `archive/` directory:
-```bash
-bash {skill_dir}/scripts/backup-history.sh --all
-bash {skill_dir}/scripts/backup-history.sh --before 2024-01-01
-bash {skill_dir}/scripts/backup-history.sh --before 2024-01-01 --dry-run
+```
+RunCommand: bash {skill_dir}/scripts/backup-history.sh --all
+RunCommand: bash {skill_dir}/scripts/backup-history.sh --before 2024-01-01
 ```
 
-### cleanup-history.sh - Clean Old Files
+### memory-status.sh - View Status
 
-Automatically archive old history and delete old archives:
-```bash
-bash {skill_dir}/scripts/cleanup-history.sh --status
-bash {skill_dir}/scripts/cleanup-history.sh --keep-days 30 --archive-days 90
-bash {skill_dir}/scripts/cleanup-history.sh --dry-run
+Check current memory file sizes and counts:
 ```
-
-Options:
-- `--status`: Show current file counts and sizes
-- `--keep-days N`: Keep history files from last N days (default: 30)
-- `--archive-days N`: Delete archived files older than N days (default: 90)
-- `--dry-run`: Preview without making changes
+RunCommand: bash {skill_dir}/scripts/memory-status.sh
+```
 
 ## SOUL.md - The AI's Soul
 
@@ -178,54 +178,39 @@ Keep under 2000 tokens. Update after each significant session.
 
 ## Session End Protocol
 
-Before the session ends, **update memory files** using the scripts:
+**IMPORTANT: Use `RunCommand` tool for ALL write operations!**
 
 ### Step 1: Create History
 
-```bash
-bash {skill_dir}/scripts/append-history.sh "history-YYYY-MM-DD-N.md" "content"
+Use RunCommand to execute append-history.sh:
 ```
-
-Content format:
-```markdown
-# Session History: YYYY-MM-DD #N
+RunCommand: bash {skill_dir}/scripts/append-history.sh "history-YYYY-MM-DD-N.md" "# Session History: YYYY-MM-DD #N
 
 **Date**: YYYY-MM-DD HH:MM
 **Topics**: [main topics]
-**Projects**: [projects worked on]
 
 ## Key Activities
 - [Activity 1]
 
 ## Learnings & Insights
-- [What AI learned about user]
+- [What AI learned]
 
 ## Decisions Made
-- [Important decisions and rationale]
-
-## Follow-ups
-- [Unfinished tasks to remember]
+- [Important decisions]
+"
 ```
 
 ### Step 2: Check Consolidation
 
-If **3+ history files** exist → consolidate, otherwise skip to Step 4.
+If **3+ history files** exist → consolidate (Step 3), otherwise skip to Step 4.
 
 ### Step 3: Consolidate
 
-Read all history files and extract:
-- **For USER.md**: New preferences, project context updates, important decisions
-- **For SOUL.md**: Patterns learned, expertise gained, lessons learned
-
-Update using the write scripts:
-```bash
-bash {skill_dir}/scripts/write-memory.sh SOUL.md "updated content"
-bash {skill_dir}/scripts/write-memory.sh USER.md "updated content"
+Read all history files and extract insights, then use RunCommand:
 ```
-
-Then backup old history:
-```bash
-bash {skill_dir}/scripts/backup-history.sh --all
+RunCommand: bash {skill_dir}/scripts/write-memory.sh SOUL.md "updated content"
+RunCommand: bash {skill_dir}/scripts/write-memory.sh USER.md "updated content"
+RunCommand: bash {skill_dir}/scripts/backup-history.sh --all
 ```
 
 ### Step 4: Confirm to User
@@ -234,14 +219,6 @@ bash {skill_dir}/scripts/backup-history.sh --all
 ✓ Session history saved: history-2024-01-15-1.md
 ✓ Memory consolidated (3 sessions → USER.md, SOUL.md updated)
 ✓ Archived: 3 history files
-```
-
-## Periodic Maintenance
-
-Run cleanup periodically (weekly recommended):
-```bash
-bash {skill_dir}/scripts/cleanup-history.sh --status
-bash {skill_dir}/scripts/cleanup-history.sh --keep-days 30 --archive-days 90
 ```
 
 ## Writing Style for memory/ Files
@@ -265,5 +242,5 @@ Dense, telegraphic short sentences. No filler words ("You are", "You should"). C
 - All files under `~/.learnwy/ai/memory/` **must be written in English**, except for user-language-specific proper nouns.
 - **Keep each file under 2000 tokens.** Be ruthless about deduplication and conciseness.
 - Move detailed or archival information to separate files under `~/.learnwy/ai/memory/` if needed.
-- **Always use scripts to write files** to avoid sandbox permission issues.
+- **NEVER use Write/SearchReplace tools** for memory files — always use RunCommand + scripts.
 - **Security**: write-memory.sh only allows SOUL.md and USER.md; append-history.sh validates filename format.
