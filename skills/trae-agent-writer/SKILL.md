@@ -5,12 +5,13 @@ license: "MIT"
 compatibility: "Requires Trae IDE"
 metadata:
   author: "learnwy"
-  version: "1.2"
+  version: "1.3"
 ---
 
 # Trae Agent Writer
 
 Create agent definitions for independent, isolated execution with business context.
+
 
 ## What is an Agent?
 
@@ -19,43 +20,32 @@ Create agent definitions for independent, isolated execution with business conte
 - **Stateless** - No memory between invocations
 - **Composable** - Orchestrated by parent agents/skills
 
-## Workflow
+
+## Phase 1: Understand Project (REQUIRED)
+
+**Before creating ANY agent, understand the context first.**
+
+### 1.1 Check Scope
+
+If project is too large:
+- **ASK** - What specific task needs an agent?
+- **SCOPE** - Focus on one isolated task
+
+### 1.2 Scan Existing Patterns
+
+Quick scan to understand what exists (NOT deep reading):
 
 ```
-0. SIZE CHECK      → Is project too large? Ask user to specify context
-1. ANALYZE         → What independent task needs an agent?
-2. UNDERSTAND BIZ  → What business context does this agent need?
-3. READ CODE       → Study existing patterns/agents if any
-4. DEFINE          → Role, inputs, process, outputs + business rules
-5. CREATE          → Write agent.md with domain context
-6. VERIFY          → Test agent invocation
+1. Check if agents/ directory exists
+2. List existing agents (names only)
+3. Note invocation patterns used
 ```
 
----
+**Note:** Deep reading of existing agents happens in Phase 2 when creating similar ones.
 
-## Common Mistakes (AVOID THESE)
+### 1.3 Understand Business
 
-| Wrong ❌ | Correct ✅ | Why |
-|----------|------------|-----|
-| `/Users/john/project/` | `{project_root}/` | Absolute paths break for others |
-| `agent.md`, `helper.md` | `review-grader.md` | Use descriptive action-oriented names |
-| Mixed 中英文 | Single language | Confuses AI |
-
----
-
-## Understand Code + Business
-
-### Code-First Approach
-
-```
-1. Check if similar agents exist
-2. Read 1-2 existing agents for patterns
-3. Follow established conventions
-```
-
-### Business Context
-
-Agents need domain knowledge to make correct decisions:
+Agents need domain knowledge to make decisions:
 
 | Agent Type | Business Context Needed |
 |------------|-------------------------|
@@ -63,9 +53,47 @@ Agents need domain knowledge to make correct decisions:
 | **Analyzer** | What patterns matter? |
 | **Validator** | What business rules apply? |
 
----
+**Ask:** "What criteria should this agent use?"
 
-## Agent Format
+
+## Phase 2: Create Agents (SEQUENTIAL)
+
+**Create agents ONE at a time.**
+
+### 2.1 Plan Agent Breakdown
+
+First, identify what agents are needed:
+
+```
+Example: code-review skill
+├── review-grader.md    (grade review quality)
+├── code-comparator.md  (compare two versions)
+└── issue-analyzer.md   (analyze patterns)
+```
+
+### 2.2 For EACH Agent
+
+```
+┌─────────────────────────────────────────────┐
+│  For each agent:                            │
+│                                             │
+│  1. Define role clearly                     │
+│     - Single purpose                        │
+│     - What makes it need isolation?         │
+│                                             │
+│  2. Specify inputs/outputs                  │
+│     - All parameters documented             │
+│     - Structured output format              │
+│                                             │
+│  3. Write process steps                     │
+│     - Numbered, clear steps                 │
+│     - Include business rules                │
+│                                             │
+│  4. Move to next agent                      │
+└─────────────────────────────────────────────┘
+```
+
+### 2.3 Agent Format
 
 ```markdown
 # {Agent Name} Agent
@@ -74,7 +102,7 @@ Agents need domain knowledge to make correct decisions:
 
 ## Role
 
-{What this agent does and why}
+{What this agent does and why it needs isolation}
 
 ## Inputs
 
@@ -100,7 +128,32 @@ Save to `{output_path}`.
 - **Cite evidence**: Quote specific text
 ```
 
----
+
+## Phase 3: Quality & Lessons Learned
+
+### ⚠️ Common Mistakes (CRITICAL)
+
+These mistakes break agents. **Always check:**
+
+| Wrong ❌ | Correct ✅ | Why |
+|----------|------------|-----|
+| `/Users/john/` | `{project_root}/` | Absolute paths break |
+| `agent.md` | `review-grader.md` | Descriptive names |
+| Mixed 中英文 | Single language | Confuses AI |
+| Missing inputs | Document all params | Agent needs context |
+
+### Quality Checklist
+
+Before creating each agent:
+
+- [ ] **Paths** - Use placeholders, no absolute paths
+- [ ] **Naming** - Descriptive, action-oriented
+- [ ] **Language** - Single language throughout
+- [ ] **Role** - Clear single purpose
+- [ ] **Inputs** - All parameters documented
+- [ ] **Output** - Structured format defined
+- [ ] **Business** - Includes domain context
+
 
 ## Best Practices
 
@@ -110,7 +163,7 @@ Save to `{output_path}`.
 |---------|--------|
 | `review-grader.md` | `agent.md` |
 | `code-comparator.md` | `helper.md` |
-| `app-analyzer.md` | `scanner.md` (too vague) |
+| `app-analyzer.md` | `scanner.md` |
 
 ### Agent Locations
 
@@ -131,31 +184,20 @@ Save to `{output_path}`.
 
 **Don't make agents for:** Simple inline tasks, tasks needing conversation history.
 
----
-
-## Quality Checklist
-
-Before creating agents, verify:
-
-- [ ] **No absolute paths** - Use placeholders
-- [ ] **Naming** - Descriptive, action-oriented
-- [ ] **Language** - Single language throughout
-- [ ] **Role** - Clear single purpose
-- [ ] **Inputs** - All parameters documented
-- [ ] **Output** - Structured format defined
-
----
 
 ## Example
 
 ```
-User: "I need an agent to grade code review outputs"
+User: "Create agent to grade code reviews"
 
-ANALYZE:
-- Purpose: Evaluate code reviews objectively
-- Needs isolation to prevent bias
+Phase 1: Understand
+- Purpose: Evaluate reviews objectively
+- Needs isolation: Prevent bias
+- Criteria: completeness, accuracy
 
-CREATE: review-grader.md
+Phase 2: Create
+
+📄 agents/review-grader.md
 
 # Review Grader Agent
 
@@ -176,13 +218,13 @@ Operates blindly to prevent bias.
 
 ### Step 1: Read Review
 1. Read review file
-2. Extract all claims and findings
+2. Extract all claims
 
 ### Step 2: Check Expectations
 For each expectation:
-1. Search for evidence in review
+1. Search for evidence
 2. Mark PASS/FAIL
-3. Cite specific evidence
+3. Cite specific text
 
 ### Step 3: Write Results
 Save to `{output_path}/grading.json`
@@ -200,13 +242,13 @@ Save to `{output_path}/grading.json`
 
 - **Be objective**: Don't favor verbose or brief
 - **Cite evidence**: Quote specific text
+
+Phase 3: Verify agent can be invoked
 ```
 
----
 
 ## References
 
 - [Trae Agent Documentation](assets/trae-agent-docs.md)
 - [Agent Patterns](references/agent-patterns.md)
-- [Agent Template](assets/agent.md.template)
-- [Grader Agent Example](examples/grader-agent.md)
+- [Grader Example](examples/grader-agent.md)

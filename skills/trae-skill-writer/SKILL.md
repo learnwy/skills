@@ -1,112 +1,101 @@
 ---
 name: trae-skill-writer
-description: "Create Trae IDE skills (SKILL.md files) for reusable AI capabilities. Use when user wants to: create a skill, make a reusable workflow, automate repetitive tasks, turn a conversation into a skill, or encapsulate a process for AI to follow. Triggers on: '创建 skill', 'write a SKILL.md', 'make this reusable', '.trae/skills/', 'I keep doing the same thing every time'. Do NOT use for skills (use trae-skill-writer) or agents (use trae-agent-writer)."
+description: "Create Trae IDE skills (SKILL.md files) for reusable AI capabilities. Use when user wants to: create a skill, make a reusable workflow, automate repetitive tasks, turn a conversation into a skill, or encapsulate a process for AI to follow. Triggers on: '创建 skill', 'write a SKILL.md', 'make this reusable', '.trae/skills/', 'I keep doing the same thing every time'. Do NOT use for rules (use trae-rules-writer) or agents (use trae-agent-writer)."
 license: "MIT"
 compatibility: "Requires Trae IDE"
 metadata:
   author: "learnwy"
-  version: "1.5"
+  version: "1.6"
 ---
 
 # Trae Skill Writer
 
-Analyze project patterns AND business context, design skill specs, then delegate to `skill-creator`.
+Analyze project code AND business context, then delegate to `skill-creator` for SKILL.md creation.
 
-## Workflow
 
-```
-0. SIZE CHECK      → Is project too large? Ask user to specify folders
-1. ANALYZE         → Scan project structure (spawn Project Scanner Agent)
-2. UNDERSTAND BIZ  → Gather business context from user and docs
-3. READ CODE       → Deep-dive into domain-specific code (2-5 key files)
-4. IDENTIFY        → Extract patterns + business rules from code
-5. DESIGN          → Structure skill spec with code AND business context
-6. DELEGATE        → Hand off to skill-creator (DO NOT write SKILL.md yourself)
-7. VERIFY          → Validate skill after creation
-```
+## Phase 1: Understand Project (REQUIRED)
 
----
+**Before creating ANY skill, you MUST understand the project first.**
 
-## Common Mistakes (AVOID THESE)
+### 1.1 Check Project Size
 
-These mistakes break skills. Check before delegating:
-
-| Wrong ❌ | Correct ✅ | Why |
-|----------|------------|-----|
-| `/Users/john/project/src/` | `src/` | Absolute paths break for other users |
-| `globs: "*.ts,*.tsx"` | `globs: *.ts,*.tsx` | Trae doesn't recognize quoted globs |
-| Mixed 中英文 in same file | Single language throughout | Confuses AI and users |
-| `my-super-long-skill-name` | `app-style` | Use prefix + short domain |
-
----
-
-## Understand Code + Business
-
-### Code-First Approach
-
-Before writing any skill, read actual codebase files:
+If project is too large (>50 top-level items, monorepo):
+- **STOP** - Don't analyze entire project
+- **ASK** - Use `AskUserQuestion` for target folders
+- **SCOPE** - Only analyze user-specified folders
 
 ```
-1. Identify key files for this domain
-2. Read 2-5 source files deeply (100-200 lines each)
-3. Extract actual patterns, types, constants
-4. Use real code examples from the codebase
+"This project is large. Which folders should I focus on?"
+Options: "src/features/", "lib/core/", "Other..."
 ```
 
-### Business Context
+### 1.2 Scan Project Structure
 
-Skills should capture BOTH code patterns AND business logic:
+Quick scan to understand what exists (NOT deep reading):
 
-| Source | Information |
-|--------|-------------|
+```
+1. List top-level directories
+2. Identify tech stack (package.json, go.mod, etc.)
+3. Find existing skills/rules/automation
+4. List major domains/modules for skill breakdown
+```
+
+**Note:** Deep code reading happens in Phase 2 for each specific skill.
+
+### 1.3 Understand Business
+
+Ask user and read docs to capture business context:
+
+| Source | What to Extract |
+|--------|-----------------|
 | **User input** | Domain terminology, workflows |
 | **README/docs** | Project purpose, architecture |
-| **Comments** | Business rules in code |
-| **Naming** | Domain concepts from identifiers |
+| **Code comments** | Business rules |
+| **Naming** | Domain concepts |
 
-**Ask user:** "What business problem does this solve?"
+**Ask:** "What business problem does this solve?"
 
----
 
-## Best Practices
+## Phase 2: Create Skills (SEQUENTIAL)
 
-### Naming Convention
+**Create skills ONE at a time, not in parallel.**
 
-Every skill MUST use a project prefix: `{prefix}-{domain}`
+### 2.1 Plan Skill Breakdown
 
-| Good ✅ | Bad ❌ |
-|---------|--------|
-| `app-style` | `style` (no prefix) |
-| `fe-component` | `my-app-general-search-scene-template` (too long) |
+First, identify all skills needed:
 
-### Language Consistency
-
-All content within a skill MUST be in ONE language:
-
-```yaml
-# Good
-name: app-style
-description: "Style system guide..."
-
-# Bad
-name: app-style
-description: "Style 系统指南..."
+```
+Example: ecommerce-app
+├── app-style      (style system)
+├── app-component  (UI components)
+├── app-api        (API patterns)
+└── app-monitor    (monitoring)
 ```
 
-### Skill Granularity
+### 2.2 For EACH Skill (Sequential Loop)
 
-**Single Responsibility**: Each skill focuses on ONE domain.
+```
+┌─────────────────────────────────────────────┐
+│  For each skill:                            │
+│                                             │
+│  1. Deep-dive into THIS skill's code        │
+│     - Read 2-5 key files for this domain    │
+│     - Extract patterns specific to it       │
+│                                             │
+│  2. Design spec for THIS skill              │
+│     - Name, triggers, exclusions            │
+│     - Key files, workflow                   │
+│     - Business context                      │
+│                                             │
+│  3. Delegate to skill-creator               │
+│     - Use template below                    │
+│     - Wait for completion                   │
+│                                             │
+│  4. Move to next skill                      │
+└─────────────────────────────────────────────┘
+```
 
-- Good: `app-style` (only style), `app-monitor` (only monitoring)
-- Bad: `app-style-and-component` (too broad)
-
----
-
-## Delegation to skill-creator
-
-**After DESIGN step, delegate to `skill-creator` for SKILL.md creation.**
-
-### Template
+### 2.3 Delegation Template
 
 ```
 Use skill `skill-creator` to create the skill with this spec:
@@ -116,59 +105,78 @@ Use skill `skill-creator` to create the skill with this spec:
 **Triggers:** {phrases that should activate it}
 **Exclusions:** {when NOT to use}
 **Language:** English (or specify)
-**Key Files:** {list of files - relative paths}
+**Key Files:** {list of files - relative paths only}
 **Workflow:** {numbered steps}
 **Location:** .trae/skills/{name}/
 
 Project context:
 - Tech stack: {detected tech}
-- Patterns found: {from actual code}
+- Patterns: {from actual code}
 
 Business context:
 - Domain concepts: {terminology}
 - Business rules: {constraints}
 ```
 
----
 
-## Quality Checklist
+## Phase 3: Quality & Lessons Learned
 
-Before delegating, verify:
+### ⚠️ Common Mistakes (CRITICAL)
 
-- [ ] **No absolute paths** - All paths are relative
-- [ ] **Naming** - Has project prefix, kebab-case
+These mistakes break skills. **Always check:**
+
+| Wrong ❌ | Correct ✅ | Why |
+|----------|------------|-----|
+| `/Users/john/src/` | `src/` | Absolute paths break for others |
+| `globs: "*.ts"` | `globs: *.ts,*.tsx` | No quotes in globs |
+| Mixed 中英文 | Single language | Confuses AI |
+| `super-long-name` | `app-style` | prefix + short domain |
+| No business context | Include domain terms | AI needs to understand "why" |
+
+### Quality Checklist
+
+Before delegating each skill:
+
+- [ ] **Paths** - All relative, no absolute paths
+- [ ] **Naming** - `{prefix}-{domain}` format
 - [ ] **Language** - Single language throughout
-- [ ] **Code study** - Based on actual codebase reading
-- [ ] **Business context** - Includes domain terminology
+- [ ] **Code study** - Based on actual codebase
+- [ ] **Business** - Includes domain terminology
+- [ ] **Granularity** - Single responsibility
 
----
 
-## Batch Creation Workflow
+## Best Practices
 
-When creating multiple skills:
+### Naming: `{prefix}-{domain}`
 
-1. **Phase 1 - Overview**: Understand architecture, identify domains
-2. **Phase 2 - Deep-Dive**: Process ONE skill at a time
-3. **Phase 3 - Cross-Reference**: Check for overlap and duplication
+| Good ✅ | Bad ❌ |
+|---------|--------|
+| `app-style` | `style` (no prefix) |
+| `fe-component` | `my-app-template` (too long) |
 
----
+### Single Responsibility
 
-## Agent-Enhanced Analysis
+Each skill = ONE domain:
+- Good: `app-style` (only style)
+- Bad: `app-style-and-component` (too broad)
 
-| Stage | Agent | When to Use |
-|-------|-------|-------------|
-| ANALYZE | [Project Scanner](agents/project-scanner.md) | Large/unfamiliar projects |
-| ANALYZE | [Tech Stack Analyzer](agents/tech-stack-analyzer.md) | Domain-specific (iOS, Go, React) |
-| VERIFY | [Quality Validator](agents/quality-validator.md) | Post-creation validation |
+### Cross-Reference
+
+After creating all skills:
+- Check for overlap
+- Add "Related Skills" sections
+- Verify no duplicate content
+
+
+## Agents
+
+| Stage | Agent | When |
+|-------|-------|------|
+| Phase 1 | [Project Scanner](agents/project-scanner.md) | Large projects |
+| Phase 1 | [Tech Stack Analyzer](agents/tech-stack-analyzer.md) | Domain-specific |
+| Phase 3 | [Quality Validator](agents/quality-validator.md) | Validation |
 
 ## References
 
 - [Trae Skills Documentation](assets/trae-skills-docs.md)
 - [Best Practices](assets/trae-skill-best-practices.md)
-
-## Agents
-
-- [Project Scanner](agents/project-scanner.md)
-- [Tech Stack Analyzer](agents/tech-stack-analyzer.md)
-- [Convention Detector](agents/convention-detector.md)
-- [Quality Validator](agents/quality-validator.md)
