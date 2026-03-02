@@ -5,16 +5,15 @@ license: "MIT"
 compatibility: "Requires Trae IDE"
 metadata:
   author: "learnwy"
-  version: "1.1"
+  version: "1.2"
 ---
 
 # Trae Agent Writer
 
-Create agent definitions for tasks that need independent, isolated execution.
+Create agent definitions for independent, isolated execution with business context.
 
 ## What is an Agent?
 
-A **focused, autonomous instruction set** for a subagent to execute independently:
 - **Spawned as subagents** - Run with isolated context
 - **Single-purpose** - One agent, one job
 - **Stateless** - No memory between invocations
@@ -23,58 +22,48 @@ A **focused, autonomous instruction set** for a subagent to execute independentl
 ## Workflow
 
 ```
-0. SIZE CHECK   → Is project too large? Ask user to specify context
-1. ANALYZE      → What independent task needs an agent?
-2. READ CODE    → Study existing patterns/agents if any
-3. DEFINE       → Role, inputs, process, outputs
-4. CREATE       → Write agent.md following the pattern
-5. VERIFY       → Test agent invocation
+0. SIZE CHECK      → Is project too large? Ask user to specify context
+1. ANALYZE         → What independent task needs an agent?
+2. UNDERSTAND BIZ  → What business context does this agent need?
+3. READ CODE       → Study existing patterns/agents if any
+4. DEFINE          → Role, inputs, process, outputs + business rules
+5. CREATE          → Write agent.md with domain context
+6. VERIFY          → Test agent invocation
 ```
 
-## Naming Convention (CRITICAL)
+---
 
-**Every agent MUST use a descriptive, action-oriented name.**
+## Common Mistakes (AVOID THESE)
 
-| Good ✅ | Bad ❌ |
-|---------|--------|
-| `review-grader.md` | `agent.md` |
-| `code-comparator.md` | `helper.md` |
-| `project-scanner.md` | `scanner.md` (too vague) |
+| Wrong ❌ | Correct ✅ | Why |
+|----------|------------|-----|
+| `/Users/john/project/` | `{project_root}/` | Absolute paths break for others |
+| `agent.md`, `helper.md` | `review-grader.md` | Use descriptive action-oriented names |
+| Mixed 中英文 | Single language | Confuses AI |
 
-**For project-specific agents, consider prefix:**
-- `app-analyzer.md` for your-app project
-- `fe-validator.md` for frontend agents
+---
 
-## Language Consistency (CRITICAL)
+## Understand Code + Business
 
-**All content within an agent MUST be in ONE language.**
-
-- Role, steps, guidelines - ALL same language
-- Prefer English for code projects
-- Do NOT mix Chinese and English in the same agent file
-
-```markdown
-# Good - all English
-## Process
-### Step 1: Read Input
-Read the input file and extract claims.
-
-# Bad - mixed languages
-## Process 流程
-### Step 1: Read Input 读取输入
-Read the input file 读取文件.
-```
-
-## Code-First Approach
-
-**Before writing an agent, study existing patterns.**
+### Code-First Approach
 
 ```
-1. Check if similar agents exist in the project
+1. Check if similar agents exist
 2. Read 1-2 existing agents for patterns
-3. Understand how agents are invoked in this codebase
-4. Follow established conventions
+3. Follow established conventions
 ```
+
+### Business Context
+
+Agents need domain knowledge to make correct decisions:
+
+| Agent Type | Business Context Needed |
+|------------|-------------------------|
+| **Grader** | What makes output "good"? |
+| **Analyzer** | What patterns matter? |
+| **Validator** | What business rules apply? |
+
+---
 
 ## Agent Format
 
@@ -103,11 +92,7 @@ Save to `{output_path}`.
 
 ## Output Format
 
-```json
-{
-  "field": "value"
-}
-```
+{JSON structure}
 
 ## Guidelines
 
@@ -115,51 +100,51 @@ Save to `{output_path}`.
 - **Cite evidence**: Quote specific text
 ```
 
-## Agent Locations
+---
+
+## Best Practices
+
+### Naming
+
+| Good ✅ | Bad ❌ |
+|---------|--------|
+| `review-grader.md` | `agent.md` |
+| `code-comparator.md` | `helper.md` |
+| `app-analyzer.md` | `scanner.md` (too vague) |
+
+### Agent Locations
 
 | Location | Use Case |
 |----------|----------|
-| `skill-name/agents/` | Inside orchestrating skills |
-| `.trae/agents/` | Project-level agents |
-| `~/.trae/agents/` | Global agents |
+| `skill-name/agents/` | Inside skills |
+| `.trae/agents/` | Project-level |
+| `~/.trae/agents/` | Global |
 
-## Path Conventions (CRITICAL)
+### Good Agent Candidates
 
-**NEVER use absolute paths in agents.** This breaks portability across team members.
+| Pattern | Why Agent? |
+|---------|------------|
+| Grader | Needs objectivity |
+| Comparator | Blind comparison |
+| Analyzer | Deep dive, isolated |
+| Transformer | Parallel processing |
 
-| Wrong ❌ | Correct ✅ |
-|----------|------------|
-| `/Users/john/project/` | `{project_root}/` |
-| `/home/dev/output/` | `{output_path}` (as input) |
-| `~/Documents/code/` | Relative path or placeholder |
+**Don't make agents for:** Simple inline tasks, tasks needing conversation history.
 
-**Why:** Agents are shared via git - absolute paths break for other users, expose private info.
-
-**Use placeholders:** `{project_root}`, `{git_root}`, `{skill_dir}`, `{output_path}`
-
-## Good Agent Candidates
-
-| Pattern | Why Agent? | Example |
-|---------|------------|---------|
-| Grader | Needs objectivity | Output evaluator |
-| Comparator | Blind comparison | A/B tester |
-| Analyzer | Deep dive, isolated | Performance analyzer |
-| Transformer | Parallel processing | File converter |
-| Researcher | Independent investigation | Doc researcher |
-
-**Don't make agents for:** Simple inline tasks, tasks needing conversation history, single-step operations.
+---
 
 ## Quality Checklist
 
 Before creating agents, verify:
 
-- [ ] **Naming**: Descriptive, action-oriented, optionally prefixed
-- [ ] **Language**: 100% consistent language
-- [ ] **Role**: Clear single purpose
-- [ ] **Inputs**: All parameters documented
-- [ ] **Process**: Step-by-step instructions
-- [ ] **Output**: Structured format defined
-- [ ] **Paths**: Uses placeholders, no absolute paths
+- [ ] **No absolute paths** - Use placeholders
+- [ ] **Naming** - Descriptive, action-oriented
+- [ ] **Language** - Single language throughout
+- [ ] **Role** - Clear single purpose
+- [ ] **Inputs** - All parameters documented
+- [ ] **Output** - Structured format defined
+
+---
 
 ## Example
 
@@ -204,25 +189,24 @@ Save to `{output_path}/grading.json`
 
 ## Output Format
 
-```json
 {
   "expectations": [
     {"text": "...", "passed": true, "evidence": "..."}
   ],
-  "summary": {"passed": 4, "failed": 1, "pass_rate": 0.80}
+  "pass_rate": 0.80
 }
-```
 
 ## Guidelines
 
-- **Be objective**: Don't favor verbose or brief reviews
-- **Cite evidence**: Quote specific text from review
-- **Be thorough**: Check all expectations
+- **Be objective**: Don't favor verbose or brief
+- **Cite evidence**: Quote specific text
 ```
+
+---
 
 ## References
 
-- [Trae Agent Documentation](assets/trae-agent-docs.md) - Official docs
-- [Agent Patterns](references/agent-patterns.md) - Common archetypes
-- [Agent Template](assets/agent.md.template) - Starter template
-- [Grader Agent Example](examples/grader-agent.md) - Complete example
+- [Trae Agent Documentation](assets/trae-agent-docs.md)
+- [Agent Patterns](references/agent-patterns.md)
+- [Agent Template](assets/agent.md.template)
+- [Grader Agent Example](examples/grader-agent.md)

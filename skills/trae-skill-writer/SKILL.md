@@ -1,85 +1,50 @@
 ---
 name: trae-skill-writer
-description: "Create Trae IDE skills (SKILL.md files) for reusable AI capabilities. Use when user wants to: create a skill, make a reusable workflow, automate repetitive tasks, turn a conversation into a skill, or encapsulate a process for AI to follow. Triggers on: '创建 skill', 'write a SKILL.md', 'make this reusable', '.trae/skills/', 'I keep doing the same thing every time'. Do NOT use for rules (use trae-rules-writer) or agents (use trae-agent-writer)."
+description: "Create Trae IDE skills (SKILL.md files) for reusable AI capabilities. Use when user wants to: create a skill, make a reusable workflow, automate repetitive tasks, turn a conversation into a skill, or encapsulate a process for AI to follow. Triggers on: '创建 skill', 'write a SKILL.md', 'make this reusable', '.trae/skills/', 'I keep doing the same thing every time'. Do NOT use for skills (use trae-skill-writer) or agents (use trae-agent-writer)."
 license: "MIT"
 compatibility: "Requires Trae IDE"
 metadata:
   author: "learnwy"
-  version: "1.4"
+  version: "1.5"
 ---
 
 # Trae Skill Writer
 
-Analyze project patterns, design skill specs with code-first approach, then delegate to `skill-creator`.
+Analyze project patterns AND business context, design skill specs, then delegate to `skill-creator`.
 
 ## Workflow
 
 ```
-0. SIZE CHECK   → Is project too large? Ask user to specify folders
-1. ANALYZE      → Scan project structure (spawn Project Scanner Agent)
-2. READ CODE    → Deep-dive into domain-specific code (2-5 key files)
-3. IDENTIFY     → Extract real patterns, constants, conventions from code
-4. DESIGN       → Structure skill spec with real code examples
-5. DELEGATE     → Hand off to skill-creator (DO NOT write SKILL.md yourself)
-6. VERIFY       → Validate skill after creation
+0. SIZE CHECK      → Is project too large? Ask user to specify folders
+1. ANALYZE         → Scan project structure (spawn Project Scanner Agent)
+2. UNDERSTAND BIZ  → Gather business context from user and docs
+3. READ CODE       → Deep-dive into domain-specific code (2-5 key files)
+4. IDENTIFY        → Extract patterns + business rules from code
+5. DESIGN          → Structure skill spec with code AND business context
+6. DELEGATE        → Hand off to skill-creator (DO NOT write SKILL.md yourself)
+7. VERIFY          → Validate skill after creation
 ```
 
-## Path Conventions (CRITICAL - READ FIRST)
+---
 
-**NEVER use absolute paths in skills.** This breaks portability across team members.
+## Common Mistakes (AVOID THESE)
 
-| Wrong ❌ | Correct ✅ |
-|----------|------------|
-| `/Users/john/project/src/` | `src/` |
-| `/home/dev/repo/.trae/` | `.trae/` |
-| `~/Documents/code/lib/` | `lib/` |
-| `file:///absolute/path` | Relative path only |
+These mistakes break skills. Check before delegating:
 
-**Why this matters:**
-- Skills are shared via git - absolute paths break for other users
-- Each developer has different usernames and clone locations
-- Absolute paths expose private information
+| Wrong ❌ | Correct ✅ | Why |
+|----------|------------|-----|
+| `/Users/john/project/src/` | `src/` | Absolute paths break for other users |
+| `globs: "*.ts,*.tsx"` | `globs: *.ts,*.tsx` | Trae doesn't recognize quoted globs |
+| Mixed 中英文 in same file | Single language throughout | Confuses AI and users |
+| `my-super-long-skill-name` | `app-style` | Use prefix + short domain |
 
-**Use these instead:**
-- Relative paths: `src/`, `internal/`, `.trae/skills/`
-- Placeholders: `{project_root}`, `{git_root}`, `{skill_dir}`
+---
 
-## Naming Convention (CRITICAL)
+## Understand Code + Business
 
-**Every skill MUST use a project prefix** to avoid namespace collision.
+### Code-First Approach
 
-| Format | Example | Explanation |
-|--------|---------|-------------|
-| `{prefix}-{domain}` | `app-style` | app = your project name |
-| `{prefix}-{domain}` | `trae-rules` | trae = trae-related |
-| `{prefix}-{domain}` | `fe-component` | fe = frontend |
-
-**Good names:** `app-scene-general`, `app-bff-review`, `trae-skill-writer`
-**Bad names:** `my-app-general-search-scene-template` (too long)
-
-## Language Consistency (CRITICAL)
-
-**All content within a skill MUST be in ONE language.**
-
-- Title, description, headings, code comments, explanations - ALL same language
-- Prefer English for code projects
-- Do NOT mix Chinese and English in the same skill file
-
-```yaml
-# Good - all English
-name: app-style
-description: "Style system guide for TextStyle/BaseStyle. Use when..."
-
-# Bad - mixed languages
-name: app-style
-description: "Style 系统指南. Use when 使用样式时..."
-```
-
-## Code-First Approach (CRITICAL)
-
-**Before writing any skill, you MUST read actual codebase files.**
-
-### Study Workflow (for each skill)
+Before writing any skill, read actual codebase files:
 
 ```
 1. Identify key files for this domain
@@ -88,44 +53,60 @@ description: "Style 系统指南. Use when 使用样式时..."
 4. Use real code examples from the codebase
 ```
 
-### Code Examples Must Be Real
+### Business Context
 
-- Every code example should come from or closely mirror actual codebase patterns
-- Include file paths as comments when referencing specific patterns
-- Use actual constant names, function signatures, and type definitions
+Skills should capture BOTH code patterns AND business logic:
 
-```go
-// From: internal/style/text_style.go
-type TextStyle struct {
-    FontSize  int
-    FontColor string
-}
+| Source | Information |
+|--------|-------------|
+| **User input** | Domain terminology, workflows |
+| **README/docs** | Project purpose, architecture |
+| **Comments** | Business rules in code |
+| **Naming** | Domain concepts from identifiers |
+
+**Ask user:** "What business problem does this solve?"
+
+---
+
+## Best Practices
+
+### Naming Convention
+
+Every skill MUST use a project prefix: `{prefix}-{domain}`
+
+| Good ✅ | Bad ❌ |
+|---------|--------|
+| `app-style` | `style` (no prefix) |
+| `fe-component` | `my-app-general-search-scene-template` (too long) |
+
+### Language Consistency
+
+All content within a skill MUST be in ONE language:
+
+```yaml
+# Good
+name: app-style
+description: "Style system guide..."
+
+# Bad
+name: app-style
+description: "Style 系统指南..."
 ```
 
-## Batch Skill Creation Workflow
+### Skill Granularity
 
-When creating multiple skills for a project:
+**Single Responsibility**: Each skill focuses on ONE domain.
 
-### Phase 1 - Project Overview
-- Understand overall project architecture
-- Identify major domains/modules
-- Plan skill breakdown (avoid overlap)
+- Good: `app-style` (only style), `app-monitor` (only monitoring)
+- Bad: `app-style-and-component` (too broad)
 
-### Phase 2 - Sequential Deep-Dive
-- Process ONE skill at a time (not parallel)
-- For each skill: read code → understand patterns → design spec
-- Maintain overall coherence while focusing on specific domain
-
-### Phase 3 - Cross-Reference Pass
-- Ensure "Related Skills" sections are accurate
-- Check for content duplication
-- Verify trigger keywords don't overlap excessively
+---
 
 ## Delegation to skill-creator
 
-**After DESIGN step, ALWAYS delegate to `skill-creator` for actual SKILL.md creation.**
+**After DESIGN step, delegate to `skill-creator` for SKILL.md creation.**
 
-### Delegation Template
+### Template
 
 ```
 Use skill `skill-creator` to create the skill with this spec:
@@ -135,15 +116,42 @@ Use skill `skill-creator` to create the skill with this spec:
 **Triggers:** {phrases that should activate it}
 **Exclusions:** {when NOT to use}
 **Language:** English (or specify)
-**Key Files:** {list of files this skill is based on}
+**Key Files:** {list of files - relative paths}
 **Workflow:** {numbered steps}
-**Location:** .trae/skills/{name}/ or ~/.trae/skills/{name}/
+**Location:** .trae/skills/{name}/
 
 Project context:
 - Tech stack: {detected tech}
-- Patterns found: {patterns from actual code}
-- Related skills: {other skills to cross-reference}
+- Patterns found: {from actual code}
+
+Business context:
+- Domain concepts: {terminology}
+- Business rules: {constraints}
 ```
+
+---
+
+## Quality Checklist
+
+Before delegating, verify:
+
+- [ ] **No absolute paths** - All paths are relative
+- [ ] **Naming** - Has project prefix, kebab-case
+- [ ] **Language** - Single language throughout
+- [ ] **Code study** - Based on actual codebase reading
+- [ ] **Business context** - Includes domain terminology
+
+---
+
+## Batch Creation Workflow
+
+When creating multiple skills:
+
+1. **Phase 1 - Overview**: Understand architecture, identify domains
+2. **Phase 2 - Deep-Dive**: Process ONE skill at a time
+3. **Phase 3 - Cross-Reference**: Check for overlap and duplication
+
+---
 
 ## Agent-Enhanced Analysis
 
@@ -153,84 +161,10 @@ Project context:
 | ANALYZE | [Tech Stack Analyzer](agents/tech-stack-analyzer.md) | Domain-specific (iOS, Go, React) |
 | VERIFY | [Quality Validator](agents/quality-validator.md) | Post-creation validation |
 
-## Skill Granularity
-
-**Single Responsibility**: Each skill should focus on ONE specific domain.
-
-- Good: `app-style` (only style system), `app-monitor` (only monitoring)
-- Bad: `app-style-and-component` (too broad)
-
-**Cross-Reference**: Use "Related Skills" section to connect related concepts.
-- Don't duplicate content across skills
-- Reference other skills for adjacent knowledge
-
-## Quality Checklist
-
-Before delegating to skill-creator, verify spec has:
-
-- [ ] **NO ABSOLUTE PATHS** - Check all file references use relative paths
-- [ ] **Naming**: Has project prefix, kebab-case, concise
-- [ ] **Language**: 100% consistent language decided
-- [ ] **Code Study**: Based on actual codebase reading
-- [ ] **Key Files**: List of source files (relative paths!)
-- [ ] **Examples**: Real code patterns extracted
-- [ ] **Related Skills**: Links to adjacent skills
-
-## Example
-
-```
-User: "Create skills for our ecommerce-app project"
-
-Phase 1 - Project Overview:
-- Tech stack: Go, internal frameworks
-- Domains identified: style, component, monitor, api
-
-Phase 2 - Sequential Deep-Dive for app-style:
-
-READ CODE:
-- internal/style/text_style.go (150 lines)
-- internal/style/base_style.go (200 lines)
-- Found: TextStyle, BaseStyle, FontSize constants
-
-DESIGN (skill spec):
-- Name: app-style (prefix: app)
-- Language: English
-- Key Files: internal/style/*.go
-- Purpose: Style system guide for TextStyle/BaseStyle
-- Triggers: 'style', 'TextStyle', 'font'
-- Exclusions: layout, animation
-
-DELEGATE:
-"Use skill `skill-creator` to create the skill with this spec:
-
-**Skill Name:** app-style
-**Purpose:** Style system guide for TextStyle/BaseStyle in ecommerce-app
-**Triggers:** 'style', 'TextStyle', 'BaseStyle', 'font', 'color'
-**Exclusions:** layout, animation (see app-layout)
-**Language:** English
-**Key Files:**
-- internal/style/text_style.go
-- internal/style/base_style.go
-**Workflow:**
-1. Identify style type needed (Text vs Base)
-2. Apply correct style constants
-3. Follow naming conventions
-**Location:** .trae/skills/app-style/
-
-Project context:
-- Tech stack: Go
-- Patterns: TextStyle struct, BaseStyle interface
-- Related skills: app-layout, app-component"
-
-Phase 3 - Cross-Reference:
-- app-style ↔ app-layout (related)
-- app-style ↔ app-component (related)
-```
-
 ## References
 
-- [Trae Skills Documentation](assets/trae-skills-docs.md) - Official docs
-- [Best Practices](assets/trae-skill-best-practices.md) - Writing good skills
+- [Trae Skills Documentation](assets/trae-skills-docs.md)
+- [Best Practices](assets/trae-skill-best-practices.md)
 
 ## Agents
 

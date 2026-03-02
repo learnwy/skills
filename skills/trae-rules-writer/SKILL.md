@@ -5,123 +5,67 @@ license: "MIT"
 compatibility: "Requires Trae IDE"
 metadata:
   author: "learnwy"
-  version: "1.4"
+  version: "1.5"
 ---
 
 # Trae Rules Writer
 
-Analyze project conventions with code-first approach, then create rules that match existing patterns.
+Analyze project conventions AND business context, then create rules that guide AI behavior.
 
 ## Workflow
 
 ```
-0. SIZE CHECK   → Is project too large? Ask user to specify folders
-1. ANALYZE      → Scan project structure (spawn Project Scanner Agent)
-2. READ CODE    → Deep-dive into domain-specific code (2-5 key files)
-3. IDENTIFY     → Extract real conventions from code (spawn Convention Detector)
-4. DESIGN       → Choose rule type and application mode
-5. CREATE       → Write rules in Trae's official format
-6. VALIDATE     → Ensure no conflicts (spawn Quality Validator)
-7. REFRESH      → Start new chat for rules to take effect
+0. SIZE CHECK      → Is project too large? Ask user to specify folders
+1. ANALYZE         → Scan project structure (spawn Project Scanner Agent)
+2. UNDERSTAND BIZ  → Gather business context from user and docs
+3. READ CODE       → Deep-dive into domain-specific code (2-5 key files)
+4. IDENTIFY        → Extract conventions + business rules from code
+5. DESIGN          → Choose rule type and application mode
+6. CREATE          → Write rules with code AND business guidance
+7. VALIDATE        → Ensure no conflicts (spawn Quality Validator)
+8. REFRESH         → Start new chat for rules to take effect
 ```
 
-## Naming Convention (CRITICAL)
+---
 
-**Every rule MUST use a descriptive, focused name.**
+## Common Mistakes (AVOID THESE)
 
-| Good ✅ | Bad ❌ |
-|---------|--------|
-| `code-style.md` | `rules.md` |
-| `react-patterns.md` | `all-patterns.md` |
-| `import-order.md` | `style.md` (too vague) |
+These mistakes break rules. Check before creating:
 
-**For project-specific rules, consider prefix:**
-- `app-naming.md` for your-app project
-- `fe-components.md` for frontend rules
+| Wrong ❌ | Correct ✅ | Why |
+|----------|------------|-----|
+| `globs: "*.ts,*.tsx"` | `globs: *.ts,*.tsx` | Trae doesn't recognize quoted globs |
+| `globs: ["*.ts"]` | `globs: *.ts,*.tsx` | No YAML arrays for globs |
+| `/Users/john/src/` | `src/` | Absolute paths break for others |
+| Mixed 中英文 | Single language | Confuses AI and users |
+| Missing `description` | Always include it | Even for alwaysApply rules |
 
-## Language Consistency (CRITICAL)
+---
 
-**All content within a rule MUST be in ONE language.**
+## Understand Code + Business
 
-- Title, description, guidance - ALL same language
-- Prefer English for code projects
-- Do NOT mix Chinese and English in the same rule file
+### Code-First Approach
 
-```yaml
-# Good - all English
-# Code Style
-- Use PascalCase for components
-
-# Bad - mixed languages
-# Code Style 代码规范
-- Use PascalCase 组件命名
-```
-
-## Code-First Approach (CRITICAL)
-
-**Before writing any rule, you MUST read actual codebase files.**
-
-### Study Workflow (for each rule)
+Before writing any rule, read actual codebase files:
 
 ```
 1. Identify key files for this domain
 2. Read 2-5 source files deeply (100-200 lines each)
-3. Extract actual patterns, naming conventions from code
-4. Create rules that match existing patterns (not impose new ones)
+3. Extract actual patterns from code
+4. Create rules that MATCH existing patterns
 ```
 
-### Rules Must Match Reality
+### Business Context
 
-- Every convention should come from actual codebase patterns
-- Include file paths as examples when referencing specific patterns
-- Don't create rules that contradict existing code style
+Rules should capture BOTH code conventions AND business guidance:
 
-## Batch Rule Creation Workflow
+| Include ✅ | Skip ❌ |
+|------------|---------|
+| Domain terminology | Generic programming terms |
+| Business constraints | Implementation details |
+| "Why" behind conventions | "How" of algorithms |
 
-When creating multiple rules for a project:
-
-### Phase 1 - Project Overview
-- Understand overall project conventions
-- Identify areas needing AI guidance
-- Plan rule breakdown (avoid overlap)
-
-### Phase 2 - Sequential Deep-Dive
-- Process ONE rule at a time
-- For each rule: read code → extract conventions → create rule
-- Ensure rules don't conflict
-
-### Phase 3 - Cross-Reference Pass
-- Check for rule conflicts
-- Verify globs don't overlap excessively
-- Test rule activation
-
-## Agent-Enhanced Analysis
-
-| Stage | Agent | When to Use |
-|-------|-------|-------------|
-| ANALYZE | [Project Scanner](agents/project-scanner.md) | Large/unfamiliar projects |
-| IDENTIFY | [Convention Detector](agents/convention-detector.md) | Extract naming/style conventions |
-| VALIDATE | [Quality Validator](agents/quality-validator.md) | Check for conflicts |
-
-## Large Project Handling
-
-If project is too large (>50 top-level items, monorepo):
-
-1. **STOP** - Don't analyze entire project
-2. **ASK** - Use `AskUserQuestion` for target folders
-3. **SCOPE** - Only analyze user-specified folders
-
-## Path Conventions (CRITICAL)
-
-**NEVER use absolute paths in rules.** This breaks portability across team members.
-
-| Wrong ❌ | Correct ✅ |
-|----------|------------|
-| `/Users/john/project/src/` | `src/` |
-| `/home/dev/repo/.trae/` | `.trae/` |
-| `~/Documents/code/lib/` | `lib/` |
-
-**Why:** Rules are shared via git - absolute paths break for other users, expose private info.
+---
 
 ## Rule Format
 
@@ -137,67 +81,72 @@ alwaysApply: false
 Concise guidance for AI.
 ```
 
-## Description Field (RECOMMENDED)
+### Application Modes
 
-**Always include `description`**, even for `alwaysApply: true` rules.
+| Mode | Frontmatter | Use Case |
+|------|-------------|----------|
+| **Always Apply** | `alwaysApply: true` | All AI chats |
+| **File-Specific** | `globs: *.tsx,*.jsx` | Matching files only |
+| **Intelligent** | `description: "When..."` | AI determines |
+| **Manual** | (no frontmatter) | `#RuleName` only |
 
-| Without description ❌ | With description ✅ |
-|------------------------|---------------------|
-| `alwaysApply: true` | `description: Project architecture guide` |
-| (Trae doesn't know what it's for) | `alwaysApply: true` |
+---
 
-**Why:**
-- Helps Trae understand rule purpose
-- Shows in rule list with context
-- Makes rules easier to manage/review
-- Useful for team members reading `.trae/rules/`
+## Best Practices
+
+### Naming
+
+| Good ✅ | Bad ❌ |
+|---------|--------|
+| `code-style.md` | `rules.md` (too vague) |
+| `react-patterns.md` | `all-patterns.md` |
+| `app-naming.md` | `style.md` |
+
+### Language Consistency
+
+All content in ONE language:
 
 ```yaml
-# Good - always include description
+# Good
+# Code Style
+- Use PascalCase for components
+
+# Bad
+# Code Style 代码规范
+- Use PascalCase 组件命名
+```
+
+### Always Include Description
+
+Even for `alwaysApply: true` rules:
+
+```yaml
+# Good
 ---
-description: Code style conventions for TypeScript React project
+description: Code style conventions for TypeScript
 alwaysApply: true
 ---
 
-# Bad - missing context
+# Bad
 ---
 alwaysApply: true
 ---
 ```
 
-## Globs Format (CRITICAL)
-
-**`globs` MUST be comma-separated WITHOUT quotes.** Trae does NOT recognize standard YAML arrays.
-
-| Correct ✅ | Wrong ❌ |
-|------------|----------|
-| `globs: *.ts,*.tsx` | `globs: "*.ts,*.tsx"` |
-| `globs: *.test.ts,*.spec.ts` | `globs: ["*.test.ts", "*.spec.ts"]` |
-| `globs: src/**/*.jsx` | `globs: 'src/**/*.jsx'` |
-
-**Never use quotes around globs value.** This is a common mistake that breaks rule activation.
-
-## Application Modes
-
-| Mode | Frontmatter | Use Case |
-|------|-------------|----------|
-| **Always Apply** | `alwaysApply: true` | All AI chats in project |
-| **File-Specific** | `globs: *.tsx,*.jsx` | Only for matching files |
-| **Apply Intelligently** | `description: "When doing X..."` | AI determines relevance |
-| **Manual Only** | (no frontmatter) | Invoke with `#RuleName` |
+---
 
 ## Quality Checklist
 
 Before creating rules, verify:
 
-- [ ] **Description**: Always included (even for alwaysApply rules)
-- [ ] **Naming**: Descriptive, focused, optionally prefixed
-- [ ] **Language**: 100% consistent language
-- [ ] **Code Study**: Based on actual codebase conventions
-- [ ] **Globs Format**: NO quotes - `globs: *.ts,*.tsx` NOT `globs: "*.ts,*.tsx"`
-- [ ] **No Conflicts**: Rules don't contradict each other
-- [ ] **Single Concern**: Each rule is focused on one area
-- [ ] **Paths**: Uses relative paths only
+- [ ] **Globs format** - No quotes: `globs: *.ts,*.tsx`
+- [ ] **Description** - Always included
+- [ ] **No absolute paths** - Use relative paths only
+- [ ] **Language** - Single language throughout
+- [ ] **Code study** - Based on actual codebase
+- [ ] **No conflicts** - Rules don't contradict
+
+---
 
 ## Example
 
@@ -205,26 +154,20 @@ Before creating rules, verify:
 User: "Create rules for this TypeScript React project"
 
 READ CODE:
-- src/components/Button.tsx (150 lines)
-- src/hooks/useAuth.ts (100 lines)
-- Found: PascalCase components, camelCase hooks, functional components
-
-DESIGN:
-- Rule 1: code-style (naming conventions)
-- Rule 2: react-patterns (component patterns)
-- Rule 3: file-organization (structure)
+- src/components/Button.tsx
+- src/hooks/useAuth.ts
+- Found: PascalCase components, camelCase hooks
 
 CREATE: .trae/rules/
 
 📄 code-style.md
 ---
-description: Naming conventions for TypeScript React codebase
+description: Naming conventions for TypeScript React
 alwaysApply: true
 ---
 # Code Style
 - PascalCase for components and types
-- camelCase for functions, hooks, and variables
-- Use const for component definitions
+- camelCase for functions and hooks
 
 📄 react-patterns.md
 ---
@@ -233,24 +176,24 @@ globs: *.tsx,*.jsx
 ---
 # React Patterns
 - Use functional components with hooks
-- Custom hooks go in src/hooks/
-- Prefer named exports for components
-
-📄 file-organization.md
----
-description: When organizing project files or creating new components
----
-# File Organization
-- Components in src/components/
-- Hooks in src/hooks/
-- Use relative imports
+- Custom hooks in src/hooks/
 ```
+
+---
+
+## Agent-Enhanced Analysis
+
+| Stage | Agent | When to Use |
+|-------|-------|-------------|
+| ANALYZE | [Project Scanner](agents/project-scanner.md) | Large projects |
+| IDENTIFY | [Convention Detector](agents/convention-detector.md) | Extract conventions |
+| VALIDATE | [Quality Validator](agents/quality-validator.md) | Check conflicts |
 
 ## References
 
-- [Trae Rules Documentation](assets/trae-rules-docs.md) - Official docs
-- [Application Mode Examples](examples/application-modes.md) - Complete examples
-- [Rule Template](assets/rule.md.template) - Starter template
+- [Trae Rules Documentation](assets/trae-rules-docs.md)
+- [Application Mode Examples](examples/application-modes.md)
+- [Rule Template](assets/rule.md.template)
 
 ## Agents
 
