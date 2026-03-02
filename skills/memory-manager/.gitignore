@@ -1,10 +1,10 @@
-# Memory Manager - Private Data
-# NEVER commit memory/ to version control
+# Memory Manager - Git Ignore
+# Memory data is now stored at ~/.learnwy/ai/memory/ (outside skill directory)
 
-# All memory data
+# Legacy memory folder (if exists)
 memory/
 
-# Keep skill definition files
+# Keep skill files
 !SKILL.md
-!README.md
 !.gitignore
+!scripts/
