@@ -258,6 +258,59 @@ hooks:
       added_at: "2024-01-15T10:30:00Z"
 ```
 
+## Methodology Agents Library
+
+Optional methodology agents based on classic software engineering books. Inject when project needs them.
+
+### Available Agents
+
+| Agent | Best For | Book Reference |
+|-------|----------|----------------|
+| `problem-definer` | Unclear requirements | Are Your Lights On? (Weinberg) |
+| `spec-by-example` | BDD/ATDD projects | Specification by Example (Adzic) |
+| `story-mapper` | Feature planning | User Story Mapping (Patton) |
+| `domain-modeler` | Complex domains | DDD (Eric Evans) |
+| `responsibility-modeler` | OO design | Object Design (Wirfs-Brock) |
+| `architecture-advisor` | System design | Software Architecture in Practice |
+| `tdd-coach` | Test-first development | TDD by Example (Beck) |
+| `legacy-surgeon` | Legacy code work | Working Effectively with Legacy Code |
+| `refactoring-guide` | Code improvement | Refactoring (Fowler) |
+| `test-strategist` | Test planning | Agile Testing, xUnit Patterns |
+
+### Common Injection Patterns
+
+```bash
+SKILL_ROOT=/path/to/skills/requirement-workflow
+
+# Pattern 1: Greenfield Project (new codebase)
+$SKILL_ROOT/scripts/inject-agent.sh -r /project --scope project \
+  --hook pre_stage_ANALYZING --agent problem-definer
+$SKILL_ROOT/scripts/inject-agent.sh -r /project --scope project \
+  --hook post_stage_ANALYZING --agent spec-by-example
+$SKILL_ROOT/scripts/inject-agent.sh -r /project --scope project \
+  --hook pre_stage_DESIGNING --agent domain-modeler
+$SKILL_ROOT/scripts/inject-agent.sh -r /project --scope project \
+  --hook pre_stage_IMPLEMENTING --agent tdd-coach
+
+# Pattern 2: Legacy Code Project
+$SKILL_ROOT/scripts/inject-agent.sh -r /project --scope project \
+  --hook pre_stage_IMPLEMENTING --agent legacy-surgeon
+$SKILL_ROOT/scripts/inject-agent.sh -r /project --scope project \
+  --hook post_stage_IMPLEMENTING --agent refactoring-guide
+
+# Pattern 3: Complex Domain Project
+$SKILL_ROOT/scripts/inject-agent.sh -r /project --scope project \
+  --hook pre_stage_DESIGNING --agent domain-modeler
+$SKILL_ROOT/scripts/inject-agent.sh -r /project --scope project \
+  --hook pre_stage_DESIGNING --agent responsibility-modeler
+
+# Pattern 4: One-time methodology boost (current workflow only)
+$SKILL_ROOT/scripts/inject-agent.sh -r /project --scope workflow \
+  --hook pre_stage_ANALYZING --agent problem-definer
+```
+
+See `agents/AGENTS.md` for full documentation.
+
 ## Best Practices
 
 ### DO
@@ -266,6 +319,7 @@ hooks:
 2. **Mark critical skills as required** - lint-checker, type-checker should block on failure
 3. **Use order for dependencies** - Ensure lint runs before type check
 4. **Keep skills focused** - Each skill does one thing well
+5. **Inject methodology agents at project level** - For consistent methodology across workflows
 
 ### DON'T
 
@@ -273,6 +327,7 @@ hooks:
 2. **Make everything required** - Only block for critical checks
 3. **Ignore skill output** - Skills provide valuable feedback
 4. **Skip injected skills** - AI MUST invoke them when listed
+5. **Inject all methodology agents at once** - Pick what fits your project needs
 
 ## Troubleshooting
 

@@ -87,3 +87,4 @@ $ {skill_root}/scripts/advance-stage.sh -r /project
 - [L2 Workflow](references/WORKFLOW_L2.md) - Standard workflow  
 - [L3 Workflow](references/WORKFLOW_L3.md) - Complex workflow
 - [Injection Guide](references/INJECTION_GUIDE.md) - Agent/Skill injection
+- [Agents Index](agents/AGENTS.md) - All available agents
