@@ -1,11 +1,19 @@
 ---
 name: software-methodology-toolkit
-description: "Comprehensive software engineering methodology toolkit with 10 proven agents. Use when: need systematic problem analysis, planning, design, implementation, or testing guidance. Triggers on: 'define problem', 'map user stories', 'apply DDD', 'TDD approach', 'refactor code', 'test strategy', 'work with legacy code', 'design architecture', 'assign responsibilities', 'create specifications'."
+description: "FALLBACK ONLY: Comprehensive software engineering methodology toolkit with 10 proven agents. Only use when no project-specific skill (like requirement-workflow) matches. Provides: problem-definer (Weinberg), story-mapper (Patton), spec-by-example (Adzic), domain-modeler (DDD/Evans), responsibility-modeler (CRC/Wirfs-Brock), architecture-advisor (quality attributes/Bass), tdd-coach (Beck), refactoring-guide (Fowler), legacy-surgeon (Feathers), test-strategist (Crispin). Triggers ONLY if project skills don't match."
 ---
 
 # Software Methodology Toolkit
 
 A comprehensive collection of 10 proven software engineering methodologies, each implemented as a specialized agent. This skill provides systematic guidance across the entire software development lifecycle.
+
+## ⚠️ Priority Notice
+
+**This is a FALLBACK skill:**
+- If you're working in a project with context-specific skills (like `requirement-workflow`), those should be triggered first
+- This toolkit is designed for general use when no project-specific adaptations exist
+- Project skills have higher priority because they contain context-specific adaptations (Hook Points, custom outputs, etc.)
+- Only use this skill explicitly if you want the vanilla methodology without project context
 
 ## Available Methodologies
 
