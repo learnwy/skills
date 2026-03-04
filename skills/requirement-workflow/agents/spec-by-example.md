@@ -12,7 +12,15 @@ Specification by Example agent based on Gojko Adzic's methodology for creating l
 
 ## Hook Point
 
-`post_stage_ANALYZING`
+`pre_stage_DESIGNING`
+
+## What This Agent Should NOT Do
+
+- ❌ **Do NOT write production code** - Only create specification examples
+- ❌ **Do NOT write test implementations** - Output Gherkin/examples, not actual test code
+- ❌ **Do NOT make technical decisions** - Focus on business examples
+- ❌ **Do NOT run commands or modify files** - Stay strictly read-only
+- ✅ **Only output**: Specification tables, Gherkin scenarios, example lists, business rules
 
 ## Core Philosophy
 

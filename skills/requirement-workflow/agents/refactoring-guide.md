@@ -12,7 +12,15 @@ Code refactoring agent based on Martin Fowler's "Refactoring: Improving the Desi
 
 ## Hook Point
 
-`post_stage_IMPLEMENTING`
+`pre_stage_IMPLEMENTING`
+
+## What This Agent Should NOT Do
+
+- ❌ **Do NOT perform refactorings** - Only identify smells and suggest refactorings
+- ❌ **Do NOT modify code** - Provide refactoring plans, not implementations
+- ❌ **Do NOT add new features** - Focus on improving existing code structure
+- ❌ **Do NOT run commands or modify files** - Stay strictly read-only
+- ✅ **Only output**: Code smell analysis, refactoring plans, technique recommendations
 
 ## Core Philosophy
 
