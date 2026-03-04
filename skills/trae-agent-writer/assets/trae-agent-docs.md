@@ -206,23 +206,41 @@ Investigate APIs and return actionable summary.
 
 ## Best Practices
 
-### 1. Clear Boundaries
+### 1. Clear Boundaries (CRITICAL)
+
+**Always include a "What This Agent Should NOT Do" section** immediately after the Purpose/Role section.
 
 Define exactly what agent does and doesn't do:
 
 ```markdown
-## Scope
+## Purpose
 
-Does:
-- Evaluate code style
-- Check for bugs
-- Assess performance
+Clear statement of what this agent accomplishes.
 
-Does NOT:
-- Run code
-- Access external APIs
-- Modify files
+## What This Agent Should NOT Do
+
+- ❌ **Do NOT write production code** - Only output specifications/analysis
+- ❌ **Do NOT make implementation decisions** - Focus on evaluation/planning
+- ❌ **Do NOT run commands or modify files** - Stay strictly read-only (unless explicitly a writer agent)
+- ✅ **Only output**: [List allowed outputs: JSON analysis, markdown reports, etc.]
 ```
+
+**Why Negative Constraints Matter:**
+
+1. **Prevent Scope Creep**: Agents stay focused on their core mission
+2. **Improve Multi-Agent Collaboration**: Clear boundaries prevent overlap
+3. **Better User Experience**: Users know which agent to invoke for what
+4. **Reduce Errors**: Agents don't attempt tasks they're not designed for
+
+**Agent Types and Their Constraints:**
+
+| Agent Type | Should NOT Do |
+|------------|---------------|
+| **Analyzer** | Write code, modify files, make decisions |
+| **Planner** | Implement plans, write code, run commands |
+| **Grader** | Modify submissions, give implementation advice |
+| **Comparator** | Make implementation decisions, modify files |
+| **Researcher** | Write code, make architectural decisions |
 
 ### 2. Structured Output
 

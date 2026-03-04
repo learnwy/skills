@@ -104,6 +104,14 @@ Example: code-review skill
 
 {What this agent does and why it needs isolation}
 
+## What This Agent Should NOT Do
+
+- ❌ **Do NOT {negative_action_1}** - {explanation}
+- ❌ **Do NOT {negative_action_2}** - {explanation}
+- ❌ **Do NOT {negative_action_3}** - {explanation}
+- ❌ **Do NOT run commands or modify files** - Stay strictly read-only (unless explicitly a writer agent)
+- ✅ **Only output**: {list_allowed_outputs}
+
 ## Inputs
 
 - **param_name**: Description
@@ -153,6 +161,7 @@ Before creating each agent:
 - [ ] **Naming** - Descriptive, action-oriented
 - [ ] **Language** - Single language throughout
 - [ ] **Role** - Clear single purpose
+- [ ] **Negative Constraints** - "What This Agent Should NOT Do" section included
 - [ ] **Inputs** - All parameters documented
 - [ ] **Output** - Structured format defined
 - [ ] **Business** - Includes domain context

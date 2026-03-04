@@ -6,6 +6,14 @@
 
 {{EXPANDED_ROLE_DESCRIPTION}}
 
+## What This Agent Should NOT Do
+
+- ❌ **{{NEGATIVE_CONSTRAINT_1}}** - {{EXPLANATION_1}}
+- ❌ **{{NEGATIVE_CONSTRAINT_2}}** - {{EXPLANATION_2}}
+- ❌ **{{NEGATIVE_CONSTRAINT_3}}** - {{EXPLANATION_3}}
+- ❌ **Do NOT run commands or modify files** - Stay strictly read-only (unless explicitly designed for writing)
+- ✅ **Only output**: {{ALLOWED_OUTPUT_TYPES}}
+
 ## Inputs
 
 You receive these parameters in your prompt:
