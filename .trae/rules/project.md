@@ -5,11 +5,11 @@ alwaysApply: true
 
 # Personal Skills Repository
 
-## 🎯 项目
+## Goal
 
-个人 Skills 仓库，存放 AI 技能。
+This repository stores and maintains personal AI skills.
 
-## 📁 结构
+## Structure
 
 ```
 skills/
@@ -20,15 +20,15 @@ skills/
 └── agents/
 ```
 
-## 🎯 分类
+## Categories
 
-**agents/** - 方法论（problem-definer, story-mapper）
+**agents/**: methodology-only assets (for example `problem-definer`, `story-mapper`).
 
-**skills/** - 能力模块
-- 项目特定（高优先级）
-- 通用（Fallback）
+**skills/**: runnable skill modules.
+- Project-specific skills (higher priority)
+- General fallback skills
 
-## 🏗️ 结构
+## Skill Layout
 
 ```
 skills/{name}/
@@ -37,12 +37,12 @@ skills/{name}/
 └── agents/
 ```
 
-## 🔧 使用
+## Usage
 
-**用户**: AI 自动调用
-**开发者**: 创建 SKILL.md
+**Users**: AI selects skills automatically.
+**Developers**: add or update `skills/{name}/SKILL.md`.
 
-## 📖 参考
+## References
 
 - [Skill Creator](../skill-creator/SKILL.md)
 - [Software Methodology Toolkit](../skills/software-methodology-toolkit/SKILL.md)

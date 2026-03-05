@@ -42,3 +42,4 @@ skills/
 - Description: triggers + "Do NOT"
 - NO absolute paths
 - Globs: no quotes
+- Keep content in English only
