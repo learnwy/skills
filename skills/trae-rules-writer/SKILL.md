@@ -101,6 +101,8 @@ alwaysApply: false
 Concise guidance for AI.
 ```
 
+**Character Limit:** Keep rules under 1000 characters when possible. Long rules reduce AI attention.
+
 ### Application Modes
 
 | Mode | Frontmatter | Use Case |
@@ -145,6 +147,7 @@ Before creating each rule:
 - [ ] **Paths** - All relative
 - [ ] **Language** - Single language
 - [ ] **No conflicts** - Rules don't contradict
+- [ ] **Length** - Under 1000 characters (ideal)
 
 
 ## Best Practices

@@ -98,6 +98,7 @@ Examples:
 3. **Use Relative Paths**: Reference files relative to project root
 4. **Be Specific**: Provide clear, actionable guidance
 5. **Include Examples**: Show good and bad patterns when helpful
+6. **Keep it Concise**: Under 1000 characters when possible (reduces AI attention loss)
 
 ## Import Settings
 
