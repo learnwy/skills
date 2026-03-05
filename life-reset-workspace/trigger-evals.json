@@ -1,0 +1,23 @@
+[
+  {"query": "我觉得我的人生陷入了死循环，每天都过着同样的生活，想要彻底改变", "should_trigger": true},
+  {"query": "I feel stuck in life and want to make a major transformation", "should_trigger": true},
+  {"query": "帮我找到我真正想要的人生方向，我现在的工作和生活都不是我想要的", "should_trigger": true},
+  {"query": "I want to reset my life. I feel lost and don't know what I really want anymore", "should_trigger": true},
+  {"query": "每天都重复同样的事情，感觉很绝望，想要突破这种状态", "should_trigger": true},
+  {"query": "How do I completely change my life? I'm tired of being stuck in the same patterns", "should_trigger": true},
+  {"query": "我想要重新设计我的人生，找到真正的目标和方向", "should_trigger": true},
+  {"query": "一天内彻底改变人生的方法，有这样的流程吗", "should_trigger": true},
+  {"query": "I need help figuring out my life vision and breaking free from old habits", "should_trigger": true},
+  {"query": "感觉自己被生活困住了，想要找到出口但不知道从哪里开始", "should_trigger": true},
+  
+  {"query": "帮我写一份简历", "should_trigger": false},
+  {"query": "今天天气怎么样", "should_trigger": false},
+  {"query": "推荐几本好看的电影", "should_trigger": false},
+  {"query": "如何做番茄炒蛋", "should_trigger": false},
+  {"query": "帮我 debug 这段 Python 代码", "should_trigger": false},
+  {"query": "创建一个 React 组件", "should_trigger": false},
+  {"query": "翻译这段英文到中文", "should_trigger": false},
+  {"query": "总结一下这篇文章的主要内容", "should_trigger": false},
+  {"query": "帮我安排明天的会议日程", "should_trigger": false},
+  {"query": "这个数学题怎么解", "should_trigger": false}
+]

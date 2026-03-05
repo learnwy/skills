@@ -1,0 +1,23 @@
+{
+  "skill_name": "life-reset",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "我觉得我的人生陷入了死循环，每天都过着同样的生活，想要彻底改变但不知道从哪里开始",
+      "expected_output": "引导用户完成一天重置流程，包括反愿景构建、愿景构建、游戏化规划",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "I want to reset my life. I feel stuck and lost, don't know what I really want anymore",
+      "expected_output": "提供完整的一天重置协议，包括早上的心理挖掘、全天的模式打断提醒、晚上的整合规划",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "帮我找到我真正想要的人生方向，我现在的工作和生活都不是我想要的",
+      "expected_output": "使用 7 个核心问题帮助用户挖掘反愿景，然后通过 3 个问题构建愿景，最后游戏化人生规划",
+      "files": []
+    }
+  ]
+}

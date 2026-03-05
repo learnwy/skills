@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Life-Reset Skill - Trigger Eval Queries Review</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 1200px; margin: 0 auto; padding: 2rem; background: #f5f5f5; }
+    h1 { color: #333; margin-bottom: 0.5rem; }
+    .skill-desc { background: #fff; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border-left: 4px solid #6a9bcc; }
+    .section { background: #fff; padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; }
+    .section h2 { margin-top: 0; color: #333; border-bottom: 2px solid #eee; padding-bottom: 0.5rem; }
+    .query-item { background: #fafafa; padding: 0.75rem; margin: 0.5rem 0; border-radius: 4px; border-left: 4px solid; display: flex; align-items: flex-start; gap: 1rem; }
+    .query-item.trigger { border-color: #4caf50; }
+    .query-item.no-trigger { border-color: #f44336; }
+    .query-text { flex: 1; font-size: 0.95rem; line-height: 1.5; }
+    .badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+    .badge.trigger { background: #e8f5e9; color: #2e7d32; }
+    .badge.no-trigger { background: #ffebee; color: #c62828; }
+    .note { background: #fff3cd; padding: 1rem; border-radius: 4px; margin-top: 1rem; border-left: 4px solid #ffc107; }
+    .export-btn { background: #d97757; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; font-size: 1rem; font-weight: 600; margin-top: 1rem; }
+    .export-btn:hover { background: #c4613f; }
+  </style>
+</head>
+<body>
+  <h1>🎯 Life-Reset Skill - Trigger Eval Queries</h1>
+  
+  <div class="skill-desc">
+    <strong>Current Description:</strong><br>
+    FALLBACK ONLY: Comprehensive software engineering methodology toolkit with 10 proven agents. Only use when no project-specific skill (like requirement-workflow) matches...
+  </div>
+
+  <div class="note">
+    <strong>📋 Review Instructions:</strong>
+    <ul>
+      <li>Review the 20 queries below (10 should trigger + 10 should NOT trigger)</li>
+      <li>Check if the queries are realistic and cover edge cases</li>
+      <li>Modify any queries that need adjustment</li>
+      <li>Click "Export to JSON" when ready to proceed</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>✅ Should Trigger (10 queries)</h2>
+    <div class="query-item trigger">
+      <span class="badge trigger">YES</span>
+      <span class="query-text">我觉得我的人生陷入了死循环，每天都过着同样的生活，想要彻底改变</span>
+    </div>
+    <div class="query-item trigger">
+      <span class="badge trigger">YES</span>
+      <span class="query-text">I feel stuck in life and want to make a major transformation</span>
+    </div>
+    <div class="query-item trigger">
+      <span class="badge trigger">YES</span>
+      <span class="query-text">帮我找到我真正想要的人生方向，我现在的工作和生活都不是我想要的</span>
+    </div>
+    <div class="query-item trigger">
+      <span class="badge trigger">YES</span>
+      <span class="query-text">I want to reset my life. I feel lost and don't know what I really want anymore</span>
+    </div>
+    <div class="query-item trigger">
+      <span class="badge trigger">YES</span>
+      <span class="query-text">每天都重复同样的事情，感觉很绝望，想要突破这种状态</span>
+    </div>
+    <div class="query-item trigger">
+      <span class="badge trigger">YES</span>
+      <span class="query-text">How do I completely change my life? I'm tired of being stuck in the same patterns</span>
+    </div>
+    <div class="query-item trigger">
+      <span class="badge trigger">YES</span>
+      <span class="query-text">我想要重新设计我的人生，找到真正的目标和方向</span>
+    </div>
+    <div class="query-item trigger">
+      <span class="badge trigger">YES</span>
+      <span class="query-text">一天内彻底改变人生的方法，有这样的流程吗</span>
+    </div>
+    <div class="query-item trigger">
+      <span class="badge trigger">YES</span>
+      <span class="query-text">I need help figuring out my life vision and breaking free from old habits</span>
+    </div>
+    <div class="query-item trigger">
+      <span class="badge trigger">YES</span>
+      <span class="query-text">感觉自己被生活困住了，想要找到出口但不知道从哪里开始</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>❌ Should NOT Trigger (10 queries)</h2>
+    <div class="query-item no-trigger">
+      <span class="badge no-trigger">NO</span>
+      <span class="query-text">帮我写一份简历</span>
+    </div>
+    <div class="query-item no-trigger">
+      <span class="badge no-trigger">NO</span>
+      <span class="query-text">今天天气怎么样</span>
+    </div>
+    <div class="query-item no-trigger">
+      <span class="badge no-trigger">NO</span>
+      <span class="query-text">推荐几本好看的电影</span>
+    </div>
+    <div class="query-item no-trigger">
+      <span class="badge no-trigger">NO</span>
+      <span class="query-text">如何做番茄炒蛋</span>
+    </div>
+    <div class="query-item no-trigger">
+      <span class="badge no-trigger">NO</span>
+      <span class="query-text">帮我 debug 这段 Python 代码</span>
+    </div>
+    <div class="query-item no-trigger">
+      <span class="badge no-trigger">NO</span>
+      <span class="query-text">创建一个 React 组件</span>
+    </div>
+    <div class="query-item no-trigger">
+      <span class="badge no-trigger">NO</span>
+      <span class="query-text">翻译这段英文到中文</span>
+    </div>
+    <div class="query-item no-trigger">
+      <span class="badge no-trigger">NO</span>
+      <span class="query-text">总结一下这篇文章的主要内容</span>
+    </div>
+    <div class="query-item no-trigger">
+      <span class="badge no-trigger">NO</span>
+      <span class="query-text">帮我安排明天的会议日程</span>
+    </div>
+    <div class="query-item no-trigger">
+      <span class="badge no-trigger">NO</span>
+      <span class="query-text">这个数学题怎么解</span>
+    </div>
+  </div>
+
+  <button class="export-btn" onclick="exportJSON()">📥 Export to JSON</button>
+
+  <script>
+    function exportJSON() {
+      const evalSet = [
+        {"query": "我觉得我的人生陷入了死循环，每天都过着同样的生活，想要彻底改变", "should_trigger": true},
+        {"query": "I feel stuck in life and want to make a major transformation", "should_trigger": true},
+        {"query": "帮我找到我真正想要的人生方向，我现在的工作和生活都不是我想要的", "should_trigger": true},
+        {"query": "I want to reset my life. I feel lost and don't know what I really want anymore", "should_trigger": true},
+        {"query": "每天都重复同样的事情，感觉很绝望，想要突破这种状态", "should_trigger": true},
+        {"query": "How do I completely change my life? I'm tired of being stuck in the same patterns", "should_trigger": true},
+        {"query": "我想要重新设计我的人生，找到真正的目标和方向", "should_trigger": true},
+        {"query": "一天内彻底改变人生的方法，有这样的流程吗", "should_trigger": true},
+        {"query": "I need help figuring out my life vision and breaking free from old habits", "should_trigger": true},
+        {"query": "感觉自己被生活困住了，想要找到出口但不知道从哪里开始", "should_trigger": true},
+        {"query": "帮我写一份简历", "should_trigger": false},
+        {"query": "今天天气怎么样", "should_trigger": false},
+        {"query": "推荐几本好看的电影", "should_trigger": false},
+        {"query": "如何做番茄炒蛋", "should_trigger": false},
+        {"query": "帮我 debug 这段 Python 代码", "should_trigger": false},
+        {"query": "创建一个 React 组件", "should_trigger": false},
+        {"query": "翻译这段英文到中文", "should_trigger": false},
+        {"query": "总结一下这篇文章的主要内容", "should_trigger": false},
+        {"query": "帮我安排明天的会议日程", "should_trigger": false},
+        {"query": "这个数学题怎么解", "should_trigger": false}
+      ];
+      
+      const blob = new Blob([JSON.stringify(evalSet, null, 2)], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'eval_set.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      alert('✅ Eval set exported to ~/Downloads/eval_set.json');
+    }
+  </script>
+</body>
+</html>
