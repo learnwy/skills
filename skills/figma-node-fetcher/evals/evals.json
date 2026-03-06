@@ -1,0 +1,29 @@
+{
+  "skill_name": "figma-node-fetcher",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "帮我从这个链接导出节点结构：https://www.figma.com/file/AbCdEf12345/App?node-id=12%3A345",
+      "expected_output": "先检查 FIGMA_ACCESS_TOKEN，再解析 URL，最后输出 node.json 路径",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "我需要节点截图，链接是 https://www.figma.com/design/AbCdEf12345/Design-System?node-id=1-200",
+      "expected_output": "判断为 image 模式，输出图片路径和 image-meta.json",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "请读取这个 figma 文件：https://www.figma.com/file/AbCdEf12345/App",
+      "expected_output": "拒绝执行并提示 URL 必须包含 node-id query",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "我有 3 个节点链接，帮我批量导出结构数据到 ./.figma-output/batch，并输出每个节点成功或失败结果",
+      "expected_output": "使用 fetch-batch 模式，输出 success_count/failure_count/items/failures",
+      "files": []
+    }
+  ]
+}
