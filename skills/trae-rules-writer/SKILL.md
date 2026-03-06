@@ -72,6 +72,10 @@ Example: react-project
 ┌─────────────────────────────────────────────┐
 │  For each rule:                             │
 │                                             │
+│  0. Initialize from template via script     │
+│     - Run scripts/init_rule.py              │
+│     - Ensure frontmatter markers exist      │
+│                                             │
 │  1. Deep-dive into THIS rule's scope        │
 │     - What files does it apply to?          │
 │     - What conventions exist?               │
@@ -87,6 +91,17 @@ Example: react-project
 │                                             │
 │  4. Move to next rule                       │
 └─────────────────────────────────────────────┘
+```
+
+Initialization command:
+
+```bash
+python {skill_dir}/scripts/init_rule.py \
+  --skill-dir {skill_dir} \
+  --name {rule_name} \
+  --mode intelligent \
+  --description "When to apply this rule" \
+  --output-dir {project_root}/.trae/rules
 ```
 
 ### 2.3 Rule Format

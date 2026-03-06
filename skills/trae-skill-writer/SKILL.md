@@ -78,6 +78,10 @@ Example: ecommerce-app
 ┌─────────────────────────────────────────────┐
 │  For each skill:                            │
 │                                             │
+│  0. Initialize SKILL.md from template       │
+│     - Run scripts/init_skill.py             │
+│     - Edit generated scaffold               │
+│                                             │
 │  1. Deep-dive into THIS skill's code        │
 │     - Read 2-5 key files for this domain    │
 │     - Extract patterns specific to it       │
@@ -93,6 +97,16 @@ Example: ecommerce-app
 │                                             │
 │  4. Move to next skill                      │
 └─────────────────────────────────────────────┘
+```
+
+Initialization command:
+
+```bash
+python {skill_dir}/scripts/init_skill.py \
+  --skill-dir {skill_dir} \
+  --name {new_skill_name} \
+  --summary "One-line skill purpose" \
+  --output-root {project_root}/skills
 ```
 
 ### 2.3 Delegation Template

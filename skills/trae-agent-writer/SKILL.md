@@ -77,6 +77,10 @@ Example: code-review skill
 ┌─────────────────────────────────────────────┐
 │  For each agent:                            │
 │                                             │
+│  0. Initialize from template via script     │
+│     - Run scripts/init_agent.py             │
+│     - Edit generated scaffold               │
+│                                             │
 │  1. Define role clearly                     │
 │     - Single purpose                        │
 │     - What makes it need isolation?         │
@@ -91,6 +95,16 @@ Example: code-review skill
 │                                             │
 │  4. Move to next agent                      │
 └─────────────────────────────────────────────┘
+```
+
+Initialization command:
+
+```bash
+python {skill_dir}/scripts/init_agent.py \
+  --skill-dir {skill_dir} \
+  --name {agent_name} \
+  --role "One-line role" \
+  --output-dir {project_root}/agents
 ```
 
 ### 2.3 Agent Format
