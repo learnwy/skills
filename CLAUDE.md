@@ -19,9 +19,9 @@ skills/
     ├── memory-manager/           # Cross-session AI memory (CRITICAL)
     ├── requirement-workflow/     # Software development orchestrator
     ├── skill-finder/             # Skill discovery and installation
-    ├── trae-agent-writer/         # Trae IDE agent creation
+    ├── project-agent-writer/      # Project-level agent creation
     ├── trae-rules-writer/         # Trae IDE rules creation
-    └── trae-skill-writer/         # Trae IDE skill creation
+    └── project-skill-writer/      # Project-level skill creation
 ```
 
 ## Essential Commands
@@ -128,10 +128,10 @@ The memory-manager skill is critical for session continuity:
 - Uses `npx skills` CLI for management
 - Supports global and project-scoped installations
 
-#### trae-*
-- trae-skill-writer: Creates reusable skills for workflows
+#### project-*
+- project-skill-writer: Creates reusable project skills for workflows
 - trae-rules-writer: Creates AI behavior rules
-- trae-agent-writer: Creates specialized AI agents
+- project-agent-writer: Creates specialized project agents
 
 ## Development Guidelines
 
@@ -168,7 +168,7 @@ All script paths in documentation are relative to `{skill_root}`:
 
 ### Automating Repetitive Tasks
 1. Identify patterns in project
-2. Create skill with trae-skill-writer
+2. Create skill with project-skill-writer
 3. Test skill with real scenarios
 4. Install globally if reusable
 
