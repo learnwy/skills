@@ -1,0 +1,18 @@
+{
+  "skill": "project-agent-writer",
+  "eval_id": 20,
+  "prompt": "targets 中出现 Unicode 同形字变体（如 prоject-rules-writer，其中 o 为西里尔字符）；请创建路由agent，要求识别并阻断同形字污染。",
+  "artifacts": [
+    {
+      "type": "agent_definition",
+      "path": "iteration-7/eval-20/with_skill/outputs/unicode-homoglyph-detection-guard.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "nfkc_normalization",
+    "mixed_script_confusable_detection",
+    "homoglyph_pollution_blocking",
+    "pollution_evidence_output"
+  ]
+}

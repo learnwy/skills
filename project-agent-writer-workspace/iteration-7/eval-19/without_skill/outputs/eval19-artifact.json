@@ -1,0 +1,16 @@
+{
+  "skill": "baseline",
+  "eval_id": 19,
+  "prompt": "available_targets 包含大小写混淆 ['Project-Rules-Writer','project-rules-writer']，请求目标是 project-rules-writer；请创建路由agent并定义大小写策略。",
+  "artifacts": [
+    {
+      "type": "agent_definition",
+      "path": "iteration-7/eval-19/without_skill/outputs/case-normalization-routing-guard.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "basic_case_insensitive_match",
+    "prefer_lowercase_target"
+  ]
+}

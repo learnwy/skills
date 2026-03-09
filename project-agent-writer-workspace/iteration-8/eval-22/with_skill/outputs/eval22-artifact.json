@@ -1,0 +1,18 @@
+{
+  "skill": "project-agent-writer",
+  "eval_id": 22,
+  "prompt": "复合攻击：大小写混淆 + Unicode 同形字 + 污染目标（drop-database）同时出现；请创建路由agent，要求单次输出完整阻断与分项证据。",
+  "artifacts": [
+    {
+      "type": "agent_definition",
+      "path": "iteration-8/eval-22/with_skill/outputs/composite-risk-aggregation-guard.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "multi_risk_independent_detection",
+    "single_blocked_decision_aggregation",
+    "per_risk_audit_emission",
+    "dangerous_target_rejection"
+  ]
+}

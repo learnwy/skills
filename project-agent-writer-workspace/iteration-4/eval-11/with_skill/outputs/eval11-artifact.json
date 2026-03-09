@@ -1,0 +1,18 @@
+{
+  "skill": "project-agent-writer",
+  "eval_id": 11,
+  "prompt": "仓库同时存在 /project/.trae/agents 与 /project/.claude/agents 且文件同名；请创建路由agent，要求先处理同名冲突，不允许覆盖写入。",
+  "artifacts": [
+    {
+      "type": "agent_definition",
+      "path": "iteration-4/eval-11/with_skill/outputs/cross-ide-name-collision-guard.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "detect_cross_ide_same_name_collision",
+    "block_before_write_path_selection",
+    "emit_collision_list",
+    "emit_prewrite_requirements"
+  ]
+}

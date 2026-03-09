@@ -1,0 +1,18 @@
+{
+  "skill": "none",
+  "eval_id": 2,
+  "prompt": "请设计一个root-cause analyzer agent，用于分析崩溃日志并给出优先级修复建议，要求有非目标声明。",
+  "artifacts": [
+    {
+      "type": "agent_definition",
+      "path": "iteration-1/eval-2/without_skill/outputs/crash-root-cause-analyzer.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "analysis_dimensions_defined",
+    "non_goals_declared",
+    "prioritized_fix_recommendations",
+    "structured_output_schema"
+  ]
+}

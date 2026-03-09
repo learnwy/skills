@@ -1,0 +1,18 @@
+{
+  "skill": "project-agent-writer",
+  "eval_id": 16,
+  "prompt": "证据链在中间步骤断裂：有IDE marker但缺少available_targets，随后日志又补了一份不完整targets；请创建路由agent，要求恢复流程但不可猜测缺失证据。",
+  "artifacts": [
+    {
+      "type": "agent_definition",
+      "path": "iteration-6/eval-16/with_skill/outputs/evidence-chain-recovery-router.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "staged_recovery_validation",
+    "no_guess_on_partial_targets",
+    "blocked_until_chain_closed",
+    "recovery_state_output"
+  ]
+}

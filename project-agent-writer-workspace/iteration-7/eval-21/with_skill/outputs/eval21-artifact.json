@@ -1,0 +1,18 @@
+{
+  "skill": "project-agent-writer",
+  "eval_id": 21,
+  "prompt": "多源证据冲突：path marker 指向 .claude，但 env 变量 IDE=trae；请创建路由agent，要求有证据优先级矩阵并给出最终决策。",
+  "artifacts": [
+    {
+      "type": "agent_definition",
+      "path": "iteration-7/eval-21/with_skill/outputs/multi-source-evidence-priority-matrix-router.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "explicit_evidence_priority_matrix",
+    "conflict_resolution_by_priority",
+    "deterministic_selected_ide_output",
+    "conflict_explanation_emission"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "skill": "baseline",
+  "eval_id": 17,
+  "prompt": "发现路径 /external-repo/project/.trae 与当前仓库 /project/.claude 同时存在，请创建路由agent，要求防止跨仓库路径伪装。",
+  "artifacts": [
+    {
+      "type": "agent_definition",
+      "path": "iteration-6/eval-17/without_skill/outputs/cross-repo-boundary-guard.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "basic_external_path_ignore",
+    "prefer_local_root"
+  ]
+}

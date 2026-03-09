@@ -1,0 +1,16 @@
+{
+  "skill": "baseline",
+  "eval_id": 23,
+  "prompt": "证据链恢复中同时出现跨仓库路径伪装与历史上下文漂移；请创建路由agent，要求先边界校验，再恢复流程，不可跳步。",
+  "artifacts": [
+    {
+      "type": "agent_definition",
+      "path": "iteration-8/eval-23/without_skill/outputs/staged-gate-boundary-recovery-router.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "basic_external_path_blocking",
+    "simple_staged_flow"
+  ]
+}

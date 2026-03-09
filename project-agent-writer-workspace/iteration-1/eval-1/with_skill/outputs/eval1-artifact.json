@@ -1,0 +1,16 @@
+{
+  "skill": "project-agent-writer",
+  "eval_id": 1,
+  "prompt": "为iOS项目创建一个grader agent，要求输出JSON结果，包含passed与evidence字段，并限定只读分析。",
+  "artifacts": [
+    {
+      "type": "agent_definition",
+      "path": "iteration-1/eval-1/with_skill/outputs/ios-project-grader.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "json_output_with_passed_and_evidence",
+    "read_only_analysis"
+  ]
+}

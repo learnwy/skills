@@ -1,0 +1,16 @@
+{
+  "skill": "baseline",
+  "eval_id": 13,
+  "prompt": "给定三轮会话上下文：第一轮是 Trae，第二轮切到 Claude，第三轮用户只说“按之前的继续”；请创建路由agent，要求防止上下文漂移误路由。",
+  "artifacts": [
+    {
+      "type": "agent_definition",
+      "path": "iteration-5/eval-13/without_skill/outputs/multi-turn-context-drift-guard.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "basic_latest_turn_preference",
+    "manual_confirmation_on_ambiguity"
+  ]
+}

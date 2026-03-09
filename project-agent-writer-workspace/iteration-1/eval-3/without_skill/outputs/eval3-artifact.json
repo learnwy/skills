@@ -1,0 +1,17 @@
+{
+  "skill": "none",
+  "eval_id": 3,
+  "prompt": "为Trae项目创建一个只处理规则路由判断的agent，如果是rules请求就转交project-rules-writer。",
+  "artifacts": [
+    {
+      "type": "agent_definition",
+      "path": "iteration-1/eval-3/without_skill/outputs/trae-rules-routing-gate.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "rules_routing_conditions_defined",
+    "trae_project_constraints_declared",
+    "auditable_output_format"
+  ]
+}

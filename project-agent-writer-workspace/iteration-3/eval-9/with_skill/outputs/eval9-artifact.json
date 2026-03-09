@@ -1,0 +1,18 @@
+{
+  "skill": "project-agent-writer",
+  "eval_id": 9,
+  "prompt": "用户强制要求路由到 project-rules-writer，但没有runtime证据（无IDE marker、无target目录）；请创建防误路由agent。",
+  "artifacts": [
+    {
+      "type": "agent_definition",
+      "path": "iteration-3/eval-9/with_skill/outputs/evidence-first-routing-guard.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "forced_route_rejected_without_evidence",
+    "minimum_evidence_set_declared",
+    "blocked_output_with_required_evidence_checklist",
+    "no_guess_routing_policy"
+  ]
+}

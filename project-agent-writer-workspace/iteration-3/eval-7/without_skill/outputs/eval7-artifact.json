@@ -1,0 +1,16 @@
+{
+  "skill": "baseline",
+  "eval_id": 7,
+  "prompt": "项目上下文同时出现 .trae 和 .claude marker，请创建路由agent：必须先返回冲突阻断，不允许直接写入任一路径。",
+  "artifacts": [
+    {
+      "type": "agent_definition",
+      "path": "iteration-3/eval-7/without_skill/outputs/dual-marker-conflict-router.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "basic_conflict_blocking",
+    "marker_based_decision_path"
+  ]
+}

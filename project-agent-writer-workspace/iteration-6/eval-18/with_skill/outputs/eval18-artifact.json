@@ -1,0 +1,18 @@
+{
+  "skill": "project-agent-writer",
+  "eval_id": 18,
+  "prompt": "available_targets 包含同形异义项 ['project-rules-writer','project-rules-writer-temp','project-rules-writer-prod']，请创建路由agent，要求只匹配精确目标。",
+  "artifacts": [
+    {
+      "type": "agent_definition",
+      "path": "iteration-6/eval-18/with_skill/outputs/homograph-target-normalization-guard.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "exact_canonical_target_matching",
+    "no_fuzzy_target_resolution",
+    "reject_suffix_variants",
+    "audit_rejected_variants_output"
+  ]
+}

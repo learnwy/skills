@@ -1,0 +1,18 @@
+{
+  "skill": "none",
+  "eval_id": 6,
+  "prompt": "当前项目是Claude Code（.claude），请创建规则路由agent，要求不能错误路由到Trae规则路径。",
+  "artifacts": [
+    {
+      "type": "agent_definition",
+      "path": "iteration-2/eval-6/without_skill/outputs/claude-code-rules-routing-guard.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "ide_context_detection_supports_claude_code",
+    "claude_context_denies_trae_rules_path_routing",
+    "conflicting_or_unknown_ide_context_blocked",
+    "deterministic_auditable_routing_basis"
+  ]
+}

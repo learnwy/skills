@@ -1,0 +1,18 @@
+{
+  "skill": "none",
+  "eval_id": 5,
+  "prompt": "请创建一个路由agent，但输入里可能缺少available_targets；要求缺字段时返回blocked并说明缺失项。",
+  "artifacts": [
+    {
+      "type": "agent_definition",
+      "path": "iteration-2/eval-5/without_skill/outputs/available-targets-validation-router.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "required_field_validation_includes_available_targets",
+    "blocked_decision_on_missing_required_fields",
+    "missing_fields_reported_explicitly",
+    "deterministic_routing_output_rules"
+  ]
+}

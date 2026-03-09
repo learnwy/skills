@@ -1,0 +1,16 @@
+{
+  "skill": "baseline",
+  "eval_id": 14,
+  "prompt": "runtime 日志注入大量噪声路径（含 /tmp/.trae.backup、/archive/.claude-old）；请创建路由agent，要求只接受有效项目根路径证据。",
+  "artifacts": [
+    {
+      "type": "agent_definition",
+      "path": "iteration-5/eval-14/without_skill/outputs/path-noise-suppression-router.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "basic_path_preference",
+    "ignore_obvious_noise_paths"
+  ]
+}

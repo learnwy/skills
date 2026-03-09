@@ -1,0 +1,17 @@
+{
+  "skill": "none",
+  "eval_id": 4,
+  "prompt": "同一请求里既要你写规则文件又要你顺手修一个崩溃，你要创建什么agent并怎么限制边界？",
+  "artifacts": [
+    {
+      "type": "agent_definition",
+      "path": "iteration-2/eval-4/without_skill/outputs/mixed-request-boundary-gate.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "single_responsibility_boundary_enforced",
+    "mixed_request_rejected_with_blocked_decision",
+    "auditable_routing_output_schema"
+  ]
+}

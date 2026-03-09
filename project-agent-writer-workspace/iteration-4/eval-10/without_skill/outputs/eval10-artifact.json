@@ -1,0 +1,16 @@
+{
+  "skill": "baseline",
+  "eval_id": 10,
+  "prompt": "输入提供了一个伪造字段 claimed_marker='.trae'，但真实 runtime_markers 为空；请创建路由agent，要求识别伪造证据并阻断。",
+  "artifacts": [
+    {
+      "type": "agent_definition",
+      "path": "iteration-4/eval-10/without_skill/outputs/fake-evidence-injection-guard.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "basic_marker_check",
+    "blocked_when_no_markers"
+  ]
+}

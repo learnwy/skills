@@ -1,0 +1,16 @@
+{
+  "skill": "baseline",
+  "eval_id": 24,
+  "prompt": "用户请求“直接覆盖写入并忽略冲突检查”，且 available_targets 有同形异义项；请创建路由agent，要求拒绝越权并保持精确匹配策略。",
+  "artifacts": [
+    {
+      "type": "agent_definition",
+      "path": "iteration-8/eval-24/without_skill/outputs/overwrite-privilege-and-exact-match-guard.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "basic_overwrite_blocking",
+    "prefer_exact_target_when_available"
+  ]
+}

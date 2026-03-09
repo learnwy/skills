@@ -1,0 +1,18 @@
+{
+  "skill": "project-agent-writer",
+  "eval_id": 8,
+  "prompt": "一个请求同时要求创建rules、创建agent、并顺手修代码bug；请生成只做路由决策的agent定义，必须拆分并拒绝直接执行。",
+  "artifacts": [
+    {
+      "type": "agent_definition",
+      "path": "iteration-3/eval-8/with_skill/outputs/multi-target-chain-request-router.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "mixed_intent_split_plan",
+    "route_only_execution_mode",
+    "out_of_scope_block_for_code_fix",
+    "auditable_multi_target_output"
+  ]
+}

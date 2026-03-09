@@ -1,0 +1,16 @@
+{
+  "skill": "baseline",
+  "eval_id": 8,
+  "prompt": "一个请求同时要求创建rules、创建agent、并顺手修代码bug；请生成只做路由决策的agent定义，必须拆分并拒绝直接执行。",
+  "artifacts": [
+    {
+      "type": "agent_definition",
+      "path": "iteration-3/eval-8/without_skill/outputs/multi-target-chain-request-router.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "basic_multi_intent_routing",
+    "separate_code_fix_note"
+  ]
+}
