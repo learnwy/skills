@@ -1,0 +1,22 @@
+{
+  "run_id": "eval-3-with_skill",
+  "expectations": [
+    {
+      "text": "拦截并修正绝对路径污染",
+      "passed": true,
+      "evidence": "matched"
+    },
+    {
+      "text": "保持 prerequisites gate 不可绕过",
+      "passed": true,
+      "evidence": "matched"
+    },
+    {
+      "text": "输出项目内相对路径版本的修正内容",
+      "passed": true,
+      "evidence": "matched"
+    }
+  ],
+  "pass_count": 3,
+  "total": 3
+}

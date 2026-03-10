@@ -1,0 +1,152 @@
+{
+  "skill_name": "project-skill-writer",
+  "iteration": 1,
+  "metrics": [
+    {
+      "config": "with_skill",
+      "passed": 8,
+      "total": 9,
+      "pass_rate": 0.8889
+    },
+    {
+      "config": "baseline",
+      "passed": 7,
+      "total": 9,
+      "pass_rate": 0.7778
+    }
+  ],
+  "runs": [
+    {
+      "run_id": "eval-1-with_skill",
+      "expectations": [
+        {
+          "text": "明确项目级输出路径，不写入全局目录",
+          "passed": false,
+          "evidence": "missing signal"
+        },
+        {
+          "text": "输出含 frontmatter 与触发说明",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "包含 prerequisites 或前置依赖检查",
+          "passed": true,
+          "evidence": "matched"
+        }
+      ],
+      "pass_count": 2,
+      "total": 3
+    },
+    {
+      "run_id": "eval-1-baseline",
+      "expectations": [
+        {
+          "text": "明确项目级输出路径，不写入全局目录",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "输出含 frontmatter 与触发说明",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "包含 prerequisites 或前置依赖检查",
+          "passed": true,
+          "evidence": "matched"
+        }
+      ],
+      "pass_count": 3,
+      "total": 3
+    },
+    {
+      "run_id": "eval-2-with_skill",
+      "expectations": [
+        {
+          "text": "识别 skill、rule、agent 混合请求并做边界路由",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "拒绝 ~/.trae/skills 全局写入",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "保留可执行的项目级技能产出方案",
+          "passed": true,
+          "evidence": "matched"
+        }
+      ],
+      "pass_count": 3,
+      "total": 3
+    },
+    {
+      "run_id": "eval-2-baseline",
+      "expectations": [
+        {
+          "text": "识别 skill、rule、agent 混合请求并做边界路由",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "拒绝 ~/.trae/skills 全局写入",
+          "passed": false,
+          "evidence": "missing signal"
+        },
+        {
+          "text": "保留可执行的项目级技能产出方案",
+          "passed": true,
+          "evidence": "matched"
+        }
+      ],
+      "pass_count": 2,
+      "total": 3
+    },
+    {
+      "run_id": "eval-3-with_skill",
+      "expectations": [
+        {
+          "text": "拦截并修正绝对路径污染",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "保持 prerequisites gate 不可绕过",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "输出项目内相对路径版本的修正内容",
+          "passed": true,
+          "evidence": "matched"
+        }
+      ],
+      "pass_count": 3,
+      "total": 3
+    },
+    {
+      "run_id": "eval-3-baseline",
+      "expectations": [
+        {
+          "text": "拦截并修正绝对路径污染",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "保持 prerequisites gate 不可绕过",
+          "passed": false,
+          "evidence": "missing signal"
+        },
+        {
+          "text": "输出项目内相对路径版本的修正内容",
+          "passed": true,
+          "evidence": "matched"
+        }
+      ],
+      "pass_count": 2,
+      "total": 3
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "run_id": "eval-2-baseline",
+  "expectations": [
+    {
+      "text": "识别 skill、rule、agent 混合请求并做边界路由",
+      "passed": true,
+      "evidence": "matched"
+    },
+    {
+      "text": "拒绝 ~/.trae/skills 全局写入",
+      "passed": false,
+      "evidence": "missing signal"
+    },
+    {
+      "text": "保留可执行的项目级技能产出方案",
+      "passed": true,
+      "evidence": "matched"
+    }
+  ],
+  "pass_count": 2,
+  "total": 3
+}

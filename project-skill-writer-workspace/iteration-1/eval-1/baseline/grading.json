@@ -1,0 +1,22 @@
+{
+  "run_id": "eval-1-baseline",
+  "expectations": [
+    {
+      "text": "明确项目级输出路径，不写入全局目录",
+      "passed": true,
+      "evidence": "matched"
+    },
+    {
+      "text": "输出含 frontmatter 与触发说明",
+      "passed": true,
+      "evidence": "matched"
+    },
+    {
+      "text": "包含 prerequisites 或前置依赖检查",
+      "passed": true,
+      "evidence": "matched"
+    }
+  ],
+  "pass_count": 3,
+  "total": 3
+}

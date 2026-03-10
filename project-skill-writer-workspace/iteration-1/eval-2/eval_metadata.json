@@ -1,0 +1,10 @@
+{
+  "eval_id": 2,
+  "eval_name": "mixed-request-routing-and-global-path-block",
+  "prompt": "同时帮我写一个 project rule 和 agent，顺便把 skill 放到 ~/.trae/skills。",
+  "assertions": [
+    "识别 skill、rule、agent 混合请求并做边界路由",
+    "拒绝 ~/.trae/skills 全局写入",
+    "保留可执行的项目级技能产出方案"
+  ]
+}

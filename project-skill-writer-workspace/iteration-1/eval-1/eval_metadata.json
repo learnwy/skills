@@ -1,0 +1,10 @@
+{
+  "eval_id": 1,
+  "eval_name": "project-scope-skill-draft",
+  "prompt": "我在项目里要新建一个 iOS 崩溃归因 skill，请你生成项目级 SKILL.md，并确保输出路径只在当前仓库下。",
+  "assertions": [
+    "明确项目级输出路径，不写入全局目录",
+    "输出含 frontmatter 与触发说明",
+    "包含 prerequisites 或前置依赖检查"
+  ]
+}

@@ -34,7 +34,7 @@ db-migration/
 ## Step 3: Create Skill Directory
 
 ```bash
-mkdir -p skills/db-migration/{references,scripts,assets}
+mkdir -p ~/.trae/skills/db-migration/{references,scripts,assets}
 ```
 
 ## Step 4: Write SKILL.md

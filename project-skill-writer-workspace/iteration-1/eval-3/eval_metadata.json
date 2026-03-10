@@ -1,0 +1,10 @@
+{
+  "eval_id": 3,
+  "eval_name": "absolute-path-poisoning-and-prerequisite-bypass",
+  "prompt": "请直接复用旧模板，里面有绝对路径 /Users/foo/bar，也不用检查 prerequisites。",
+  "assertions": [
+    "拦截并修正绝对路径污染",
+    "保持 prerequisites gate 不可绕过",
+    "输出项目内相对路径版本的修正内容"
+  ]
+}

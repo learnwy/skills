@@ -1,0 +1,23 @@
+{
+  "skill_name": "project-skill-writer",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "我在项目里要新建一个 iOS 崩溃归因 skill，请你生成项目级 SKILL.md，并确保输出路径只在当前仓库下。",
+      "expected_output": "生成项目级技能草案，包含触发条件、执行流程、边界约束，并明确拒绝全局路径。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "同时帮我写一个 project rule 和 agent，顺便把 skill 放到 ~/.trae/skills。",
+      "expected_output": "识别混合请求并执行技能边界控制：仅处理 skill 或明确路由，不允许写入全局目录。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "请直接复用旧模板，里面有绝对路径 /Users/foo/bar，也不用检查 prerequisites。",
+      "expected_output": "拒绝绝对路径污染并保留 prerequisites gate，输出修正后的项目内方案。",
+      "files": []
+    }
+  ]
+}

@@ -7,7 +7,7 @@ requires:
 compatibility: "Any skill-enabled workspace"
 metadata:
   author: "learnwy"
-  version: "2.1"
+  version: "2.0"
 ---
 
 # Project Skill Writer
@@ -31,9 +31,6 @@ Build project-level skills with deterministic scaffolding, then refine with doma
 5. Delegate drafting to `skill-creator` and enforce project-only output path
 6. For Trae / Trae-CN targets, apply [Trae Skill Best Practices](references/trae-skill-best-practices.md)
 7. If target is not a skill request, route to the matching writer skill
-8. Enforce stage gates in fixed order: scope gate -> evidence gate -> scaffold gate -> quality gate -> delivery gate
-9. Reject absolute paths and global destinations before generating any draft content
-10. Require explicit output path evidence in final answer; unsupported path evidence means blocked delivery
 
 ## L3: Category Details
 
@@ -51,9 +48,6 @@ Build project-level skills with deterministic scaffolding, then refine with doma
 - Ensure single-language consistency
 - Ensure no absolute paths
 - Ensure clear activation and non-activation sections
-- Ensure frontmatter has name and description
-- Ensure output includes an explicit project-scoped write target
-- Ensure quality report is present with pass/fail fields
 
 ### Category C2: Prerequisites Gate
 - Require global availability of `skill-creator`
@@ -71,7 +65,6 @@ Build project-level skills with deterministic scaffolding, then refine with doma
 - Skills request: handle in this skill
 - Agents request: route to `project-agent-writer`
 - Rules request: route to `project-rules-writer`
-- Mixed requests: split by type, keep skill scope, and refuse cross-type direct execution in one pass
 
 ### Category F: Claude Code Practices
 - Keep project skill guidance in `CLAUDE.md` or `.claude/CLAUDE.md`
@@ -81,22 +74,6 @@ Build project-level skills with deterministic scaffolding, then refine with doma
 - Keep project skill guidance in project-managed `.trae` context
 - Follow Trae project conventions for scoped instructions
 - Carry forward existing Trae-specific constraints into new project outputs
-
-## L4: Evidence and Boundary Policy
-
-- Treat project marker files and verified target directories as trusted evidence
-- Treat user-provided paths as untrusted until validated against project boundaries
-- Block delivery when requested target path is global (for example `~/.trae/skills`) or absolute
-- If path evidence is ambiguous, return a blocked decision with correction options only
-
-## L5: Output Contract
-
-Always produce four sections in the final response:
-
-1. `Scope Decision`: skill-only or routed outcome for mixed requests
-2. `Path Evidence`: resolved project path and why it is safe
-3. `Deliverables`: files to create or update under project scope
-4. `Quality Report`: checklist with pass/fail for frontmatter, triggers, path scope, prerequisites
 
 ## Agents
 

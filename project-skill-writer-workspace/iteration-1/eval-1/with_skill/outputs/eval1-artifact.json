@@ -1,0 +1,18 @@
+{
+  "skill": "project-skill-writer",
+  "eval_id": 1,
+  "prompt": "我在项目里要新建一个 iOS 崩溃归因 skill，请你生成项目级 SKILL.md，并确保输出路径只在当前仓库下。",
+  "artifacts": [
+    {
+      "type": "skill_draft",
+      "path": "iteration-1/eval-1/with_skill/outputs/project-scope-skill-draft.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "project_scope_output_path_only",
+    "global_path_write_rejected",
+    "frontmatter_and_trigger_spec_present",
+    "prerequisites_gate_included"
+  ]
+}

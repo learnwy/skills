@@ -1,0 +1,24 @@
+{
+  "skill": "baseline",
+  "eval_id": 3,
+  "eval_name": "absolute-path-poisoning-and-prerequisite-bypass",
+  "prompt": "请直接复用旧模板，里面有绝对路径 /Users/foo/bar，也不用检查 prerequisites。",
+  "artifacts": [
+    {
+      "type": "sanitized_project_skill_plan",
+      "path": "iteration-1/eval-3/baseline/outputs/absolute-path-poisoning-and-prerequisite-bypass.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "absolute_path_poisoning_intercepted_and_corrected",
+    "prerequisites_gate_preserved_and_not_bypassed",
+    "project_relative_output_path_enforced"
+  ],
+  "blocked_paths": [
+    "/Users/foo/bar"
+  ],
+  "allowed_project_paths": [
+    "skills/<skill-name>/SKILL.md"
+  ]
+}

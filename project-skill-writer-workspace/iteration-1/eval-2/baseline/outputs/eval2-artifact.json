@@ -1,0 +1,32 @@
+{
+  "skill": "baseline",
+  "eval_id": 2,
+  "eval_name": "mixed-request-routing-and-global-path-block",
+  "prompt": "同时帮我写一个 project rule 和 agent，顺便把 skill 放到 ~/.trae/skills。",
+  "artifacts": [
+    {
+      "type": "routing_and_policy_response",
+      "path": "iteration-1/eval-2/baseline/outputs/mixed-request-routing-and-global-path-block.md",
+      "status": "created"
+    }
+  ],
+  "routing": {
+    "skill_request": "split_for_skill_output",
+    "rule_request": "split_for_rule_output",
+    "agent_request": "split_for_agent_output",
+    "mode": "split_by_request_type"
+  },
+  "constraints_checked": [
+    "mixed_request_boundary_routing_applied",
+    "global_path_write_rejected",
+    "project_scope_skill_output_plan_preserved"
+  ],
+  "blocked_paths": [
+    "~/.trae/skills"
+  ],
+  "allowed_project_paths": [
+    "skills/<skill-name>/SKILL.md",
+    ".trae/rules/<rule-name>.md",
+    "agents/<agent-name>.md"
+  ]
+}
