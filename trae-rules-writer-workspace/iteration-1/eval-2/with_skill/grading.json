@@ -1,0 +1,22 @@
+{
+  "run_id": "eval-2-with_skill",
+  "expectations": [
+    {
+      "text": "生成 .trae/rules/security.md",
+      "passed": false,
+      "evidence": "missing signal"
+    },
+    {
+      "text": "alwaysApply: true",
+      "passed": false,
+      "evidence": "missing signal"
+    },
+    {
+      "text": "路径为相对路径",
+      "passed": true,
+      "evidence": "matched"
+    }
+  ],
+  "pass_count": 1,
+  "total": 3
+}

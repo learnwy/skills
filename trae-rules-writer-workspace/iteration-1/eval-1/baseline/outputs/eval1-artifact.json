@@ -1,0 +1,13 @@
+{
+  "skill": "none",
+  "eval_id": 1,
+  "prompt": "Create a project rule for our TypeScript React project that enforces PascalCase for components and camelCase for functions",
+  "artifacts": [
+    {
+      "type": "rule_definition",
+      "path": "iteration-1/eval-1/baseline/outputs/.code-style.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": []
+}

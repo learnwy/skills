@@ -1,0 +1,17 @@
+{
+  "run_id": "eval-3-baseline_v1_6",
+  "expectations": [
+    {
+      "text": "globs: *.ts,*.tsx 格式正确",
+      "passed": true,
+      "evidence": "matched"
+    },
+    {
+      "text": "Quality Report 存在",
+      "passed": true,
+      "evidence": "matched"
+    }
+  ],
+  "pass_count": 2,
+  "total": 2
+}

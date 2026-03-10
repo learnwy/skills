@@ -1,0 +1,10 @@
+{
+  "eval_id": 2,
+  "eval_name": "security-rule-creation",
+  "prompt": "Set up security rules for our project - never log passwords, always validate input at entry points",
+  "assertions": [
+    "生成 .trae/rules/security.md",
+    "alwaysApply: true",
+    "路径为相对路径"
+  ]
+}

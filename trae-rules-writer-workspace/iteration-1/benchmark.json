@@ -1,12 +1,142 @@
 {
   "skill_name": "trae-rules-writer",
   "iteration": 1,
-  "timestamp": "2026-02-27T21:20:00Z",
-  "configurations": [
+  "metrics": [
     {
-      "name": "with_skill",
-      "description": "Using trae-rules-writer skill"
+      "config": "with_skill",
+      "passed": 5,
+      "total": 8,
+      "pass_rate": 0.625
+    },
+    {
+      "config": "baseline",
+      "passed": 4,
+      "total": 8,
+      "pass_rate": 0.5
     }
   ],
-  "evals": []
+  "runs": [
+    {
+      "run_id": "eval-1-with_skill",
+      "expectations": [
+        {
+          "text": "生成 .trae/rules/code-style.md",
+          "passed": false,
+          "evidence": "missing signal"
+        },
+        {
+          "text": "globs 格式正确（无引号数组）",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "alwaysApply: true",
+          "passed": true,
+          "evidence": "matched"
+        }
+      ],
+      "pass_count": 2,
+      "total": 3
+    },
+    {
+      "run_id": "eval-1-baseline",
+      "expectations": [
+        {
+          "text": "生成 .trae/rules/code-style.md",
+          "passed": false,
+          "evidence": "missing signal"
+        },
+        {
+          "text": "globs 格式正确（无引号数组）",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "alwaysApply: true",
+          "passed": true,
+          "evidence": "matched"
+        }
+      ],
+      "pass_count": 2,
+      "total": 3
+    },
+    {
+      "run_id": "eval-2-with_skill",
+      "expectations": [
+        {
+          "text": "生成 .trae/rules/security.md",
+          "passed": false,
+          "evidence": "missing signal"
+        },
+        {
+          "text": "alwaysApply: true",
+          "passed": false,
+          "evidence": "missing signal"
+        },
+        {
+          "text": "路径为相对路径",
+          "passed": true,
+          "evidence": "matched"
+        }
+      ],
+      "pass_count": 1,
+      "total": 3
+    },
+    {
+      "run_id": "eval-2-baseline",
+      "expectations": [
+        {
+          "text": "生成 .trae/rules/security.md",
+          "passed": false,
+          "evidence": "missing signal"
+        },
+        {
+          "text": "alwaysApply: true",
+          "passed": false,
+          "evidence": "missing signal"
+        },
+        {
+          "text": "路径为相对路径",
+          "passed": true,
+          "evidence": "matched"
+        }
+      ],
+      "pass_count": 1,
+      "total": 3
+    },
+    {
+      "run_id": "eval-3-with_skill",
+      "expectations": [
+        {
+          "text": "使用 globs: *.ts,*.tsx",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "不使用绝对路径",
+          "passed": true,
+          "evidence": "matched"
+        }
+      ],
+      "pass_count": 2,
+      "total": 2
+    },
+    {
+      "run_id": "eval-3-baseline",
+      "expectations": [
+        {
+          "text": "使用 globs: *.ts,*.tsx",
+          "passed": false,
+          "evidence": "missing signal"
+        },
+        {
+          "text": "不使用绝对路径",
+          "passed": true,
+          "evidence": "matched"
+        }
+      ],
+      "pass_count": 1,
+      "total": 2
+    }
+  ]
 }

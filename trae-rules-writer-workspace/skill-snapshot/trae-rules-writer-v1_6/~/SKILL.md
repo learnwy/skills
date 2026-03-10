@@ -1,11 +1,11 @@
 ---
 name: trae-rules-writer
-description: "Create Trae IDE rules (.trae/rules/*.md) for AI behavior constraints. Use when user wants to: create a project rule, set up code style guidelines, enforce naming conventions, make AI always do X, customize AI behavior for specific files, configure AI coding standards, or establish project-specific AI guidelines. Triggers on: 'create rule', 'project rule', '创建 rule', '.trae/rules/', 'AGENTS.md', 'CLAUDE.md', 'set up coding rules', 'make AI always use PascalCase', 'enforce naming convention', 'configure AI behavior'. Do NOT use for skills (use project-skill-writer) or agents (use project-agent-writer)."
+description: "Create Trae IDE rules (.trae/rules/*.md) for AI behavior constraints. Use when user wants to: create a project rule, set up code style guidelines, enforce naming conventions, make AI always do X, customize AI behavior for specific files, configure AI coding standards, or establish project-specific AI guidelines. Triggers on: 'create rule', '创建 rule', 'project rule', '.trae/rules/', 'AGENTS.md', 'CLAUDE.md', 'set up coding rules', 'make AI always use PascalCase', 'enforce naming convention', 'configure AI behavior'. Do NOT use for skills (use project-skill-writer) or agents (use project-agent-writer)."
 license: "MIT"
 compatibility: "Requires Trae IDE"
 metadata:
   author: "learnwy"
-  version: "1.7"
+  version: "1.6"
 ---
 
 # Trae Rules Writer
@@ -130,15 +130,6 @@ Concise guidance for AI.
 
 ## Phase 3: Quality & Lessons Learned
 
-### Stage Gates (MANDATORY)
-
-Before returning any rule, you MUST pass these gates in order:
-
-1. **Gate 1: Format Gate** - Verify globs format is correct (no quotes, no YAML arrays)
-2. **Gate 2: Path Gate** - Verify all paths are relative (no /Users/, no /home/)
-3. **Gate 3: Description Gate** - Verify description is present
-4. **Gate 4: Conflict Gate** - Verify no conflicting rules exist
-
 ### ⚠️ Common Mistakes (CRITICAL)
 
 These mistakes break rules. **Always check:**
@@ -236,38 +227,6 @@ globs: *.tsx,*.jsx
 Phase 3: Verify no conflicts, test activation
 ```
 
-
-## Phase 4: Output Contract (MANDATORY)
-
-Every response MUST include these four sections:
-
-1. **Scope Decision**: What rule is being created
-2. **Path Evidence**: Verified project path and why it is safe
-3. **Rule Content**: The actual rule content with frontmatter
-4. **Quality Report**: Pass/fail for each stage gate
-
-Example:
-```
-## Scope Decision
-Creating code-style.md for TypeScript React project
-
-## Path Evidence
-Project root verified at ./my-project (relative path confirmed)
-
-## Rule Content
-```yaml
-description: Naming conventions for TypeScript React
-globs: *.ts,*.tsx
-alwaysApply: true
-```
-... rule content ...
-
-## Quality Report
-- [x] Format Gate: globs format correct
-- [x] Path Gate: no absolute paths
-- [x] Description Gate: description present
-- [x] Conflict Gate: no conflicts found
-```
 
 ## Agents
 

@@ -1,0 +1,9 @@
+{
+  "eval_id": 3,
+  "eval_name": "typescript-interface-enforcement",
+  "prompt": "Make AI always use TypeScript interfaces instead of types for object definitions",
+  "assertions": [
+    "使用 globs: *.ts,*.tsx",
+    "不使用绝对路径"
+  ]
+}

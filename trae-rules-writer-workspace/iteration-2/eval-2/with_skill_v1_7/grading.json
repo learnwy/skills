@@ -1,0 +1,22 @@
+{
+  "run_id": "eval-2-with_skill_v1_7",
+  "expectations": [
+    {
+      "text": "生成 security.md",
+      "passed": true,
+      "evidence": "matched"
+    },
+    {
+      "text": "alwaysApply: true",
+      "passed": true,
+      "evidence": "matched"
+    },
+    {
+      "text": "Quality Report 存在",
+      "passed": false,
+      "evidence": "missing signal"
+    }
+  ],
+  "pass_count": 2,
+  "total": 3
+}

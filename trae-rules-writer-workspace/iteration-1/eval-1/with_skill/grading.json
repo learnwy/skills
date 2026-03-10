@@ -1,0 +1,22 @@
+{
+  "run_id": "eval-1-with_skill",
+  "expectations": [
+    {
+      "text": "生成 .trae/rules/code-style.md",
+      "passed": false,
+      "evidence": "missing signal"
+    },
+    {
+      "text": "globs 格式正确（无引号数组）",
+      "passed": true,
+      "evidence": "matched"
+    },
+    {
+      "text": "alwaysApply: true",
+      "passed": true,
+      "evidence": "matched"
+    }
+  ],
+  "pass_count": 2,
+  "total": 3
+}

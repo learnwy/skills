@@ -1,0 +1,10 @@
+{
+  "eval_id": 1,
+  "eval_name": "typescript-naming-convention",
+  "prompt": "Create a project rule for our TypeScript React project that enforces PascalCase for components and camelCase for functions",
+  "assertions": [
+    "生成 .trae/rules/code-style.md",
+    "globs 格式正确（无引号数组）",
+    "alwaysApply: true"
+  ]
+}

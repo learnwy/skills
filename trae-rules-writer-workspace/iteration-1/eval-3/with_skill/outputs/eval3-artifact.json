@@ -1,0 +1,25 @@
+{
+  "skill": "trae-rules-writer",
+  "eval_id": 3,
+  "prompt": "Make AI always use TypeScript interfaces instead of types for object definitions",
+  "artifacts": [
+    {
+      "type": "project_rule",
+      "path": "iteration-1/eval-3/with_skill/outputs/.typescript-interface.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "globs_format_correct_no_quotes",
+    "globs_format_correct_no_yaml_array",
+    "description_included",
+    "alwaysApply_appropriate_value",
+    "interface_vs_type_distinction_clear"
+  ],
+  "rule_quality": {
+    "globs_format": "*.ts,*.tsx",
+    "has_description": true,
+    "alwaysApply": false,
+    "language": "English"
+  }
+}

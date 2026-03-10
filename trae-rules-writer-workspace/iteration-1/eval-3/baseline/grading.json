@@ -1,0 +1,17 @@
+{
+  "run_id": "eval-3-baseline",
+  "expectations": [
+    {
+      "text": "使用 globs: *.ts,*.tsx",
+      "passed": false,
+      "evidence": "missing signal"
+    },
+    {
+      "text": "不使用绝对路径",
+      "passed": true,
+      "evidence": "matched"
+    }
+  ],
+  "pass_count": 1,
+  "total": 2
+}

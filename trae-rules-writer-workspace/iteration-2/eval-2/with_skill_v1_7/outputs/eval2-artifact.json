@@ -1,0 +1,31 @@
+{
+  "skill": "trae-rules-writer-v1.7",
+  "eval_id": 2,
+  "eval_name": "security-rule-creation",
+  "prompt": "Set up security rules for our project - never log passwords, always validate input at entry points",
+  "artifacts": [
+    {
+      "type": "rule_file",
+      "path": ".trae/rules/security.md",
+      "status": "created",
+      "frontmatter": {
+        "description": "Security guidelines for the project - prevent password leakage and validate inputs",
+        "alwaysApply": true
+      }
+    }
+  ],
+  "quality_report": {
+    "format_gate": "passed",
+    "path_gate": "passed",
+    "description_gate": "passed",
+    "conflict_gate": "passed"
+  },
+  "rules_created": [
+    {
+      "name": "security.md",
+      "description": "Security guidelines for the project - prevent password leakage and validate inputs",
+      "alwaysApply": true,
+      "path": ".trae/rules/security.md"
+    }
+  ]
+}

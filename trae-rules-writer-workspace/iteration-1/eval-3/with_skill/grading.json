@@ -1,0 +1,17 @@
+{
+  "run_id": "eval-3-with_skill",
+  "expectations": [
+    {
+      "text": "使用 globs: *.ts,*.tsx",
+      "passed": true,
+      "evidence": "matched"
+    },
+    {
+      "text": "不使用绝对路径",
+      "passed": true,
+      "evidence": "matched"
+    }
+  ],
+  "pass_count": 2,
+  "total": 2
+}

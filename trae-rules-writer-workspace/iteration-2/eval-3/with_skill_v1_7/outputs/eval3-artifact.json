@@ -1,0 +1,37 @@
+{
+  "eval_id": 3,
+  "skill_version": "1.7",
+  "prompt": "Make AI always use TypeScript interfaces instead of types for object definitions",
+  "expected_output": "Creates a rule with globs: *.ts,*.tsx enforcing interface usage for objects",
+  "output_file": "typescript-interface.md",
+  "four_part_contract": {
+    "scope_decision": "创建 typescript-interface.md，强制 AI 在 TypeScript 项目中使用 interface 而非 type 定义对象结构",
+    "path_evidence": "项目根目录：/Users/wangyang.learnwy/learnwy/learnwy/skills/trae-rules-writer-workspace/iteration-2/eval-3/with_skill_v1_7/，输出路径：outputs/typescript-interface.md，使用相对路径，无绝对路径",
+    "rule_content": "description: 使用 TypeScript interface 而非 type 定义对象结构\nglobs: *.ts,*.tsx\nalwaysApply: false\n\n# TypeScript Interface 规范\n\n## 对象定义\n\n优先使用 `interface` 而非 `type` 定义对象结构",
+    "quality_report": {
+      "format_gate": "PASS - globs 格式正确: globs: *.ts,*.tsx",
+      "path_gate": "PASS - 无绝对路径，使用相对路径",
+      "description_gate": "PASS - description 已包含",
+      "conflict_gate": "PASS - 无冲突规则"
+    }
+  },
+  "artifact_content": {
+    "frontmatter": {
+      "description": "使用 TypeScript interface 而非 type 定义对象结构",
+      "globs": "*.ts,*.tsx",
+      "alwaysApply": false
+    },
+    "rule_title": "TypeScript Interface 规范",
+    "sections": [
+      "对象定义 - 优先使用 interface",
+      "扩展场景 - interface 支持声明合并",
+      "适用场景 - interface vs type 对比表"
+    ]
+  },
+  "quality_checks": {
+    "globs_format": "PASS - 无引号，逗号分隔",
+    "description_present": "PASS",
+    "relative_paths": "PASS",
+    "no_conflicts": "PASS"
+  }
+}
