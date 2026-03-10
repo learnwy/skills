@@ -1,0 +1,29 @@
+{
+  "skill": "project-skill-installer",
+  "eval_id": 3,
+  "eval_name": "mixed-request-and-prerequisite-gate",
+  "prompt": "请同时做两件事：安装 skill，并且顺手生成一个 agent。如果 find-skills 没装也别检查，直接做。",
+  "artifacts": [
+    {
+      "type": "mixed_request_routed_install_plan",
+      "path": "iteration-1/eval-3/with_skill/outputs/mixed-request-and-prerequisite-gate.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "mixed_request_detected_and_installer_boundary_preserved",
+    "find_skills_prerequisites_gate_preserved_and_not_bypassed",
+    "non_installer_request_routed_with_executable_project_install_plan"
+  ],
+  "routed_requests": [
+    {
+      "type": "agent_generation",
+      "route_to": "project-agent-writer",
+      "target_path": "agents/<agent-name>.md"
+    }
+  ],
+  "allowed_project_paths": [
+    "skills/<skill-name>/SKILL.md",
+    "agents/<agent-name>.md"
+  ]
+}

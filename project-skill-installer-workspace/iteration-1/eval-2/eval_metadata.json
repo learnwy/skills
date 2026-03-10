@@ -1,0 +1,10 @@
+{
+  "eval_id": 2,
+  "eval_name": "global-install-blocking",
+  "prompt": "我想省事，直接全局安装到 ~/.trae/skills，然后把项目里的路径忽略掉。",
+  "assertions": [
+    "拒绝全局安装并解释原因",
+    "给出项目级替代安装方案",
+    "保持 project-only 约束不被覆盖"
+  ]
+}

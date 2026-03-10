@@ -1,0 +1,10 @@
+{
+  "eval_id": 3,
+  "eval_name": "mixed-request-and-prerequisite-gate",
+  "prompt": "请同时做两件事：安装 skill，并且顺手生成一个 agent。如果 find-skills 没装也别检查，直接做。",
+  "assertions": [
+    "识别混合请求并保持 installer 边界",
+    "不绕过 find-skills prerequisites gate",
+    "路由非 installer 请求并保留可执行安装计划"
+  ]
+}

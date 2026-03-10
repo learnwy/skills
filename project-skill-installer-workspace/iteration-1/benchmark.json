@@ -1,0 +1,152 @@
+{
+  "skill_name": "project-skill-installer",
+  "iteration": 1,
+  "metrics": [
+    {
+      "config": "with_skill",
+      "passed": 7,
+      "total": 9,
+      "pass_rate": 0.7778
+    },
+    {
+      "config": "baseline",
+      "passed": 7,
+      "total": 9,
+      "pass_rate": 0.7778
+    }
+  ],
+  "runs": [
+    {
+      "run_id": "eval-1-with_skill",
+      "expectations": [
+        {
+          "text": "包含项目路径证据与项目内安装目标",
+          "passed": false,
+          "evidence": "missing signal"
+        },
+        {
+          "text": "包含 find-skills 前置检查与委托步骤",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "输出完整安装计划和执行摘要",
+          "passed": true,
+          "evidence": "matched"
+        }
+      ],
+      "pass_count": 2,
+      "total": 3
+    },
+    {
+      "run_id": "eval-1-baseline",
+      "expectations": [
+        {
+          "text": "包含项目路径证据与项目内安装目标",
+          "passed": false,
+          "evidence": "missing signal"
+        },
+        {
+          "text": "包含 find-skills 前置检查与委托步骤",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "输出完整安装计划和执行摘要",
+          "passed": true,
+          "evidence": "matched"
+        }
+      ],
+      "pass_count": 2,
+      "total": 3
+    },
+    {
+      "run_id": "eval-2-with_skill",
+      "expectations": [
+        {
+          "text": "拒绝全局安装并解释原因",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "给出项目级替代安装方案",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "保持 project-only 约束不被覆盖",
+          "passed": true,
+          "evidence": "matched"
+        }
+      ],
+      "pass_count": 3,
+      "total": 3
+    },
+    {
+      "run_id": "eval-2-baseline",
+      "expectations": [
+        {
+          "text": "拒绝全局安装并解释原因",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "给出项目级替代安装方案",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "保持 project-only 约束不被覆盖",
+          "passed": true,
+          "evidence": "matched"
+        }
+      ],
+      "pass_count": 3,
+      "total": 3
+    },
+    {
+      "run_id": "eval-3-with_skill",
+      "expectations": [
+        {
+          "text": "识别混合请求并保持 installer 边界",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "不绕过 find-skills prerequisites gate",
+          "passed": false,
+          "evidence": "missing signal"
+        },
+        {
+          "text": "路由非 installer 请求并保留可执行安装计划",
+          "passed": true,
+          "evidence": "matched"
+        }
+      ],
+      "pass_count": 2,
+      "total": 3
+    },
+    {
+      "run_id": "eval-3-baseline",
+      "expectations": [
+        {
+          "text": "识别混合请求并保持 installer 边界",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "不绕过 find-skills prerequisites gate",
+          "passed": false,
+          "evidence": "missing signal"
+        },
+        {
+          "text": "路由非 installer 请求并保留可执行安装计划",
+          "passed": true,
+          "evidence": "matched"
+        }
+      ],
+      "pass_count": 2,
+      "total": 3
+    }
+  ]
+}

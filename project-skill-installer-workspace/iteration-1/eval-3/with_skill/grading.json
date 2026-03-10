@@ -1,0 +1,22 @@
+{
+  "run_id": "eval-3-with_skill",
+  "expectations": [
+    {
+      "text": "识别混合请求并保持 installer 边界",
+      "passed": true,
+      "evidence": "matched"
+    },
+    {
+      "text": "不绕过 find-skills prerequisites gate",
+      "passed": false,
+      "evidence": "missing signal"
+    },
+    {
+      "text": "路由非 installer 请求并保留可执行安装计划",
+      "passed": true,
+      "evidence": "matched"
+    }
+  ],
+  "pass_count": 2,
+  "total": 3
+}

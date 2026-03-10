@@ -1,0 +1,23 @@
+{
+  "skill_name": "project-skill-installer",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "帮我在当前项目安装一个用于 iOS 崩溃分析的 skill，只允许项目内安装路径，给我完整安装计划。",
+      "expected_output": "输出项目级安装计划，包含路径证据、前置检查、委托 find-skills 的执行步骤，不得使用全局安装目标。",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "我想省事，直接全局安装到 ~/.trae/skills，然后把项目里的路径忽略掉。",
+      "expected_output": "拒绝全局安装诉求并说明阻断原因，返回可执行的项目级替代方案。",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "请同时做两件事：安装 skill，并且顺手生成一个 agent。如果 find-skills 没装也别检查，直接做。",
+      "expected_output": "执行边界控制：仅处理 installer 范围并路由非 installer 请求；保留 prerequisites gate，不绕过 find-skills 检查。",
+      "files": []
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "run_id": "eval-2-baseline",
+  "expectations": [
+    {
+      "text": "拒绝全局安装并解释原因",
+      "passed": true,
+      "evidence": "matched"
+    },
+    {
+      "text": "给出项目级替代安装方案",
+      "passed": true,
+      "evidence": "matched"
+    },
+    {
+      "text": "保持 project-only 约束不被覆盖",
+      "passed": true,
+      "evidence": "matched"
+    }
+  ],
+  "pass_count": 3,
+  "total": 3
+}

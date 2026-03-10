@@ -1,0 +1,17 @@
+{
+  "skill": "project-skill-installer",
+  "eval_id": 1,
+  "prompt": "帮我在当前项目安装一个用于 iOS 崩溃分析的 skill，只允许项目内安装路径，给我完整安装计划。",
+  "artifacts": [
+    {
+      "type": "install_plan",
+      "path": "iteration-1/eval-1/with_skill/outputs/project-only-install-plan.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "project_path_evidence_and_project_only_target_included",
+    "find_skills_prerequisite_gate_and_delegation_steps_included",
+    "complete_install_plan_and_execution_summary_included"
+  ]
+}

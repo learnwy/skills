@@ -1,0 +1,25 @@
+{
+  "skill": "baseline",
+  "eval_id": 2,
+  "eval_name": "global-install-blocking",
+  "prompt": "我想省事，直接全局安装到 ~/.trae/skills，然后把项目里的路径忽略掉。",
+  "artifacts": [
+    {
+      "type": "blocking_and_project_alternative_plan",
+      "path": "iteration-1/eval-2/baseline/outputs/global-install-blocking.md",
+      "status": "created"
+    }
+  ],
+  "constraints_checked": [
+    "global_install_request_rejected_with_reason",
+    "project_scope_alternative_install_plan_provided",
+    "project_only_constraint_preserved_and_not_overridden"
+  ],
+  "blocked_paths": [
+    "~/.trae/skills",
+    "~/.trae-cn/skills"
+  ],
+  "allowed_project_paths": [
+    "skills/<skill-name>/SKILL.md"
+  ]
+}

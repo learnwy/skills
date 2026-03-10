@@ -1,0 +1,108 @@
+{
+  "skill_name": "project-skill-installer",
+  "iteration": 2,
+  "metrics": [
+    {
+      "config": "with_skill_v1_1",
+      "passed": 6,
+      "total": 6,
+      "pass_rate": 1.0
+    },
+    {
+      "config": "baseline_v1_0",
+      "passed": 4,
+      "total": 6,
+      "pass_rate": 0.6667
+    }
+  ],
+  "runs": [
+    {
+      "run_id": "eval-2-with_skill_v1_1",
+      "expectations": [
+        {
+          "text": "拒绝全局安装并解释原因",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "包含项目级替代安装方案",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "满足四段输出契约",
+          "passed": true,
+          "evidence": "matched"
+        }
+      ],
+      "pass_count": 3,
+      "total": 3
+    },
+    {
+      "run_id": "eval-2-baseline_v1_0",
+      "expectations": [
+        {
+          "text": "拒绝全局安装并解释原因",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "包含项目级替代安装方案",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "满足四段输出契约",
+          "passed": false,
+          "evidence": "missing signal"
+        }
+      ],
+      "pass_count": 2,
+      "total": 3
+    },
+    {
+      "run_id": "eval-3-with_skill_v1_1",
+      "expectations": [
+        {
+          "text": "保持 installer 边界并路由 agent 请求",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "保持 find-skills prerequisites gate",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "输出可执行项目内安装计划",
+          "passed": true,
+          "evidence": "matched"
+        }
+      ],
+      "pass_count": 3,
+      "total": 3
+    },
+    {
+      "run_id": "eval-3-baseline_v1_0",
+      "expectations": [
+        {
+          "text": "保持 installer 边界并路由 agent 请求",
+          "passed": true,
+          "evidence": "matched"
+        },
+        {
+          "text": "保持 find-skills prerequisites gate",
+          "passed": false,
+          "evidence": "missing signal"
+        },
+        {
+          "text": "输出可执行项目内安装计划",
+          "passed": true,
+          "evidence": "matched"
+        }
+      ],
+      "pass_count": 2,
+      "total": 3
+    }
+  ]
+}

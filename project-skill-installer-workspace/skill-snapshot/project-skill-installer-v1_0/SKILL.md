@@ -5,9 +5,6 @@ priority: 100
 requires:
   - find-skills
 compatibility: "Any skills-enabled workspace"
-metadata:
-  author: "learnwy"
-  version: "1.1"
 ---
 
 # Project Skill Installer
@@ -31,17 +28,12 @@ Use this skill to perform:
 5. Apply [Agent Skills Core Practices](references/agent-skills-core-practices.md) for output quality
 6. If runtime target is Trae or Trae-CN, apply [Trae Runtime Practices](references/trae-runtime-practices.md)
 7. Return project-only install plan, target path, and action summary
-8. Enforce fixed stage gates: scope gate -> path evidence gate -> prerequisites gate -> delegation gate -> quality gate -> delivery gate
-9. Block global or absolute install targets before delegation
-10. If path evidence is ambiguous, return blocked decision with correction options only
 
 ## L3: Category-Specific Actions
 
 - **Delegation:** always delegate install actions to `find-skills`
 - **Project Scope Enforcement:** reject global target requests and keep output in project paths
 - **Prerequisites Gate:** block execution until `find-skills` is available globally
-- **Mixed Request Boundary:** split installer and non-installer requests; only execute installer scope in this skill
-- **Evidence Priority:** project marker and verified target path override user-provided path hints
 
 ### L3-Claude Code Practices
 - Prefer project instruction and `.claude` project conventions for routed targets
@@ -55,29 +47,6 @@ Use this skill to perform:
 - Require global availability of `find-skills`
 - If missing, prompt user to run:
   - `npx skills add find-skills -g -y`
-
-## L4: Delegation I/O Contract
-
-- Required delegation input:
-  - `runtime_target`
-  - `project_root`
-  - `resolved_install_path`
-  - `project_only=true`
-  - `requested_skill_intent`
-- Required delegation output:
-  - `install_plan`
-  - `target_path`
-  - `risk_notes`
-  - `action_summary`
-
-## L5: Output Contract
-
-Always return four sections:
-
-1. `Scope Decision`: what this skill handles and what is routed away
-2. `Path Evidence`: why the selected path is project-scoped and safe
-3. `Delegation Plan`: how `find-skills` will be invoked with project-only constraints
-4. `Quality Report`: pass/fail checklist for prerequisites, path scope, global-target blocking, runtime adaptation
 
 ## References
 

@@ -1,0 +1,22 @@
+{
+  "run_id": "eval-1-baseline",
+  "expectations": [
+    {
+      "text": "包含项目路径证据与项目内安装目标",
+      "passed": false,
+      "evidence": "missing signal"
+    },
+    {
+      "text": "包含 find-skills 前置检查与委托步骤",
+      "passed": true,
+      "evidence": "matched"
+    },
+    {
+      "text": "输出完整安装计划和执行摘要",
+      "passed": true,
+      "evidence": "matched"
+    }
+  ],
+  "pass_count": 2,
+  "total": 3
+}

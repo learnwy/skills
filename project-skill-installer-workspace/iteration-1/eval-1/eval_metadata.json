@@ -1,0 +1,10 @@
+{
+  "eval_id": 1,
+  "eval_name": "project-only-install-plan",
+  "prompt": "帮我在当前项目安装一个用于 iOS 崩溃分析的 skill，只允许项目内安装路径，给我完整安装计划。",
+  "assertions": [
+    "包含项目路径证据与项目内安装目标",
+    "包含 find-skills 前置检查与委托步骤",
+    "输出完整安装计划和执行摘要"
+  ]
+}

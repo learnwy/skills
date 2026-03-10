@@ -1,0 +1,22 @@
+{
+  "run_id": "eval-2-baseline_v1_0",
+  "expectations": [
+    {
+      "text": "拒绝全局安装并解释原因",
+      "passed": true,
+      "evidence": "matched"
+    },
+    {
+      "text": "包含项目级替代安装方案",
+      "passed": true,
+      "evidence": "matched"
+    },
+    {
+      "text": "满足四段输出契约",
+      "passed": false,
+      "evidence": "missing signal"
+    }
+  ],
+  "pass_count": 2,
+  "total": 3
+}

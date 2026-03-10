@@ -1,0 +1,22 @@
+{
+  "run_id": "eval-3-baseline_v1_0",
+  "expectations": [
+    {
+      "text": "保持 installer 边界并路由 agent 请求",
+      "passed": true,
+      "evidence": "matched"
+    },
+    {
+      "text": "保持 find-skills prerequisites gate",
+      "passed": false,
+      "evidence": "missing signal"
+    },
+    {
+      "text": "输出可执行项目内安装计划",
+      "passed": true,
+      "evidence": "matched"
+    }
+  ],
+  "pass_count": 2,
+  "total": 3
+}
