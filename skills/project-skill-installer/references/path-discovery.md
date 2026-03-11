@@ -1,6 +1,21 @@
 ## Project Skill Install Path Discovery
 
-Load this reference whenever you need to determine where project skills should be installed or updated.
+This reference is used AFTER installation plan design. Load it when:
+1. You have an installation plan and need to determine where skills should be placed
+2. User has confirmed the plan and you're ready to delegate to find-skills
+
+### DO NOT load this first!
+
+**Critical**: Path discovery is the LAST step, not the first!
+
+```
+Correct Flow:
+1. Understand user's goal
+2. Analyze project (existing skills, context, available skills)
+3. Design installation plan
+4. Validate with user (show what will happen)
+5. Only THEN: Load path-discovery to determine output location
+```
 
 ### Runtime Marker Detection
 
@@ -21,24 +36,13 @@ If ambiguity remains, select the most conservative writable path and report why.
 
 ### Discovery Priority
 
-1. Runtime-specific project skill path
+1. Runtime-specific project skill path (detected from markers)
 2. Project-managed shared skill path
 3. Default local `skills/` path
-
-### Runtime-Specific Candidate Paths
-
-- Claude Code: `.claude/skills/` or `.claude/agents/skills/`
-- Codex CLI: `.codex/skills/` or `.codex/agents/skills/`
-- Cursor: `.cursor/skills/` or `.cursor/agents/skills/`
-- Trae / Trae-CN: runtime-managed project skill path
-- Generic fallback: `.agents/skills/`, then `skills/`
 
 ### Validation Rules
 
 - Path must exist or be creatable inside project workspace
 - Path must be writable
 - Selected install path must be included in result output
-
-### Large Project Rule
-
-If repository is large (more than 50 top-level entries or monorepo layout), require user-provided target scope before broad skill discovery.
+- Use project-relative paths, never global paths like `~/.trae/skills`
