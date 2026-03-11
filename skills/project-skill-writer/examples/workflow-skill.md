@@ -1,23 +1,67 @@
-# Complete Workflow: Creating a Skill
+# Complete Workflow: Creating a Skill (Problem-Driven)
 
-End-to-end example of creating a skill from scratch.
+End-to-end example of creating a skill by understanding user's problem.
+
+## The Problem-First Approach
+
+**Old way**: User says "I want a skill" → ask questions → generate
+
+**New way**: User describes frustration → understand problem → analyze project → design → validate → generate
 
 ## Scenario
 
-Create a skill for database migration management.
+**User says**: "I keep writing the same React component boilerplate with TypeScript, styled-components, and tests. Every single time I create a Button or Card, I copy-paste from an old file and modify. It's so repetitive and I always miss something."
 
-## Step 1: Define Purpose and Triggers
+## Step 1: Problem Understanding
 
-**Purpose:** Help AI manage database migrations safely.
+Instead of asking "What do you want to name the skill?", understand the problem:
 
-**Triggers:**
+```
+Problem Analysis:
+- Pattern: "I keep writing the same... every time"
+- Type: Generator (creates code repeatedly)
+- Input: component name, props type
+- Output: complete component files (index.tsx, styles.ts, types.ts, test.tsx)
+- Frequency: high (every new component)
+```
 
-- "create migration"
-- "run migration"
-- "database migration"
-- "schema change"
+## Step 2: Project Analysis
 
-## Step 2: Plan Skill Structure
+Run in parallel:
+- Tech Stack: React + TypeScript + styled-components
+- Conventions: PascalCase for components, functional components with hooks
+- Existing: no similar skill
+
+## Step 3: Design the Skill
+
+Show user BEFORE generating:
+
+```
+I'll create a skill that:
+
+Problem: You keep writing React component boilerplate manually
+Solution: Auto-generate complete component files with styles and tests
+Triggers: "new component", "create component", "generate component"
+Files created: 
+  - {name}/index.tsx (component)
+  - {name}/styles.ts (styled-components)
+  - {name}/types.ts (TypeScript interfaces)
+  - {name}/test.tsx (basic test)
+
+Is this correct? Should I adjust anything?
+```
+
+## Step 4: User Confirms
+
+User says: "Yes, but I also want prop-types generated"
+
+## Step 5: Generate Skill
+
+```bash
+mkdir -p .trae/skills/react-component-generator/{references,scripts,assets}
+```
+
+Write SKILL.md with user's confirmed requirements...
 
 ```
 db-migration/

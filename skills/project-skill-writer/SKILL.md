@@ -1,113 +1,208 @@
 ---
 name: project-skill-writer
-description: "Create or update project-level skills only. Use for project skill authoring and refactoring. Delegate generation to skill-creator and keep outputs in project scope."
+description: "Create or update project-level skills by analyzing user problems and project context. NOT by asking questions - by understanding what users struggle with and designing solutions. Keeps outputs in project scope."
 license: "MIT"
 requires:
   - skill-creator
 compatibility: "Any skill-enabled workspace"
 metadata:
   author: "learnwy"
-  version: "2.1"
+  version: "3.0"
 ---
 
 # Project Skill Writer
 
-Build project-level skills with deterministic scaffolding, then refine with domain evidence.
+**Design Philosophy**: Users don't know what a "skill" is or how to describe one. They know their **problems**. This skill transforms problem descriptions into working skills.
 
-## L1: Create or Update Project Skills
+## Core Principle: Problem-First, Not Questionnaire-First
 
-- Create new project skills under the discovered project skill directory
-- Update existing skill workflows, triggers, and exclusions
-- Normalize path style, language style, and output structure
-- Delegate final drafting to `skill-creator` when needed
-- Reject global-scope output targets
+When a user says "I want a skill" or describes a recurring frustration, **DO NOT ask questions**. Instead:
 
-## L2: Project Workflow Contract
+1. **Understand the problem** - What does the user struggle with?
+2. **Analyze the project** - What code, patterns, and conventions already exist?
+3. **Design the solution** - Recommend a skill architecture
+4. **Validate with user** - Show what will be created, get confirmation
+5. **Generate and deliver** - Create the skill files
 
-1. If repository is large, require user-selected scope before deep analysis
-2. Detect project skill path by loading [Path Discovery](references/path-discovery.md)
-3. Gather project evidence from selected scope only
-4. Check global prerequisite: `skill-creator`; if missing, ask user to install before continuing
-5. Delegate drafting to `skill-creator` and enforce project-only output path
-6. For Trae / Trae-CN targets, apply [Trae Skill Best Practices](references/trae-skill-best-practices.md)
-7. If target is not a skill request, route to the matching writer skill
-8. Enforce stage gates in fixed order: scope gate -> evidence gate -> scaffold gate -> quality gate -> delivery gate
-9. Reject absolute paths and global destinations before generating any draft content
-10. Require explicit output path evidence in final answer; unsupported path evidence means blocked delivery
+## L1: Problem Understanding (The Critical Step)
 
-## L3: Category Details
+### Extract the Problem Statement
 
-### Category A: New Skill Creation
-- Identify one domain per skill
-- Keep triggers focused on user intent, not just keywords
-- Keep file paths project-relative only
+When user mentions any of these, activate this skill:
+- "I keep doing X manually"
+- "Every time I need to Y, I have to..."
+- "Can you create a skill for..."
+- "I wish AI would automatically..."
+- Any repetitive workflow description
 
-### Category B: Existing Skill Update
-- Preserve valid frontmatter fields
-- Replace weak workflow steps with executable steps
-- Move long vendor/runtime details into references
+### Problem Classification
 
-### Category C: Quality Gate
-- Ensure single-language consistency
-- Ensure no absolute paths
-- Ensure clear activation and non-activation sections
-- Ensure frontmatter has name and description
-- Ensure output includes an explicit project-scoped write target
-- Ensure quality report is present with pass/fail fields
+Classify the problem into a skill category:
 
-### Category C2: Prerequisites Gate
-- Require global availability of `skill-creator`
-- If missing, prompt user with installation guidance before execution
-- Suggested commands:
-  - `npx skills add skill-creator -g -y`
+| Problem Pattern | Skill Type | Example |
+|----------------|------------|---------|
+| "I write the same code every time" | Generator | Component generator, API client |
+| "I do the same check every time" | Validator | Linter, security scanner |
+| "I explain the same thing every time" | Informer | Architecture docs, API docs |
+| "I follow the same steps every time" | Workflow | Deployment, release process |
+| "I find and fix the same issues" | Remediation | Bug fixer, refactorer |
 
-### Category D: Reference Loading
-- Load `references/path-discovery.md` for output path discovery and validation
-- Load `references/advanced-patterns.md` only for complex structuring decisions
-- Load `references/trae-target-mode.md` only when runtime target is Trae or Trae-CN
-- Load `references/trae-skill-best-practices.md` only when runtime target is Trae or Trae-CN
+### Ask ONLY When Necessary
 
-### Category E: Target Routing
-- Skills request: handle in this skill
-- Agents request: route to `project-agent-writer`
-- Rules request: route to `project-rules-writer`
-- Mixed requests: split by type, keep skill scope, and refuse cross-type direct execution in one pass
+Only ask questions when:
+- Multiple valid solutions exist and user preference matters
+- Ambiguous terms need clarification ("what kind of component?")
 
-### Category F: Claude Code Practices
-- Keep project skill guidance in `CLAUDE.md` or `.claude/CLAUDE.md`
-- Split specialized guidance by project rule files when needed
+NEVER ask: "What do you want the skill to do?" - you should infer this from their problem.
 
-### Category G: Trae / Trae-CN Practices
-- Keep project skill guidance in project-managed `.trae` context
-- Follow Trae project conventions for scoped instructions
-- Carry forward existing Trae-specific constraints into new project outputs
+## L2: Project Analysis Pipeline
 
-## L4: Evidence and Boundary Policy
+Run these in parallel (they're independent):
 
-- Treat project marker files and verified target directories as trusted evidence
-- Treat user-provided paths as untrusted until validated against project boundaries
-- Block delivery when requested target path is global (for example `~/.trae/skills`) or absolute
-- If path evidence is ambiguous, return a blocked decision with correction options only
+### Analysis 1: Tech Stack Detection
 
-## L5: Output Contract
+```
+Detect from project:
+- Language: from package.json, go.mod, Cargo.toml, Podfile, etc.
+- Framework: React, Vue, SwiftUI, UIKit, etc.
+- Build tools: npm, yarn, pod, cargo, etc.
+```
 
-Always produce four sections in the final response:
+### Analysis 2: Convention Detection
 
-1. `Scope Decision`: skill-only or routed outcome for mixed requests
-2. `Path Evidence`: resolved project path and why it is safe
-3. `Deliverables`: files to create or update under project scope
-4. `Quality Report`: checklist with pass/fail for frontmatter, triggers, path scope, prerequisites
+```
+Find in existing code:
+- Naming patterns: kebab-case, PascalCase, snake_case
+- File organization: src/, lib/, internal/
+- Import patterns: relative vs alias
+```
+
+### Analysis 3: Existing Assets
+
+```
+Check for:
+- .trae/skills/ - existing skills
+- .trae/rules/ - existing rules
+- scripts/ - automation scripts
+- .github/workflows/ - CI/CD
+```
+
+### Analysis 4: Pattern Discovery
+
+```
+Look for:
+- Repeated code structures (component patterns)
+- Similar files that could be templates
+- Common import/order patterns
+```
+
+## L3: Skill Design
+
+Based on Problem + Project Analysis, design the skill:
+
+### Design Output Template
+
+For each skill, define:
+
+```
+## Skill: {name}
+
+### Problem Solved
+{1-sentence description of the problem this skill solves}
+
+### Triggers (auto-detected from problem description)
+- {trigger 1}
+- {trigger 2}
+
+### Architecture
+- Input: {what does skill take}
+- Output: {what does skill produce}
+- Process: {how does skill work}
+
+### Project Integration
+- Output path: {project-relative path}
+- Dependencies: {required skills}
+- Conventions: {from project analysis}
+
+### Quality Criteria
+- {measurable success criteria}
+```
+
+### Design Principles
+
+1. **Single Responsibility**: One skill = one problem solved
+2. **Convention-Aligned**: Use project's naming, structure, patterns
+3. **Minimal Friction**: Triggers should match natural language
+4. **Verifiable Output**: Clear success/failure criteria
+
+## L4: Validation (Before Generation)
+
+Before generating, show user:
+
+```
+I'll create a skill that:
+
+Problem: {user's problem in their words}
+Solution: {what the skill will do}
+Triggers: {when it activates}
+Output: {files it will create}
+
+Is this correct? Should I adjust anything?
+```
+
+WAIT for user confirmation before generating.
+
+## L5: Generation
+
+Only after user confirmation:
+
+1. Use `skill-creator` for scaffolding
+2. Inject project-specific conventions
+3. Set correct output paths
+4. Include quality gates
+
+## L6: Quality Gates
+
+Before delivery, verify:
+
+- [ ] Skill has meaningful triggers (not just filename)
+- [ ] Output path is project-relative, not global
+- [ ] Frontmatter has name and description
+- [ ] Workflow is executable (not just steps)
+- [ ] Dependencies are declared
+- [ ] Examples show real usage
+
+## L7: Output Contract
+
+Always produce four sections:
+
+1. **Problem Understanding**: What problem you identified
+2. **Solution Design**: The skill architecture
+3. **Deliverables**: Files created
+4. **Usage Guide**: How to trigger and use the skill
+
+## Reference: AskUserQuestion Triggers (Limited)
+
+Only use AskUserQuestion when:
+
+```
+Condition: Multiple solutions exist
+Example: "Generate React or Vue components?" (user didn't specify)
+
+DO NOT use for:
+- Asking what they want to name it (infer from problem)
+- Asking where to put it (use project conventions)
+- Asking what language/framework (detect from project)
+```
 
 ## Agents
 
-- [Project Scanner](agents/project-scanner.md): use for large project boundary scan
-- [Tech Stack Analyzer](agents/tech-stack-analyzer.md): use for framework-aware skill design
-- [Quality Validator](agents/quality-validator.md): use before final delivery
-- [Convention Detector](agents/convention-detector.md): use when conventions are implicit
+- [Project Scanner](agents/project-scanner.md): for project analysis
+- [Tech Stack Analyzer](agents/tech-stack-analyzer.md): for tech detection
+- [Convention Detector](agents/convention-detector.md): for pattern extraction
+- [Quality Validator](agents/quality-validator.md): for quality gates
 
 ## References
 
-- [Advanced Patterns](references/advanced-patterns.md)
-- [Path Discovery](references/path-discovery.md)
-- [Trae Target Mode](references/trae-target-mode.md)
-- [Trae Skill Best Practices](references/trae-skill-best-practices.md)
+- [Path Discovery](references/path-discovery.md): Output path determination (load AFTER design)
+- [Advanced Patterns](references/advanced-patterns.md): Skill architecture patterns (workflow, domain, template, multi-variant)
