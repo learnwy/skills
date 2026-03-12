@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MEMORY_DIR="$HOME/.learnwy/ai/memory"
 
 echo "=== Memory Manager: Init ==="
@@ -61,6 +62,31 @@ Go, Swift/ObjC, React/Vue/TypeScript, Python.
 (To be filled through interactions)
 EOF
     echo "Created: identity/you.md"
+fi
+
+if [ ! -f "$MEMORY_DIR/.memoryrc" ]; then
+    cat > "$MEMORY_DIR/.memoryrc" << 'EOF'
+# Memory Manager Configuration
+
+# Load Triggers
+LOAD_ON_START=true
+
+# Save Triggers
+AUTO_SAVE_CONVERSATION=true
+AUTO_SAVE_INTERVAL=3
+
+# Consolidation
+CONSOLIDATE_AFTER=3
+CONSOLIDATE_ON_EXIT=true
+
+# Reflection
+ENABLE_REFLECTION=true
+REFLECTION_INTERVAL=5
+
+# Limits
+MAX_CONVERSATION=5
+EOF
+    echo "Created: .memoryrc"
 fi
 
 echo ""

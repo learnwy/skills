@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MEMORY_DIR="$HOME/.learnwy/ai/memory"
 CONFIG_FILE="$MEMORY_DIR/.memoryrc"
 
@@ -8,34 +9,24 @@ init_config() {
     if [ ! -f "$CONFIG_FILE" ]; then
         cat > "$CONFIG_FILE" << 'EOF'
 # Memory Manager Configuration
-# Generated: 2026-03-12
 
-# === Load Triggers ===
-# When to load memory at session start
+# Load Triggers
 LOAD_ON_START=true
 
-# === Save Triggers ===
-# When to auto-save memory
+# Save Triggers
 AUTO_SAVE_CONVERSATION=true
-AUTO_SAVE_INTERVAL=3  # Save after N conversations
-AUTO_SAVE_ON_EXIT=true
+AUTO_SAVE_INTERVAL=3
 
-# === Consolidation Triggers ===
-CONSOLIDATE_AFTER=3   # Consolidate after N conversations
+# Consolidation
+CONSOLIDATE_AFTER=3
 CONSOLIDATE_ON_EXIT=true
 
-# === Reflection ===
+# Reflection
 ENABLE_REFLECTION=true
-REFLECTION_INTERVAL=5  # Reflect after N conversations
+REFLECTION_INTERVAL=5
 
-# === Memory Limits ===
-MAX_CONVERSATION=5    # Max conversations before archive
-MAX_TOKEN_IDENTITY=2000
-
-# === Model/IDE/Agent Specific ===
-# Per-model settings (override above)
-# MODEL_TRAE="CONSOLIDATE_AFTER=2"
-# MODEL_CLAUDE="CONSOLIDATE_AFTER=3"
+# Limits
+MAX_CONVERSATION=5
 EOF
         echo "Created: $CONFIG_FILE"
     fi
@@ -55,7 +46,7 @@ show_config() {
     echo "Auto-save conv:    $AUTO_SAVE_CONVERSATION"
     echo "Save interval:     $AUTO_SAVE_INTERVAL"
     echo "Consolidate after: $CONSOLIDATE_AFTER"
-    echo "Enable reflection:$ENABLE_REFLECTION"
+    echo "Enable reflection: $ENABLE_REFLECTION"
     echo "Max conversation: $MAX_CONVERSATION"
     echo ""
     echo "Config file: $CONFIG_FILE"

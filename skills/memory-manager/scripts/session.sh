@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MEMORY_DIR="$HOME/.learnwy/ai/memory"
 HISTORY_DIR="$MEMORY_DIR/conversation/history"
 CONFIG_FILE="$MEMORY_DIR/.memoryrc"
@@ -25,7 +26,7 @@ session_start() {
     echo "=== Memory: Session Start ==="
 
     if [ ! -d "$MEMORY_DIR/identity" ]; then
-        echo "⚠️  Memory not initialized. Run init-memory.sh"
+        echo "⚠️  Memory not initialized. Run: bash $SCRIPT_DIR/init-memory.sh"
         return 1
     fi
 
@@ -63,45 +64,45 @@ session_end() {
 
     if [ "$conv_count" -ge "$MAX_CONVERSATION" ]; then
         echo "⚠️  Max conversations reached ($MAX_CONVERSATION)"
-        echo "Recommend: Run summarize.sh then backup-history.sh --all"
+        echo "Recommend: Run summarize then backup"
     elif [ "$conv_count" -ge "$CONSOLIDATE_AFTER" ]; then
         echo "⚠️  Consolidation recommended (after $CONSOLIDATE_AFTER)"
         echo "Steps:"
-        echo "  1. bash scripts/summarize.sh"
-        echo "  2. bash scripts/write-memory.sh identity/AI.md \"...\""
-        echo "  3. bash scripts/backup-history.sh --all"
+        echo "  1. bash $SCRIPT_DIR/summarize.sh"
+        echo "  2. bash $SCRIPT_DIR/write-memory.sh identity/AI.md \"...\""
+        echo "  3. bash $SCRIPT_DIR/backup-history.sh --all"
     fi
 
     if [ "$ENABLE_REFLECTION" = "true" ]; then
         if [ "$conv_count" -ge "$REFLECTION_INTERVAL" ]; then
             echo ""
             echo "⚠️  Reflection recommended:"
-            echo "  bash scripts/reflection.sh init"
+            echo "  bash $SCRIPT_DIR/reflection.sh init"
         fi
     fi
 
     echo ""
     echo "To save this conversation:"
-    echo "  bash scripts/append-history.sh \"history-$(date +%Y-%m-%d)-1.md\" \"...\""
+    echo "  bash $SCRIPT_DIR/append-history.sh \"history-$(date +%Y-%m-%d)-1.md\" \"...\""
 }
 
 status() {
     load_config
-    bash "$MEMORY_DIR/scripts/memory-status.sh" 2>/dev/null || {
-        echo "=== Memory Status ==="
-        echo ""
-        echo "Identity:"
-        for f in "$MEMORY_DIR/identity"/*.md; do
-            [ -f "$f" ] && echo "  $(basename "$f")"
-        done
 
-        conv_count=$(find "$HISTORY_DIR" -name "history-*.md" 2>/dev/null | wc -l | tr -d ' ')
-        echo "Conversations: $conv_count / $MAX_CONVERSATION"
+    echo "=== Memory Status ==="
+    echo ""
 
-        if [ "$conv_count" -ge "$CONSOLIDATE_AFTER" ]; then
-            echo "⚠️  Consolidation needed"
-        fi
-    }
+    echo "Identity:"
+    for f in "$MEMORY_DIR/identity"/*.md; do
+        [ -f "$f" ] && echo "  $(basename "$f")"
+    done
+
+    conv_count=$(find "$HISTORY_DIR" -name "history-*.md" 2>/dev/null | wc -l | tr -d ' ')
+    echo "Conversations: $conv_count / $MAX_CONVERSATION"
+
+    if [ "$conv_count" -ge "$CONSOLIDATE_AFTER" ]; then
+        echo "⚠️  Consolidation needed"
+    fi
 }
 
 case "${1:-status}" in

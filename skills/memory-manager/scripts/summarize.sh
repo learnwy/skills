@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MEMORY_DIR="$HOME/.learnwy/ai/memory"
 HISTORY_DIR="$MEMORY_DIR/conversation/history"
 
@@ -37,8 +38,8 @@ echo "⚠️  This script extracts key points from conversation history."
 echo "You (AI) should review the content and update AI.md/you.md manually."
 echo ""
 echo "To update identity after review:"
-echo "  bash scripts/write-memory.sh AI.md \"updated content\""
-echo "  bash scripts/write-memory.sh you.md \"updated content\""
+echo "  bash $SCRIPT_DIR/write-memory.sh identity/AI.md \"updated content\""
+echo "  bash $SCRIPT_DIR/write-memory.sh identity/you.md \"updated content\""
 echo ""
 echo "Then archive the summarized conversations:"
-echo "  bash scripts/backup-history.sh --all"
+echo "  bash $SCRIPT_DIR/backup-history.sh --all"

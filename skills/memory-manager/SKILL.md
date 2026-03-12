@@ -1,6 +1,6 @@
 ---
 name: memory-manager
-description: Human memory model for AI. Layers: identity, conversation, archive, deeper. Auto-load, auto-save, reflection. Cross-IDE shared at ~/.learnwy/ai/memory/
+description: Human memory model for AI. Layers: identity, conversation, archive, deeper. Auto-load, auto-save, reflection. Cross-IDE shared at ~/.learnwy/ai/memory/. Use when user says "save memory", "load memory", "remember", "forget", session start/end, or needs persistent AI memory.
 ---
 
 # Memory Manager
@@ -127,6 +127,13 @@ RunCommand: bash {skill_dir}/scripts/write-memory.sh identity/you.md "content"
 RunCommand: bash {skill_dir}/scripts/write-memory.sh deeper/projects/myproject.md "content"
 ```
 
+### read-memory.sh - Read Memory
+
+```
+RunCommand: bash {skill_dir}/scripts/read-memory.sh
+RunCommand: bash {skill_dir}/scripts/read-memory.sh identity/AI.md
+```
+
 ### append-history.sh - Save Conversation
 
 ```
@@ -137,12 +144,15 @@ RunCommand: bash {skill_dir}/scripts/append-history.sh "history-2026-03-12-1.md"
 
 ```
 RunCommand: bash {skill_dir}/scripts/backup-history.sh --all
+RunCommand: bash {skill_dir}/scripts/backup-history.sh --before 2026-02-01
+RunCommand: bash {skill_dir}/scripts/backup-history.sh --dry-run
 ```
 
-### recall.sh - Search
+### recall.sh - Search Memory
 
 ```
-RunCommand: bash {skill_dir}/scripts/recall.sh keyword
+RunCommand: bash {skill_dir}/scripts/recall.sh swift
+RunCommand: bash {skill_dir}/scripts/recall.sh preferences
 ```
 
 ### summarize.sh - Consolidate
@@ -151,7 +161,7 @@ RunCommand: bash {skill_dir}/scripts/recall.sh keyword
 RunCommand: bash {skill_dir}/scripts/summarize.sh
 ```
 
-### consolidate.sh - Create Deeper
+### consolidate.sh - Create Deeper Memory
 
 ```
 RunCommand: bash {skill_dir}/scripts/consolidate.sh project myproject
@@ -163,6 +173,12 @@ RunCommand: bash {skill_dir}/scripts/consolidate.sh pattern mypattern
 ```
 RunCommand: bash {skill_dir}/scripts/reflection.sh check   # Check if needed
 RunCommand: bash {skill_dir}/scripts/reflection.sh init    # Start reflection
+```
+
+### memory-status.sh - View Status
+
+```
+RunCommand: bash {skill_dir}/scripts/memory-status.sh
 ```
 
 ## Self-Reflection
@@ -238,3 +254,27 @@ NOT:
 ## Preferences
 - User prefers...
 ```
+
+## Quick Start
+
+1. Initialize memory:
+   ```
+   bash {skill_dir}/scripts/init-memory.sh
+   ```
+
+2. Start session:
+   ```
+   bash {skill_dir}/scripts/session.sh start
+   ```
+
+3. Work with user...
+
+4. End session:
+   ```
+   bash {skill_dir}/scripts/session.sh end
+   ```
+
+5. Save conversation:
+   ```
+   bash {skill_dir}/scripts/append-history.sh "history-YYYY-MM-DD-1.md" "content"
+   ```

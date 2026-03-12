@@ -1,13 +1,14 @@
 #!/bin/bash
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MEMORY_DIR="$HOME/.learnwy/ai/memory"
 
 echo "=== Memory Status ==="
 echo ""
 
 if [ ! -d "$MEMORY_DIR/identity" ]; then
-    echo "⚠️  Memory not initialized. Run init-memory.sh"
+    echo "⚠️  Memory not initialized. Run: bash $SCRIPT_DIR/init-memory.sh"
     exit 0
 fi
 

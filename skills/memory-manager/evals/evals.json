@@ -1,0 +1,61 @@
+{
+  "skill_name": "memory-manager",
+  "evals": [
+    {
+      "id": 1,
+      "name": "session-start-loads-identity",
+      "prompt": "Load the memory-manager skill and start a new session. Run session.sh start to verify it loads identity files correctly.",
+      "expected_output": "Should display AI.md and you.md content from identity layer",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "save-conversation",
+      "prompt": "Save a conversation history file named history-2026-03-12-1.md with some test content about a coding session.",
+      "expected_output": "File should be created in conversation/history/ with correct format",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "search-memory",
+      "prompt": "Search memory for keyword 'swift' using recall.sh",
+      "expected_output": "Should show matching results from identity, conversation, archive, or deeper layers",
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "create-deeper-memory",
+      "prompt": "Create a new project memory called 'test-project' using consolidate.sh",
+      "expected_output": "File should be created in deeper/projects/test-project.md",
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "memory-status",
+      "prompt": "Check memory status using memory-status.sh",
+      "expected_output": "Should show identity files, conversation count, archive count, deeper count",
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "write-identity",
+      "prompt": "Update AI.md with new lesson using write-memory.sh",
+      "expected_output": "File should be updated with new content",
+      "files": []
+    },
+    {
+      "id": 7,
+      "name": "reflection-check",
+      "prompt": "Run reflection.sh check to see if reflection is needed",
+      "expected_output": "Should return OK or REFLECTION_NEEDED based on conversation count",
+      "files": []
+    },
+    {
+      "id": 8,
+      "name": "archive-conversations",
+      "prompt": "Archive all conversation history files using backup-history.sh --all",
+      "expected_output": "Files should be moved to archive/by-month/ directory",
+      "files": []
+    }
+  ]
+}

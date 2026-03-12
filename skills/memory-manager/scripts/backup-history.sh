@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MEMORY_DIR="$HOME/.learnwy/ai/memory"
 HISTORY_DIR="$MEMORY_DIR/conversation/history"
 ARCHIVE_DIR="$MEMORY_DIR/archive/by-month"

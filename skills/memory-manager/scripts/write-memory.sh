@@ -1,13 +1,14 @@
 #!/bin/bash
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MEMORY_DIR="$HOME/.learnwy/ai/memory"
 
 ALLOWED_FILES=("AI.md" "you.md")
 ALLOWED_PATHS=("identity/AI.md" "identity/you.md" "deeper/projects/" "deeper/patterns/")
 
 usage() {
-    echo "Usage: $0 <filename> <content>"
+    echo "Usage: \$0 <filename> <content>"
     echo ""
     echo "Allowed files:"
     echo "  - identity/AI.md    (AI's identity)"
@@ -16,8 +17,8 @@ usage() {
     echo "  - deeper/patterns/<name>.md"
     echo ""
     echo "Examples:"
-    echo "  $0 identity/AI.md \"content\""
-    echo "  $0 identity/you.md \"content\""
+    echo "  \$0 identity/AI.md \"content\""
+    echo "  \$0 identity/you.md \"content\""
     exit 1
 }
 
@@ -26,7 +27,8 @@ if [ $# -lt 2 ]; then
 fi
 
 FILENAME="$1"
-CONTENT="$2"
+shift
+CONTENT="$*"
 
 is_allowed() {
     local file="$1"
@@ -53,14 +55,14 @@ fi
 FILEPATH="$MEMORY_DIR/$FILENAME"
 
 if [ ! -d "$MEMORY_DIR/identity" ]; then
-    echo "Error: Memory not initialized. Run init-memory.sh first."
+    echo "Error: Memory not initialized. Run: bash $SCRIPT_DIR/init-memory.sh"
     exit 1
 fi
 
 DIRPATH=$(dirname "$FILEPATH")
 mkdir -p "$DIRPATH"
 
-echo "$CONTENT" > "$FILEPATH"
+printf '%s\n' "$CONTENT" > "$FILEPATH"
 
 echo "Written: $FILEPATH"
 echo "Size: $(wc -c < "$FILEPATH") bytes"

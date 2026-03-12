@@ -1,16 +1,16 @@
 #!/bin/bash
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MEMORY_DIR="$HOME/.learnwy/ai/memory"
 HISTORY_DIR="$MEMORY_DIR/conversation/history"
+CONFIG_FILE="$MEMORY_DIR/.memoryrc"
 
-usage() {
-    echo "Usage: $0 [init|check]"
-    echo ""
-    echo "Self-reflection for AI memory."
-    echo "  init   - Start reflection (read recent conversations)"
-    echo "  check  - Check if reflection needed"
-    exit 1
+load_config() {
+    if [ -f "$CONFIG_FILE" ]; then
+        source "$CONFIG_FILE"
+    fi
+    REFLECTION_INTERVAL=${REFLECTION_INTERVAL:-5}
 }
 
 check_reflection() {
@@ -21,9 +21,7 @@ check_reflection() {
 
     count=$(find "$HISTORY_DIR" -name "history-*.md" 2>/dev/null | wc -l | tr -d ' ')
 
-    INTERVAL=${REFLECTION_INTERVAL:-5}
-
-    if [ "$count" -ge "$INTERVAL" ]; then
+    if [ "$count" -ge "$REFLECTION_INTERVAL" ]; then
         echo "REFLECTION_NEEDED:$count"
         return 1
     fi
@@ -37,6 +35,12 @@ init_reflection() {
     echo ""
     echo "This script helps AI reflect on recent conversations."
     echo ""
+
+    if [ ! -d "$HISTORY_DIR" ]; then
+        echo "No conversation history found."
+        return
+    fi
+
     echo "Recent conversations:"
     for f in $(ls -t "$HISTORY_DIR"/history-*.md 2>/dev/null | head -5); do
         echo "  - $(basename "$f")"
@@ -49,10 +53,10 @@ init_reflection() {
     echo "4. What can I improve for next session?"
     echo ""
     echo "After reflection, update AI.md with:"
-    echo "  write-memory.sh identity/AI.md \"updated content\""
+    echo "  bash $SCRIPT_DIR/write-memory.sh identity/AI.md \"updated content\""
     echo ""
     echo "Consider creating deeper memory if needed:"
-    echo "  consolidate.sh pattern <name>"
+    echo "  bash $SCRIPT_DIR/consolidate.sh pattern <name>"
 }
 
 case "${1:-check}" in
@@ -63,6 +67,7 @@ case "${1:-check}" in
         check_reflection
         ;;
     *)
-        usage
+        echo "Usage: $0 [init|check]"
+        exit 1
         ;;
 esac

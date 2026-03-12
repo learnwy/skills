@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MEMORY_DIR="$HOME/.learnwy/ai/memory"
 HISTORY_DIR="$MEMORY_DIR/conversation/history"
 ARCHIVE_DIR="$MEMORY_DIR/archive/by-month"
@@ -39,7 +40,7 @@ else
 fi
 
 if [ ! -d "$MEMORY_DIR/identity" ]; then
-    echo "Error: Memory not initialized."
+    echo "Error: Memory not initialized. Run: bash $SCRIPT_DIR/init-memory.sh"
     exit 1
 fi
 

@@ -1,5 +1,7 @@
 #!/bin/bash
+set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MEMORY_DIR="$HOME/.learnwy/ai/memory"
 
 usage() {
@@ -55,7 +57,8 @@ if [ -d "$MEMORY_DIR/archive/by-month" ]; then
     for f in "$MEMORY_DIR/archive/by-month"/**/history-*.md; do
         [ -f "$f" ] || continue
         if grep -qi "$KEYWORD" "$f"; then
-            echo "★ $f"
+            rel_path="${f#$MEMORY_DIR/}"
+            echo "★ $rel_path"
             grep -ni "$KEYWORD" "$f" | head -1
             FOUND=true
         fi
@@ -67,7 +70,8 @@ if [ -d "$MEMORY_DIR/deeper" ]; then
     for f in "$MEMORY_DIR/deeper"/**/*.md; do
         [ -f "$f" ] || continue
         if grep -qi "$KEYWORD" "$f"; then
-            echo "★ $f"
+            rel_path="${f#$MEMORY_DIR/}"
+            echo "★ $rel_path"
             grep -ni "$KEYWORD" "$f" | head -1
             FOUND=true
         fi
