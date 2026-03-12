@@ -69,7 +69,7 @@ session_end() {
         echo "⚠️  Consolidation recommended (after $CONSOLIDATE_AFTER)"
         echo "Steps:"
         echo "  1. bash $SCRIPT_DIR/summarize.sh"
-        echo "  2. bash $SCRIPT_DIR/write-memory.sh identity/AI.md \"...\""
+        echo "  2. bash $SCRIPT_DIR/write-memory.sh ai \"updated content\""
         echo "  3. bash $SCRIPT_DIR/backup-history.sh --all"
     fi
 
@@ -83,7 +83,7 @@ session_end() {
 
     echo ""
     echo "To save this conversation:"
-    echo "  bash $SCRIPT_DIR/append-history.sh \"history-$(date +%Y-%m-%d)-1.md\" \"...\""
+    echo "  bash $SCRIPT_DIR/append-history.sh \"session content here\""
 }
 
 status() {
