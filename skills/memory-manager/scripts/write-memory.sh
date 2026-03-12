@@ -3,19 +3,21 @@ set -e
 
 MEMORY_DIR="$HOME/.learnwy/ai/memory"
 
-ALLOWED_FILES=("SOUL.md" "USER.md")
+ALLOWED_FILES=("AI.md" "you.md")
+ALLOWED_PATHS=("identity/AI.md" "identity/you.md" "deeper/projects/" "deeper/patterns/")
 
 usage() {
     echo "Usage: $0 <filename> <content>"
     echo ""
-    echo "Allowed files (security restricted):"
-    for f in "${ALLOWED_FILES[@]}"; do
-        echo "  - $f"
-    done
+    echo "Allowed files:"
+    echo "  - identity/AI.md    (AI's identity)"
+    echo "  - identity/you.md   (User profile)"
+    echo "  - deeper/projects/<name>.md"
+    echo "  - deeper/patterns/<name>.md"
     echo ""
     echo "Examples:"
-    echo "  $0 SOUL.md \"content here\""
-    echo "  $0 USER.md \"content here\""
+    echo "  $0 identity/AI.md \"content\""
+    echo "  $0 identity/you.md \"content\""
     exit 1
 }
 
@@ -28,8 +30,8 @@ CONTENT="$2"
 
 is_allowed() {
     local file="$1"
-    for allowed in "${ALLOWED_FILES[@]}"; do
-        if [[ "$file" == "$allowed" ]]; then
+    for allowed in "${ALLOWED_PATHS[@]}"; do
+        if [[ "$file" == "$allowed"* ]]; then
             return 0
         fi
     done
@@ -37,25 +39,28 @@ is_allowed() {
 }
 
 if ! is_allowed "$FILENAME"; then
-    echo "Error: '$FILENAME' is not in the allowed file list."
+    echo "Error: '$FILENAME' not allowed."
     echo ""
-    echo "Allowed files:"
+    echo "Allowed:"
     for f in "${ALLOWED_FILES[@]}"; do
-        echo "  - $f"
+        echo "  - identity/$f"
     done
-    echo ""
-    echo "For history files, use append-history.sh instead."
+    echo "  - deeper/projects/*.md"
+    echo "  - deeper/patterns/*.md"
     exit 1
 fi
 
 FILEPATH="$MEMORY_DIR/$FILENAME"
 
-if [ ! -d "$MEMORY_DIR" ]; then
-    echo "Error: Memory directory not initialized. Run init-memory.sh first."
+if [ ! -d "$MEMORY_DIR/identity" ]; then
+    echo "Error: Memory not initialized. Run init-memory.sh first."
     exit 1
 fi
 
+DIRPATH=$(dirname "$FILEPATH")
+mkdir -p "$DIRPATH"
+
 echo "$CONTENT" > "$FILEPATH"
 
-echo "Written to: $FILEPATH"
+echo "Written: $FILEPATH"
 echo "Size: $(wc -c < "$FILEPATH") bytes"

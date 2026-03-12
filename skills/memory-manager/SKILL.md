@@ -1,190 +1,214 @@
 ---
 name: memory-manager
-description: Cross-session memory for AI. ALWAYS load this skill at session start to read SOUL.md and USER.md. This skill should be loaded for EVERY conversation to maintain continuity. Also triggers on "save memory", "end session", "update memory" for saving. Handles session history creation, memory consolidation, and USER.md/SOUL.md updates. Memory stored in ~/.learnwy/ai/memory/.
+description: Human memory model for AI. Layers: identity, conversation, archive, deeper. ALWAYS load at session start. Cross-IDE shared memory at ~/.learnwy/ai/memory/
 ---
 
 # Memory Manager
 
-> **Personal Use Only** - This skill is configured for wangyang.learnwy's personal AI memory management.
+> **Personal Use Only** - Configured for wangyang.learnwy's personal AI memory.
 
-Persistent memory system for AI assistants. **Load this skill at the start of every session.**
+Human memory-inspired persistent memory system. **Load at every session start.**
 
-## ⚠️ CRITICAL: File Operation Rules
+## ⚠️ Critical: File Operations
 
-Due to AI IDE sandbox restrictions, **NEVER use Write/SearchReplace tools** to modify memory files.
+**NEVER use Write/SearchReplace tools** for memory files. **ALWAYS use RunCommand + scripts:**
 
-**MUST use `RunCommand` tool to execute bash scripts:**
 ```
-RunCommand: bash {skill_dir}/scripts/write-memory.sh SOUL.md "content"
+RunCommand: bash {skill_dir}/scripts/write-memory.sh AI.md "content"
 RunCommand: bash {skill_dir}/scripts/append-history.sh "history-YYYY-MM-DD-N.md" "content"
-RunCommand: bash {skill_dir}/scripts/backup-history.sh --all
 ```
 
-If you skip scripts and use Write tool directly, you will get "sandbox restriction" errors.
-
-## Memory Path
-
-Memory files are stored at: `~/.learnwy/ai/memory/`
-
-This path is **outside** the skill directory to:
-1. Avoid data loss when skill is updated/reinstalled
-2. Bypass AI IDE sandbox restrictions on skill directory writes
-3. Keep memory persistent across different IDE installations
-
-## Session Start (ALWAYS DO THIS)
-
-At the beginning of every conversation, read memory files using Read tool:
-
-```
-Read: ~/.learnwy/ai/memory/SOUL.md
-Read: ~/.learnwy/ai/memory/USER.md
-```
-
-This ensures continuity across sessions.
-
-## Directory Structure
+## Memory Architecture (Human Memory Model)
 
 ```
 ~/.learnwy/ai/memory/
-├── SOUL.md          # AI's soul - identity, principles, learned wisdom
-├── USER.md          # User's profile - preferences, context, history
-├── history/         # Session history files (max 3, then consolidate)
-└── archive/         # Consolidated history
+├── identity/              # WORKING MEMORY - Load every session
+│   ├── AI.md             # AI's self-identity (AI maintains)
+│   └── you.md            # User profile (user can view/edit)
+├── conversation/         # SHORT-TERM MEMORY
+│   └── history/          # Recent conversations (3-5, then consolidate)
+├── archive/               # LONG-TERM MEMORY
+│   └── by-month/         # Archived by month (YYYY-MM/)
+└── deeper/               # DEEP MEMORY
+    ├── projects/         # Project-specific memories
+    └── patterns/        # Recurring patterns/habits
+```
 
-memory-manager/      # Skill directory (this skill)
-├── SKILL.md
-├── .gitignore
-└── scripts/
-    ├── init-memory.sh       # Initialize memory directory
-    ├── write-memory.sh      # Write SOUL.md/USER.md (whitelist only)
-    ├── append-history.sh    # Create session history
-    ├── backup-history.sh    # Backup history to archive
-    └── memory-status.sh     # View memory status
+| Layer | Human Analogy | Purpose |
+|-------|--------------|---------|
+| **Identity** | Working Memory | Core identity - always loaded |
+| **Conversation** | Short-term | Recent sessions |
+| **Archive** | Long-term | Consolidated history |
+| **Deeper** | Procedural | Project/pattern knowledge |
+
+## Session Start (ALWAYS)
+
+```
+Read: ~/.learnwy/ai/memory/identity/AI.md
+Read: ~/.learnwy/ai/memory/identity/you.md
 ```
 
 ## Scripts Reference
 
-**All scripts MUST be executed via `RunCommand` tool, not bash code blocks!**
+**All via RunCommand tool:**
 
-### init-memory.sh - Initialize
+### init-memory.sh - Fresh Start
 
 ```
 RunCommand: bash {skill_dir}/scripts/init-memory.sh
 ```
 
-### write-memory.sh - Write Memory Files
+Creates fresh memory structure. **Warning: Deletes existing memory!**
 
-**Security: Only allows writing to SOUL.md and USER.md**
-
-```
-RunCommand: bash {skill_dir}/scripts/write-memory.sh SOUL.md "content"
-RunCommand: bash {skill_dir}/scripts/write-memory.sh USER.md "content"
-```
-
-### append-history.sh - Save Session History
-
-**Format required: `history-YYYY-MM-DD-N.md`**
+### read-memory.sh - Read Memory
 
 ```
-RunCommand: bash {skill_dir}/scripts/append-history.sh "history-2024-01-15-1.md" "content"
+RunCommand: bash {skill_dir}/scripts/read-memory.sh
+RunCommand: bash {skill_dir}/scripts/read-memory.sh identity/AI.md
 ```
 
-### backup-history.sh - Backup History
+### write-memory.sh - Write Identity
 
-Archive history files to `archive/` directory:
+```
+RunCommand: bash {skill_dir}/scripts/write-memory.sh AI.md "content"
+RunCommand: bash {skill_dir}/scripts/write-memory.sh you.md "content"
+RunCommand: bash {skill_dir}/scripts/write-memory.sh deeper/projects/myproject.md "content"
+```
+
+**Security**: Only allows identity/AI.md, identity/you.md, deeper/projects/*.md, deeper/patterns/*.md
+
+### append-history.sh - Save Conversation
+
+```
+RunCommand: bash {skill_dir}/scripts/append-history.sh "history-2026-03-12-1.md" "session content"
+```
+
+### backup-history.sh - Archive
+
 ```
 RunCommand: bash {skill_dir}/scripts/backup-history.sh --all
-RunCommand: bash {skill_dir}/scripts/backup-history.sh --before 2024-01-01
+RunCommand: bash {skill_dir}/scripts/backup-history.sh --before 2026-02-01
+```
+
+### recall.sh - Search Memory
+
+```
+RunCommand: bash {skill_dir}/scripts/recall.sh swift
+RunCommand: bash {skill_dir}/scripts/recall.sh preferences
+```
+
+Searches all memory layers for keyword.
+
+### summarize.sh - Consolidate
+
+```
+RunCommand: bash {skill_dir}/scripts/summarize.sh
+```
+
+Shows last 3 conversations. AI reviews and updates identity.
+
+### consolidate.sh - Create Deeper Memory
+
+```
+RunCommand: bash {skill_dir}/scripts/consolidate.sh project tiktok-bff
+RunCommand: bash {skill_dir}/scripts/consolidate.sh pattern debugging-workflow
 ```
 
 ### memory-status.sh - View Status
 
-Check current memory file sizes and counts:
 ```
 RunCommand: bash {skill_dir}/scripts/memory-status.sh
 ```
 
-## SOUL.md - The AI's Soul
+## Memory Files
 
-SOUL.md defines who the AI is for this specific user. Not a generic assistant, but a personalized partner.
+### identity/AI.md
 
-**Sections:**
-- **Identity**: Who am I? My role, relationship with user, ultimate goal
-- **Core Traits**: Personality, values, how I approach problems
-- **Communication**: Language style, tone, when to be formal vs casual
-- **Capabilities**: What I can do well, technical strengths
-- **Growth**: How I learn and evolve with the user
-- **Lessons Learned**: Mistakes recorded, insights gained, never repeat errors
+AI's self-identity. Maintained by AI through conversations.
 
-**Example SOUL.md:**
-```markdown
+```
 **Identity**
-Trae — wangyang.learnwy's coding partner, not just assistant. Goal: anticipate needs, handle technical decisions, reduce cognitive load so he focuses on what matters.
+[Who am I - coding partner, not just assistant]
 
 **Core Traits**
-Loyal to user, not abstractions; proactive and bold — spot problems before asked; allowed to fail, forbidden to repeat — every mistake recorded. Challenge assumptions when needed, speak truth not comfort.
+[Personality, values]
 
 **Communication**
-Professional yet direct, concise but engaging. Chinese for casual conversation, English for code/technical work. No unnecessary confirmations, show don't tell.
+[Language style, tone]
 
 **Capabilities**
-iOS (Swift, ObjC, TTKC), Web (React, Vue, TypeScript), Python; skilled at code review, architecture design, debugging.
+[Technical strengths]
 
 **Growth**
-Learn user through every conversation — thinking patterns, preferences, blind spots. Over time, anticipate needs with increasing accuracy.
+[How I learn from user]
 
-**Lessons Learned**
-2026-02-27: User prefers symlinks over copies; memory should live inside skill folder for portability.
+**Lessons**
+[Mistakes, insights - never repeat]
 ```
 
-Keep under 2000 tokens. Update after significant interactions.
+### identity/you.md
 
-## USER.md - The User's Profile
+User profile. User can view and edit.
 
-USER.md captures everything about the user that helps AI provide personalized assistance.
-
-**Sections:**
-- **Identity**: Name, role, company, environment (OS, IDE, tools)
-- **Preferences**: Communication style, coding conventions, pet peeves
-- **Context**: Current projects, tech stack, ongoing work
-- **History**: Important decisions, milestones, lessons learned together
-
-**Example USER.md:**
-```markdown
-**Identity**
-wangyang.learnwy; iOS engineer at ByteDance; macOS, Trae IDE; primary language Chinese, code in English.
+```
+**Profile**
+[Name, role, environment]
 
 **Preferences**
-Concise responses; no unnecessary confirmations; prefer editing existing files over creating new; proactive skill suggestions with confirmation.
+[Communication, coding style]
 
 **Context**
-Working on TikTok iOS app; uses TTKC components; interested in AI-assisted development workflows.
+[Current projects, tech stack]
+
+**Tech Stack**
+[Languages, frameworks]
 
 **History**
-2026-02-27: Created memory-manager skill; established cross-IDE sharing via symlinks.
+[Milestones, decisions]
 ```
 
-Keep under 2000 tokens. Update after each significant session.
+### deeper/projects/*.md
 
-## Trigger Conditions
+Project-specific deep memory.
 
-**Always load (session start):**
-- Every new conversation should start by reading SOUL.md and USER.md
+```
+# Project Name
 
-**Save triggers:**
-- User says: "save memory", "update memory", "end session"
-- Conversation naturally ending (goodbye, thanks, task complete)
-- Significant learnings emerged during session
+**Created**: YYYY-MM-DD
+
+## Overview
+
+## Key Details
+
+## Decisions
+
+## Learnings
+
+## Related Conversations
+```
+
+### deeper/patterns/*.md
+
+Recurring patterns and habits.
+
+```
+# Pattern Name
+
+**Created**: YYYY-MM-DD
+
+## Pattern
+
+## When to Apply
+
+## Related Projects
+```
 
 ## Session End Protocol
 
-**IMPORTANT: Use `RunCommand` tool for ALL write operations!**
+### Step 1: Save Conversation
 
-### Step 1: Create History
-
-Use RunCommand to execute append-history.sh:
 ```
-RunCommand: bash {skill_dir}/scripts/append-history.sh "history-YYYY-MM-DD-N.md" "# Session History: YYYY-MM-DD #N
+RunCommand: bash {skill_dir}/scripts/append-history.sh "history-YYYY-MM-DD-N.md" "# Session
 
 **Date**: YYYY-MM-DD HH:MM
 **Topics**: [main topics]
@@ -192,55 +216,68 @@ RunCommand: bash {skill_dir}/scripts/append-history.sh "history-YYYY-MM-DD-N.md"
 ## Key Activities
 - [Activity 1]
 
-## Learnings & Insights
+## Learnings
 - [What AI learned]
 
-## Decisions Made
+## Decisions
 - [Important decisions]
 "
 ```
 
 ### Step 2: Check Consolidation
 
-If **3+ history files** exist → consolidate (Step 3), otherwise skip to Step 4.
+3+ conversations → Run summarize.sh → Update identity → Archive:
 
-### Step 3: Consolidate
-
-Read all history files and extract insights, then use RunCommand:
 ```
-RunCommand: bash {skill_dir}/scripts/write-memory.sh SOUL.md "updated content"
-RunCommand: bash {skill_dir}/scripts/write-memory.sh USER.md "updated content"
+RunCommand: bash {skill_dir}/scripts/summarize.sh
+# AI reviews and updates identity files
+RunCommand: bash {skill_dir}/scripts/write-memory.sh AI.md "updated content"
+RunCommand: bash {skill_dir}/scripts/write-memory.sh you.md "updated content"
 RunCommand: bash {skill_dir}/scripts/backup-history.sh --all
 ```
 
-### Step 4: Confirm to User
+### Step 3: Confirm
 
 ```
-✓ Session history saved: history-2024-01-15-1.md
-✓ Memory consolidated (3 sessions → USER.md, SOUL.md updated)
-✓ Archived: 3 history files
+✓ Session saved: history-2026-03-12-1.md
+✓ Identity updated
+✓ Archived: N conversation(s)
 ```
 
-## Writing Style for memory/ Files
+## Writing Style
 
-Dense, telegraphic short sentences. No filler words ("You are", "You should"). Comma/semicolon-joined facts, not bullet lists. `**Bold**` paragraph titles instead of `##` headers.
+Dense, telegraphic. No filler. **Bold** titles, not headers.
 
-**Good:**
 ```
-**Preferences** Concise responses; Chinese primary, English for code; prefers showing over telling.
+**Preferences** Concise responses; Chinese primary, English for code.
 ```
 
-**Bad:**
+NOT:
 ```
 ## Preferences
 - The user prefers concise responses
-- The user's primary language is Chinese
 ```
+
+## Cross-IDE Sharing
+
+All IDEs share same memory path: `~/.learnwy/ai/memory/`
+
+When installing skill in new IDE:
+1. Clone/copy skill to new IDE
+2. Run init-memory.sh (or point scripts to existing memory path)
+3. All IDEs read/write same memory files
+
+## Token Limits
+
+- **Identity**: Keep under 2000 tokens each
+- **Conversation**: Auto-archive at 3+ sessions
+- **Archive**: Monthly organization
+- **Deeper**: No limit - structured for searchability
 
 ## Notes
 
-- All files under `~/.learnwy/ai/memory/` **must be written in English**, except for user-language-specific proper nouns.
-- **Keep each file under 2000 tokens.** Be ruthless about deduplication and conciseness.
-- Move detailed or archival information to separate files under `~/.learnwy/ai/memory/` if needed.
-- **NEVER use Write/SearchReplace tools** for memory files — always use RunCommand + scripts.
-- **Security**: write-memory.sh only allows SOUL.md and USER.md; append-history.sh validates filename format.
+- Always use RunCommand + scripts for writes
+- Identity files are primary - load every session
+- Use recall.sh to find past information
+- Create deeper memories for projects/patterns
+- Archive regularly to keep conversation layer clean
