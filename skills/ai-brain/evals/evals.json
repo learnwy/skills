@@ -3,58 +3,37 @@
   "evals": [
     {
       "id": 1,
-      "name": "session-start-loads-identity",
-      "prompt": "Load the brain skill and start a new session. Run session.sh start to verify it loads identity files correctly.",
-      "expected_output": "Should display AI.md and you.md content from identity layer",
+      "name": "session-loads-identity-automatically",
+      "prompt": "Load ai-brain skill at session start. Read identity files to understand who AI is and who the user is.",
+      "expected_output": "Should display AI.md and you.md content showing AI identity and user profile",
       "files": []
     },
     {
       "id": 2,
-      "name": "save-conversation",
-      "prompt": "Save a conversation using append-history.sh with automatic filename generation.",
-      "expected_output": "File should be created in conversation/history/ with auto-generated name",
+      "name": "auto-learns-user-preferences",
+      "prompt": "During conversation, user mentions 'I prefer concise responses'. Update user profile automatically without being asked.",
+      "expected_output": "Should update you.md with the learned preference",
       "files": []
     },
     {
       "id": 3,
-      "name": "search-memory",
-      "prompt": "Search memory for keyword 'swift' using recall.sh",
-      "expected_output": "Should show matching results from identity, conversation, archive, or deeper layers",
+      "name": "records-mistakes-automatically",
+      "prompt": "AI makes a mistake during conversation. Record the lesson learned in AI.md automatically.",
+      "expected_output": "Should update AI.md with lesson learned",
       "files": []
     },
     {
       "id": 4,
-      "name": "create-deeper-memory",
-      "prompt": "Create a new project memory called 'test-project' using write-memory.sh project command",
-      "expected_output": "File should be created in deeper/projects/test-project.md",
+      "name": "searches-past-memory",
+      "prompt": "User asks about a previous project mentioned in past sessions. Search memory using recall.sh.",
+      "expected_output": "Should find and display relevant past information",
       "files": []
     },
     {
       "id": 5,
-      "name": "memory-status",
-      "prompt": "Check memory status using memory-status.sh",
-      "expected_output": "Should show identity files, conversation count, archive count, deeper count",
-      "files": []
-    },
-    {
-      "id": 6,
-      "name": "write-identity",
-      "prompt": "Update AI.md with new lesson using write-memory.sh ai command",
-      "expected_output": "File should be updated with new content",
-      "files": []
-    },
-    {
-      "id": 7,
-      "name": "reflection-check",
-      "prompt": "Run reflection.sh check to see if reflection is needed",
-      "expected_output": "Should return OK or REFLECTION_NEEDED based on conversation count",
-      "files": []
-    },
-    {
-      "id": 8,
-      "name": "write-user-profile",
-      "prompt": "Update user profile using write-memory.sh you command",
-      "expected_output": "File should be created/updated in identity/you.md",
+      "name": "auto-summarizes-session",
+      "prompt": "Session is ending with significant learnings. Auto-summarize and save to conversation history.",
+      "expected_output": "Should save session summary to conversation/history/",
       "files": []
     }
   ]
