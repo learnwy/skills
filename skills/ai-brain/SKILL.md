@@ -1,6 +1,6 @@
 ---
 name: ai-brain
-description: AI brain with human memory model. Layers: identity, conversation, archive, deeper. Use when user says "save memory", "load memory", "remember", session start/end, or needs persistent AI memory across sessions. This skill provides cross-session continuity for AI assistants.
+description: "AI brain with human memory model. Layers: identity, conversation, archive, deeper. Use when user says save memory, load memory, remember, session start/end, or needs persistent AI memory across sessions."
 ---
 
 # AI Brain
