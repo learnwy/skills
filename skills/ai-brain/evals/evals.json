@@ -25,7 +25,7 @@
     {
       "id": 4,
       "name": "searches-past-memory",
-      "prompt": "User asks about a previous project mentioned in past sessions. Search memory using recall.sh.",
+      "prompt": "User asks about a previous project mentioned in past sessions. Search memory using python3 {skill_dir}/scripts/brain.py recall.",
       "expected_output": "Should find and display relevant past information",
       "files": []
     },

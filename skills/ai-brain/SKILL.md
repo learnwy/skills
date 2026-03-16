@@ -11,6 +11,10 @@ description: "AI brain with human memory model. Layers: identity, conversation, 
 
 **This skill should be loaded at EVERY session start.** The AI reads its identity and the user's profile, then operates with full context.
 
+**Memory writes must use scripts only.** Do not use IDE Write tool for `~/.learnwy/ai/memory/*` because sandbox policies may block it.
+
+**Implementation**: Pure Python. Use `python3 {skill_dir}/scripts/brain.py ...` for all operations.
+
 ## Memory Architecture (Human Memory Model)
 
 ```
@@ -29,16 +33,16 @@ description: "AI brain with human memory model. Layers: identity, conversation, 
 
 | Layer | Analogy | Script | Purpose |
 |-------|---------|--------|---------|
-| **Identity** | Working Memory | `session.sh start` | Core - always loaded |
-| **Conversation** | Short-term | `append-history.sh` | Recent sessions |
-| **Archive** | Long-term | `backup-history.sh` | Consolidated |
-| **Deeper** | Procedural | `consolidate.sh` | Knowledge |
+| **Identity** | Working Memory | `brain.py session start` | Core - always loaded |
+| **Conversation** | Short-term | `brain.py append-history` | Recent sessions |
+| **Archive** | Long-term | `brain.py backup-history` | Consolidated |
+| **Deeper** | Procedural | `brain.py consolidate` | Knowledge |
 
 ## Session Lifecycle
 
 ### Session Start → Load Identity
 ```bash
-RunCommand: bash {skill_dir}/scripts/session.sh start
+RunCommand: python3 {skill_dir}/scripts/brain.py session start
 ```
 This loads AI.md + you.md and shows conversation count.
 
@@ -49,80 +53,107 @@ This loads AI.md + you.md and shows conversation count.
 
 ### Session End → Auto-Summarize
 ```bash
-RunCommand: bash {skill_dir}/scripts/session.sh end
+RunCommand: python3 {skill_dir}/scripts/brain.py session end
+```
+
+If callbacks were not triggered and you already have a session summary:
+```bash
+RunCommand: python3 {skill_dir}/scripts/brain.py session end-auto "session summary"
 ```
 
 ## Scripts Reference
 
-### session.sh - Session Lifecycle
+### brain.py - Single Entry
 ```
-RunCommand: bash {skill_dir}/scripts/session.sh start   # Load memory
-RunCommand: bash {skill_dir}/scripts/session.sh end     # Check status
-RunCommand: bash {skill_dir}/scripts/session.sh status   # Quick view
+RunCommand: python3 {skill_dir}/scripts/brain.py session start
+RunCommand: python3 {skill_dir}/scripts/brain.py session end
+RunCommand: python3 {skill_dir}/scripts/brain.py session end-auto "summary"
+RunCommand: python3 {skill_dir}/scripts/brain.py session status
 ```
 
-### write-memory.sh - Write Identity (Working Memory)
+### write - Write Identity (Working Memory)
 ```
 # AI identity - learnings, lessons
-RunCommand: bash {skill_dir}/scripts/write-memory.sh ai "**Identity** ...content..."
+RunCommand: python3 {skill_dir}/scripts/brain.py write ai "**Identity** ...content..."
 
 # User profile - preferences, context
-RunCommand: bash {skill_dir}/scripts/write-memory.sh you "**Profile** ...content..."
+RunCommand: python3 {skill_dir}/scripts/brain.py write you "**Profile** ...content..."
 
 # Project memory - deep knowledge
-RunCommand: bash {skill_dir}/scripts/write-memory.sh project myproject
+RunCommand: python3 {skill_dir}/scripts/brain.py write project myproject
 
 # Pattern memory - recurring patterns
-RunCommand: bash {skill_dir}/scripts/write-memory.sh pattern debugging
+RunCommand: python3 {skill_dir}/scripts/brain.py write pattern debugging
 ```
 
-### append-history.sh - Save Conversation (Short-term)
+### append-history - Save Conversation (Short-term)
 ```
 # Auto-generate filename: history-YYYY-MM-DD-N.md
-RunCommand: bash {skill_dir}/scripts/append-history.sh "session summary..."
+RunCommand: python3 {skill_dir}/scripts/brain.py append-history "session summary..."
 
 # Custom name
-RunCommand: bash {skill_dir}/scripts/append-history.sh -n my-session "content"
+RunCommand: python3 {skill_dir}/scripts/brain.py append-history -n my-session "content"
 ```
 
-### recall.sh - Search All Memory Layers
+### recall - Search All Memory Layers
 ```
-RunCommand: bash {skill_dir}/scripts/recall.sh swift
-RunCommand: bash {skill_dir}/scripts/recall.sh preferences
-```
-
-### consolidate.sh - Create Deeper Memory
-```
-RunCommand: bash {skill_dir}/scripts/consolidate.sh project myproject
-RunCommand: bash {skill_dir}/scripts/consolidate.sh pattern debugging
+RunCommand: python3 {skill_dir}/scripts/brain.py recall swift
+RunCommand: python3 {skill_dir}/scripts/brain.py recall preferences
 ```
 
-### backup-history.sh - Archive (Long-term)
+### consolidate - Create Deeper Memory
 ```
-RunCommand: bash {skill_dir}/scripts/backup-history.sh --all
-RunCommand: bash {skill_dir}/scripts/backup-history.sh --dry-run
-```
-
-### summarize.sh - Consolidate Short-term to Identity
-```
-RunCommand: bash {skill_dir}/scripts/summarize.sh
+RunCommand: python3 {skill_dir}/scripts/brain.py consolidate project myproject
+RunCommand: python3 {skill_dir}/scripts/brain.py consolidate pattern debugging
 ```
 
-### reflection.sh - Self-Reflection
+### backup-history - Archive (Long-term)
 ```
-RunCommand: bash {skill_dir}/scripts/reflection.sh check   # Check if needed
-RunCommand: bash {skill_dir}/scripts/reflection.sh init    # Start reflection
-```
-
-### memory-status.sh - View Status
-```
-RunCommand: bash {skill_dir}/scripts/memory-status.sh
+RunCommand: python3 {skill_dir}/scripts/brain.py backup-history --all
+RunCommand: python3 {skill_dir}/scripts/brain.py backup-history --dry-run
 ```
 
-### init-memory.sh - Initialize
+### summarize - Consolidate Short-term to Identity
 ```
-RunCommand: bash {skill_dir}/scripts/init-memory.sh
+RunCommand: python3 {skill_dir}/scripts/brain.py summarize
 ```
+
+### reflection - Self-Reflection
+```
+RunCommand: python3 {skill_dir}/scripts/brain.py reflection check
+RunCommand: python3 {skill_dir}/scripts/brain.py reflection init
+```
+
+### memory-status - View Status
+```
+RunCommand: python3 {skill_dir}/scripts/brain.py memory-status
+```
+
+### init-memory - Initialize
+```
+RunCommand: python3 {skill_dir}/scripts/brain.py init-memory
+```
+
+## Script Roles
+
+Cross-skill dependency is not required at runtime. Reuse shared code by vendoring helper files into this skill.
+
+### Core (always used)
+- `brain.py session` - session orchestration
+- `brain.py write` - identity updates (`ai` / `you`)
+- `brain.py append-history` - short-term conversation save
+
+### Layer operations (used by thresholds)
+- `brain.py summarize` - short-term to identity consolidation
+- `brain.py backup-history` - archive rotation
+- `brain.py consolidate` - deeper memory creation
+
+### Utilities
+- `brain.py recall` - memory retrieval
+- `brain.py reflection` - self-review
+- `brain.py memory-status` - diagnostics
+- `brain.py memory-config` - trigger tuning
+- `brain.py read-memory` - direct read helper
 
 ## When to Use Each Layer
 
@@ -133,16 +164,16 @@ RunCommand: bash {skill_dir}/scripts/init-memory.sh
 
 ### Conversation (Short-term)
 - End of any session → save summary
-- 3+ conversations → run summarize.sh → update identity
+- 3+ conversations → run brain.py summarize → update identity
 
 ### Archive (Long-term)
-- After summarize → run backup-history.sh --all
+- After summarize → run brain.py backup-history --all
 - Monthly consolidation
 
 ### Deeper (Deep Memory)
 - Project-specific knowledge → project/
 - Recurring patterns → patterns/
-- Important learnings worth preserving → consolidate.sh
+- Important learnings worth preserving → brain.py consolidate
 
 ## Automatic Learning (No User Action Needed)
 
