@@ -1,7 +1,36 @@
 # Global Hooks Configuration
-# See agents/AGENTS.md for agent details
+# Managed by hooks.cjs
 
-hooks: {}
+hooks:
+  pre_stage_ANALYZING:
+    - skill: "risk-auditor"
+      required: false
+
+  post_stage_ANALYZING:
+    - skill: "iron-audit-pm"
+      required: false
+    - skill: "mvp-freeze-architect"
+      required: false
+
+  post_stage_DESIGNING:
+    - skill: "tech-design-reviewer"
+      required: false
+
+  post_stage_IMPLEMENTING:
+    - skill: "code-reviewer"
+      required: false
+
+  pre_stage_TESTING:
+    - skill: "test-strategy-advisor"
+      required: false
+
+  on_blocked:
+    - skill: "blocker-resolver"
+      required: false
+
+  on_error:
+    - skill: "error-analyzer"
+      required: false
 
 agents:
   pre_stage_ANALYZING:

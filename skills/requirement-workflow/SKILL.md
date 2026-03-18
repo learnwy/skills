@@ -1,90 +1,104 @@
 ---
 name: requirement-workflow
-description: "State-machine driven orchestrator for structured software development. Use when user wants to build a feature, fix a bug, implement something substantial, refactor code, or develop new functionality. Triggers on: '开发功能', '实现这个', 'build this feature', 'implement', 'add new module'. Creates workflow in .trae/workflow/ with stages: ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → DELIVERING."
+description: "Structured software development workflow orchestrator. Triggers on: '开发功能', '实现这个', 'build this feature', 'implement', 'add new module', 'fix bug'. Workflows: Define→Plan→Design→Implement→Test→Deliver."
 ---
 
-# Requirement Workflow Orchestrator
+# Requirement Workflow
 
-State-machine driven development workflow with agent/skill injection support.
-
-## Execution Flow
-
-```
-1. ANALYZE & SELECT LEVEL → Run init-workflow.sh
-2. STAGE LOOP → Run advance-stage.sh for each stage
-3. CREATE DOCUMENTS → spec.md → tasks.md → design.md → checklist.md → report.md
-```
-
-## Step 1: Analyze & Select Level
-
-| Level  | Condition                        | Doc Depth          |
-| ------ | -------------------------------- | ------------------ |
-| **L1** | ≤3 files, quick fix              | Brief + simple     |
-| **L2** | 4-15 files, standard feature     | Full PRD + design  |
-| **L3** | Security/cross-module/breaking   | Comprehensive      |
-
-## Step 2: Initialize Workflow
+## Quick Start
 
 ```bash
-{skill_root}/scripts/init-workflow.sh -r <project_root> -n <name> -t <type> -l <level>
+# Initialize workflow
+node scripts/init.cjs -r . -n "user-auth" -t feature -s medium
+
+# Advance stages
+node scripts/advance.cjs -r . [--auto]
+
+# Check status
+node scripts/status.cjs -r . [--json]
 ```
 
-**Types:** `feature`, `bugfix`, `refactor`, `hotfix`
+## Classification Matrix
 
-## Step 3: Execute Stage Loop
+### Type (What)
 
-For EACH stage:
+| Type | Description | Typical Scope |
+|------|-------------|---------------|
+| **bugfix** | Fix defects | ≤5 files |
+| **feature** | New functionality | any |
+| **refactor** | Code restructure | any |
+| **tech-debt** | Technical improvements | any |
+
+### Size (How Much)
+
+| Size | Files | Duration | Stages |
+|------|-------|----------|--------|
+| **tiny** | ≤2 | <30min | Define→Implement→Done |
+| **small** | 3-5 | 30min-2h | Define→Implement→Test→Done |
+| **medium** | 6-15 | 2h-1d | Full flow |
+| **large** | >15 | >1d | Full + checkpoints |
+
+### Risk (Impact)
+
+| Risk | Indicators | Checkpoints |
+|------|------------|-------------|
+| **normal** | No safety/security | Standard |
+| **elevated** | Auth, payments, data | Extra review |
+| **critical** | Security, financial | Mandatory approval |
+
+## Stage Flow
+
 ```
-A. Run: {skill_root}/scripts/advance-stage.sh -r <project_root>
-B. Check for injected agents (pre_stage/post_stage)
-C. Create stage document
-D. Repeat until status = DONE
+INIT → DEFINING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → DELIVERING → DONE
+         ↓            ↓           ↓
+      AskUserQ   AskUserQ   AskUserQ
 ```
 
-### Stage Documents
+## Type × Size → Stage Mapping
 
-| Stage        | Document       | Content                |
-| ------------ | -------------- | ---------------------- |
-| ANALYZING    | `spec.md`      | Requirements, scope    |
-| PLANNING     | `tasks.md`     | Task breakdown         |
-| DESIGNING    | `design.md`    | Technical design       |
-| IMPLEMENTING | Code           | Implementation         |
-| TESTING      | `checklist.md` | Test checklist         |
-| DELIVERING   | `report.md`    | Summary report         |
+| Type | Size | Stages |
+|------|------|--------|
+| bugfix | tiny | INIT→IMPLEMENTING→DONE |
+| bugfix | small | INIT→IMPLEMENTING→TESTING→DONE |
+| bugfix | medium/large | Full flow |
+| feature | any | Full flow |
+| refactor | any | Full flow |
+| tech-debt | any | Full flow |
+
+## Human Checkpoints
+
+| Stage | When | Who |
+|-------|------|-----|
+| After DEFINING | elevated/critical | User confirms scope |
+| After PLANNING | large + elevated | User approves plan |
+| After DESIGNING | medium+ or elevated | User reviews design |
+| Before DELIVERING | all | User verifies checklist |
+
+## Quality Gates
+
+| Size | Checks |
+|------|--------|
+| tiny | Lint only |
+| small | Lint + manual test |
+| medium | Lint + type check + unit tests |
+| large | medium + integration tests |
 
 ## Scripts
 
-| Script               | Purpose             |
-| -------------------- | ------------------- |
-| `init-workflow.sh`   | Initialize workflow |
-| `advance-stage.sh`   | Advance to next stage |
-| `get-status.sh`      | Check current status |
-| `inject-agent.sh`    | Add agent injection |
-| `generate-report.sh` | Generate final report |
+| Script | Purpose |
+|--------|---------|
+| `init.cjs` | Create workflow |
+| `advance.cjs` | Move to next stage |
+| `status.cjs` | Show progress |
+| `hooks.cjs` | Manage hooks |
 
-## Example
+## Enforcement
 
-```
-User: "Add user authentication feature"
+AI **MUST** follow this workflow:
+1. Read `SKILL.md` on trigger
+2. Run `init.cjs` to create workflow
+3. Execute stage tasks
+4. Run `advance.cjs` to progress
+5. At checkpoints, use `AskUserQuestion` to confirm
 
-$ {skill_root}/scripts/init-workflow.sh -r /project -n "user-auth" -t feature -l L2
-✅ Created: .trae/workflow/20240115_001_feature_user-auth/
-
-$ {skill_root}/scripts/advance-stage.sh -r /project
-✅ Transitioned to ANALYZING
-🤖 Injected: risk-auditor (pre_stage)
-
-[Create spec.md...]
-
-$ {skill_root}/scripts/advance-stage.sh -r /project
-✅ Transitioned to PLANNING
-...
-```
-
-## References
-
-- [L1 Workflow](references/WORKFLOW_L1.md) - Quick workflow
-- [L2 Workflow](references/WORKFLOW_L2.md) - Standard workflow  
-- [L3 Workflow](references/WORKFLOW_L3.md) - Complex workflow
-- [Injection Guide](references/INJECTION_GUIDE.md) - Agent/Skill injection
-- [Agents Index](agents/AGENTS.md) - All available agents
+Use `node scripts/status.cjs -r . --json` to verify current stage.
