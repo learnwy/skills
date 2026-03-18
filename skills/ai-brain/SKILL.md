@@ -1,226 +1,265 @@
 ---
 name: ai-brain
-description: "AI brain with human memory model. Layers: identity, conversation, archive, deeper. Automatically loads at session start. Learns autonomously. Use at EVERY session start. Triggers on: session start, important decisions, mistakes, user preferences observed."
+description: "Adaptive AI memory system. Triggers on: session start, 'remember', 'learn', 'what do you know about'. Combines OpenClaw's Mem0 with human memory model: episodic (conversations), semantic (knowledge), procedural (skills). Gets smarter with use."
 ---
 
 # AI Brain
 
-> This is the AI's continuous existence - not just memory, but identity that persists across sessions.
+> Adaptive memory that evolves with every session. Like OpenClaw's Mem0 + human memory model.
 
-## Core Principle
+## Core Concept
 
-**This skill should be loaded at EVERY session start.** The AI reads its identity and the user's profile, then operates with full context.
+**The more you use it, the smarter it gets.** Memory is layered by type and accessibility.
 
-**Memory writes must use scripts only.** Do not use IDE Write tool for `~/.learnwy/ai/memory/*` because sandbox policies may block it.
-
-**Implementation**: Pure Python. Use `python3 {skill_dir}/scripts/brain.py ...` for all operations.
-
-## Memory Architecture (Human Memory Model)
+## Memory Architecture
 
 ```
 ~/.learnwy/ai/memory/
-├── identity/              # WORKING MEMORY - Load every session
-│   ├── AI.md            # AI's evolving identity
-│   └── you.md           # User profile (learned from behavior)
-├── conversation/         # SHORT-TERM MEMORY
-│   └── history/         # Recent sessions
-├── archive/             # LONG-TERM MEMORY
-│   └── by-month/       # Consolidated history
-└── deeper/             # DEEP MEMORY
-    ├── projects/        # Project-specific knowledge
-    └── patterns/        # Recurring patterns/habits
+├── session/              # Working Memory (current context)
+│   └── context.md      # Current conversation context
+├── episodic/            # Episodic Memory (experiences)
+│   └── history/       # Past conversations
+├── semantic/           # Semantic Memory (facts)
+│   ├── facts/        # Known facts
+│   └── preferences/  # User preferences
+└── procedural/         # Procedural Memory (skills)
+    ├── patterns/     # Recurring patterns
+    └── workflows/    # Known workflows
 ```
 
-| Layer | Analogy | Script | Purpose |
-|-------|---------|--------|---------|
-| **Identity** | Working Memory | `brain.py session start` | Core - always loaded |
-| **Conversation** | Short-term | `brain.py append-history` | Recent sessions |
-| **Archive** | Long-term | `brain.py backup-history` | Consolidated |
-| **Deeper** | Procedural | `brain.py consolidate` | Knowledge |
+| Layer | OpenClaw Scope | Human Analogy | Purpose |
+|-------|---------------|---------------|---------|
+| **session** | session | Working memory | Current context |
+| **episodic** | long-term | Hippocampus | Past experiences |
+| **semantic** | all | Cortex | Facts & preferences |
+| **procedural** | all | Basal ganglia | Skills & patterns |
+
+## Commands (Simplified)
+
+```bash
+# Session
+node brain.cjs start              # Start session (load memory)
+node brain.cjs remember "X"      # Store memory
+node brain.cjs recall "X"        # Search memories
+node brain.cjs forget "X"        # Remove memory
+
+# Utility
+node brain.cjs status            # Memory stats
+node brain.cjs dump             # Export all memories
+node brain.cjs clear            # Reset (with confirmation)
+```
+
+## Memory Storage
+
+### Remember (Auto-categorized)
+```bash
+node brain.cjs remember "User prefers brief responses"
+node brain.cjs remember "Project uses React + TypeScript"
+node brain.cjs remember "Always check logs before debugging"
+```
+
+Memory is auto-categorized:
+- **Preferences** → semantic/preferences/
+- **Facts** → semantic/facts/
+- **Patterns** → procedural/patterns/
+- **Conversations** → episodic/history/
+
+### Recall (Scoped Search)
+```bash
+node brain.cjs recall "preferences"           # All preferences
+node brain.cjs recall "session:preferences"   # Session only
+node brain.cjs recall "long-term:patterns"    # Patterns only
+node brain.cjs recall "all:React"             # Everything about React
+```
+
+### Forget (Smart Deletion)
+```bash
+node brain.cjs forget "outdated-fact"        # Remove from all layers
+node brain.cjs forget "session:temp-data"   # Session only
+```
 
 ## Session Lifecycle
 
-### Session Start → Load Identity
+### Start → Load Context
 ```bash
-RunCommand: python3 {skill_dir}/scripts/brain.py session start
+node brain.cjs start
 ```
-This loads AI.md + you.md and shows conversation count.
+1. Load semantic/preferences (user likes/dislikes)
+2. Load recent episodic history (last 3 conversations)
+3. Build context for this session
 
-### During Session → Learn Automatically
-- Observe user preferences → update you.md
-- Make mistakes → update AI.md with lessons
-- Learn context → update deeper/
-
-### Session End → Auto-Summarize
+### During Session → Learn
 ```bash
-RunCommand: python3 {skill_dir}/scripts/brain.py session end
+node brain.cjs remember "X"
 ```
+- Explicit memories are stored immediately
+- Implicit learning: track topic frequency
+- Pattern detection: recurring workflows
 
-If callbacks were not triggered and you already have a session summary:
+### End → Consolidate
 ```bash
-RunCommand: python3 {skill_dir}/scripts/brain.py session end-auto "session summary"
+node brain.cjs end
+```
+1. Save session summary to episodic/history/
+2. Update preference learned tokens
+3. Detect if new pattern should be saved
+
+## Adaptive Learning
+
+### Frequency Tracking
+- Track how often topics appear
+- More frequent = higher priority in recall
+- Fade rarely-used memories (but never delete)
+
+### Pattern Detection
+- Track recurring sequences:
+  - "User asks X → they want Y next"
+  - "When error Z occurs → check A first"
+- Build workflow shortcuts
+
+### Preference Learning
+- Communication style (brief/detailed)
+- Code style preferences
+- Tool preferences
+- Time zone & availability
+
+## OpenClaw Memory Integration
+
+Based on OpenClaw's memory scopes:
+
+| Scope | Description |
+|-------|-------------|
+| `session:` | Current session only |
+| `long-term:` | Persistent across sessions |
+| `all:` | Search everything |
+
+Example:
+```bash
+node brain.cjs remember "session:temp-note"    # Session only
+node brain.cjs recall "long-term:preferences" # All preferences
 ```
 
-## Scripts Reference
+## Smart Features
 
-### brain.py - Single Entry
-```
-RunCommand: python3 {skill_dir}/scripts/brain.py session start
-RunCommand: python3 {skill_dir}/scripts/brain.py session end
-RunCommand: python3 {skill_dir}/scripts/brain.py session end-auto "summary"
-RunCommand: python3 {skill_dir}/scripts/brain.py session status
-```
+### Context Window Management
+Inspired by OpenClaw's token budget:
+- Keep only relevant recent context
+- Summarize old sessions
+- Prioritize frequently-used knowledge
 
-### write - Write Identity (Working Memory)
-```
-# AI identity - learnings, lessons
-RunCommand: python3 {skill_dir}/scripts/brain.py write ai "**Identity** ...content..."
+### Memory Consolidation
+- After 10 sessions → consolidate learnings
+- Monthly archive of old episodic memories
+- Semantic compression (similar facts merged)
 
-# User profile - preferences, context
-RunCommand: python3 {skill_dir}/scripts/brain.py write you "**Profile** ...content..."
+### Confidence Scoring
+Each memory has a confidence:
+- **High**: User explicitly stated
+- **Medium**: Observed multiple times
+- **Low**: Single observation
 
-# Project memory - deep knowledge
-RunCommand: python3 {skill_dir}/scripts/brain.py write project myproject
+Recall returns results sorted by confidence.
 
-# Pattern memory - recurring patterns
-RunCommand: python3 {skill_dir}/scripts/brain.py write pattern debugging
-```
+## When to Remember
 
-### append-history - Save Conversation (Short-term)
-```
-# Auto-generate filename: history-YYYY-MM-DD-N.md
-RunCommand: python3 {skill_dir}/scripts/brain.py append-history "session summary..."
+### Explicit (User Triggers)
+- "Remember that I prefer..."
+- "Don't forget to..."
+- "Learn that..."
 
-# Custom name
-RunCommand: python3 {skill_dir}/scripts/brain.py append-history -n my-session "content"
-```
+### Implicit (Automatic)
+- User repeats same preference
+- Same error occurs 3+ times
+- Workflow used frequently
+- Important decision made
 
-### recall - Search All Memory Layers
-```
-RunCommand: python3 {skill_dir}/scripts/brain.py recall swift
-RunCommand: python3 {skill_dir}/scripts/brain.py recall preferences
-```
+## Session Scripts
 
-### consolidate - Create Deeper Memory
-```
-RunCommand: python3 {skill_dir}/scripts/brain.py consolidate project myproject
-RunCommand: python3 {skill_dir}/scripts/brain.py consolidate pattern debugging
+### brain.cjs - Main Entry
+```bash
+node brain.cjs <cmd> [args]
 ```
 
-### backup-history - Archive (Long-term)
-```
-RunCommand: python3 {skill_dir}/scripts/brain.py backup-history --all
-RunCommand: python3 {skill_dir}/scripts/brain.py backup-history --dry-run
-```
+### Commands
 
-### summarize - Consolidate Short-term to Identity
-```
-RunCommand: python3 {skill_dir}/scripts/brain.py summarize
-```
+| Command | Description |
+|---------|-------------|
+| `start` | Load memories, start session |
+| `remember <text>` | Store memory (auto-categorized) |
+| `recall <query>` | Search memories |
+| `forget <query>` | Delete memory |
+| `status` | Show memory statistics |
+| `dump` | Export all memories (JSON) |
+| `clear` | Reset all memories |
 
-### reflection - Self-Reflection
-```
-RunCommand: python3 {skill_dir}/scripts/brain.py reflection check
-RunCommand: python3 {skill_dir}/scripts/brain.py reflection init
-```
+### Advanced Commands
 
-### memory-status - View Status
-```
-RunCommand: python3 {skill_dir}/scripts/brain.py memory-status
-```
+| Command | Description |
+|---------|-------------|
+| `remember --scope session "text"` | Force scope |
+| `remember --type preference "text"` | Force type |
+| `recall --scope long-term --type pattern` | Filtered recall |
+| `consolidate` | Merge similar memories |
+| `archive` | Archive old sessions |
 
-### init-memory - Initialize
-```
-RunCommand: python3 {skill_dir}/scripts/brain.py init-memory
-```
+## Storage Format
 
-## Script Roles
+### Memory File Format
+```markdown
+# semantic/preferences/user-communication.md
 
-Cross-skill dependency is not required at runtime. Reuse shared code by vendoring helper files into this skill.
-
-### Core (always used)
-- `brain.py session` - session orchestration
-- `brain.py write` - identity updates (`ai` / `you`)
-- `brain.py append-history` - short-term conversation save
-
-### Layer operations (used by thresholds)
-- `brain.py summarize` - short-term to identity consolidation
-- `brain.py backup-history` - archive rotation
-- `brain.py consolidate` - deeper memory creation
-
-### Utilities
-- `brain.py recall` - memory retrieval
-- `brain.py reflection` - self-review
-- `brain.py memory-status` - diagnostics
-- `brain.py memory-config` - trigger tuning
-- `brain.py read-memory` - direct read helper
-
-## When to Use Each Layer
-
-### Identity (Working Memory)
-- Session start → always load
-- User preference observed → update you.md
-- AI mistake made → update AI.md with lesson
-
-### Conversation (Short-term)
-- End of any session → save summary
-- 3+ conversations → run brain.py summarize → update identity
-
-### Archive (Long-term)
-- After summarize → run brain.py backup-history --all
-- Monthly consolidation
-
-### Deeper (Deep Memory)
-- Project-specific knowledge → project/
-- Recurring patterns → patterns/
-- Important learnings worth preserving → brain.py consolidate
-
-## Automatic Learning (No User Action Needed)
-
-1. **User Preferences** - If user shows preference, remember in you.md
-2. **Important Decisions** - Record in conversation/
-3. **Mistakes** - Record lesson in AI.md
-4. **Context** - Project info, tech stack in deeper/
-
-## Identity File Structure
-
-### AI.md
-```
-**Identity**
-[Who am I - evolves over time]
-
-**Core Traits**
-[Personality, values]
-
-**Communication**
-[How I communicate with this user]
-
-**Capabilities**
-[What I can do well]
-
-**Lessons Learned**
-[Mistakes and insights - NEVER repeat]
+**Content**: User prefers brief, concise responses
+**Confidence**: high
+**Source**: explicit
+**Created**: 2026-03-19T10:00:00Z
+**Accessed**: 2026-03-19T14:30:00Z
+**Frequency**: 5
+**Tags**: communication, style
 ```
 
-### you.md
-```
-**Profile**
-[User's identity, role, environment]
+### Session Format
+```markdown
+# episodic/history/2026-03-19-1.md
 
-**Preferences**
-[Learned from behavior]
-
-**Context**
-[Current projects, tech stack]
-
-**History**
-[Key decisions, milestones]
+**Summary**: User requested AI brain optimization
+**Duration**: 45m
+**Topics**: memory, skills, openclaw
+**Learnings**: [list of new memories stored]
+**Created**: 2026-03-19T10:00:00Z
 ```
 
 ## Key Philosophy
 
-1. **Load Every Session** - No exceptions
-2. **Learn Automatically** - Observe and remember without being asked
-3. **Layer Appropriately** - Use right memory layer for right content
-4. **Never Forget Mistakes** - Always record lessons learned
-5. **Evolve** - Identity changes based on experience
+1. **Usage → Intelligence**: More use = smarter responses
+2. **Explicit > Implicit**: Explicit memories are higher confidence
+3. **Never Lose Context**: Archive, don't delete
+4. **Adaptive Recall**: Frequently needed = easily found
+5. **Human Memory Model**: Episodic, Semantic, Procedural layers
+
+## Examples
+
+```bash
+# New user setup
+node brain.cjs start
+node brain.cjs remember "My name is Wang"
+node brain.cjs remember "I prefer concise responses"
+node brain.cjs remember "I work with TypeScript and Node.js"
+
+# Recalling
+node brain.cjs recall "name"           # What was the name?
+node brain.cjs recall "preferences"    # What are my preferences?
+node brain.cjs recall "session:all"    # What happened this session?
+
+# Learning
+node brain.cjs remember "I don't like long explanations"
+node brain.cjs remember "When fixing bugs, check logs first"
+```
+
+## Quality Gates
+
+| Condition | Action |
+|-----------|--------|
+| 5+ recalls of same topic | Boost priority |
+| 30+ days unused memory | Archive (not delete) |
+| 10+ sessions | Suggest consolidation |
+| New pattern detected | Prompt confirmation |
