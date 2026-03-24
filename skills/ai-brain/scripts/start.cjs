@@ -1,5 +1,7 @@
 #!/usr/bin/env node
-const { memoryDir, ensureDir, getPaths, readText } = require('./lib.cjs');
+const fs = require('fs');
+const path = require('path');
+const { getPaths, readText } = require('./lib.cjs');
 
 const p = getPaths();
 
@@ -45,9 +47,6 @@ function loadMemories() {
   return memories;
 }
 
-const fs = require('fs');
-const path = require('path');
-
 const memories = loadMemories();
 
 if (memories.preferences.length > 0) {
@@ -79,7 +78,5 @@ if (memories.recentHistory.length > 0) {
   console.log('');
 }
 
-console.log('Type "node brain.cjs recall <query>" to search memories');
-console.log('Type "node brain.cjs remember <text>" to store new memory');
-
-const fs = require('fs');
+console.log('Type "{skill_root}/scripts/brain.cjs recall <query>" to search memories');
+console.log('Type "{skill_root}/scripts/brain.cjs remember <text>" to store new memory');

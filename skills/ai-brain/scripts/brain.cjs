@@ -5,7 +5,7 @@ const path = require('path');
 function showHelp() {
   console.log(`AI Brain - Adaptive Memory System
 
-Usage: node brain.cjs <command> [args]
+Usage: {skill_root}/scripts/brain.cjs <command> [args]
 
 Commands:
   start              Load memories, start session
@@ -22,10 +22,10 @@ Scopes:
   all:        Search everything
 
 Examples:
-  node brain.cjs start
-  node brain.cjs remember "User prefers brief responses"
-  node brain.cjs recall "preferences"
-  node brain.cjs forget "outdated-fact"
+  {skill_root}/scripts/brain.cjs start
+  {skill_root}/scripts/brain.cjs remember "User prefers brief responses"
+  {skill_root}/scripts/brain.cjs recall "preferences"
+  {skill_root}/scripts/brain.cjs forget "outdated-fact"
 `);
 }
 

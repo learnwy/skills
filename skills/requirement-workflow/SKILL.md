@@ -9,13 +9,13 @@ description: "Structured software development workflow orchestrator. Triggers on
 
 ```bash
 # Initialize workflow
-node scripts/init.cjs -r . -n "user-auth" -t feature -s medium
+{skill_root}/scripts/init.cjs -r . -n "user-auth" -t feature -s medium
 
 # Advance stages
-node scripts/advance.cjs -r . [--auto]
+{skill_root}/scripts/advance.cjs -r . [--auto]
 
 # Check status
-node scripts/status.cjs -r . [--json]
+{skill_root}/scripts/status.cjs -r . [--json]
 ```
 
 ## Classification Matrix
@@ -96,9 +96,9 @@ INIT → DEFINING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → DE
 
 AI **MUST** follow this workflow:
 1. Read `SKILL.md` on trigger
-2. Run `init.cjs` to create workflow
+2. Run `{skill_root}/scripts/init.cjs` to create workflow
 3. Execute stage tasks
-4. Run `advance.cjs` to progress
+4. Run `{skill_root}/scripts/advance.cjs` to progress
 5. At checkpoints, use `AskUserQuestion` to confirm
 
-Use `node scripts/status.cjs -r . --json` to verify current stage.
+Use `{skill_root}/scripts/status.cjs -r . --json` to verify current stage.

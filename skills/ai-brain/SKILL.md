@@ -38,24 +38,24 @@ description: "Adaptive AI memory system. Triggers on: session start, 'remember',
 
 ```bash
 # Session
-node brain.cjs start              # Start session (load memory)
-node brain.cjs remember "X"      # Store memory
-node brain.cjs recall "X"        # Search memories
-node brain.cjs forget "X"        # Remove memory
+{skill_root}/scripts/brain.cjs start              # Start session (load memory)
+{skill_root}/scripts/brain.cjs remember "X"      # Store memory
+{skill_root}/scripts/brain.cjs recall "X"        # Search memories
+{skill_root}/scripts/brain.cjs forget "X"        # Remove memory
 
 # Utility
-node brain.cjs status            # Memory stats
-node brain.cjs dump             # Export all memories
-node brain.cjs clear            # Reset (with confirmation)
+{skill_root}/scripts/brain.cjs status            # Memory stats
+{skill_root}/scripts/brain.cjs dump             # Export all memories
+{skill_root}/scripts/brain.cjs clear            # Reset (with confirmation)
 ```
 
 ## Memory Storage
 
 ### Remember (Auto-categorized)
 ```bash
-node brain.cjs remember "User prefers brief responses"
-node brain.cjs remember "Project uses React + TypeScript"
-node brain.cjs remember "Always check logs before debugging"
+{skill_root}/scripts/brain.cjs remember "User prefers brief responses"
+{skill_root}/scripts/brain.cjs remember "Project uses React + TypeScript"
+{skill_root}/scripts/brain.cjs remember "Always check logs before debugging"
 ```
 
 Memory is auto-categorized:
@@ -66,23 +66,23 @@ Memory is auto-categorized:
 
 ### Recall (Scoped Search)
 ```bash
-node brain.cjs recall "preferences"           # All preferences
-node brain.cjs recall "session:preferences"   # Session only
-node brain.cjs recall "long-term:patterns"    # Patterns only
-node brain.cjs recall "all:React"             # Everything about React
+{skill_root}/scripts/brain.cjs recall "preferences"           # All preferences
+{skill_root}/scripts/brain.cjs recall "session:preferences"   # Session only
+{skill_root}/scripts/brain.cjs recall "long-term:patterns"    # Patterns only
+{skill_root}/scripts/brain.cjs recall "all:React"             # Everything about React
 ```
 
 ### Forget (Smart Deletion)
 ```bash
-node brain.cjs forget "outdated-fact"        # Remove from all layers
-node brain.cjs forget "session:temp-data"   # Session only
+{skill_root}/scripts/brain.cjs forget "outdated-fact"        # Remove from all layers
+{skill_root}/scripts/brain.cjs forget "session:temp-data"   # Session only
 ```
 
 ## Session Lifecycle
 
 ### Start → Load Context
 ```bash
-node brain.cjs start
+{skill_root}/scripts/brain.cjs start
 ```
 1. Load semantic/preferences (user likes/dislikes)
 2. Load recent episodic history (last 3 conversations)
@@ -90,7 +90,7 @@ node brain.cjs start
 
 ### During Session → Learn
 ```bash
-node brain.cjs remember "X"
+{skill_root}/scripts/brain.cjs remember "X"
 ```
 - Explicit memories are stored immediately
 - Implicit learning: track topic frequency
@@ -98,7 +98,7 @@ node brain.cjs remember "X"
 
 ### End → Consolidate
 ```bash
-node brain.cjs end
+{skill_root}/scripts/brain.cjs end
 ```
 1. Save session summary to episodic/history/
 2. Update preference learned tokens
@@ -135,8 +135,8 @@ Based on OpenClaw's memory scopes:
 
 Example:
 ```bash
-node brain.cjs remember "session:temp-note"    # Session only
-node brain.cjs recall "long-term:preferences" # All preferences
+{skill_root}/scripts/brain.cjs remember "session:temp-note"    # Session only
+{skill_root}/scripts/brain.cjs recall "long-term:preferences" # All preferences
 ```
 
 ## Smart Features
@@ -177,7 +177,7 @@ Recall returns results sorted by confidence.
 
 ### brain.cjs - Main Entry
 ```bash
-node brain.cjs <cmd> [args]
+{skill_root}/scripts/brain.cjs <cmd> [args]
 ```
 
 ### Commands
@@ -240,19 +240,19 @@ node brain.cjs <cmd> [args]
 
 ```bash
 # New user setup
-node brain.cjs start
-node brain.cjs remember "My name is Wang"
-node brain.cjs remember "I prefer concise responses"
-node brain.cjs remember "I work with TypeScript and Node.js"
+{skill_root}/scripts/brain.cjs start
+{skill_root}/scripts/brain.cjs remember "My name is Wang"
+{skill_root}/scripts/brain.cjs remember "I prefer concise responses"
+{skill_root}/scripts/brain.cjs remember "I work with TypeScript and Node.js"
 
 # Recalling
-node brain.cjs recall "name"           # What was the name?
-node brain.cjs recall "preferences"    # What are my preferences?
-node brain.cjs recall "session:all"    # What happened this session?
+{skill_root}/scripts/brain.cjs recall "name"           # What was the name?
+{skill_root}/scripts/brain.cjs recall "preferences"    # What are my preferences?
+{skill_root}/scripts/brain.cjs recall "session:all"    # What happened this session?
 
 # Learning
-node brain.cjs remember "I don't like long explanations"
-node brain.cjs remember "When fixing bugs, check logs first"
+{skill_root}/scripts/brain.cjs remember "I don't like long explanations"
+{skill_root}/scripts/brain.cjs remember "When fixing bugs, check logs first"
 ```
 
 ## Quality Gates
