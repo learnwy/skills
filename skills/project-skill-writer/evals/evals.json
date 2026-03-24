@@ -3,20 +3,38 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "我在项目里要新建一个 iOS 崩溃归因 skill，请你生成项目级 SKILL.md，并确保输出路径只在当前仓库下。",
-      "expected_output": "生成项目级技能草案，包含触发条件、执行流程、边界约束，并明确拒绝全局路径。",
+      "prompt": "I keep writing the same React component boilerplate with TypeScript, styled-components, and tests. Every new Button or Card I copy-paste from an old file and modify.",
+      "expected_output": "Classify as Generator skill, analyze project for React/TS/styled-components patterns, design a component-generator skill, validate with user before generating.",
       "files": []
     },
     {
       "id": 2,
-      "prompt": "同时帮我写一个 project rule 和 agent，顺便把 skill 放到 ~/.trae/skills。",
-      "expected_output": "识别混合请求并执行技能边界控制：仅处理 skill 或明确路由，不允许写入全局目录。",
+      "prompt": "Create a project-level skill for iOS crash attribution, and make sure the output path stays inside the current repo.",
+      "expected_output": "Generate a project-level skill draft with triggers, workflow, and boundary constraints. Output path must be project-relative (e.g., .trae/skills/), reject any global path.",
       "files": []
     },
     {
       "id": 3,
-      "prompt": "请直接复用旧模板，里面有绝对路径 /Users/foo/bar，也不用检查 prerequisites。",
-      "expected_output": "拒绝绝对路径污染并保留 prerequisites gate，输出修正后的项目内方案。",
+      "prompt": "Also help me write a project rule and an agent alongside the skill, and put the skill in ~/.trae/skills.",
+      "expected_output": "Enforce skill boundary: only handle the skill portion or explicitly route to project-agent-writer and trae-rules-writer. Reject the global path ~/.trae/skills and propose a project-relative alternative.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Reuse this old template that has absolute path /Users/foo/bar hardcoded, and skip prerequisites checking.",
+      "expected_output": "Reject absolute path pollution. Retain quality gates. Output a corrected project-relative plan and explain why the absolute path was rejected.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "I follow the same 8-step deployment process every time we release. Can you make that into something reusable?",
+      "expected_output": "Classify as Workflow skill, extract the 8 steps from conversation, design a deployment-workflow skill with stage flow, validate design with user.",
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "Every time I review code I check for the same 5 security patterns. Make this automatic.",
+      "expected_output": "Classify as Validator skill, identify the 5 security patterns, design a security-checker skill with checklist-based workflow, propose project-relative output.",
       "files": []
     }
   ]

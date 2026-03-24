@@ -3,14 +3,42 @@
 Skill initialization script - Problem-Driven Mode
 
 Usage:
-    # Old mode: specify name directly
-    python init_skill.py --skill-dir ./ --name my-skill --summary "does X"
-
-    # New mode: describe the problem
+    # Problem mode (recommended): infer skill metadata from problem description
     python init_skill.py --skill-dir ./ --problem "I keep writing the same React component boilerplate"
+
+    # Legacy mode: specify name directly
+    python init_skill.py --skill-dir ./ --name my-skill --summary "does X"
 """
 import argparse
 import pathlib
+import re
+import sys
+
+STOP_WORDS = frozenset({
+    "a", "an", "the", "is", "are", "was", "were", "be", "been", "being",
+    "have", "has", "had", "do", "does", "did", "will", "would", "shall",
+    "should", "may", "might", "must", "can", "could", "need", "want",
+    "keep", "doing", "thing", "stuff", "every", "time", "always", "never",
+    "just", "really", "very", "much", "many", "some", "each", "also",
+    "same", "like", "that", "this", "with", "from", "into", "about",
+    "when", "where", "which", "what", "make", "made",
+})
+
+SKILL_TYPE_PATTERNS = [
+    (["write", "create", "generate", "boilerplate", "scaffold", "template"], "generator"),
+    (["check", "verify", "validate", "lint", "scan", "audit"], "validator"),
+    (["explain", "document", "describe", "summarize", "annotate"], "informer"),
+    (["follow", "step", "process", "deploy", "release", "pipeline", "workflow"], "workflow"),
+    (["fix", "refactor", "repair", "clean", "migrate", "upgrade"], "remediation"),
+]
+
+TRIGGER_PREFIXES = {
+    "generator": ["create ", "generate ", "new "],
+    "validator": ["validate ", "check ", "scan "],
+    "informer": ["explain ", "document ", "describe "],
+    "workflow": ["run ", "execute ", "start "],
+    "remediation": ["fix ", "refactor ", "clean "],
+}
 
 
 def render(template: str, mapping: dict[str, str]) -> str:
@@ -20,54 +48,57 @@ def render(template: str, mapping: dict[str, str]) -> str:
     return out
 
 
+def extract_keywords(text: str, max_count: int = 5) -> list[str]:
+    words = re.findall(r"[a-zA-Z]{4,}", text.lower())
+    seen: set[str] = set()
+    result: list[str] = []
+    for w in words:
+        if w not in STOP_WORDS and w not in seen:
+            seen.add(w)
+            result.append(w)
+            if len(result) >= max_count:
+                break
+    return result
+
+
+def classify_problem(text: str) -> str:
+    text_lower = text.lower()
+    scores: dict[str, int] = {}
+    for keywords, skill_type in SKILL_TYPE_PATTERNS:
+        score = sum(1 for kw in keywords if kw in text_lower)
+        if score > 0:
+            scores[skill_type] = score
+    if scores:
+        return max(scores, key=scores.get)
+    return "workflow"
+
+
+def slugify(words: list[str], max_parts: int = 3) -> str:
+    return "-".join(words[:max_parts])
+
+
 def infer_from_problem(problem: str) -> dict[str, str]:
-    """Infer skill metadata from user's problem description."""
-    problem_lower = problem.lower()
+    skill_type = classify_problem(problem)
+    keywords = extract_keywords(problem)
+    triggers = TRIGGER_PREFIXES.get(skill_type, ["do ", "run "])
 
-    # Infer skill type from problem patterns
-    if "same" in problem_lower and ("write" in problem_lower or "create" in problem_lower):
-        skill_type = "generator"
-        triggers = ["new ", "create "]
-    elif "same" in problem_lower and ("check" in problem_lower or "verify" in problem_lower):
-        skill_type = "validator"
-        triggers = ["validate ", "check "]
-    elif "same" in problem_lower and ("explain" in problem_lower or "document" in problem_lower):
-        skill_type = "informer"
-        triggers = ["explain ", "document "]
-    elif "same" in problem_lower and ("follow" in problem_lower or "steps" in problem_lower):
-        skill_type = "workflow"
-        triggers = ["run ", "execute "]
-    elif "same" in problem_lower and ("fix" in problem_lower or "refactor" in problem_lower):
-        skill_type = "remediation"
-        triggers = ["fix ", "refactor "]
-    else:
-        skill_type = "workflow"
-        triggers = ["do ", "run "]
-
-    # Extract keywords from problem for triggers
-    words = [w.strip().rstrip('.,!?') for w in problem.split() if len(w) > 3]
-    key_triggers = [w for w in words[:5] if w not in {
-        'every', 'time', 'have', 'need', 'want', 'keep', 'doing', 'thing',
-        'stuff', 'lot', 'much', 'really', 'always', 'never', 'just'
-    }]
-
-    # Generate name from problem
-    base_name = "_".join(key_triggers[:3]).lower()
-    name = f"{base_name}-{skill_type}" if base_name else f"{skill_type}-skill"
-
+    base_slug = slugify(keywords) if keywords else skill_type
+    name = f"{base_slug}-{skill_type}"
     title = name.replace("-", " ").replace("_", " ").title()
+
+    trigger_kws = keywords[:3] if keywords else [skill_type]
 
     return {
         "SKILL_NAME": name,
-        "DESCRIPTION": f"Auto-generated from problem: {problem[:100]}",
-        "USE_CASES": f"Addresses: {problem[:150]}",
-        "TRIGGER1": key_triggers[0] if len(key_triggers) > 0 else f"{skill_type} workflow",
-        "TRIGGER2": key_triggers[1] if len(key_triggers) > 1 else "automate this",
-        "TRIGGER3": key_triggers[2] if len(key_triggers) > 2 else "make reusable",
+        "DESCRIPTION": f"Addresses: {problem[:120]}",
+        "USE_CASES": f"{problem[:150]}",
+        "TRIGGER1": trigger_kws[0] if len(trigger_kws) > 0 else triggers[0].strip(),
+        "TRIGGER2": trigger_kws[1] if len(trigger_kws) > 1 else triggers[1].strip() if len(triggers) > 1 else "automate",
+        "TRIGGER3": trigger_kws[2] if len(trigger_kws) > 2 else triggers[2].strip() if len(triggers) > 2 else "reusable",
         "EXCEPTIONS": "unrelated one-off requests",
         "SKILL_TITLE": title,
         "BRIEF_INTRO": f"Skill to address: {problem}",
-        "CONDITION_1": f"The task involves: {key_triggers[0] if key_triggers else 'repeated work'}",
+        "CONDITION_1": f"The task involves: {keywords[0] if keywords else 'repeated work'}",
         "CONDITION_2": "The user needs consistent output format",
         "CONDITION_3": "The task benefits from structured steps",
         "EXCEPTION_1": "The task is unrelated to this domain",
@@ -75,11 +106,11 @@ def infer_from_problem(problem: str) -> dict[str, str]:
         "STEP_1": "Analyze input",
         "STEP_2": f"Apply {skill_type} logic",
         "STEP_3": "Execute steps",
-        "STEP_4": "Return structured output",
+        "STEP_4": "Verify output",
         "COL1": "Input",
         "COL2": "Action",
         "COL3": "Output",
-        "VAL1": "User request / problem",
+        "VAL1": "User request",
         "VAL2": f"Skill {skill_type}",
         "VAL3": "Structured result",
         "ISSUE1": "Missing input",
@@ -91,12 +122,11 @@ def infer_from_problem(problem: str) -> dict[str, str]:
         "REF_1_DESC": "Domain notes",
         "REF_2": "Template",
         "REF_2_FILE": "template.md",
-        "REF_2_DESC": "Output template"
+        "REF_2_DESC": "Output template",
     }
 
 
 def defaults(skill_name: str, summary: str) -> dict[str, str]:
-    """Legacy mode: user provides name directly."""
     title = skill_name.replace("-", " ").title()
     return {
         "SKILL_NAME": skill_name,
@@ -116,7 +146,7 @@ def defaults(skill_name: str, summary: str) -> dict[str, str]:
         "STEP_1": "Analyze input",
         "STEP_2": "Select workflow path",
         "STEP_3": "Execute steps",
-        "STEP_4": "Return structured output",
+        "STEP_4": "Verify output",
         "COL1": "Input",
         "COL2": "Action",
         "COL3": "Output",
@@ -132,32 +162,53 @@ def defaults(skill_name: str, summary: str) -> dict[str, str]:
         "REF_1_DESC": "Domain notes",
         "REF_2": "Template",
         "REF_2_FILE": "template.md",
-        "REF_2_DESC": "Output template"
+        "REF_2_DESC": "Output template",
     }
+
+
+def validate_output_path(path: pathlib.Path) -> None:
+    home = pathlib.Path.home()
+    resolved = path.resolve()
+    global_dirs = [
+        home / ".trae",
+        home / ".trae-cn",
+        home / ".claude",
+        home / ".cursor",
+    ]
+    for gd in global_dirs:
+        if str(resolved).startswith(str(gd)):
+            print(f"ERROR: Output path {resolved} is inside global directory {gd}. Use a project-relative path.", file=sys.stderr)
+            sys.exit(1)
 
 
 def main() -> int:
     p = argparse.ArgumentParser(prog="init_skill")
-    p.add_argument("--skill-dir", required=True)
+    p.add_argument("--skill-dir", required=True, help="Path to this skill's own directory (for loading template)")
     p.add_argument("--name", help="Skill name (use --problem instead for auto-detection)")
     p.add_argument("--summary", default="")
     p.add_argument("--problem", help="Describe the problem - auto-generate skill from problem")
-    p.add_argument("--output-root", default="skills")
+    p.add_argument("--output-root", default=".trae/skills", help="Project-relative output root (default: .trae/skills)")
     args = p.parse_args()
 
     writer_skill_dir = pathlib.Path(args.skill_dir).resolve()
-    tpl = (writer_skill_dir / "assets" / "skill.md.template").read_text(encoding="utf-8")
+    tpl_path = writer_skill_dir / "assets" / "skill.md.template"
+    if not tpl_path.exists():
+        print(f"ERROR: Template not found at {tpl_path}", file=sys.stderr)
+        return 1
 
-    # New mode: infer from problem
+    tpl = tpl_path.read_text(encoding="utf-8")
+
     if args.problem:
         mapping = infer_from_problem(args.problem)
-    # Legacy mode: use provided name
     elif args.name:
         mapping = defaults(args.name, args.summary)
     else:
         p.error("Either --name or --problem is required")
+        return 1
 
     target_dir = pathlib.Path(args.output_root).resolve() / mapping["SKILL_NAME"]
+    validate_output_path(target_dir)
+
     target_dir.mkdir(parents=True, exist_ok=True)
     out_file = target_dir / "SKILL.md"
     out_file.write_text(render(tpl, mapping), encoding="utf-8")

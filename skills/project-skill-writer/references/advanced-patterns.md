@@ -146,7 +146,6 @@ tool-skill/
 ## Quick Usage
 
 \`\`\`bash
-# Most common commands
 tool init <name>
 tool run <target>
 \`\`\`
@@ -195,13 +194,3 @@ Before creating any skill, analyze:
 - [ ] What conventions exist?
 - [ ] What templates would help?
 - [ ] What patterns exist in existing `.trae/skills/`?
-
-## Anti-Patterns to Avoid
-
-| Anti-Pattern                 | Problem                     | Solution                         |
-| ---------------------------- | --------------------------- | -------------------------------- |
-| Generic skills               | Don't match project         | Analyze project first            |
-| Vague triggers               | Won't activate correctly    | Specific keywords in description |
-| Everything in SKILL.md       | Token bloat                 | Split to references/             |
-| Imposing new patterns        | Conflicts with project      | Match existing conventions       |
-| README/docs files            | Not for AI                  | Delete these files               |

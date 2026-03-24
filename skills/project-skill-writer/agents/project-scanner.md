@@ -30,7 +30,7 @@ Perform deep, isolated analysis of project structure and return structured findi
 
 2. **Find Related Patterns** in codebase:
    - Look for files/components that match the problem
-   - Identify templates or boilerplate code user might be重复写
+   - Identify templates or boilerplate code user might be writing repeatedly
    - Find documentation or comments explaining recurring processes
 
 3. **Generate Skill Recommendations**:

@@ -6,8 +6,6 @@ This reference is used AFTER problem analysis and skill design. Load it when:
 
 ### DO NOT load this first!
 
-**Critical**: Path discovery is the LAST step, not the first!
-
 ```
 Correct Flow:
 1. Understand user's problem
@@ -21,31 +19,30 @@ Correct Flow:
 
 Detect runtime/tooling markers in project root and user home:
 
-- Claude Code: `.claude/`
-- Codex CLI: `.codex/`
-- Cursor: `.cursor/`
-- Trae project marker: `{project_dir}/.trae/`
-- Trae user marker: `~/.trae/`
-- Trae-CN project marker: `{project_dir}/.trae/`
-- Trae-CN user marker: `~/.trae-cn/`
-
-If multiple markers exist, let the model judge with this order:
-1. Explicit user target
-2. Workspace marker evidence
-3. User-home marker evidence
-4. Existing project convention evidence from docs and file tree
-
-If ambiguity remains, select the most conservative writable path and report why.
+| Marker | Runtime |
+|--------|---------|
+| `.claude/` | Claude Code |
+| `.cursor/` | Cursor |
+| `{project_dir}/.trae/` | Trae (project) |
+| `~/.trae/` | Trae (user) |
+| `~/.trae-cn/` | Trae-CN (user) |
 
 ### Discovery Priority
 
-1. Runtime-specific project skill path (detected from markers)
-2. Project-managed shared skill path
-3. Default local `skills/` path
+When multiple markers exist, resolve in this order:
+
+1. **Explicit user target** — user said where to put it
+2. **Workspace marker evidence** — `.trae/` or `.cursor/` in project root
+3. **User-home marker evidence** — `~/.trae/` or `~/.trae-cn/`
+4. **Existing convention** — what other skills in the project already use
+5. **Default** — `.trae/skills/` in project root
+
+If ambiguity remains, select the most conservative writable path and report why.
 
 ### Validation Rules
 
 - Path must exist or be creatable inside project workspace
 - Path must be writable
 - Path selection must be reported in final output
-- Use project-relative paths, never global paths like `~/.trae/skills`
+- **NEVER** use global paths like `~/.trae/skills` or `~/.claude/skills` for project skills
+- Absolute paths (e.g., `/Users/foo/bar`) are rejected — always use project-relative
