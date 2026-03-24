@@ -112,7 +112,7 @@ function createSpec(workflowDir, name, desc, type, size) {
   if (isSimple) {
     fs.writeFileSync(path.join(workflowDir, 'spec.md'), `# ${name}\n\n## Problem\n${desc}\n\n## Fix\n- [ ] \n\n## Verification\n- [ ] Test passes\n`);
   } else {
-    fs.writeFileSync(path.join(workflowDir, 'spec.md'), `# ${name}\n\n## Background\n${desc}\n\n## Scope\n- In: \n- Out: \n\n## Acceptance Criteria\n- [ ] \n\n## Out of Scope\n- \n`);
+    fs.writeFileSync(path.join(workflowDir, 'spec.md'), `# ${name}\n\n## Background\n${desc}\n\n## Scope\n- In: \n- Out: \n\n## Acceptance Criteria (EARS format)\n- [ ] When <condition>, the system shall <response>\n\n## Constraints\n- \n\n## Out of Scope\n- \n`);
   }
 }
 
@@ -120,7 +120,7 @@ function createTasks(workflowDir, type) {
   if (type === 'bugfix') {
     fs.writeFileSync(path.join(workflowDir, 'tasks.md'), `# Tasks\n\n## Fix\n- [ ] Identify root cause\n- [ ] Implement fix\n- [ ] Add regression test\n\n## Verification\n- [ ] Run tests\n- [ ] Manual verification\n`);
   } else {
-    fs.writeFileSync(path.join(workflowDir, 'tasks.md'), `# Tasks\n\n## TODO\n- [ ] \n`);
+    fs.writeFileSync(path.join(workflowDir, 'tasks.md'), `# Tasks\n\n## Phase 1: Foundation\n- [ ] \n\n## Phase 2: Core Logic\n- [ ] \n\n## Phase 3: Integration & Polish\n- [ ] \n\n## Verification\n- [ ] All acceptance criteria pass\n- [ ] Lint clean\n- [ ] Type check pass\n`);
   }
 }
 
@@ -130,7 +130,7 @@ function createChecklist(workflowDir, type, size) {
   if (isSimple) {
     fs.writeFileSync(path.join(workflowDir, 'checklist.md'), `# Checklist\n\n- [ ] Code complete\n- [ ] Tests pass\n- [ ] Lint clean\n`);
   } else {
-    fs.writeFileSync(path.join(workflowDir, 'checklist.md'), `# Checklist\n\n## Code\n- [ ] Implementation complete\n- [ ] Lint clean\n- [ ] Type check pass\n\n## Tests\n- [ ] Unit tests pass\n- [ ] Integration tests pass\n\n## Review\n- [ ] Code reviewed\n- [ ] Documentation updated\n`);
+    fs.writeFileSync(path.join(workflowDir, 'checklist.md'), `# Checklist\n\n## Code Quality\n- [ ] Implementation complete\n- [ ] Lint clean\n- [ ] Type check pass\n\n## Tests\n- [ ] Unit tests pass\n- [ ] Integration tests pass (if applicable)\n\n## Acceptance Criteria\n- [ ] AC 1: {from spec.md} — verified\n\n## Review\n- [ ] Self-review complete\n- [ ] No TODO/FIXME left unresolved\n`);
   }
 }
 

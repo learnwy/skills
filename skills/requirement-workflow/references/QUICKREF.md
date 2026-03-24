@@ -1,53 +1,90 @@
-# Quick Reference
+# Quick Reference — Requirement Workflow (SDD)
 
-## Scripts
+## Mode Selection
+
+```
+Is it a bugfix AND tiny/small?  →  Agent Mode (fast path)
+Is it medium+ OR elevated+ risk? →  Spec Mode (full SDD)
+Not sure?                        →  Default to Agent Mode, upgrade if scope grows
+```
+
+## Stage Flow
+
+```
+Agent Mode:  INIT → IMPLEMENTING → TESTING → DONE
+Spec Mode:   INIT → DEFINING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → DELIVERING → DONE
+```
+
+## Classification Quick Table
+
+| Keywords | Type | Default Size | Default Risk |
+|----------|------|-------------|-------------|
+| fix, bug, broken, crash, error | bugfix | small | normal |
+| add, create, implement, build, feature | feature | small | normal |
+| refactor, clean, reorganize, simplify | refactor | small | normal |
+| upgrade, migrate, tech-debt, deprecate | tech-debt | medium | elevated |
+| auth, payment, security, PII, encrypt | any | any | critical |
+
+## SDD Artifact Templates
+
+### spec.md (EARS format)
+
+```
+When <condition>, the system shall <response>
+While <state>, the system shall <behavior>
+Where <constraint>, the system shall <limit>
+```
+
+### tasks.md (Phase-based)
+
+```
+## Phase 1: Foundation
+- [ ] Task 1.1 [files: x]
+## Phase 2: Core
+- [ ] Task 2.1 [files: y]
+```
+
+### checklist.md
+
+```
+- [ ] Implementation complete
+- [ ] Lint clean
+- [ ] Type check pass
+- [ ] Tests pass
+- [ ] Acceptance criteria verified
+```
+
+## Checkpoint Decision
+
+| Stage | Pause When |
+|-------|-----------|
+| DEFINING | risk ≥ elevated |
+| PLANNING | size = large OR risk ≥ elevated |
+| DESIGNING | size ≥ medium OR risk ≥ elevated |
+| TESTING | always |
+
+## Script Commands
 
 ```bash
-node scripts/init.cjs -r . -n "name" -t bugfix -s small -k normal
-node scripts/advance.cjs -r . [--auto]
-node scripts/status.cjs -r . [--json]
-node scripts/hooks.cjs -r . list
+node init.cjs -r . -n "name" -t feature -s medium -k normal
+node advance.cjs -r .
+node status.cjs -r .
+node hooks.cjs -r . list
 ```
 
-## Classification
+## Agent Quick Lookup
 
-| Dimension | Options |
-|-----------|---------|
-| **Type** | bugfix, feature, refactor, tech-debt |
-| **Size** | tiny (≤2), small (3-5), medium (6-15), large (>15) |
-| **Risk** | normal, elevated, critical |
-
-## Stages
-
-```
-INIT → DEFINING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → DELIVERING → DONE
-```
-
-## Type × Size → Stages
-
-| Type | Size | Stages |
-|------|------|--------|
-| bugfix | tiny | INIT→IMPLEMENTING→DONE |
-| bugfix | small | INIT→IMPLEMENTING→TESTING→DONE |
-| bugfix | medium/large | Full flow |
-| feature/refactor/tech-debt | any | Full flow |
-
-## Checkpoints
-
-Checkpoints fire based on risk level:
-
-| Stage | normal | elevated | critical |
-|-------|--------|----------|----------|
-| DEFINING | - | ✅ | ✅ |
-| PLANNING | - | - | ✅ |
-| DESIGNING | - | ✅ | ✅ |
-| TESTING | ✅ | ✅ | ✅ |
-
-## Quality Gates
-
-| Size | Checks |
-|------|--------|
-| tiny | Lint |
-| small | Lint + manual test |
-| medium | Lint + type check + unit tests |
-| large | medium + integration tests |
+| Need | Agent |
+|------|-------|
+| Audit a PRD | iron-audit-pm |
+| Define the real problem | problem-definer |
+| Scan for risks | risk-auditor |
+| Map user stories | story-mapper |
+| Freeze MVP scope | mvp-freeze-architect |
+| Model domain entities | domain-modeler |
+| Architecture quality | architecture-advisor |
+| TDD guidance | tdd-coach |
+| Test strategy | test-strategist |
+| Code review | code-reviewer |
+| Design review | tech-design-reviewer |
+| Resolve blockers | blocker-resolver |
