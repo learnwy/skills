@@ -21,6 +21,11 @@ When user says:
 - ".trae/rules/..."
 - "#RuleName"
 
+## Prerequisites
+
+- Node.js >= 18
+- Trae IDE (with `.trae/rules/` support)
+
 ## Workflow
 
 ```

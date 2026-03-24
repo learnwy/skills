@@ -19,6 +19,12 @@ Fetch data by node from Figma URL and avoid downloading full file trees.
 - User asks to fetch an entire Figma file tree.
 - Request is outside supported endpoints.
 
+## Prerequisites
+
+- Node.js >= 18
+- `FIGMA_ACCESS_TOKEN` environment variable (or `.env.local` / `.figma.env` file with the token)
+- If token is missing, run `node {skill_dir}/scripts/init_figma_config.cjs` to set up
+
 ## Fixed Workflow
 
 1. Check token config: `FIGMA_ACCESS_TOKEN`.
@@ -46,25 +52,25 @@ Recommended location: `{project_root}/.env.local`
 ### 1) Init config
 
 ```bash
-python {skill_dir}/scripts/init_figma_config.py --project-root {project_root} --file .env.local
+node {skill_dir}/scripts/init_figma_config.cjs --project-root {project_root} --file .env.local
 ```
 
 ### 2) Check config
 
 ```bash
-python {skill_dir}/scripts/figma_fetch.py check-config --project-root {project_root}
+node {skill_dir}/scripts/figma_fetch.cjs check-config --project-root {project_root}
 ```
 
 ### 3) Validate URL
 
 ```bash
-python {skill_dir}/scripts/figma_fetch.py validate-link --url "https://www.figma.com/file/xxx/xxx?node-id=1%3A2"
+node {skill_dir}/scripts/figma_fetch.cjs validate-link --url "https://www.figma.com/file/xxx/xxx?node-id=1%3A2"
 ```
 
 ### 4) Fetch node JSON
 
 ```bash
-python {skill_dir}/scripts/figma_fetch.py fetch \
+node {skill_dir}/scripts/figma_fetch.cjs fetch \
   --project-root {project_root} \
   --url "https://www.figma.com/file/xxx/xxx?node-id=1%3A2" \
   --type node \
@@ -75,7 +81,7 @@ python {skill_dir}/scripts/figma_fetch.py fetch \
 ### 5) Fetch node image
 
 ```bash
-python {skill_dir}/scripts/figma_fetch.py fetch \
+node {skill_dir}/scripts/figma_fetch.cjs fetch \
   --project-root {project_root} \
   --url "https://www.figma.com/file/xxx/xxx?node-id=1%3A2" \
   --type image \
@@ -87,7 +93,7 @@ python {skill_dir}/scripts/figma_fetch.py fetch \
 ### 6) Batch fetch (multiple URLs)
 
 ```bash
-python {skill_dir}/scripts/figma_fetch.py fetch-batch \
+node {skill_dir}/scripts/figma_fetch.cjs fetch-batch \
   --project-root {project_root} \
   --url "https://www.figma.com/file/xxx/A?node-id=1%3A2" \
   --url "https://www.figma.com/file/xxx/A?node-id=1%3A3" \
@@ -99,7 +105,7 @@ python {skill_dir}/scripts/figma_fetch.py fetch-batch \
 or:
 
 ```bash
-python {skill_dir}/scripts/figma_fetch.py fetch-batch \
+node {skill_dir}/scripts/figma_fetch.cjs fetch-batch \
   --project-root {project_root} \
   --urls-file {project_root}/figma-urls.txt \
   --type image \
@@ -154,7 +160,7 @@ This skill can be called by other skills.
 
 Recommended orchestration pattern:
 1. Product/Frontend skill receives Figma URL from user.
-2. Product/Frontend skill calls this skill (or runs `{skill_dir}/scripts/figma_fetch.py`) to fetch node JSON/image.
+2. Product/Frontend skill calls this skill (or runs `{skill_dir}/scripts/figma_fetch.cjs`) to fetch node JSON/image.
 3. Product/Frontend skill consumes the fetched artifacts to continue implementation.
 
 Practical rule:

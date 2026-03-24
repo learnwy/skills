@@ -7,13 +7,18 @@ description: "Consolidate and persist knowledge from AI conversations into struc
 
 Persist valuable knowledge from AI conversations into structured documents.
 
+## Prerequisites
+
+- Node.js >= 18
+- Target project with a supported AI IDE marker (`.trae/`, `.claude/`, `.cursor/`, `.windsurf/`)
+
 ## Workflow
 
 ```
 1. DETECT AI IDE → Check for .trae/, .claude/, .cursor/
 2. IDENTIFY CANDIDATES → Scan for knowledge worth preserving
 3. CLASSIFY TYPE → Select appropriate knowledge type
-4. GENERATE PATH → Run get-knowledge-path.sh
+4. GENERATE PATH → Run get-knowledge-path.cjs
 5. WRITE DOCUMENT → Use template format
 ```
 
@@ -40,7 +45,7 @@ Persist valuable knowledge from AI conversations into structured documents.
 ## Step 3: Generate Path
 
 ```bash
-{skill_root}/scripts/get-knowledge-path.sh -r <project_root> -a <ai_type> -t <type> -n <filename>
+{skill_root}/scripts/get-knowledge-path.cjs -r <project_root> -a <ai_type> -t <type> -n <filename>
 ```
 
 Output: `{project_root}/{ai_path}/knowledges/{YYYYMMDD}_{seq}_{type}_{filename}.md`
@@ -77,6 +82,6 @@ Use [template](assets/knowledge.md.template):
 
 | Resource                        | Purpose                |
 | ------------------------------- | ---------------------- |
-| `scripts/get-knowledge-path.sh` | Generate file path     |
+| `scripts/get-knowledge-path.cjs` | Generate file path     |
 | `references/knowledge-types.md` | Type selection guide   |
 | `assets/knowledge.md.template`  | Document template      |

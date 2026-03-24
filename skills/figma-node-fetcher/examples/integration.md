@@ -6,13 +6,13 @@ Use this skill as a data provider inside a higher-level implementation skill.
 
 1. Main skill receives user goal (for example: "build page from Figma").
 2. Main skill extracts Figma URL(s) from user input.
-3. Main skill calls `{skill_dir}/scripts/figma_fetch.py`.
+3. Main skill calls `{skill_dir}/scripts/figma_fetch.cjs`.
 4. Main skill consumes generated artifacts and continues implementation.
 
 ## Single-Node Integration
 
 ```bash
-python {skill_dir}/scripts/figma_fetch.py fetch \
+node {skill_dir}/scripts/figma_fetch.cjs fetch \
   --project-root {project_root} \
   --url "{figma_url_with_node_id}" \
   --type node \
@@ -25,7 +25,7 @@ Expected artifact:
 ## Multi-Node Integration
 
 ```bash
-python {skill_dir}/scripts/figma_fetch.py fetch-batch \
+node {skill_dir}/scripts/figma_fetch.cjs fetch-batch \
   --project-root {project_root} \
   --urls-file {project_root}/figma-urls.txt \
   --type image \

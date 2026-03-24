@@ -15,6 +15,11 @@ A comprehensive collection of 10 proven software engineering methodologies, each
 - Project skills have higher priority because they contain context-specific adaptations (Hook Points, custom outputs, etc.)
 - Only use this skill explicitly if you want the vanilla methodology without project context
 
+## Prerequisites
+
+- No runtime dependencies (methodology-only skill, no scripts)
+- Works with any project in any language
+
 ## Available Methodologies
 
 ### 🔍 Analyzing Phase

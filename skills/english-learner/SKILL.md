@@ -7,6 +7,11 @@ description: "Personal English vocabulary learning assistant. Use when user quer
 
 Personal vocabulary learning assistant with persistent storage and mastery tracking.
 
+## Prerequisites
+
+- Node.js >= 18
+- Writable home directory for `~/.english-learner/` data storage
+
 ## Keywords (Special Commands)
 
 | Keyword | Action |
@@ -23,10 +28,10 @@ Personal vocabulary learning assistant with persistent storage and mastery track
 2. PARSE INPUT      → Understand user intent (clarify if ambiguous)
 3. IDENTIFY CONTENT → Extract word(s)/phrase(s)/sentence(s) into a list
 4. IF AMBIGUOUS     → AskUserQuestion to confirm before processing
-5. BATCH LOOKUP     → python vocab_manager.py batch_get '["word1", "word2", ...]'
+5. BATCH LOOKUP     → node vocab_manager.cjs batch_get '["word1", "word2", ...]'
 6. AI GENERATES     → For each "not_found" word, AI provides definition/phonetic/examples
-7. BATCH SAVE       → python vocab_manager.py batch_save '[{...}, {...}]'
-8. LOG QUERY        → python vocab_manager.py log_query <query> <type>
+7. BATCH SAVE       → node vocab_manager.cjs batch_save '[{...}, {...}]'
+8. LOG QUERY        → node vocab_manager.cjs log_query <query> <type>
 9. RESPOND          → Unified format output
 ```
 
@@ -51,28 +56,28 @@ AskUserQuestion:
 All scripts in `{skill_root}/scripts/`. Data in `~/.english-learner/`.
 
 ```bash
-# vocab_manager.py - Single operations
-python vocab_manager.py get_word <word>
-python vocab_manager.py save_word <word> <definition> [phonetic] [examples_json]
-python vocab_manager.py get_phrase "<phrase>"
-python vocab_manager.py save_phrase "<phrase>" <definition> [phonetic] [examples_json]
-python vocab_manager.py log_query <query> <type>
-python vocab_manager.py stats
-python vocab_manager.py update_mastery <item> <is_word:true/false> <correct:true/false>
+# vocab_manager.cjs - Single operations
+node vocab_manager.cjs get_word <word>
+node vocab_manager.cjs save_word <word> <definition> [phonetic] [examples_json]
+node vocab_manager.cjs get_phrase "<phrase>"
+node vocab_manager.cjs save_phrase "<phrase>" <definition> [phonetic] [examples_json]
+node vocab_manager.cjs log_query <query> <type>
+node vocab_manager.cjs stats
+node vocab_manager.cjs update_mastery <item> <is_word:true/false> <correct:true/false>
 
-# vocab_manager.py - Batch operations (PREFERRED for multiple words)
-python vocab_manager.py batch_get '["word1", "word2", ...]'
-python vocab_manager.py batch_save '[{"word": "...", "definition": "...", "phonetic": "...", "examples": [...]}]'
+# vocab_manager.cjs - Batch operations (PREFERRED for multiple words)
+node vocab_manager.cjs batch_get '["word1", "word2", ...]'
+node vocab_manager.cjs batch_save '[{"word": "...", "definition": "...", "phonetic": "...", "examples": [...]}]'
 
-# sentence_parser.py
-python sentence_parser.py classify <text>
-python sentence_parser.py parse <sentence>
-python sentence_parser.py batch_check <words>
+# sentence_parser.cjs
+node sentence_parser.cjs classify <text>
+node sentence_parser.cjs parse <sentence>
+node sentence_parser.cjs batch_check <words>
 
-# quiz_manager.py
-python quiz_manager.py generate [count] [type] [focus]
-python quiz_manager.py review [limit]
-python quiz_manager.py summary
+# quiz_manager.cjs
+node quiz_manager.cjs generate [count] [type] [focus]
+node quiz_manager.cjs review [limit]
+node quiz_manager.cjs summary
 ```
 
 ## Unified Response Format
@@ -234,7 +239,7 @@ python quiz_manager.py summary
 When user says `学习` / `review` / `quiz`:
 
 ```
-1. python quiz_manager.py generate 5 all low_mastery
+1. node quiz_manager.cjs generate 5 all low_mastery
 
 2. For EACH item:
    
@@ -256,7 +261,7 @@ When user says `学习` / `review` / `quiz`:
      - label: "基本掌握", description: "+5 mastery"
      - label: "需要加强", description: "-5 mastery"
 
-5. python vocab_manager.py update_mastery <item> true <result>
+5. node vocab_manager.cjs update_mastery <item> true <result>
 
 6. Continue or show summary
 ```
@@ -311,7 +316,7 @@ When user says `stats` / `统计`:
 
 ## Learning Mode - Empty Vocabulary
 
-If quiz_manager.py returns empty list (no words to review):
+If quiz_manager.cjs returns empty list (no words to review):
 
 ```
 📚 **词库为空**

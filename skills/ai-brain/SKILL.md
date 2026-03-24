@@ -7,6 +7,11 @@ description: "Adaptive AI memory system. Triggers on: session start, 'remember',
 
 > Adaptive memory that evolves with every session. Like OpenClaw's Mem0 + human memory model.
 
+## Prerequisites
+
+- Node.js >= 18
+- Writable home directory for `~/.learnwy/ai/memory/` storage
+
 ## Core Concept
 
 **The more you use it, the smarter it gets.** Memory is layered by type and accessibility.

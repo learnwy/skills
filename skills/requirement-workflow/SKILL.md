@@ -18,6 +18,11 @@ description: "Structured software development workflow orchestrator. Triggers on
 {skill_root}/scripts/status.cjs -r . [--json]
 ```
 
+## Prerequisites
+
+- Node.js >= 18
+- Writable project directory for workflow state files
+
 ## Classification Matrix
 
 ### Type (What)

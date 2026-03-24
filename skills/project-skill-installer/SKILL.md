@@ -26,6 +26,12 @@ When a user mentions any of these, activate this skill:
 
 **DO NOT** ask "Which skill do you want to install?" - understand their goal first.
 
+## Prerequisites
+
+- Node.js >= 18
+- Requires `find-skills` to be globally available
+- If missing, prompt user: `npx skills add find-skills -g -y`
+
 ## L1: Goal Understanding
 
 ### Goal Classification
@@ -155,11 +161,6 @@ Only use AskUserQuestion when:
 DO NOT use for:
 - Asking where to install (use project conventions)
 - Asking which specific skill (infer from goal)
-
-## Prerequisites
-
-- Requires `find-skills` to be globally available
-- If missing, prompt user: `npx skills add find-skills -g -y`
 
 ## References
 

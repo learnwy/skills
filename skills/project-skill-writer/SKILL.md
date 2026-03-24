@@ -27,6 +27,11 @@ metadata:
 - User wants a rule, not a skill (delegate to `trae-rules-writer`)
 - One-off request with no reuse potential
 
+## Prerequisites
+
+- Node.js >= 18
+- Target project must have a writable directory (defaults to `.trae/skills/`)
+
 ## Workflow
 
 ```
@@ -123,12 +128,12 @@ WAIT for user confirmation before generating.
 
 After user confirmation:
 
-1. **Scaffold**: Run `scripts/init_skill.py` with `--problem` flag, or create files manually using [skill.md.template](assets/skill.md.template)
+1. **Scaffold**: Run `scripts/init_skill.cjs` with `--problem` flag, or create files manually using [skill.md.template](assets/skill.md.template)
 2. **Populate**: Inject project-specific conventions from L2 analysis into SKILL.md sections
 3. **Reference files**: Create `references/`, `assets/`, `scripts/` only when the skill needs them
 4. **Path**: Determine output path using [Path Discovery](references/path-discovery.md) — always project-relative
 
-Fallback: If `init_skill.py` fails or the template doesn't fit, write SKILL.md directly following the template structure.
+Fallback: If `init_skill.cjs` fails or the template doesn't fit, write SKILL.md directly following the template structure.
 
 ## L6: Quality Gates
 

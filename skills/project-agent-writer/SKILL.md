@@ -23,6 +23,11 @@ When a user mentions any of these, activate this skill:
 
 **DO NOT** ask "What do you want the agent to do?" - infer from their problem.
 
+## Prerequisites
+
+- Node.js >= 18
+- Target project must have a writable directory for agent output
+
 ## L1: Problem Understanding
 
 ### Problem Classification
@@ -125,7 +130,7 @@ WAIT for confirmation before generating.
 
 ## L5: Generation
 
-1. Create agent scaffold using `scripts/init_agent.py`
+1. Create agent scaffold using `scripts/init_agent.cjs`
 2. Fill role, inputs, process, outputs
 3. Set correct project-relative output path
 4. Include quality gates

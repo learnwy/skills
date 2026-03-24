@@ -18,7 +18,7 @@ AI: I notice we've completed a significant debugging session. Let me consolidate
 ## Path Generation
 
 ```bash
-$ {skill_root}/scripts/get-knowledge-path.sh -r /project -a trae-cn -t debug -n image-cache-memory-leak
+$ {skill_root}/scripts/get-knowledge-path.cjs -r /project -a trae-cn -t debug -n image-cache-memory-leak
 /project/.trae/knowledges/20260223_001_debug_image-cache-memory-leak.md
 ```
 
