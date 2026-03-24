@@ -1,50 +1,49 @@
 #!/usr/bin/env node
+'use strict';
+
 const fs = require('fs');
 const path = require('path');
-const { memoryDir, getPaths } = require('./lib.cjs');
+const lib = require('./lib.cjs');
 
 const args = process.argv.slice(2);
+const query = args.filter(a => !a.startsWith('--'))[0];
+let category = null;
 
-if (args.length === 0 || args[0] === 'help') {
-  console.log(`Usage: node forget.cjs "query"
-
-Remove memories matching query.
-
-Examples:
-  node forget.cjs "outdated-fact"
-  node forget.cjs "session:temp-note"
-`);
-  process.exit(0);
+for (let i = 0; i < args.length; i++) {
+  if (args[i] === '--category' && args[i + 1]) category = args[i + 1];
 }
 
-const query = args.join(' ').toLowerCase();
-const mem = memoryDir();
-const p = getPaths(mem);
+if (!query) {
+  console.error('Usage: node forget.cjs <content_substring> [--category fact|preference|pattern]');
+  process.exit(1);
+}
 
-let deleted = 0;
+const dirsToSearch = [];
+if (!category || category === 'fact') dirsToSearch.push({ dir: lib.DIRS.semantic.facts, cat: 'fact' });
+if (!category || category === 'preference') dirsToSearch.push({ dir: lib.DIRS.semantic.preferences, cat: 'preference' });
+if (!category || category === 'pattern') dirsToSearch.push({ dir: lib.DIRS.procedural.patterns, cat: 'pattern' });
 
-function searchAndDelete(dir, depth = 0) {
-  if (!fs.existsSync(dir) || depth > 3) return;
+const q = query.toLowerCase();
+let removed = 0;
+const removedItems = [];
 
-  const files = fs.readdirSync(dir, { withFileTypes: true });
-  for (const file of files) {
-    const fullPath = path.join(dir, file.name);
-    if (file.isDirectory()) {
-      searchAndDelete(fullPath, depth + 1);
-    } else if (file.name.endsWith('.md')) {
-      const content = fs.readFileSync(fullPath, 'utf8').toLowerCase();
-      if (content.includes(query)) {
-        fs.unlinkSync(fullPath);
-        console.log(`🗑️  Deleted: ${fullPath.replace(mem + '/', '')}`);
-        deleted++;
-      }
+for (const { dir, cat } of dirsToSearch) {
+  const memories = lib.getAllMemories(dir);
+  for (const mem of memories) {
+    if (!mem.content) continue;
+    if (mem.content.toLowerCase().includes(q)) {
+      try {
+        fs.unlinkSync(mem._file);
+        removed++;
+        removedItems.push({ content: mem.content, category: cat, file: path.basename(mem._file) });
+      } catch {}
     }
   }
 }
 
-const dirs = [p.session, p.semantic, p.procedural, p.episodic];
-for (const dir of dirs) {
-  searchAndDelete(dir);
-}
-
-console.log(`\nTotal deleted: ${deleted}`);
+console.log(JSON.stringify({
+  action: 'forgot',
+  query,
+  removed_count: removed,
+  removed: removedItems,
+}, null, 2));

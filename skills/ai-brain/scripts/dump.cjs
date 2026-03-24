@@ -1,41 +1,58 @@
 #!/usr/bin/env node
-const fs = require('fs');
-const path = require('path');
-const { memoryDir, getPaths } = require('./lib.cjs');
+'use strict';
 
-const mem = memoryDir();
-const p = getPaths(mem);
+const lib = require('./lib.cjs');
 
-console.log('=== AI Brain: Export All Memories ===\n');
+const args = process.argv.slice(2);
+const format = args.includes('--json') ? 'json' : 'text';
 
-const memories = {};
+const stats = lib.getStats();
+const session = lib.getActiveSession();
+const recentSessions = lib.getRecentSessions(3);
 
-function collect(dir, key) {
-  if (!fs.existsSync(dir)) return;
-  const walk = (d, prefix = '') => {
-    const files = fs.readdirSync(d, { withFileTypes: true });
-    for (const f of files) {
-      if (f.isDirectory()) {
-        walk(path.join(d, f.name), prefix + f.name + '/');
-      } else if (f.name.endsWith('.md')) {
-        const fullPath = path.join(d, f.name);
-        const relative = prefix + f.name;
-        const content = fs.readFileSync(fullPath, 'utf8');
-        memories[relative] = content;
-      }
-    }
+const facts = lib.getAllMemories(lib.DIRS.semantic.facts);
+const prefs = lib.getAllMemories(lib.DIRS.semantic.preferences);
+const patterns = lib.getAllMemories(lib.DIRS.procedural.patterns);
+
+if (format === 'json') {
+  console.log(JSON.stringify({
+    action: 'brain_dump',
+    stats,
+    active_session: session,
+    recent_sessions: recentSessions,
+    memories: {
+      facts: facts.map(m => ({ content: m.content, tags: m.tags, project: m.project, frequency: m.frequency })),
+      preferences: prefs.map(m => ({ content: m.content, tags: m.tags, frequency: m.frequency })),
+      patterns: patterns.map(m => ({ content: m.content, tags: m.tags, project: m.project, frequency: m.frequency })),
+    },
+  }, null, 2));
+} else {
+  console.log('=== AI Brain Dump ===\n');
+  console.log(`Total: ${stats.facts} facts, ${stats.preferences} prefs, ${stats.patterns} patterns, ${stats.sessions} sessions\n`);
+
+  if (session) {
+    console.log(`Active session: ${session.id} (project: ${session.project || 'general'})\n`);
+  }
+
+  const printSection = (title, items) => {
+    console.log(`--- ${title} (${items.length}) ---`);
+    items.forEach((m, i) => {
+      const tags = m.tags ? ` [${m.tags.join(', ')}]` : '';
+      const proj = m.project ? ` @${m.project}` : '';
+      console.log(`  ${i + 1}. ${m.content}${tags}${proj} (freq: ${m.frequency || 1})`);
+    });
+    console.log('');
   };
-  walk(dir);
+
+  printSection('Facts', facts);
+  printSection('Preferences', prefs);
+  printSection('Patterns', patterns);
+
+  if (recentSessions.length > 0) {
+    console.log(`--- Recent Sessions (${recentSessions.length}) ---`);
+    recentSessions.forEach((s, i) => {
+      const preview = s.summary ? s.summary.substring(0, 80) : 'no summary';
+      console.log(`  ${i + 1}. ${s.file} | ${s.project || 'general'} | ${preview}`);
+    });
+  }
 }
-
-collect(p.session, 'session/');
-collect(p.semanticFacts, 'semantic/facts/');
-collect(p.semanticPrefs, 'semantic/preferences/');
-collect(p.proceduralPatterns, 'procedural/patterns/');
-collect(p.episodicHistory, 'episodic/history/');
-
-console.log(JSON.stringify({
-  exported_at: new Date().toISOString(),
-  total_memories: Object.keys(memories).length,
-  memories
-}, null, 2));

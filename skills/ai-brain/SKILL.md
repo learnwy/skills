@@ -1,11 +1,14 @@
 ---
 name: ai-brain
-description: "Adaptive AI memory system. Triggers on: session start, 'remember', 'learn', 'what do you know about'. Combines OpenClaw's Mem0 with human memory model: episodic (conversations), semantic (knowledge), procedural (skills). Gets smarter with use."
+description: "Adaptive AI memory system. Triggers on: session start, 'remember', 'learn', 'what do you know about'. Combines episodic (sessions), semantic (facts/preferences), and procedural (patterns) memory. Gets smarter with use."
+metadata:
+  author: "learnwy"
+  version: "3.0"
 ---
 
-# AI Brain
+# AI Brain — Persistent Memory System
 
-> Adaptive memory that evolves with every session. Like OpenClaw's Mem0 + human memory model.
+Gives AI persistent memory across sessions. Remembers who you are, what you prefer, what patterns you've established, and what happened in past sessions.
 
 ## Prerequisites
 
@@ -14,257 +17,204 @@ description: "Adaptive AI memory system. Triggers on: session start, 'remember',
 
 ## Core Concept
 
-**The more you use it, the smarter it gets.** Memory is layered by type and accessibility.
+Three memory types, inspired by human cognition:
+
+| Type | What It Stores | Persists Across Sessions | Example |
+|------|---------------|------------------------|---------|
+| **Episodic** | Session history, what happened | Yes | "Last session we refactored the auth module" |
+| **Semantic** | Facts, preferences, knowledge | Yes | "User prefers TypeScript", "Project uses React 18" |
+| **Procedural** | Patterns, rules, how-to | Yes | "When fixing nil panic, check element IDs first" |
+
+Plus **Identity**: who the AI is and who the user is — loaded at every session start.
 
 ## Memory Architecture
 
 ```
 ~/.learnwy/ai/memory/
-├── session/              # Working Memory (current context)
-│   └── context.md      # Current conversation context
-├── episodic/            # Episodic Memory (experiences)
-│   └── history/       # Past conversations
-├── semantic/           # Semantic Memory (facts)
-│   ├── facts/        # Known facts
-│   └── preferences/  # User preferences
-└── procedural/         # Procedural Memory (skills)
-    ├── patterns/     # Recurring patterns
-    └── workflows/    # Known workflows
-```
-
-| Layer | OpenClaw Scope | Human Analogy | Purpose |
-|-------|---------------|---------------|---------|
-| **session** | session | Working memory | Current context |
-| **episodic** | long-term | Hippocampus | Past experiences |
-| **semantic** | all | Cortex | Facts & preferences |
-| **procedural** | all | Basal ganglia | Skills & patterns |
-
-## Commands (Simplified)
-
-```bash
-# Session
-{skill_root}/scripts/brain.cjs start              # Start session (load memory)
-{skill_root}/scripts/brain.cjs remember "X"      # Store memory
-{skill_root}/scripts/brain.cjs recall "X"        # Search memories
-{skill_root}/scripts/brain.cjs forget "X"        # Remove memory
-
-# Utility
-{skill_root}/scripts/brain.cjs status            # Memory stats
-{skill_root}/scripts/brain.cjs dump             # Export all memories
-{skill_root}/scripts/brain.cjs clear            # Reset (with confirmation)
-```
-
-## Memory Storage
-
-### Remember (Auto-categorized)
-```bash
-{skill_root}/scripts/brain.cjs remember "User prefers brief responses"
-{skill_root}/scripts/brain.cjs remember "Project uses React + TypeScript"
-{skill_root}/scripts/brain.cjs remember "Always check logs before debugging"
-```
-
-Memory is auto-categorized:
-- **Preferences** → semantic/preferences/
-- **Facts** → semantic/facts/
-- **Patterns** → procedural/patterns/
-- **Conversations** → episodic/history/
-
-### Recall (Scoped Search)
-```bash
-{skill_root}/scripts/brain.cjs recall "preferences"           # All preferences
-{skill_root}/scripts/brain.cjs recall "session:preferences"   # Session only
-{skill_root}/scripts/brain.cjs recall "long-term:patterns"    # Patterns only
-{skill_root}/scripts/brain.cjs recall "all:React"             # Everything about React
-```
-
-### Forget (Smart Deletion)
-```bash
-{skill_root}/scripts/brain.cjs forget "outdated-fact"        # Remove from all layers
-{skill_root}/scripts/brain.cjs forget "session:temp-data"   # Session only
+├── semantic/
+│   ├── facts/          # fact-{hash}.md
+│   └── preferences/    # pref-{hash}.md
+├── procedural/
+│   └── patterns/       # pattern-{hash}.md
+├── episodic/
+│   └── sessions/       # session-{date}-{hash}.md
+├── identity/
+│   ├── AI.md           # Who the AI is
+│   └── user.md         # Who the user is
+└── index/
+    └── active-session.json
 ```
 
 ## Session Lifecycle
 
-### Start → Load Context
-```bash
-{skill_root}/scripts/brain.cjs start
+Every interaction should be wrapped in a session:
+
 ```
-1. Load semantic/preferences (user likes/dislikes)
-2. Load recent episodic history (last 3 conversations)
-3. Build context for this session
-
-### During Session → Learn
-```bash
-{skill_root}/scripts/brain.cjs remember "X"
-```
-- Explicit memories are stored immediately
-- Implicit learning: track topic frequency
-- Pattern detection: recurring workflows
-
-### End → Consolidate
-```bash
-{skill_root}/scripts/brain.cjs end
-```
-1. Save session summary to episodic/history/
-2. Update preference learned tokens
-3. Detect if new pattern should be saved
-
-## Adaptive Learning
-
-### Frequency Tracking
-- Track how often topics appear
-- More frequent = higher priority in recall
-- Fade rarely-used memories (but never delete)
-
-### Pattern Detection
-- Track recurring sequences:
-  - "User asks X → they want Y next"
-  - "When error Z occurs → check A first"
-- Build workflow shortcuts
-
-### Preference Learning
-- Communication style (brief/detailed)
-- Code style preferences
-- Tool preferences
-- Time zone & availability
-
-## OpenClaw Memory Integration
-
-Based on OpenClaw's memory scopes:
-
-| Scope | Description |
-|-------|-------------|
-| `session:` | Current session only |
-| `long-term:` | Persistent across sessions |
-| `all:` | Search everything |
-
-Example:
-```bash
-{skill_root}/scripts/brain.cjs remember "session:temp-note"    # Session only
-{skill_root}/scripts/brain.cjs recall "long-term:preferences" # All preferences
+Session Start  →  Load Identity + Recent Context  →  Work  →  Session End (save summary)
+     ↓                                                                ↓
+  start.cjs                                                    session.cjs end
 ```
 
-## Smart Features
-
-### Context Window Management
-Inspired by OpenClaw's token budget:
-- Keep only relevant recent context
-- Summarize old sessions
-- Prioritize frequently-used knowledge
-
-### Memory Consolidation
-- After 10 sessions → consolidate learnings
-- Monthly archive of old episodic memories
-- Semantic compression (similar facts merged)
-
-### Confidence Scoring
-Each memory has a confidence:
-- **High**: User explicitly stated
-- **Medium**: Observed multiple times
-- **Low**: Single observation
-
-Recall returns results sorted by confidence.
-
-## When to Remember
-
-### Explicit (User Triggers)
-- "Remember that I prefer..."
-- "Don't forget to..."
-- "Learn that..."
-
-### Implicit (Automatic)
-- User repeats same preference
-- Same error occurs 3+ times
-- Workflow used frequently
-- Important decision made
-
-## Session Scripts
-
-### brain.cjs - Main Entry
-```bash
-{skill_root}/scripts/brain.cjs <cmd> [args]
-```
-
-### Commands
-
-| Command | Description |
-|---------|-------------|
-| `start` | Load memories, start session |
-| `remember <text>` | Store memory (auto-categorized) |
-| `recall <query>` | Search memories |
-| `forget <query>` | Delete memory |
-| `status` | Show memory statistics |
-| `dump` | Export all memories (JSON) |
-| `clear` | Reset all memories |
-
-### Advanced Commands
-
-| Command | Description |
-|---------|-------------|
-| `remember --scope session "text"` | Force scope |
-| `remember --type preference "text"` | Force type |
-| `recall --scope long-term --type pattern` | Filtered recall |
-| `consolidate` | Merge similar memories |
-| `archive` | Archive old sessions |
-
-## Storage Format
-
-### Memory File Format
-```markdown
-# semantic/preferences/user-communication.md
-
-**Content**: User prefers brief, concise responses
-**Confidence**: high
-**Source**: explicit
-**Created**: 2026-03-19T10:00:00Z
-**Accessed**: 2026-03-19T14:30:00Z
-**Frequency**: 5
-**Tags**: communication, style
-```
-
-### Session Format
-```markdown
-# episodic/history/2026-03-19-1.md
-
-**Summary**: User requested AI brain optimization
-**Duration**: 45m
-**Topics**: memory, skills, openclaw
-**Learnings**: [list of new memories stored]
-**Created**: 2026-03-19T10:00:00Z
-```
-
-## Key Philosophy
-
-1. **Usage → Intelligence**: More use = smarter responses
-2. **Explicit > Implicit**: Explicit memories are higher confidence
-3. **Never Lose Context**: Archive, don't delete
-4. **Adaptive Recall**: Frequently needed = easily found
-5. **Human Memory Model**: Episodic, Semantic, Procedural layers
-
-## Examples
+### Session Start (run at conversation begin)
 
 ```bash
-# New user setup
-{skill_root}/scripts/brain.cjs start
-{skill_root}/scripts/brain.cjs remember "My name is Wang"
-{skill_root}/scripts/brain.cjs remember "I prefer concise responses"
-{skill_root}/scripts/brain.cjs remember "I work with TypeScript and Node.js"
-
-# Recalling
-{skill_root}/scripts/brain.cjs recall "name"           # What was the name?
-{skill_root}/scripts/brain.cjs recall "preferences"    # What are my preferences?
-{skill_root}/scripts/brain.cjs recall "session:all"    # What happened this session?
-
-# Learning
-{skill_root}/scripts/brain.cjs remember "I don't like long explanations"
-{skill_root}/scripts/brain.cjs remember "When fixing bugs, check logs first"
+node start.cjs [--project <name>]
 ```
 
-## Quality Gates
+Returns JSON with:
+- Active session (new or resumed)
+- AI and user identity
+- Last 3 session summaries (cross-session context)
+- Memory stats
 
-| Condition | Action |
-|-----------|--------|
-| 5+ recalls of same topic | Boost priority |
-| 30+ days unused memory | Archive (not delete) |
-| 10+ sessions | Suggest consolidation |
-| New pattern detected | Prompt confirmation |
+### Session End (run at conversation end)
+
+```bash
+node session.cjs end --summary "What we accomplished this session"
+```
+
+Saves session to episodic memory with: start/end time, project, memories created/recalled, summary.
+
+## Commands
+
+### Remember (save a memory)
+
+```bash
+node remember.cjs "<content>" [--category fact|preference|pattern] [--tags tag1,tag2] [--project name]
+```
+
+- **Auto-categorizes** if no `--category`: "prefer/like/want" → preference, "when/always/pattern" → pattern, else → fact
+- **Auto-tags** based on content keywords (react, typescript, api, etc.)
+- **Deduplicates**: if similar memory exists, increments frequency instead of creating duplicate
+- **Session-aware**: tracks which session created this memory
+
+### Recall (search memories)
+
+```bash
+node recall.cjs "<query>" [--category fact|preference|pattern|all] [--project name] [--limit N] [--context]
+```
+
+- **Relevance scoring**: exact match (10pts), token match (2pts/token), tag match (3pts), project match (5pts)
+- **`--context` flag**: additionally returns recent sessions + identity — useful for full context load
+- **Session-aware**: increments session recall counter
+
+### Forget (remove memories)
+
+```bash
+node forget.cjs "<content_substring>" [--category fact|preference|pattern]
+```
+
+### Status
+
+```bash
+node status.cjs [--json]
+```
+
+Shows memory counts, identity status, active session info.
+
+### Dump (export all memories)
+
+```bash
+node dump.cjs [--json]
+```
+
+Full brain dump: all facts, preferences, patterns, recent sessions.
+
+### Clear
+
+```bash
+node clear.cjs <all|facts|preferences|patterns|sessions|identity|index>
+```
+
+### Reflect (analysis & identity management)
+
+```bash
+node reflect.cjs stats              # Memory statistics
+node reflect.cjs sessions [--limit] # Recent session history
+node reflect.cjs identity show      # Show AI & user identity
+node reflect.cjs identity set AI "I am a coding assistant who remembers context"
+node reflect.cjs identity set user "Senior dev, prefers TypeScript, works on TikTok iOS"
+node reflect.cjs health             # Memory health check
+```
+
+### Brain (unified router)
+
+```bash
+node brain.cjs <start|stop|status|recall|remember|dump|forget|clear|reflect|session>
+```
+
+Routes to the appropriate script. `brain.cjs stop` = `session.cjs end`.
+
+## Cross-Session Memory Flow
+
+```
+Session N:
+  1. start.cjs loads identity + last 3 session summaries
+  2. AI has context: "Last time we worked on X, user prefers Y"
+  3. During work: remember.cjs saves new facts/patterns
+  4. session.cjs end saves summary to episodic
+
+Session N+1:
+  1. start.cjs loads identity + sessions N, N-1, N-2 summaries
+  2. AI knows: "Last session we did X. Before that, Y. User prefers Z."
+  3. Continuity preserved across sessions
+```
+
+## AI Integration Guide
+
+### At Session Start
+
+When the AI brain skill triggers at conversation begin:
+
+1. Run `node start.cjs --project <detected_project_name>`
+2. Read the returned `identity.ai` and `identity.user` — adopt the persona
+3. Read `recent_sessions` — mention relevant past work naturally
+4. Read `stats` — know how much context is available
+
+### During Conversation
+
+When you learn something new about the user or project:
+
+```bash
+node remember.cjs "User wants all scripts in CJS format" --category preference --project skills-repo
+```
+
+When you need to recall past context:
+
+```bash
+node recall.cjs "CJS migration" --project skills-repo --context
+```
+
+### At Session End
+
+Before the conversation ends:
+
+```bash
+node session.cjs end --summary "Migrated all Python scripts to CJS, added Prerequisites to all skills"
+```
+
+## Error Handling
+
+| Issue | Solution |
+|-------|----------|
+| No identity files | AI works normally, just without persona. Set via `reflect.cjs identity set` |
+| No previous sessions | First session — no context to load, start fresh |
+| Duplicate memory | Auto-deduplicated, frequency incremented |
+| Memory storage full | Use `reflect.cjs health` to check, `clear.cjs` to prune |
+| Active session not ended | Next `start.cjs` resumes the existing session |
+
+## Scripts
+
+| Script | Purpose |
+|--------|---------|
+| [lib.cjs](scripts/lib.cjs) | Shared library (memory CRUD, sessions, identity, search) |
+| [brain.cjs](scripts/brain.cjs) | Unified command router |
+| [start.cjs](scripts/start.cjs) | Session start with context loading |
+| [session.cjs](scripts/session.cjs) | Session lifecycle (start/end/current) |
+| [remember.cjs](scripts/remember.cjs) | Save memory with dedup + auto-tag |
+| [recall.cjs](scripts/recall.cjs) | Search with relevance scoring |
+| [forget.cjs](scripts/forget.cjs) | Remove memories by content match |
+| [status.cjs](scripts/status.cjs) | Brain status overview |
+| [dump.cjs](scripts/dump.cjs) | Full memory export |
+| [clear.cjs](scripts/clear.cjs) | Clear memory by category |
+| [reflect.cjs](scripts/reflect.cjs) | Stats, sessions, identity, health |

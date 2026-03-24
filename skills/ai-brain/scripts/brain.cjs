@@ -1,68 +1,60 @@
 #!/usr/bin/env node
-const fs = require('fs');
-const path = require('path');
+'use strict';
 
-function showHelp() {
-  console.log(`AI Brain - Adaptive Memory System
-
-Usage: {skill_root}/scripts/brain.cjs <command> [args]
-
-Commands:
-  start              Load memories, start session
-  remember "text"    Store memory (auto-categorized)
-  recall "query"     Search memories
-  forget "query"     Remove memory
-  status             Show memory statistics
-  dump               Export all memories
-  clear              Reset all memories
-
-Scopes:
-  session:    Current session only
-  long-term:  Persistent across sessions
-  all:        Search everything
-
-Examples:
-  {skill_root}/scripts/brain.cjs start
-  {skill_root}/scripts/brain.cjs remember "User prefers brief responses"
-  {skill_root}/scripts/brain.cjs recall "preferences"
-  {skill_root}/scripts/brain.cjs forget "outdated-fact"
-`);
-}
-
-const cmds = {
-  start: 'start.cjs',
-  remember: 'remember.cjs',
-  recall: 'recall.cjs',
-  forget: 'forget.cjs',
-  status: 'status.cjs',
-  dump: 'dump.cjs',
-  clear: 'clear.cjs',
-};
+const lib = require('./lib.cjs');
 
 const args = process.argv.slice(2);
-const cmd = args[0];
+const subcommand = args[0];
 
-if (!cmd || cmd === 'help' || cmd === '--help' || cmd === '-h') {
-  showHelp();
-  process.exit(0);
-}
-
-if (!cmds[cmd]) {
-  console.error(`Error: unknown command: ${cmd}`);
-  showHelp();
+if (!subcommand) {
+  console.error('Usage: node brain.cjs <start|stop|status|recall|remember>');
+  console.error('  start    - start a new session (or resume existing)');
+  console.error('  stop     - end current session');
+  console.error('  status   - show brain status');
+  console.error('  recall   - search memories');
+  console.error('  remember - save a memory');
+  console.error('');
+  console.error('For detailed usage, run the individual scripts directly.');
   process.exit(1);
 }
 
-const scriptPath = path.join(__dirname, cmds[cmd]);
-if (!fs.existsSync(scriptPath)) {
-  console.error(`Error: missing script: ${scriptPath}`);
+const { execFileSync } = require('child_process');
+const path = require('path');
+const scriptDir = __dirname;
+
+const scriptMap = {
+  start: 'start.cjs',
+  stop: 'session.cjs',
+  status: 'status.cjs',
+  recall: 'recall.cjs',
+  remember: 'remember.cjs',
+  dump: 'dump.cjs',
+  forget: 'forget.cjs',
+  clear: 'clear.cjs',
+  reflect: 'reflect.cjs',
+  session: 'session.cjs',
+};
+
+const script = scriptMap[subcommand];
+if (!script) {
+  console.error(`Unknown subcommand: ${subcommand}`);
+  console.error(`Available: ${Object.keys(scriptMap).join(', ')}`);
   process.exit(1);
 }
 
-const { spawn } = require('child_process');
-const child = spawn('node', [scriptPath, ...args.slice(1)], {
-  stdio: 'inherit',
-  cwd: __dirname
-});
+const forwardArgs = args.slice(1);
+if (subcommand === 'stop') {
+  forwardArgs.unshift('end');
+}
 
-child.on('exit', (code) => process.exit(code || 0));
+try {
+  const result = execFileSync('node', [path.join(scriptDir, script), ...forwardArgs], {
+    encoding: 'utf-8',
+    stdio: ['pipe', 'pipe', 'inherit'],
+  });
+  process.stdout.write(result);
+} catch (e) {
+  if (e.status) process.exit(e.status);
+  console.error(e.message);
+  process.exit(1);
+}

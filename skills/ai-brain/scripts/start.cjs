@@ -1,82 +1,53 @@
 #!/usr/bin/env node
-const fs = require('fs');
-const path = require('path');
-const { getPaths, readText } = require('./lib.cjs');
+'use strict';
 
-const p = getPaths();
+const lib = require('./lib.cjs');
 
-console.log('=== AI Brain: Session Start ===\n');
-console.log('Loading memories...\n');
+lib.ensureDirs();
 
-function loadMemories() {
-  const memories = {
-    preferences: [],
-    facts: [],
-    patterns: [],
-    recentHistory: []
-  };
-
-  if (p.semanticPrefs && fs.existsSync(p.semanticPrefs)) {
-    const files = fs.readdirSync(p.semanticPrefs).filter(f => f.endsWith('.md'));
-    for (const f of files.sort().reverse().slice(0, 5)) {
-      memories.preferences.push(readText(path.join(p.semanticPrefs, f)));
-    }
-  }
-
-  if (p.semanticFacts && fs.existsSync(p.semanticFacts)) {
-    const files = fs.readdirSync(p.semanticFacts).filter(f => f.endsWith('.md'));
-    for (const f of files.sort().reverse().slice(0, 5)) {
-      memories.facts.push(readText(path.join(p.semanticFacts, f)));
-    }
-  }
-
-  if (p.proceduralPatterns && fs.existsSync(p.proceduralPatterns)) {
-    const files = fs.readdirSync(p.proceduralPatterns).filter(f => f.endsWith('.md'));
-    for (const f of files.sort().reverse().slice(0, 3)) {
-      memories.patterns.push(readText(path.join(p.proceduralPatterns, f)));
-    }
-  }
-
-  if (p.episodicHistory && fs.existsSync(p.episodicHistory)) {
-    const files = fs.readdirSync(p.episodicHistory).filter(f => f.startsWith('history-')).sort().reverse().slice(0, 3);
-    for (const f of files) {
-      memories.recentHistory.push(readText(path.join(p.episodicHistory, f)));
-    }
-  }
-
-  return memories;
+const args = process.argv.slice(2);
+let project = null;
+const projectIdx = args.indexOf('--project');
+if (projectIdx !== -1 && args[projectIdx + 1]) {
+  project = args[projectIdx + 1];
 }
 
-const memories = loadMemories();
-
-if (memories.preferences.length > 0) {
-  console.log('📋 Preferences:');
-  for (const m of memories.preferences) {
-    console.log(`  • ${m.split('\n')[0].replace('**', '')}`);
-  }
-  console.log('');
+let session;
+let action;
+const existing = lib.getActiveSession();
+if (existing) {
+  session = existing;
+  action = 'resumed';
+} else {
+  session = lib.createSession(project);
+  action = 'created';
 }
 
-if (memories.facts.length > 0) {
-  console.log('💡 Facts:');
-  for (const m of memories.facts.slice(0, 3)) {
-    console.log(`  • ${m.split('\n')[0].replace('**', '')}`);
-  }
-  console.log('');
-}
+const ai = lib.loadIdentity('AI');
+const user = lib.loadIdentity('user');
+const recentSessions = lib.getRecentSessions(3);
+const stats = lib.getStats();
 
-if (memories.patterns.length > 0) {
-  console.log('🔄 Patterns:');
-  for (const m of memories.patterns) {
-    console.log(`  • ${m.split('\n')[0].replace('**', '')}`);
-  }
-  console.log('');
+const parts = [];
+parts.push(action === 'resumed' ? `Resumed session ${session.id}` : `New session ${session.id}`);
+parts.push(`${stats.facts} facts, ${stats.patterns} patterns, ${stats.preferences} preferences`);
+if (recentSessions.length > 0) {
+  const last = recentSessions[0];
+  const preview = (last.summary || 'no summary').slice(0, 60);
+  parts.push(`Last session: ${preview}`);
 }
+const contextSummary = parts.join(' | ');
 
-if (memories.recentHistory.length > 0) {
-  console.log('📖 Recent Sessions:', memories.recentHistory.length);
-  console.log('');
-}
+const output = {
+  action: 'brain_started',
+  session,
+  identity: {
+    ai: ai || null,
+    user: user || null,
+  },
+  recent_sessions: recentSessions,
+  stats,
+  context_summary: contextSummary,
+};
 
-console.log('Type "{skill_root}/scripts/brain.cjs recall <query>" to search memories');
-console.log('Type "{skill_root}/scripts/brain.cjs remember <text>" to store new memory');
+console.log(JSON.stringify(output, null, 2));

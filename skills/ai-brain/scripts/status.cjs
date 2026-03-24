@@ -1,46 +1,45 @@
 #!/usr/bin/env node
-const fs = require('fs');
-const path = require('path');
-const { memoryDir, getPaths } = require('./lib.cjs');
+'use strict';
 
-const mem = memoryDir();
-const p = getPaths(mem);
+const lib = require('./lib.cjs');
 
-console.log('=== AI Brain Status ===\n');
+const args = process.argv.slice(2);
+const format = args.includes('--json') ? 'json' : 'text';
 
-function countFiles(dir) {
-  if (!fs.existsSync(dir)) return 0;
-  let count = 0;
-  const walk = (d) => {
-    const files = fs.readdirSync(d, { withFileTypes: true });
-    for (const f of files) {
-      if (f.isDirectory()) walk(path.join(d, f.name));
-      else if (f.name.endsWith('.md')) count++;
-    }
-  };
-  walk(dir);
-  return count;
-}
+const stats = lib.getStats();
+const session = lib.getActiveSession();
+const aiIdentity = lib.loadIdentity('AI');
+const userIdentity = lib.loadIdentity('user');
 
-console.log('📊 Memory Stats:\n');
-console.log(`  Session:     ${countFiles(p.session)} files`);
-console.log(`  Preferences:  ${countFiles(p.semanticPrefs)} files`);
-console.log(`  Facts:       ${countFiles(p.semanticFacts)} files`);
-console.log(`  Patterns:    ${countFiles(p.proceduralPatterns)} files`);
-console.log(`  History:     ${countFiles(p.episodicHistory)} files`);
-console.log(`\n  Total:       ${countFiles(mem)} files`);
-
-console.log('\n📁 Location:', mem);
-
-const recentHistory = p.episodicHistory;
-if (fs.existsSync(recentHistory)) {
-  const files = fs.readdirSync(recentHistory).filter(f => f.startsWith('history-')).sort().reverse().slice(0, 3);
-  if (files.length > 0) {
-    console.log('\n📖 Recent Sessions:');
-    for (const f of files) {
-      const stat = fs.statSync(path.join(recentHistory, f));
-      const date = stat.mtime.toISOString().slice(0, 10);
-      console.log(`   ${date} - ${f}`);
-    }
+if (format === 'json') {
+  console.log(JSON.stringify({
+    action: 'brain_status',
+    stats,
+    active_session: session,
+    identity: { ai: !!aiIdentity, user: !!userIdentity },
+    memory_root: lib.MEMORY_ROOT,
+  }, null, 2));
+} else {
+  console.log('=== AI Brain Status ===');
+  console.log(`Memory Root: ${lib.MEMORY_ROOT}`);
+  console.log('');
+  console.log('--- Memories ---');
+  console.log(`  Facts:       ${stats.facts}`);
+  console.log(`  Preferences: ${stats.preferences}`);
+  console.log(`  Patterns:    ${stats.patterns}`);
+  console.log(`  Sessions:    ${stats.sessions}`);
+  console.log('');
+  console.log('--- Identity ---');
+  console.log(`  AI:   ${aiIdentity ? 'set' : 'not set'}`);
+  console.log(`  User: ${userIdentity ? 'set' : 'not set'}`);
+  console.log('');
+  console.log('--- Session ---');
+  if (session) {
+    console.log(`  Active: ${session.id}`);
+    console.log(`  Started: ${session.started}`);
+    console.log(`  Project: ${session.project || 'general'}`);
+    console.log(`  Created: ${session.memories_created} | Recalled: ${session.memories_recalled}`);
+  } else {
+    console.log('  No active session');
   }
 }
