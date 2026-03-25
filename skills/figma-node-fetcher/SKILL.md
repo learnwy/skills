@@ -1,6 +1,9 @@
 ---
 name: figma-node-fetcher
 description: "Fetch Figma node JSON or node image from a Figma URL. Use when users need layer/node structure, node screenshot export, or design-token inspection from Figma. Require URL with node-id query. Check FIGMA_ACCESS_TOKEN first and guide setup when missing."
+metadata:
+  author: "learnwy"
+  version: "2.0"
 ---
 
 # Figma Node Fetcher
@@ -9,15 +12,18 @@ Fetch data by node from Figma URL and avoid downloading full file trees.
 
 ## When To Use
 
-- User provides a Figma link and needs node JSON structure.
-- User needs node image export.
-- User wants analysis for a specific node, not the whole file.
+**Invoke when:**
 
-## Do Not Use
+- User provides a Figma link and needs node JSON structure
+- User needs node image export (screenshot, rendered PNG/SVG)
+- User wants analysis for a specific node, not the whole file
+- User says "fetch Figma data", "get Figma node", "export Figma image", or similar
 
-- URL has no `node-id` query.
-- User asks to fetch an entire Figma file tree.
-- Request is outside supported endpoints.
+**Do NOT invoke when:**
+
+- URL has no `node-id` query — ask user to provide the specific node link
+- User asks to fetch an entire Figma file tree — not supported
+- Request is outside supported endpoints (e.g., comments, version history, components API)
 
 ## Prerequisites
 
@@ -153,6 +159,34 @@ Supported endpoints only:
 - `/v1/images/{file_key}`
 
 Do not promise capabilities outside these scripts.
+
+## Execution Checklist
+
+Before responding to user, verify:
+
+- [ ] `FIGMA_ACCESS_TOKEN` is available (run `check-config` if uncertain)
+- [ ] Figma URL contains `node-id` query parameter
+- [ ] Correct `type` selected (`node` for JSON structure, `image` for rendered export)
+- [ ] `output-dir` is set to a project-relative path
+- [ ] Script returned `ok: true` — if not, relay the error clearly
+- [ ] Response includes the standardized JSON output or saved file path
+
+## Boundary Enforcement
+
+This skill ONLY handles:
+
+- ✅ Validating Figma URLs with `node-id`
+- ✅ Fetching node JSON structure via `/v1/files/{file_key}/nodes`
+- ✅ Fetching node rendered images via `/v1/images/{file_key}`
+- ✅ Batch fetching multiple nodes (JSON or image)
+- ✅ Token configuration setup and validation
+
+This skill does NOT handle:
+
+- ❌ Fetching entire Figma file trees (no `node-id`) → inform user this is unsupported
+- ❌ Figma comments, version history, or components API → outside scope
+- ❌ Design-to-code generation → delegate to a frontend/product skill, use this skill as data provider
+- ❌ Modifying Figma designs (read-only access)
 
 ## Cross-Skill Orchestration
 
