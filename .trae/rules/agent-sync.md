@@ -9,34 +9,41 @@ alwaysApply: false
 ## Architecture
 
 ```
-skills/agents/{name}/agent.md        # Universal
-skills/{skill}/agents/{name}.md      # Adapted
-skills/software-methodology-toolkit/ # Standalone
+agents/{name}/agent.md                          # Universal (canonical)
+skills/{skill}/agents/{name}.md                 # Adapted (skill-specific)
+skills/software-methodology-toolkit/agents/     # Standalone (grouped by phase)
 ```
 
 ## Sync Rules
 
-**Update universal** → Sync to adapted + standalone
+**Update universal** → Sync to adapted + standalone copies.
 
-**Update adapted** → Methodology: update universal | Context: keep local
+**Update adapted** → If methodology change: update universal first. If context-only change: keep local.
 
-**Update standalone** → Full copy, no modifications
+**Update standalone** → Full copy from universal, no modifications.
 
-## Mappings
+## Current Mappings
 
-| Universal | Adapted | Standalone |
-|-----------|---------|------------|
+| Universal | Adapted (in skill) | Standalone (phase/) |
+|-----------|-------------------|-------------------|
 | problem-definer | requirement-workflow | analyzing/ |
+| spec-by-example | requirement-workflow | analyzing/ |
 | story-mapper | requirement-workflow | planning/ |
 | domain-modeler | requirement-workflow | designing/ |
+| architecture-advisor | requirement-workflow | designing/ |
+| responsibility-modeler | requirement-workflow | designing/ |
 | tdd-coach | requirement-workflow | implementing/ |
 | refactoring-guide | requirement-workflow | implementing/ |
+| legacy-surgeon | requirement-workflow | implementing/ |
+| test-strategist | requirement-workflow | testing/ |
 
 ## Checklist
 
-- [ ] Universal updated?
-- [ ] Sync adapted versions?
-- [ ] Sync standalone copies?
-- [ ] Preserve Hook Points?
+When editing any agent:
 
-**Note:** software-methodology-toolkit is fallback (lower priority)
+- [ ] Universal copy updated?
+- [ ] Adapted versions in skill synced?
+- [ ] Standalone copies in software-methodology-toolkit synced?
+- [ ] Hook points preserved in adapted versions?
+
+**Note:** software-methodology-toolkit is a fallback skill (lower priority than requirement-workflow).

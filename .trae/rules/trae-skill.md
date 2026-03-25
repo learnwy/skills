@@ -1,45 +1,55 @@
 ---
-description: Guidelines for Trae skill development in trae-*-writer directories
-globs: skills/trae-*-writer/**/*.md
+description: Guidelines for Trae IDE tool writer skills (trae-rules-writer)
+globs: skills/trae-rules-writer/**/*.md
 alwaysApply: false
 ---
 
-# Trae Skill Development
+# Trae Writer Skill Development
 
-## Shared Agents
+## Scope
 
-Each trae-writer skill has duplicated agents:
+This rule applies to `trae-rules-writer` and any future `trae-*-writer` skills.
+
+## Current Structure
 
 ```
-skills/
-├── trae-skill-writer/agents/
-├── trae-rules-writer/agents/
-└── trae-agent-writer/agents/
+skills/trae-rules-writer/
+├── agents/
+│   ├── convention-detector.md
+│   ├── project-scanner.md
+│   └── quality-validator.md
+├── assets/
+│   ├── rule.md.template
+│   └── trae-rules-docs.md
+├── evals/
+├── examples/
+├── references/
+├── scripts/
+│   └── init_rule.cjs
+└── SKILL.md
 ```
-
-## Agent Sync
-
-**Edit canonical** (trae-skill-writer/agents/) → **Sync to others**
 
 ## Agents
 
 | Agent | Purpose |
 |-------|---------|
-| project-scanner | Analyze structure |
-| tech-stack-analyzer | Domain analysis |
-| convention-detector | Extract conventions |
-| quality-validator | Validate outputs |
+| project-scanner | Analyze project structure and conventions |
+| convention-detector | Extract naming, style, and pattern conventions |
+| quality-validator | Validate generated output quality |
 
 ## Critical Rules
 
-**Paths:** NO absolute paths. Use `src/` or `{project_root}/`
+**Paths:** NO absolute paths. Use `src/` or `{project_root}/`.
 
-**Globs:** NO quotes. `globs: *.ts,*.tsx` ✅ NOT `"*.ts"` ❌
+**Globs:** NO quotes in frontmatter globs. `globs: *.ts,*.tsx` NOT `globs: "*.ts"`.
 
-## Quality
+**Frontmatter:** Every rule must have `description` and `alwaysApply` or `globs`.
 
-- Frontmatter: name + description
-- Description: triggers + "Do NOT"
-- NO absolute paths
-- Globs: no quotes
-- Keep content in English only
+## Quality Checklist
+
+- [ ] Frontmatter has `description`
+- [ ] Frontmatter has `alwaysApply: true` or `globs:` (not both active)
+- [ ] Description includes trigger conditions
+- [ ] No absolute paths in content
+- [ ] Globs use no quotes
+- [ ] Content in English only
