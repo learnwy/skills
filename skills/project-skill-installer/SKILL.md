@@ -1,168 +1,241 @@
 ---
 name: project-skill-installer
 description: "Install or configure project-level skills by understanding what users want to accomplish. NOT by asking where to install - by understanding the goal and finding the right skill. Keeps outputs in project scope."
-priority: 100
-requires:
-  - find-skills
-compatibility: "Any skills-enabled workspace"
 metadata:
   author: "learnwy"
-  version: "2.0"
+  version: "3.0"
 ---
 
 # Project Skill Installer
 
-**Design Philosophy**: Users don't say "install a skill". They say "I want to do X" or "help me with Y". This skill transforms goal descriptions into skill installation plans.
+Analyzes a project's tech stack, workflows, and pain points, then **recommends** the best skills to install. Always confirms with the user via `AskUserQuestion` before installing anything.
 
-## Core Principle: Goal-First, Not Installation-First
+> **Core Principle**: Understand the project first, recommend second, install only after user confirms.
 
-When a user mentions any of these, activate this skill:
-- "I want to do X with AI help"
-- "Can AI help me with..."
-- "How do I set up..."
-- "What's available for..."
-- "I need a skill that..."
-- "Help me use..."
+## When to Use
 
-**DO NOT** ask "Which skill do you want to install?" - understand their goal first.
+**Invoke when:**
+
+- User says "install a skill", "find a skill for X", "what skills would help this project"
+- User describes a capability gap ("I wish AI would automatically...")
+- User wants to set up a new project with skills
+
+**Do NOT invoke when:**
+
+- User wants to **create** a new skill (delegate to `project-skill-writer`)
+- User wants to **create** an agent (delegate to `project-agent-writer`)
+- User wants to **create** a rule (delegate to `trae-rules-writer`)
 
 ## Prerequisites
 
 - Node.js >= 18
-- Requires `find-skills` to be globally available
+- Requires `find-skills` or `trae-skill-finder` skill to be available globally
 - If missing, prompt user: `npx skills add find-skills -g -y`
+
+## Workflow
+
+```
+[L1: Goal Understanding]
+         ↓
+[L2: Project Analysis]
+         ↓
+[L3: Skill Discovery]
+         ↓
+[L4: Recommendation]  ← AskUserQuestion (MUST confirm)
+         ↓
+[L5: Installation]
+         ↓
+[L6: Verification]
+```
 
 ## L1: Goal Understanding
 
-### Goal Classification
+Extract what the user needs — do NOT ask "what skill do you want?" Instead, understand:
 
-| User Goal | Skill Category | Action |
-|-----------|---------------|--------|
-| "I want AI to generate..." | Generator Skills | Find/install generator |
-| "I want AI to check/validate..." | Validator Skills | Find/install validator |
-| "I want AI to explain..." | Informer Skills | Find/install informer |
-| "I want AI to do X automatically" | Workflow Skills | Find/install workflow |
-| "I don't know what's available" | Discovery | Use find-skills to explore |
+| User Says | Real Need |
+|-----------|-----------|
+| "install a skill" | Vague — proceed to L2 analysis to find gaps |
+| "find a skill for testing" | Specific domain — search for testing skills |
+| "set up this project with skills" | Full audit — analyze project and recommend suite |
+| "I keep doing X manually" | Automation gap — find skill that addresses X |
 
-### Extract Installation Requirements
+## L2: Project Analysis
 
-From user's goal, determine:
-- **What capability**: What do they want AI to do?
-- **Project context**: What language/framework are they using?
-- **Integration**: Where should the skill live?
+Scan the project to build a tech profile. Use search tools in parallel:
 
-## L2: Project Analysis Pipeline
+### Detection Targets
 
-Run in parallel with goal understanding:
+| Signal | What to Look For | Tool |
+|--------|-----------------|------|
+| Language | File extensions (`.ts`, `.py`, `.swift`, `.go`) | Glob |
+| Framework | package.json deps, Podfile, go.mod, Cargo.toml | Read |
+| Build Tool | Makefile, webpack.config, vite.config, Bazel | Glob |
+| Testing | jest.config, pytest.ini, XCTest, go test | Glob |
+| CI/CD | .github/workflows/, Jenkinsfile, .gitlab-ci.yml | Glob |
+| Existing Skills | .trae/skills/, .cursor/skills/ | Glob |
+| Existing Rules | .trae/rules/ | Glob |
 
-### Analysis 1: Existing Skills
-
-```
-Check:
-- .trae/skills/ - what's already installed
-- .claude/skills/ - alternative location
-- package.json - skill dependencies
-```
-
-### Analysis 2: Project Context
+### Tech Profile Output
 
 ```
-Detect:
-- Language: from package.json, go.mod, etc.
-- Framework: React, Vue, Swift, etc.
-- Build tool: npm, yarn, cargo, etc.
+Project: {name}
+Languages: TypeScript, Swift
+Frameworks: React 18, UIKit
+Build: Vite, Bazel
+Testing: Jest, XCTest
+CI: GitHub Actions
+Existing Skills: [list]
+Existing Rules: [list]
 ```
 
-### Analysis 3: Available Skills
+## L3: Skill Discovery
+
+Based on the tech profile and user's goal, search for matching skills:
+
+### Search Strategy
+
+1. **Direct match**: Search by user's exact request → `npx skills find "<user_query>"`
+2. **Tech match**: Search by detected tech stack → `npx skills find "react"`, `npx skills find "swift"`
+3. **Gap match**: Search by detected workflow gaps → if no testing skill, search `npx skills find "testing"`
+
+### Skill Sources (Priority Order)
+
+1. **Local registry**: Check `~/.trae/skills/` and `~/.trae-cn/skills/` for already-installed global skills
+2. **Community registry**: `npx skills find "<query>"` — searches skills.sh marketplace
+3. **ByteDance registry**: `npx @tiktok-fe/skills find "<query>"` — searches internal registry (if available)
+
+### Filtering Criteria
+
+Reject skills that:
+- Conflict with existing installed skills (same purpose)
+- Don't match the project's language/framework
+- Are global-only (this skill installs project-level)
+- Have no description or are clearly low-quality
+
+## L4: Recommendation (MUST USE AskUserQuestion)
+
+**CRITICAL**: Before installing ANY skill, present recommendations via `AskUserQuestion`.
+
+### Recommendation Format
+
+For each recommended skill, prepare:
 
 ```
-Use find-skills to discover:
-- What skills match the user's goal
-- What's already installed
-- What needs to be installed
+Skill: {name}
+Purpose: {what it does, 1 sentence}
+Why: {why it fits this project specifically}
+Install: {command}
 ```
 
-## L3: Installation Plan Design
+### AskUserQuestion Call
 
-Based on Goal + Analysis, design the installation:
+Use `AskUserQuestion` with:
 
-```
-## Installation Plan
-
-Goal: {user's goal in their words}
-Needed: {skill that fulfills the goal}
-Current Status: {installed / not installed / partially installed}
-Action: {install / configure / update / nothing needed}
-
-### Installation Steps
-1. {step 1}
-2. {step 2}
-...
-
-### Configuration (if needed)
-- Output path: {project-relative path}
-- Project integration: {how to integrate with project}
-```
-
-## L4: Validation (Before Execution)
-
-Show user BEFORE installing:
-
-```
-I'll help you achieve: {user's goal}
-
-Plan:
-- Skill needed: {name}
-- Current status: {installed/not installed}
-- Action: {what will happen}
-- Location: {where skill will be placed}
-
-Is this correct? Should I adjust anything?
+```json
+{
+  "questions": [{
+    "question": "Based on your {language/framework} project, I recommend these skills. Which would you like to install?",
+    "header": "Skills",
+    "multiSelect": true,
+    "options": [
+      {
+        "label": "{skill-1-name} (Recommended)",
+        "description": "{1-sentence: what it does + why it fits}"
+      },
+      {
+        "label": "{skill-2-name}",
+        "description": "{1-sentence: what it does + why it fits}"
+      },
+      {
+        "label": "Skip",
+        "description": "Don't install any skills right now"
+      }
+    ]
+  }]
+}
 ```
 
-WAIT for confirmation before delegating to find-skills.
+**Rules**:
+- Put the most relevant skill first with "(Recommended)"
+- Max 4 options (3 skills + Skip)
+- Include "Skip" as last option
+- Use `multiSelect: true` to allow multiple installs
+- Never install without user confirmation
 
-## L5: Delegation to find-skills
+## L5: Installation
 
-After user confirmation:
+After user confirms which skills to install:
 
-1. Prepare delegation inputs:
-   - `runtime_target`: detected from project
-   - `project_root`: verified project path
-   - `project_only`: true (always)
-   - `requested_skill_intent`: user's goal
+### Install Path Discovery
 
-2. Delegate to find-skills with project-only constraint
+Determine project-relative install path using [Path Discovery](references/path-discovery.md):
 
-3. Verify installation succeeded
+1. Check for existing `.trae/skills/` in project root
+2. Check for `.cursor/skills/` or `.claude/skills/`
+3. Default to `.trae/skills/`
 
-## L6: Quality Gates
+### Install Commands
 
-Before delivery, verify:
-- [ ] Skill is actually needed (not already available)
-- [ ] Installation target is project-relative, not global
-- [ ] Project context is preserved
-- [ ] User's goal can be fulfilled
+```bash
+# Community skills (skills.sh)
+npx skills add <package-name> --path <project-root>/.trae/skills/
 
-## L7: Output Contract
+# ByteDance internal skills
+npx @tiktok-fe/skills add <package-name> --agent trae-cn --path <project-root>/.trae/skills/
+```
 
-Always produce:
-1. **Goal Understanding**: What the user wants to accomplish
-2. **Installation Plan**: What will be installed/configured
-3. **Execution Summary**: What happened
-4. **Usage Guide**: How to use the installed skill
+### Install Rules
 
-## Reference: AskUserQuestion Triggers (Limited)
+- **ALWAYS** project-relative path — NEVER `~/.trae/skills/` or other global paths
+- Install one skill at a time, verify each before proceeding to next
+- If install fails, report error and suggest manual install steps
 
-Only use AskUserQuestion when:
-- Multiple skills match the goal and user needs to choose
-- User's goal is vague and needs clarification
+## L6: Verification
 
-DO NOT use for:
-- Asking where to install (use project conventions)
-- Asking which specific skill (infer from goal)
+After installation, verify:
+
+- [ ] Skill directory exists at expected path
+- [ ] SKILL.md is present and readable
+- [ ] Skill's description mentions relevant triggers
+- [ ] No conflicts with existing skills
+
+Report to user:
+
+```
+Installed {N} skill(s):
+  ✓ {skill-1} → {path}
+  ✓ {skill-2} → {path}
+
+To use: just describe what you need, the skill will activate automatically.
+```
+
+## Error Handling
+
+| Issue | Solution |
+|-------|----------|
+| `find-skills` not available | Prompt: `npx skills add find-skills -g -y` |
+| No skills found for query | Suggest creating a custom skill via `project-skill-writer` |
+| User requests global install | Reject, explain project-scope boundary, offer project-relative alternative |
+| User requests agent/rule creation | Route to `project-agent-writer` or `trae-rules-writer` |
+| Install command fails | Show error, suggest `npx skills add <name> --path <path>` manually |
+| Skill conflicts with existing | Show comparison, ask user which to keep |
+
+## Boundary Enforcement
+
+This skill ONLY handles:
+- ✅ Analyzing project for skill needs
+- ✅ Searching skill registries
+- ✅ Recommending skills with user confirmation
+- ✅ Installing skills to project-relative paths
+- ✅ Verifying installation
+
+This skill does NOT handle:
+- ❌ Creating new skills → `project-skill-writer`
+- ❌ Creating agents → `project-agent-writer`
+- ❌ Creating rules → `trae-rules-writer`
+- ❌ Global installation (always project-scoped)
 
 ## References
 
-- [Path Discovery](references/path-discovery.md): Output paths (load AFTER plan design)
-- [Agent Skills Core Practices](references/agent-skills-core-practices.md): Quality guidelines
+- [Path Discovery](references/path-discovery.md) — Install path determination
+- [Agent Skills Core Practices](references/agent-skills-core-practices.md) — Best practices for AI skills

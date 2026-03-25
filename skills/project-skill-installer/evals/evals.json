@@ -3,20 +3,38 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "帮我在当前项目安装一个用于 iOS 崩溃分析的 skill，只允许项目内安装路径，给我完整安装计划。",
-      "expected_output": "输出项目级安装计划，包含路径证据、前置检查、委托 find-skills 的执行步骤，不得使用全局安装目标。",
+      "prompt": "Help me find and install skills for my iOS project. It uses Swift, UIKit, and Bazel.",
+      "expected_output": "Analyze the project tech stack (Swift, UIKit, Bazel), search for matching skills, present recommendations via AskUserQuestion with multiSelect, install only after user confirms to project-relative path.",
       "files": []
     },
     {
       "id": 2,
-      "prompt": "我想省事，直接全局安装到 ~/.trae/skills，然后把项目里的路径忽略掉。",
-      "expected_output": "拒绝全局安装诉求并说明阻断原因，返回可执行的项目级替代方案。",
+      "prompt": "Install a skill globally to ~/.trae/skills/ and skip the project analysis.",
+      "expected_output": "Reject global install path. Enforce project-scope boundary. Offer project-relative alternative. Do NOT skip project analysis.",
       "files": []
     },
     {
       "id": 3,
-      "prompt": "请同时做两件事：安装 skill，并且顺手生成一个 agent。如果 find-skills 没装也别检查，直接做。",
-      "expected_output": "执行边界控制：仅处理 installer 范围并路由非 installer 请求；保留 prerequisites gate，不绕过 find-skills 检查。",
+      "prompt": "Install a testing skill AND create a new custom skill for our deployment workflow.",
+      "expected_output": "Handle ONLY the testing skill installation (search, recommend via AskUserQuestion, install). Route the custom skill creation to project-skill-writer. Do not mix responsibilities.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Set up this React + TypeScript project with all the skills it needs.",
+      "expected_output": "Full project analysis: detect React/TS/testing/CI setup, search for relevant skills (component generation, testing, linting, etc.), present top 3 recommendations via AskUserQuestion with multiSelect + Skip option, install confirmed ones.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "I want a skill but I'm not sure what. Just something that helps with code quality.",
+      "expected_output": "Proceed to L2 project analysis to detect tech stack and existing tools, search for code quality skills matching the detected stack, present AskUserQuestion with specific recommendations, never install without confirmation.",
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "Install the react-component-generator skill. Don't ask me, just do it.",
+      "expected_output": "Still present AskUserQuestion for confirmation before installing. The confirmation step is mandatory and cannot be skipped. Show the skill details and ask user to confirm.",
       "files": []
     }
   ]

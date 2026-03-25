@@ -1,42 +1,42 @@
-## Agent Skills Core Practices
+## Agent Skills — Core Practices
 
-Use this reference for generic skill standards that are not IDE-specific.
+Best practices for AI-assistable skills in the agent ecosystem.
 
-### Core Model
+### Skill Quality Indicators
 
-- A skill is a directory with required `SKILL.md`
-- Optional resources include `scripts/`, `references/`, and `assets/`
-- Use progressive disclosure: metadata discovery → full SKILL.md activation → on-demand resource loading
+| Indicator | Good | Bad |
+|-----------|------|-----|
+| Description | Includes trigger phrases, use cases, exclusions | Generic "does stuff" |
+| SKILL.md | Structured with sections, workflow, references | Flat text blob |
+| Triggers | Specific: "create react component" | Vague: "help me" |
+| Boundary | Clear "Do NOT" section | No scope limits |
+| Error handling | Explicit failure modes + solutions | Silent failures |
 
-### SKILL.md Requirements
+### Project-Level vs Global Skills
 
-- YAML frontmatter must include `name` and `description`
-- `name` should be lowercase with hyphens and match directory name
-- `description` should cover both capability and trigger timing
+| Aspect | Project-Level | Global |
+|--------|--------------|--------|
+| Path | `.trae/skills/` in project root | `~/.trae/skills/` |
+| Scope | This project only | All projects |
+| Version control | Committed with project | User-specific |
+| Use case | Project-specific workflows | General-purpose utilities |
 
-### Authoring Guidance
+**This installer ONLY handles project-level skills.**
 
-- Keep responsibilities focused and avoid oversized multi-domain instructions
-- Keep SKILL.md concise; move long details to `references/`
-- Put deterministic operations in `scripts/` and reusable patterns in `examples/` or `assets/`
+### Installation Verification Checklist
 
-### Evaluation Guidance
+After installing a skill, verify:
 
-- Validate skills with structured evals: prompt, expected output, optional files
-- Compare with-skill versus baseline behavior to verify real value
-- Iterate with measurable quality checks instead of ad-hoc impressions
+1. **Directory exists**: `<path>/<skill-name>/` is created
+2. **SKILL.md present**: Main skill file is readable
+3. **Description valid**: Contains trigger keywords
+4. **No conflicts**: Doesn't overlap with existing skills
+5. **Dependencies met**: Referenced tools/libs are available
 
-### Runtime Web Fetch Policy
+### Skill Discovery Best Practices
 
-- If local references are insufficient, fetch official specification pages directly
-- Prefer official docs first, then ecosystem examples
-- Record the selected source links in output rationale
-
-### Sources
-
-- https://agentskills.io/home
-- https://agentskills.io/what-are-skills
-- https://agentskills.io/specification
-- https://agentskills.io/skill-creation/evaluating-skills
-- https://agentskills.io/skill-creation/using-scripts
-- https://agentskills.io/client-implementation/adding-skills-support
+1. **Search by problem, not by name** — "how to lint my code" not "eslint skill"
+2. **Check local first** — already-installed global skills may work
+3. **Prefer specific over generic** — "react-component-generator" over "code-generator"
+4. **Read the SKILL.md** — verify it actually does what the user needs
+5. **Check compatibility** — language/framework match with project
