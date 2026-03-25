@@ -66,13 +66,17 @@ function generateQuiz(count = 10, quizType = 'all', focus = 'low_mastery') {
 
   return selected.map(item => {
     if (item.type === 'word') {
+      const defs = item.definitions || [];
+      const answer = defs.map(d => `${d.pos} ${d.meaning}`).join('; ') || '';
+      const examples = defs.flatMap(d => d.examples || []);
       return {
         id: item.word,
         type: 'word',
         question: item.word,
-        answer: item.definition,
+        answer,
+        definitions: defs,
         phonetic: item.phonetic || '',
-        examples: item.examples || [],
+        examples,
         mastery: item.mastery || 0,
         lookup_count: item.lookup_count || 0,
       };
@@ -81,7 +85,7 @@ function generateQuiz(count = 10, quizType = 'all', focus = 'low_mastery') {
         id: item.phrase,
         type: 'phrase',
         question: item.phrase,
-        answer: item.definition,
+        answer: item.definition || '',
         phonetic: item.phonetic || '',
         examples: item.examples || [],
         mastery: item.mastery || 0,
@@ -96,12 +100,13 @@ function getReviewCandidates(limit = 20) {
 
   for (const w of getAllWords()) {
     const score = (100 - (w.mastery || 0)) + (w.lookup_count || 0) * 5;
+    const defs = w.definitions || [];
     items.push({
       item: w.word,
       type: 'word',
       mastery: w.mastery || 0,
       lookup_count: w.lookup_count || 0,
-      definition: w.definition,
+      definition: defs.map(d => `${d.pos} ${d.meaning}`).join('; ') || '',
       score,
     });
   }
@@ -113,7 +118,7 @@ function getReviewCandidates(limit = 20) {
       type: 'phrase',
       mastery: p.mastery || 0,
       lookup_count: p.lookup_count || 0,
-      definition: p.definition,
+      definition: p.definition || '',
       score,
     });
   }
