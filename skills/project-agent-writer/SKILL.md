@@ -1,173 +1,258 @@
 ---
 name: project-agent-writer
 description: "Create or update project-level agents by analyzing user problems and project context. NOT by asking questions - by understanding what users struggle with and designing worker solutions. Keeps outputs in project scope."
-license: "MIT"
-compatibility: "Any agent-enabled workspace"
 metadata:
   author: "learnwy"
-  version: "3.0"
+  version: "4.0"
 ---
 
 # Project Agent Writer
 
-**Design Philosophy**: Users don't know what an "agent" is. They know their **problems**. This skill transforms problem descriptions into working agents.
+Analyzes a project's structure, conventions, and automation gaps, then **designs** an agent to solve the user's problem. Always confirms with the user via `AskUserQuestion` before generating any files.
 
-## Core Principle: Problem-First, Not Questionnaire-First
+> **Core Principle**: Understand the problem first, analyze the project second, design the agent third, generate only after user confirms.
 
-When a user mentions any of these, activate this skill:
-- "I need someone to automatically..."
-- "Can you make AI do X every time..."
-- "I want an agent that..."
-- "Someone to constantly monitor..."
-- Any automation need described as "someone who would..."
+## When to Use
 
-**DO NOT** ask "What do you want the agent to do?" - infer from their problem.
+**Invoke when:**
+
+- User says "create an agent", "I need an agent that...", "make AI do X every time"
+- User describes automation need ("someone to automatically...", "I want something that monitors...")
+- User wants to build a grader, comparator, analyzer, transformer, researcher, or validator
+
+**Do NOT invoke when:**
+
+- User wants to **install** a skill → delegate to `project-skill-installer`
+- User wants to **create** a skill → delegate to `project-skill-writer`
+- User wants to **create** a rule → delegate to `trae-rules-writer`
 
 ## Prerequisites
 
 - Node.js >= 18
 - Target project must have a writable directory for agent output
 
+## Workflow
+
+```
+[L1: Problem Understanding]
+         ↓
+[L2: Project Analysis]
+         ↓
+[L3: Agent Design]
+         ↓
+[L4: Confirmation]  ← AskUserQuestion (MUST confirm)
+         ↓
+[L5: Generation]
+         ↓
+[L6: Verification]
+```
+
 ## L1: Problem Understanding
+
+Extract what the user needs — do NOT ask "what do you want the agent to do?" Instead, infer from their problem:
 
 ### Problem Classification
 
 | Problem Pattern | Agent Type | Example |
 |----------------|------------|---------|
-| "Evaluate/grade/compare..." | Evaluator | Code reviewer, PR grader |
-| "Analyze/find/report..." | Analyzer | Bug finder, pattern detector |
-| "Transform/convert/normalize..." | Transformer | Format converter |
-| "Monitor/watch/alert..." | Monitor | Log watcher, performance tracker |
-| "Execute/run/deploy..." | Executor | Deployment agent |
+| "Evaluate/grade/compare outputs" | Grader | Code reviewer, PR quality checker |
+| "Compare A vs B, pick the better one" | Comparator | Skill version comparison, A/B tester |
+| "Analyze/find patterns/report insights" | Analyzer | Bug finder, performance diagnosis |
+| "Transform/convert/normalize data" | Transformer | Format converter, schema mapper |
+| "Research/gather/synthesize information" | Researcher | Documentation lookup, best practices |
+| "Check/validate/enforce rules" | Validator | Schema checker, compliance verifier |
 
 ### Extract Agent Specifications
 
-From user's problem, extract:
-- **Role**: What the agent does (from problem)
-- **Inputs**: What triggers the agent
+From the user's problem, extract:
+- **Role**: What the agent does (from problem description)
+- **Inputs**: What triggers the agent / what data it needs
 - **Outputs**: What the agent produces
 - **Constraints**: Boundaries and limitations
 
-## L2: Project Analysis Pipeline
+## L2: Project Analysis
 
-Run in parallel with problem understanding:
+Scan the project to understand context. Use search tools in parallel:
 
-### Analysis 1: Existing Agents
+### Detection Targets
 
-```
-Check for:
-- .trae/agents/ - existing agents
-- .claude/agents/ - alternative locations
-- scripts/ - automation scripts that could become agents
-```
+| Signal | What to Look For | Tool |
+|--------|-----------------|------|
+| Language | File extensions (`.ts`, `.py`, `.swift`, `.go`) | Glob |
+| Framework | package.json deps, Podfile, go.mod, Cargo.toml | Read |
+| Existing Agents | `.trae/agents/`, `.claude/agents/`, `.cursor/agents/` | Glob |
+| Existing Skills | `.trae/skills/`, `.cursor/skills/` | Glob |
+| Automation Scripts | `scripts/`, `tools/`, `Makefile` targets | Glob |
+| API Surface | REST endpoints, GraphQL schema, gRPC protos | Grep |
+| Conventions | Naming patterns, output formats, directory structure | LS |
 
-### Analysis 2: Integration Points
-
-```
-Find:
-- APIs the agent will call
-- File patterns the agent will process
-- External tools the agent will use
-```
-
-### Analysis 3: Conventions
+### Analysis Output
 
 ```
-Detect:
-- Naming conventions for automation
-- Output formats expected in project
+Project: {name}
+Languages: {detected languages}
+Existing Agents: {list or "none"}
+Existing Skills: {list or "none"}
+Automation Scripts: {list or "none"}
+Integration Points: {APIs, file patterns, tools}
+Conventions: {naming, output formats}
 ```
 
 ## L3: Agent Design
 
-Based on Problem + Analysis, design the agent:
+Based on Problem (L1) + Analysis (L2), design the agent:
 
 ```
-## Agent: {name}
-
+Agent: {name}
 Problem: {user's problem in their words}
 Role: {one-line description}
-Type: {Evaluator|Analyzer|Transformer|Monitor|Executor}
+Type: {Grader|Comparator|Analyzer|Transformer|Researcher|Validator}
 
-### Triggers
-- {when agent should activate}
+Triggers: {when agent should activate}
+Inputs: {what data the agent needs}
+Process: {high-level steps}
+Outputs: {what agent produces + format}
+Constraints: {boundaries + what NOT to do}
 
-### Inputs
-- {what triggers the agent}
-- {required context}
-
-### Process
-1. {step 1}
-2. {step 2}
-3. ...
-
-### Outputs
-- {what agent produces}
-- {output format}
-
-### Constraints
-- {boundaries}
-- {what NOT to do}
+Files to create:
+  - {path/to/agent.md}
 ```
 
-## L4: Validation (Before Generation)
+## L4: Confirmation (MUST USE AskUserQuestion)
 
-Show user BEFORE generating:
+**CRITICAL**: Before generating ANY files, present the design via `AskUserQuestion`.
 
+### AskUserQuestion Call
+
+Use `AskUserQuestion` with:
+
+```json
+{
+  "questions": [{
+    "question": "I've designed this agent based on your project. Should I create it?",
+    "header": "Agent",
+    "multiSelect": false,
+    "options": [
+      {
+        "label": "Create {agent-name} (Recommended)",
+        "description": "{type} agent — {1-sentence role}. Output: {path}"
+      },
+      {
+        "label": "Adjust design",
+        "description": "Let me refine the agent design before generating"
+      },
+      {
+        "label": "Skip",
+        "description": "Don't create an agent right now"
+      }
+    ]
+  }]
+}
 ```
-I'll create an agent that:
 
-Problem: {user's problem}
-Role: {what the agent does}
-Type: {agent category}
-Triggers: {when it activates}
-Files: {files to create}
+**Rules**:
+- Always show the designed agent name and type
+- Include the output path so user knows where files go
+- If multiple agent types are valid, offer alternatives:
 
-Is this correct? Should I adjust anything?
+```json
+{
+  "questions": [{
+    "question": "Your problem could be solved by different agent types. Which approach fits best?",
+    "header": "Agent type",
+    "multiSelect": false,
+    "options": [
+      {
+        "label": "Grader agent (Recommended)",
+        "description": "Evaluates outputs against expectations with pass/fail evidence"
+      },
+      {
+        "label": "Validator agent",
+        "description": "Checks correctness against rules and suggests fixes"
+      },
+      {
+        "label": "Skip",
+        "description": "Don't create an agent right now"
+      }
+    ]
+  }]
+}
 ```
 
-WAIT for confirmation before generating.
+- Never generate files without user confirmation
+- If user says "Adjust design", loop back to L3 with feedback
 
 ## L5: Generation
 
-1. Create agent scaffold using `scripts/init_agent.cjs`
-2. Fill role, inputs, process, outputs
-3. Set correct project-relative output path
-4. Include quality gates
+After user confirms:
 
-## L6: Quality Gates
+1. Determine output path using [Path Discovery](references/path-discovery.md)
+2. Create agent scaffold using `scripts/init_agent.cjs`
+3. Fill in role, inputs, process, outputs from L3 design
+4. Set correct project-relative output path
+5. Include quality gates and constraints
+
+### Generation Command
+
+```bash
+node scripts/init_agent.cjs \
+  --skill-dir <this-skill-dir> \
+  --name <agent-name> \
+  --role "<one-sentence-role>" \
+  --output-dir <project>/.trae/agents/
+```
+
+## L6: Verification
 
 Before delivery, verify:
-- [ ] Agent has clear role (not vague)
-- [ ] Inputs are explicitly defined
-- [ ] Output schema is deterministic
-- [ ] Constraints are enforced
+
+- [ ] Agent has a clear, specific role (not vague)
+- [ ] Inputs are explicitly defined with descriptions
+- [ ] Output schema is deterministic (JSON with known fields)
+- [ ] Constraints are enforced (what NOT to do)
 - [ ] Output path is project-relative, not global
+- [ ] Agent follows conventions from L2 analysis
 
-## L7: Output Contract
+### Delivery Report
 
-Always produce:
-1. **Problem Understanding**: What problem identified
-2. **Agent Design**: The agent architecture
-3. **Deliverables**: Files created
-4. **Usage Guide**: How to trigger and use
+```
+Created agent:
+  Name: {agent-name}
+  Type: {Grader|Comparator|Analyzer|...}
+  Path: {project-relative path}
 
-## Reference: AskUserQuestion Triggers (Limited)
+To use: spawn this agent via the Task tool with its defined inputs.
+```
 
-Only use AskUserQuestion when:
-- Multiple valid agent types exist and user preference matters
+## Error Handling
 
-DO NOT use for:
-- Asking what to name it (infer from problem)
-- Asking where to put it (use project conventions)
+| Issue | Solution |
+|-------|----------|
+| User's problem is too vague | Infer the most likely agent type from context, confirm at L4 |
+| Multiple valid agent types | Show alternatives in AskUserQuestion, let user pick |
+| No existing agents directory | Create `.trae/agents/` (or detected IDE convention) |
+| User requests skill/rule creation | Route to `project-skill-writer` or `trae-rules-writer` |
+| User says "Adjust design" at L4 | Loop back to L3, incorporate feedback |
+| Output path is global | Reject, enforce project-relative path |
+| Agent conflicts with existing | Show comparison, ask user whether to replace or rename |
 
-## Agents
+## Boundary Enforcement
 
-- Built-in problem analysis
-- Project convention detection
-- Integration point discovery
+This skill ONLY handles:
+- Analyzing project for agent design context
+- Designing agents based on user problems
+- Confirming design via AskUserQuestion
+- Generating agent files to project-relative paths
+- Verifying generated agents
+
+This skill does NOT handle:
+- Creating skills → `project-skill-writer`
+- Installing skills → `project-skill-installer`
+- Creating rules → `trae-rules-writer`
+- Global agent installation (always project-scoped)
 
 ## References
 
-- [Agent Patterns](references/agent-patterns.md): Architecture patterns
-- [Path Discovery](references/path-discovery.md): Output paths (load AFTER design)
+- [Agent Patterns](references/agent-patterns.md) — Architecture patterns (Grader, Comparator, Analyzer, Transformer, Researcher, Validator)
+- [Path Discovery](references/path-discovery.md) — Output path determination (load AFTER design)
+- [Example: Grader Agent](examples/grader-agent.md) — Full walkthrough of creating a grader agent
