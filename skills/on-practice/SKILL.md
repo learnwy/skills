@@ -3,7 +3,7 @@ name: on-practice
 description: "Practical methodology toolkit based on Mao Zedong's *On Practice* (《实践论》). Applies the practice-cognition-re-practice spiral to decision-making, problem analysis, and report writing. Triggers on: 'practice-based', 'verify through practice', 'seek truth from facts', '实践论', '实事求是', 'On Practice', 'test assumptions', 'practice spiral', 'field investigation'."
 metadata:
   author: "learnwy"
-  version: "1.0"
+  version: "1.1"
   source: "Mao Zedong, *On Practice* (《实践论》, 1937)"
 ---
 
@@ -126,6 +126,35 @@ If confidence is Low, confirm agent selection with the user before proceeding.
    ↻ Repeat each iteration
 ```
 
+## Cross-Skill Composition Workflows (with On Contradiction)
+
+### Validate-Then-Structure (Recommended Default)
+
+```
+1. on-practice / problem-analyzer       → Investigate reality: gather first-hand perceptual knowledge
+2. on-practice / decision-maker         → Audit assumptions: which have practice evidence?
+3. on-contradiction / problem-analyzer  → Structure validated findings into contradiction layers
+4. on-contradiction / decision-maker    → Identify principal contradiction, plan transformation
+5. on-practice / report-writer          → Document the full practice → structure → action cycle
+```
+
+### Practice-Driven Decision
+
+```
+1. on-practice / decision-maker         → Surface assumptions, design small-scale trials
+2. on-contradiction / decision-maker    → Frame validated results as contradictions, find principal one
+3. on-practice / decision-maker         → Final decision grounded in both evidence and structural clarity
+```
+
+### Investigation-First Deep Analysis
+
+```
+1. on-practice / problem-analyzer       → Field investigation: perceptual → rational knowledge
+2. on-contradiction / problem-analyzer  → Map rational knowledge to contradiction structure
+3. on-contradiction / decision-maker    → Resolve the principal contradiction
+4. on-practice / problem-analyzer       → Re-practice: validate the resolution in reality
+```
+
 ## Practice Analysis Tools
 
 ### Tool 1: Practice-Cognition Map
@@ -228,13 +257,17 @@ This skill does NOT handle:
 
 ## Expansion Roadmap (v2.0)
 
-| Domain | Agent | Core Principle |
-|--------|-------|---------------|
-| Learning | learning-master | Learn by doing; deepen through repeated practice; summarize laws |
-| Experimentation | experiment-designer | Small practices to test ideas; iterate on results |
-| Execution | execution-driver | Translate plans into actions; correct deviations through practice |
-| Investigation | field-investigator | First-hand research; rational knowledge from perceptual facts |
-| Improvement | pattern-extractor | Extract regular patterns; turn experience into methods into systems |
+> **Guiding principle**: No new agents until v1.0 agents are practice-tested. Apply our own spiral — use the skills in real work first, then expand based on evidence.
+
+The following agents are planned for future versions. Agents are assigned to the skill whose **core method** (practice spiral vs contradiction structure) is the primary lens.
+
+| Domain | Agent | Core Principle | Notes |
+|--------|-------|---------------|-------|
+| Learning | learning-master | Learn by doing; deepen through repeated practice; summarize laws | Complements `on-contradiction / knowledge-absorber` (which focuses on structural universality/particularity) |
+| Experimentation | experiment-designer | Small practices to test ideas; iterate on results | |
+| Execution | execution-driver | Translate plans into actions; correct deviations through practice | |
+| Investigation | field-investigator | First-hand research; rational knowledge from perceptual facts | |
+| Improvement | pattern-extractor | Extract regular patterns; turn experience into methods into systems | Complements `on-contradiction / retrospective-guide` (which focuses on contradiction development over time) |
 
 ## References
 

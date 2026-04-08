@@ -3,7 +3,7 @@ name: on-contradiction
 description: "Practical methodology toolkit based on Mao Zedong's *On Contradiction* (《矛盾论》). Provides the law of the unity of opposites as actionable frameworks for decision-making, problem analysis, and report writing. Triggers on: 'contradiction analysis', 'principal contradiction', 'analyze contradictions', '矛盾分析', '主要矛盾', 'On Contradiction', 'decision analysis', 'root cause with contradictions'."
 metadata:
   author: "learnwy"
-  version: "1.0"
+  version: "1.1"
   source: "Mao Zedong, *On Contradiction* (《矛盾论》, 1937)"
 ---
 
@@ -34,6 +34,18 @@ Practical methodology toolkit derived from Mao Zedong's *On Contradiction*. Tran
 - User needs software-specific methodology → use `software-methodology-toolkit`
 - User needs a quick factual answer → answer directly
 - The problem is trivial and doesn't warrant deep analysis
+
+## Relationship with On Practice
+
+*On Contradiction* and *On Practice* are complementary:
+
+| Dimension | On Contradiction | On Practice |
+|-----------|-----------------|-------------|
+| **Focus** | Structure of problems (opposing forces) | Process of knowing (practice-cognition cycle) |
+| **Question** | "What are the contradictions?" | "How do we know what's true?" |
+| **Method** | Identify, prioritize, transform contradictions | Investigate, test, verify through action |
+| **Strength** | Structural clarity — sees the skeleton | Process rigor — ensures grounding in reality |
+| **Combine** | Use On Contradiction to identify WHAT to solve | Use On Practice to verify HOW to solve it |
 
 ## The Universal Contradiction Framework
 
@@ -108,6 +120,35 @@ If confidence is Low, confirm agent selection with the user before proceeding.
 1. problem-analyzer  → Surface → Intermediate → Essential contradiction layers
 2. problem-analyzer  → Internal causes vs external causes
 3. decision-maker    → Prioritize and plan resolution
+```
+
+## Cross-Skill Composition Workflows (with On Practice)
+
+### Structure-Then-Validate (Recommended Default)
+
+```
+1. on-contradiction / problem-analyzer  → Identify all contradictions, find the principal one
+2. on-contradiction / decision-maker    → Evaluate transformation conditions, propose a path
+3. on-practice / decision-maker         → Surface untested assumptions, design small-scale trials
+4. on-practice / problem-analyzer       → Analyze practice results, extract validated knowledge
+5. on-contradiction / report-writer     → Final report: contradiction structure + practice evidence
+```
+
+### Rapid Evidence-Grounded Decision
+
+```
+1. on-contradiction / decision-maker    → Identify principal contradiction and two sides
+2. on-practice / decision-maker         → Audit assumptions: which side has practice evidence?
+3. on-contradiction / decision-maker    → Decide with both structural and empirical confidence
+```
+
+### Deep Root-Cause with Field Investigation
+
+```
+1. on-practice / problem-analyzer       → Investigate first: gather perceptual knowledge from reality
+2. on-contradiction / problem-analyzer  → Structure findings into contradiction layers (surface → essential)
+3. on-practice / problem-analyzer       → Validate the root-cause theory through re-practice
+4. on-contradiction / decision-maker    → Plan resolution focused on the principal contradiction
 ```
 
 ## Contradiction Analysis Tools
@@ -209,22 +250,24 @@ This skill does NOT handle:
 
 ## Expansion Roadmap (v2.0)
 
-The following agents are planned for future versions:
+> **Guiding principle**: No new agents until v1.0 agents are practice-tested. Apply On Practice — use the skills in real work first, then expand based on evidence.
 
-| Domain | Agent | Core Principle |
-|--------|-------|---------------|
-| Communication | negotiation-advisor | Identity (common ground) + struggle (resolve divergences) |
-| Management | project-manager | Staged principal contradictions + internal/external causes |
-| Growth | self-growth-coach | Internal contradictions + transformation |
-| Innovation | innovation-catalyst | Unity of opposites + restructuring contradictions |
-| Risk | risk-controller | Risk/opportunity coexistence + prediction |
-| Team | team-harmonizer | Group contradiction universality + principal contradiction |
-| Review | retrospective-guide | Full contradiction development + internal/external causes |
-| Learning | knowledge-absorber | Universality (underlying logic) + particularity (scenarios) |
-| Career | career-planner | Personal/environment contradictions + staged resolution |
-| Product | product-designer | User demand contradictions + supply-demand unity |
-| Emotion | emotion-manager | Rational/emotional contradictions + transformation |
-| Task | task-decomposer | Hierarchical contradictions + principal prioritization |
+The following agents are planned for future versions. Agents are assigned to the skill whose **core method** (contradiction structure vs practice spiral) is the primary lens.
+
+| Domain | Agent | Core Principle | Notes |
+|--------|-------|---------------|-------|
+| Communication | negotiation-advisor | Identity (common ground) + struggle (resolve divergences) | |
+| Management | project-manager | Staged principal contradictions + internal/external causes | |
+| Growth | self-growth-coach | Internal contradictions + transformation | |
+| Innovation | innovation-catalyst | Unity of opposites + restructuring contradictions | |
+| Risk | risk-controller | Risk/opportunity coexistence + prediction | |
+| Team | team-harmonizer | Group contradiction universality + principal contradiction | |
+| Review | retrospective-guide | Contradiction development over time + internal/external causes | Complements `on-practice / pattern-extractor` (which extracts patterns from practice data) |
+| Learning | knowledge-absorber | Universality (underlying logic) + particularity (scenarios) | Complements `on-practice / learning-master` (which focuses on learning by doing) |
+| Career | career-planner | Personal/environment contradictions + staged resolution | |
+| Product | product-designer | User demand contradictions + supply-demand unity | |
+| Emotion | emotion-manager | Rational/emotional contradictions + transformation | |
+| Task | task-decomposer | Hierarchical contradictions + principal prioritization | |
 
 ## References
 
