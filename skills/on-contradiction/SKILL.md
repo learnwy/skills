@@ -35,17 +35,17 @@ Practical methodology toolkit derived from Mao Zedong's *On Contradiction*. Tran
 - User needs a quick factual answer → answer directly
 - The problem is trivial and doesn't warrant deep analysis
 
-## Relationship with On Practice
+## Relationship with On Practice and On Protracted War
 
-*On Contradiction* and *On Practice* are complementary:
+*On Contradiction*, *On Practice*, and *On Protracted War* form a trilogy:
 
-| Dimension | On Contradiction | On Practice |
-|-----------|-----------------|-------------|
-| **Focus** | Structure of problems (opposing forces) | Process of knowing (practice-cognition cycle) |
-| **Question** | "What are the contradictions?" | "How do we know what's true?" |
-| **Method** | Identify, prioritize, transform contradictions | Investigate, test, verify through action |
-| **Strength** | Structural clarity — sees the skeleton | Process rigor — ensures grounding in reality |
-| **Combine** | Use On Contradiction to identify WHAT to solve | Use On Practice to verify HOW to solve it |
+| Dimension | On Contradiction | On Practice | On Protracted War |
+|-----------|-----------------|-------------|-------------------|
+| **Focus** | Structure of forces | Process of knowing | Evolution over time |
+| **Question** | "What are the contradictions?" | "How do we verify truth?" | "How does this unfold and when do we act?" |
+| **Method** | Identify, prioritize, transform | Investigate, test, validate | Stage, strategize, maneuver, evolve |
+| **Strength** | Structural clarity — sees the skeleton | Process rigor — ensures grounding | Temporal wisdom — sees the arc of change |
+| **Combine** | Identify WHAT forces are at play | Validate HOW through practice | Plan WHEN to act and how each phase differs |
 
 ## The Universal Contradiction Framework
 
@@ -122,9 +122,9 @@ If confidence is Low, confirm agent selection with the user before proceeding.
 3. decision-maker    → Prioritize and plan resolution
 ```
 
-## Cross-Skill Composition Workflows (with On Practice)
+## Cross-Skill Composition Workflows (Trilogy)
 
-### Structure-Then-Validate (Recommended Default)
+### Structure-Then-Validate (with On Practice)
 
 ```
 1. on-contradiction / problem-analyzer  → Identify all contradictions, find the principal one
@@ -134,7 +134,7 @@ If confidence is Low, confirm agent selection with the user before proceeding.
 5. on-contradiction / report-writer     → Final report: contradiction structure + practice evidence
 ```
 
-### Rapid Evidence-Grounded Decision
+### Rapid Evidence-Grounded Decision (with On Practice)
 
 ```
 1. on-contradiction / decision-maker    → Identify principal contradiction and two sides
@@ -142,13 +142,14 @@ If confidence is Low, confirm agent selection with the user before proceeding.
 3. on-contradiction / decision-maker    → Decide with both structural and empirical confidence
 ```
 
-### Deep Root-Cause with Field Investigation
+### The Full Trilogy Workflow (Structure → Time → Evidence)
 
 ```
-1. on-practice / problem-analyzer       → Investigate first: gather perceptual knowledge from reality
-2. on-contradiction / problem-analyzer  → Structure findings into contradiction layers (surface → essential)
-3. on-practice / problem-analyzer       → Validate the root-cause theory through re-practice
-4. on-contradiction / decision-maker    → Plan resolution focused on the principal contradiction
+1. on-contradiction / problem-analyzer   → Identify all contradictions, find the principal one
+2. on-protracted-war / problem-analyzer  → Diagnose current stage, assess four factors over time
+3. on-protracted-war / decision-maker    → Choose phase-appropriate strategy
+4. on-practice / decision-maker          → Validate strategy assumptions through small-scale practice
+5. on-protracted-war / report-writer     → Full strategic report: contradiction + phased plan + evidence
 ```
 
 ## Contradiction Analysis Tools
@@ -242,6 +243,8 @@ This skill ONLY handles:
 
 This skill does NOT handle:
 
+- Long-term phased strategy or stage diagnosis → `on-protracted-war`
+- Practice-based evidence validation → `on-practice`
 - Code generation or software implementation → `requirement-workflow`
 - Software engineering methodology → `software-methodology-toolkit`
 - Quick factual answers → answer directly
@@ -273,4 +276,5 @@ The following agents are planned for future versions. Agents are assigned to the
 
 - **On Contradiction** (《矛盾论》) — Mao Zedong (1937)
 - **On Practice** (《实践论》) — Mao Zedong (1937)
+- **On Protracted War** (《论持久战》) — Mao Zedong (1938)
 - **"On the Correct Handling of Contradictions Among the People"** (《关于正确处理人民内部矛盾的问题》) — Mao Zedong (1957)
