@@ -245,6 +245,7 @@ This skill ONLY handles:
 
 This skill does NOT handle:
 
+- Building a full knowledge base from raw sources → `llm-wiki`
 - Persistent AI memory across sessions → `ai-brain`
 - Creating reusable skills → `project-skill-writer`
 - Creating project rules → `trae-rules-writer`
