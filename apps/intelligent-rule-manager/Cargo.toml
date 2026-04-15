@@ -1,0 +1,4 @@
+[workspace]
+members = ["src-tauri", "crates/rule-core", "crates/rule-cli"]
+resolver = "2"
+
