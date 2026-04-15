@@ -29,8 +29,8 @@
 
 ## Phase 4: Desktop App Shell
 
-- [ ] Add typed Tauri invoke helpers in the frontend
-- [ ] Replace static summary content with live Tauri data
+- [x] Add typed Tauri invoke helpers in the frontend
+- [x] Replace static summary content with live Tauri data
 - [ ] Build the three-pane desktop layout
 - [ ] Add loading, empty, and error states
 
@@ -55,4 +55,3 @@
 - [ ] Run Rust formatting and checks
 - [ ] Run manual Tauri smoke test
 - [ ] Review behavior against `docs/spec.md`
-

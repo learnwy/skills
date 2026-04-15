@@ -59,7 +59,15 @@ body {
   margin-bottom: 24px;
 }
 
+.facts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
 .status-card,
+.fact-card,
 .panel,
 .milestones {
   background: var(--panel);
@@ -74,6 +82,7 @@ body {
 }
 
 .status-card h2,
+.fact-card h2,
 .panel h2,
 .milestones h2 {
   margin: 0 0 12px;
@@ -81,11 +90,29 @@ body {
 }
 
 .status-card p,
+.fact-card p,
 .panel p,
 .milestones li {
   margin: 0;
   line-height: 1.6;
   color: var(--muted);
+}
+
+.fact-card {
+  padding: 22px;
+}
+
+.fact-card ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+  display: grid;
+  gap: 8px;
+}
+
+.error-text {
+  margin-top: 12px !important;
+  color: #b54633 !important;
 }
 
 .status-card.accent {
@@ -119,6 +146,7 @@ body {
 
 @media (max-width: 980px) {
   .status-grid,
+  .facts-grid,
   .workspace-frame {
     grid-template-columns: 1fr;
   }
@@ -128,4 +156,3 @@ body {
     padding-top: 36px;
   }
 }
-

@@ -1,3 +1,6 @@
+import { startTransition, useEffect, useState } from "react";
+import { getWorkspaceSnapshot, type WorkspaceSummary } from "./lib/tauri";
+
 const milestones = [
   "Port rule parsing and composition into rule-core",
   "Expose workspace summary and rule listing over Tauri commands",
@@ -20,6 +23,49 @@ const panels = [
 ];
 
 export default function App() {
+  const [summary, setSummary] = useState<WorkspaceSummary | null>(null);
+  const [runtimeMode, setRuntimeMode] = useState<"tauri" | "browser">("browser");
+  const [runtimeLayer, setRuntimeLayer] = useState<string>("loading");
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadWorkspaceSnapshot() {
+      try {
+        const snapshot = await getWorkspaceSnapshot();
+        if (!isActive) {
+          return;
+        }
+
+        startTransition(() => {
+          setRuntimeMode(snapshot.mode);
+          setRuntimeLayer(snapshot.healthcheck.layer);
+          setSummary(snapshot.summary);
+          setError(null);
+        });
+      } catch (loadError) {
+        if (!isActive) {
+          return;
+        }
+
+        startTransition(() => {
+          setError(
+            loadError instanceof Error
+              ? loadError.message
+              : "Unknown workspace loading error",
+          );
+        });
+      }
+    }
+
+    void loadWorkspaceSnapshot();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
   return (
     <div className="app-shell">
       <header className="hero">
@@ -34,27 +80,58 @@ export default function App() {
 
       <section className="status-grid" aria-label="Current foundation">
         <article className="status-card accent">
-          <h2>Current scope</h2>
+          <h2>Runtime</h2>
           <p>
-            The workspace is scaffolded. Next we should implement `rule-core`
-            first, then wire live Tauri commands into the UI.
+            Running in <strong>{runtimeMode}</strong> mode with data from{" "}
+            <strong>{runtimeLayer}</strong>.
           </p>
         </article>
 
         <article className="status-card">
           <h2>Storage model</h2>
           <p>
-            Rules stay file-first under `AGENTS_HOME/rules` or `~/.agents/rules`
-            so the app remains compatible with existing workflows.
+            {summary
+              ? summary.storage_root
+              : "Loading storage root from rule-core workspace summary..."}
           </p>
         </article>
 
         <article className="status-card">
-          <h2>Shared runtime</h2>
+          <h2>Exports</h2>
           <p>
-            The desktop shell and CLI will both depend on `rule-core` to avoid
-            domain drift.
+            {summary
+              ? summary.exports_dir
+              : "Loading export directory from rule-core workspace summary..."}
           </p>
+        </article>
+      </section>
+
+      <section className="facts-grid" aria-label="Workspace capabilities">
+        <article className="fact-card">
+          <h2>Supported artifacts</h2>
+          <ul>
+            {(summary?.supported_artifacts ?? []).map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </article>
+
+        <article className="fact-card">
+          <h2>Supported targets</h2>
+          <ul>
+            {(summary?.supported_targets ?? []).map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </article>
+
+        <article className="fact-card">
+          <h2>Integration state</h2>
+          <p>
+            The frontend now requests live workspace data through a typed Tauri
+            wrapper instead of relying only on static content.
+          </p>
+          {error ? <p className="error-text">{error}</p> : null}
         </article>
       </section>
 
@@ -78,4 +155,3 @@ export default function App() {
     </div>
   );
 }
-
