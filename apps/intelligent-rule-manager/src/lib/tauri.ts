@@ -13,6 +13,23 @@ export type WorkspaceSummary = {
   supported_targets: string[];
 };
 
+export type RuleLibraryStats = {
+  count: number;
+  average_complexity: number;
+  average_update_frequency: number;
+  average_maintenance_cost: number;
+  tag_count: number;
+  group_count: number;
+};
+
+export type VisualizationRecommendation = {
+  recommendation: string;
+  score: number;
+  stats: RuleLibraryStats;
+  reasons: string[];
+  suggested_features: string[];
+};
+
 export type RuleListItem = {
   id: string;
   title: string;
@@ -45,6 +62,8 @@ type WorkspaceSnapshot = {
   healthcheck: Healthcheck;
   summary: WorkspaceSummary;
   rules: RuleListItem[];
+  stats: RuleLibraryStats;
+  recommendation: VisualizationRecommendation;
 };
 
 const browserFallback: WorkspaceSnapshot = {
@@ -71,6 +90,32 @@ const browserFallback: WorkspaceSnapshot = {
       file: "Browser-only preview data",
     },
   ],
+  stats: {
+    count: 1,
+    average_complexity: 2,
+    average_update_frequency: 2,
+    average_maintenance_cost: 1,
+    tag_count: 1,
+    group_count: 1,
+  },
+  recommendation: {
+    recommendation: "cli-is-enough",
+    score: 19,
+    stats: {
+      count: 1,
+      average_complexity: 2,
+      average_update_frequency: 2,
+      average_maintenance_cost: 1,
+      tag_count: 1,
+      group_count: 1,
+    },
+    reasons: [
+      "The current library is still small enough that a CLI-first workflow is efficient.",
+    ],
+    suggested_features: [
+      "Keep using Markdown files plus the CLI for assembly and export.",
+    ],
+  },
 };
 
 let browserDocuments: RuleDocument[] = [
@@ -124,13 +169,26 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     return {
       ...browserFallback,
       rules: browserDocuments.map(asListItem),
+      stats: {
+        ...browserFallback.stats,
+        count: browserDocuments.length,
+      },
+      recommendation: {
+        ...browserFallback.recommendation,
+        stats: {
+          ...browserFallback.recommendation.stats,
+          count: browserDocuments.length,
+        },
+      },
     };
   }
 
-  const [healthcheck, summary, rules] = await Promise.all([
+  const [healthcheck, summary, rules, stats, recommendation] = await Promise.all([
     invoke<Healthcheck>("healthcheck"),
     invoke<WorkspaceSummary>("workspace_summary"),
     invoke<RuleListItem[]>("list_rules"),
+    invoke<RuleLibraryStats>("stats"),
+    invoke<VisualizationRecommendation>("recommend_visualization"),
   ]);
 
   return {
@@ -138,6 +196,8 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     healthcheck,
     summary,
     rules,
+    stats,
+    recommendation,
   };
 }
 

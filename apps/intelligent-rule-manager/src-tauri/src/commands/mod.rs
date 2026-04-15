@@ -1,4 +1,7 @@
-use rule_core::{Healthcheck, NewRuleInput, RuleDocument, RuleListItem, WorkspaceSummary};
+use rule_core::{
+    Healthcheck, NewRuleInput, RuleDocument, RuleLibraryStats, RuleListItem,
+    VisualizationRecommendation, WorkspaceSummary,
+};
 
 #[tauri::command]
 pub fn healthcheck() -> Healthcheck {
@@ -28,4 +31,14 @@ pub fn create_rule(input: NewRuleInput) -> Result<RuleDocument, String> {
 #[tauri::command]
 pub fn save_rule(document: RuleDocument) -> Result<RuleDocument, String> {
     rule_core::save_rule(document)
+}
+
+#[tauri::command]
+pub fn stats() -> Result<RuleLibraryStats, String> {
+    rule_core::stats()
+}
+
+#[tauri::command]
+pub fn recommend_visualization() -> Result<VisualizationRecommendation, String> {
+    rule_core::recommend_visualization()
 }

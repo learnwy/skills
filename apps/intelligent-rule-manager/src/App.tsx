@@ -6,7 +6,9 @@ import {
   saveRule,
   type NewRuleInput,
   type RuleDocument,
+  type RuleLibraryStats,
   type RuleListItem,
+  type VisualizationRecommendation,
   type WorkspaceSummary,
 } from "./lib/tauri";
 
@@ -53,6 +55,9 @@ function joinValues(values: string[]): string {
 export default function App() {
   const [summary, setSummary] = useState<WorkspaceSummary | null>(null);
   const [rules, setRules] = useState<RuleListItem[]>([]);
+  const [stats, setStats] = useState<RuleLibraryStats | null>(null);
+  const [recommendation, setRecommendation] =
+    useState<VisualizationRecommendation | null>(null);
   const [selectedRuleId, setSelectedRuleId] = useState<string | null>(null);
   const [selectedDocument, setSelectedDocument] = useState<RuleDocument | null>(null);
   const [draftDocument, setDraftDocument] = useState<RuleDocument | null>(null);
@@ -117,6 +122,8 @@ export default function App() {
         setRuntimeLayer(snapshot.healthcheck.layer);
         setSummary(snapshot.summary);
         setRules(snapshot.rules);
+        setStats(snapshot.stats);
+        setRecommendation(snapshot.recommendation);
         setSelectedRuleId(
           preferredRuleId ??
             snapshot.rules.find((rule) => rule.id === selectedRuleId)?.id ??
@@ -307,21 +314,51 @@ export default function App() {
         </article>
 
         <article className="fact-card">
+          <h2>Library metrics</h2>
+          <ul>
+            <li>Tags: {stats?.tag_count ?? 0}</li>
+            <li>Groups: {stats?.group_count ?? 0}</li>
+            <li>Avg complexity: {stats?.average_complexity ?? 0}</li>
+          </ul>
+        </article>
+
+        <article className="fact-card">
+          <h2>Visualization signal</h2>
+          <p>
+            Recommendation:{" "}
+            <strong>{recommendation?.recommendation ?? "loading"}</strong>
+          </p>
+          <p>Score: {recommendation?.score ?? 0}</p>
+          {error ? <p className="error-text">{error}</p> : null}
+        </article>
+      </section>
+
+      <section className="insight-grid" aria-label="Recommendation insights">
+        <article className="fact-card">
+          <h2>Why this recommendation</h2>
+          <ul>
+            {(recommendation?.reasons ?? []).map((reason) => (
+              <li key={reason}>{reason}</li>
+            ))}
+          </ul>
+        </article>
+
+        <article className="fact-card">
+          <h2>Suggested capabilities</h2>
+          <ul>
+            {(recommendation?.suggested_features ?? []).map((feature) => (
+              <li key={feature}>{feature}</li>
+            ))}
+          </ul>
+        </article>
+
+        <article className="fact-card">
           <h2>Supported targets</h2>
           <ul>
             {(summary?.supported_targets ?? []).map((item) => (
               <li key={item}>{item}</li>
             ))}
           </ul>
-        </article>
-
-        <article className="fact-card">
-          <h2>Integration state</h2>
-          <p>
-            The shell now supports listing, filtering, creating, loading, and
-            saving rules through the shared Rust core.
-          </p>
-          {error ? <p className="error-text">{error}</p> : null}
         </article>
       </section>
 

@@ -14,6 +14,8 @@ enum Commands {
     Healthcheck,
     WorkspaceSummary,
     List,
+    Stats,
+    RecommendVisualization,
     Inspect {
         #[arg(long)]
         file: String,
@@ -48,6 +50,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Commands::List => {
             let rules: Vec<RuleListItem> = rule_core::list_rules()?;
             println!("{}", serde_json::to_string_pretty(&rules)?);
+        }
+        Commands::Stats => {
+            println!("{}", serde_json::to_string_pretty(&rule_core::stats()?)?);
+        }
+        Commands::RecommendVisualization => {
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&rule_core::recommend_visualization()?)?
+            );
         }
         Commands::Inspect { file } => {
             println!("{}", serde_json::to_string_pretty(&rule_core::load_rule(file)?)?);

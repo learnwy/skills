@@ -9,7 +9,9 @@ pub fn run() {
             commands::list_rules,
             commands::load_rule,
             commands::create_rule,
-            commands::save_rule
+            commands::save_rule,
+            commands::stats,
+            commands::recommend_visualization
         ])
         .run(tauri::generate_context!())
         .expect("error while running intelligent-rule-manager");

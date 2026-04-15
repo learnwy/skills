@@ -66,6 +66,13 @@ body {
   margin-bottom: 24px;
 }
 
+.insight-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
 .status-card,
 .fact-card,
 .panel,
@@ -322,6 +329,7 @@ body {
 @media (max-width: 980px) {
   .status-grid,
   .facts-grid,
+  .insight-grid,
   .workspace-frame {
     grid-template-columns: 1fr;
   }

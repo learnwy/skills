@@ -58,6 +58,25 @@ pub struct NewRuleInput {
     pub targets: Vec<String>,
 }
 
+#[derive(Debug, Clone, Serialize)]
+pub struct RuleLibraryStats {
+    pub count: usize,
+    pub average_complexity: f64,
+    pub average_update_frequency: f64,
+    pub average_maintenance_cost: f64,
+    pub tag_count: usize,
+    pub group_count: usize,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct VisualizationRecommendation {
+    pub recommendation: String,
+    pub score: i32,
+    pub stats: RuleLibraryStats,
+    pub reasons: Vec<String>,
+    pub suggested_features: Vec<String>,
+}
+
 pub fn healthcheck() -> Healthcheck {
     Healthcheck {
         ok: true,
@@ -88,32 +107,12 @@ pub fn default_rules_root() -> PathBuf {
 }
 
 pub fn list_rules() -> Result<Vec<RuleListItem>, String> {
-    let rules_root = default_rules_root();
-    if !rules_root.exists() {
-        return Ok(Vec::new());
-    }
+    let items = read_rule_documents()?
+        .into_iter()
+        .map(|document| as_list_item(&document))
+        .collect::<Vec<_>>();
 
-    let mut items = Vec::new();
-    let entries = fs::read_dir(&rules_root)
-        .map_err(|error| format!("Failed to read rules directory: {error}"))?;
-
-    for entry in entries {
-        let entry = entry.map_err(|error| format!("Failed to read directory entry: {error}"))?;
-        let file_path = entry.path();
-
-        if !file_path.is_file() {
-            continue;
-        }
-
-        if file_path.extension().and_then(|value| value.to_str()) != Some("md") {
-            continue;
-        }
-
-        let source = fs::read_to_string(&file_path)
-            .map_err(|error| format!("Failed to read {}: {error}", file_path.display()))?;
-        let document = parse_rule_document(&file_path, &source)?;
-        items.push(as_list_item(&document));
-    }
+    let mut items = items;
 
     items.sort_by(|left, right| left.title.cmp(&right.title));
     Ok(items)
@@ -204,6 +203,16 @@ pub fn save_rule(mut document: RuleDocument) -> Result<RuleDocument, String> {
     load_rule(document.file)
 }
 
+pub fn stats() -> Result<RuleLibraryStats, String> {
+    let documents = read_rule_documents()?;
+    Ok(build_stats(&documents))
+}
+
+pub fn recommend_visualization() -> Result<VisualizationRecommendation, String> {
+    let documents = read_rule_documents()?;
+    Ok(build_visualization_recommendation(&documents))
+}
+
 fn split_frontmatter(source: &str) -> Option<(&str, &str)> {
     if !source.starts_with("---\n") {
         return None;
@@ -215,6 +224,37 @@ fn split_frontmatter(source: &str) -> Option<(&str, &str)> {
     let body = &source[(frontmatter_end + 5)..];
 
     Some((frontmatter, body))
+}
+
+fn read_rule_documents() -> Result<Vec<RuleDocument>, String> {
+    let rules_root = default_rules_root();
+    if !rules_root.exists() {
+        return Ok(Vec::new());
+    }
+
+    let mut documents = Vec::new();
+    let entries = fs::read_dir(&rules_root)
+        .map_err(|error| format!("Failed to read rules directory: {error}"))?;
+
+    for entry in entries {
+        let entry = entry.map_err(|error| format!("Failed to read directory entry: {error}"))?;
+        let file_path = entry.path();
+
+        if !file_path.is_file() {
+            continue;
+        }
+
+        if file_path.extension().and_then(|value| value.to_str()) != Some("md") {
+            continue;
+        }
+
+        let source = fs::read_to_string(&file_path)
+            .map_err(|error| format!("Failed to read {}: {error}", file_path.display()))?;
+        documents.push(parse_rule_document(&file_path, &source)?);
+    }
+
+    documents.sort_by(|left, right| left.title.cmp(&right.title));
+    Ok(documents)
 }
 
 fn parse_rule_document(file_path: &Path, source: &str) -> Result<RuleDocument, String> {
@@ -431,6 +471,144 @@ fn today_iso_utc() -> String {
     let days_since_epoch = seconds_since_epoch / 86_400;
     let (year, month, day) = civil_from_days(days_since_epoch);
     format!("{year:04}-{month:02}-{day:02}")
+}
+
+fn build_stats(documents: &[RuleDocument]) -> RuleLibraryStats {
+    let mut tags = std::collections::BTreeSet::new();
+    let mut groups = std::collections::BTreeSet::new();
+
+    for document in documents {
+        for tag in &document.tags {
+            tags.insert(tag.clone());
+        }
+
+        for group in &document.groups {
+            groups.insert(group.clone());
+        }
+    }
+
+    RuleLibraryStats {
+        count: documents.len(),
+        average_complexity: round(average(
+            documents
+                .iter()
+                .map(|document| document.complexity as f64)
+                .collect(),
+        )),
+        average_update_frequency: round(average(
+            documents
+                .iter()
+                .map(|document| update_frequency_score(&document.update_frequency) as f64)
+                .collect(),
+        )),
+        average_maintenance_cost: round(average(
+            documents
+                .iter()
+                .map(|document| maintenance_cost_score(&document.maintenance_cost) as f64)
+                .collect(),
+        )),
+        tag_count: tags.len(),
+        group_count: groups.len(),
+    }
+}
+
+fn build_visualization_recommendation(documents: &[RuleDocument]) -> VisualizationRecommendation {
+    let stats = build_stats(documents);
+    let quantity_score = scale(stats.count as i32, &[(6, 10), (12, 20), (24, 30), (40, 40)]);
+    let complexity_score = (stats.average_complexity * 5.0).round() as i32;
+    let update_score = (stats.average_update_frequency * 4.0).round() as i32;
+    let maintenance_score = (stats.average_maintenance_cost * 6.0).round() as i32;
+    let taxonomy_score = scale((stats.tag_count + stats.group_count) as i32, &[(10, 6), (20, 12), (35, 18)]);
+    let total_score = quantity_score + complexity_score + update_score + maintenance_score + taxonomy_score;
+
+    let recommendation = if stats.count >= 20 && total_score >= 65 {
+        "build-macos-app"
+    } else if stats.count >= 8 && total_score >= 40 {
+        "consider-macos-app-soon"
+    } else {
+        "cli-is-enough"
+    };
+
+    let mut reasons = Vec::new();
+    if stats.count >= 25 {
+        reasons.push("The rule library is large enough that manual browsing will become slow.".to_string());
+    }
+    if stats.average_complexity >= 3.0 {
+        reasons.push("Rules are complex enough that preview and side-by-side editing would reduce mistakes.".to_string());
+    }
+    if stats.average_update_frequency >= 3.0 {
+        reasons.push("Rules are updated frequently, which makes tagging, syncing, and export workflows more valuable.".to_string());
+    }
+    if stats.average_maintenance_cost >= 2.2 {
+        reasons.push("Maintenance cost is trending high, so visual grouping and quick review can pay off.".to_string());
+    }
+    if (stats.tag_count + stats.group_count) >= 20 {
+        reasons.push("Taxonomy sprawl suggests a GUI for grouping and filtering would improve discoverability.".to_string());
+    }
+    if reasons.is_empty() {
+        reasons.push("The current library is still small enough that a CLI-first workflow is efficient.".to_string());
+    }
+
+    VisualizationRecommendation {
+        recommendation: recommendation.to_string(),
+        score: total_score,
+        stats,
+        reasons,
+        suggested_features: if recommendation == "cli-is-enough" {
+            vec!["Keep using Markdown files plus the CLI for assembly and export.".to_string()]
+        } else {
+            vec![
+                "Rule editor with metadata form fields".to_string(),
+                "Grouping and tag filters".to_string(),
+                "Live Markdown preview".to_string(),
+                "One-click export for AGENTS.md and Trae targets".to_string(),
+                "Sync status and conflict visibility".to_string(),
+            ]
+        },
+    }
+}
+
+fn average(values: Vec<f64>) -> f64 {
+    if values.is_empty() {
+        return 0.0;
+    }
+
+    values.iter().sum::<f64>() / values.len() as f64
+}
+
+fn round(value: f64) -> f64 {
+    (value * 100.0).round() / 100.0
+}
+
+fn scale(value: i32, thresholds: &[(i32, i32)]) -> i32 {
+    let mut score = 0;
+    for (threshold, points) in thresholds {
+        if value >= *threshold {
+            score = *points;
+        }
+    }
+    score
+}
+
+fn update_frequency_score(value: &str) -> i32 {
+    match value {
+        "rare" => 1,
+        "occasional" => 2,
+        "monthly" => 3,
+        "weekly" => 4,
+        "frequent" => 5,
+        _ => 1,
+    }
+}
+
+fn maintenance_cost_score(value: &str) -> i32 {
+    match value {
+        "low" => 1,
+        "medium" => 2,
+        "high" => 3,
+        "very-high" => 4,
+        _ => 1,
+    }
 }
 
 fn civil_from_days(days_since_epoch: i64) -> (i64, i64, i64) {
