@@ -23,6 +23,23 @@ export type RuleListItem = {
   file: string;
 };
 
+export type RuleDocument = RuleListItem & {
+  complexity: number;
+  update_frequency: string;
+  maintenance_cost: string;
+  priority: number;
+  last_reviewed: string;
+  body: string;
+};
+
+export type NewRuleInput = {
+  title: string;
+  summary?: string;
+  groups: string[];
+  tags: string[];
+  targets: string[];
+};
+
 type WorkspaceSnapshot = {
   mode: "tauri" | "browser";
   healthcheck: Healthcheck;
@@ -56,6 +73,32 @@ const browserFallback: WorkspaceSnapshot = {
   ],
 };
 
+let browserDocuments: RuleDocument[] = [
+  {
+    id: "browser-preview-rule",
+    title: "Browser Preview Rule",
+    summary: "Fallback example shown when the app is running outside Tauri.",
+    groups: ["preview"],
+    tags: ["fallback"],
+    targets: ["generic"],
+    complexity: 2,
+    update_frequency: "occasional",
+    maintenance_cost: "low",
+    priority: 50,
+    last_reviewed: "2026-04-16",
+    file: "Browser-only preview data",
+    body: [
+      "# Intent",
+      "",
+      "Preview how the desktop app behaves before the Tauri runtime is attached.",
+      "",
+      "# Rule",
+      "",
+      "This sample rule lets the browser build stay interactive during local UI work.",
+    ].join("\n"),
+  },
+];
+
 function isTauriRuntime(): boolean {
   const candidate = window as Window & {
     __TAURI_INTERNALS__?: unknown;
@@ -64,9 +107,24 @@ function isTauriRuntime(): boolean {
   return Boolean(candidate.__TAURI_INTERNALS__);
 }
 
+function asListItem(document: RuleDocument): RuleListItem {
+  return {
+    id: document.id,
+    title: document.title,
+    summary: document.summary,
+    groups: document.groups,
+    tags: document.tags,
+    targets: document.targets,
+    file: document.file,
+  };
+}
+
 export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
   if (!isTauriRuntime()) {
-    return browserFallback;
+    return {
+      ...browserFallback,
+      rules: browserDocuments.map(asListItem),
+    };
   }
 
   const [healthcheck, summary, rules] = await Promise.all([
@@ -81,4 +139,61 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     summary,
     rules,
   };
+}
+
+export async function loadRule(file: string): Promise<RuleDocument> {
+  if (!isTauriRuntime()) {
+    const document = browserDocuments.find((item) => item.file === file);
+    if (!document) {
+      throw new Error(`No browser fallback rule found for ${file}`);
+    }
+    return document;
+  }
+
+  return invoke<RuleDocument>("load_rule", { file });
+}
+
+export async function createRule(input: NewRuleInput): Promise<RuleDocument> {
+  if (!isTauriRuntime()) {
+    const title = input.title.trim();
+    const id = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    const created: RuleDocument = {
+      id,
+      title,
+      summary: input.summary?.trim() || `Reusable rule for ${title.toLowerCase()}.`,
+      groups: input.groups.length > 0 ? input.groups : ["shared"],
+      tags: input.tags,
+      targets: input.targets.length > 0 ? input.targets : ["agents-md", "trae-rule"],
+      complexity: 2,
+      update_frequency: "occasional",
+      maintenance_cost: "low",
+      priority: 50,
+      last_reviewed: "2026-04-16",
+      file: `Browser preview/${id}.md`,
+      body: [
+        "# Intent",
+        "",
+        "State the scenario or goal this rule is meant to support.",
+        "",
+        "# Rule",
+        "",
+        "Write the rule in normal Markdown so it stays compatible with AGENTS-style documents and Trae rule files.",
+      ].join("\n"),
+    };
+    browserDocuments = [...browserDocuments, created];
+    return created;
+  }
+
+  return invoke<RuleDocument>("create_rule", { input });
+}
+
+export async function saveRule(document: RuleDocument): Promise<RuleDocument> {
+  if (!isTauriRuntime()) {
+    browserDocuments = browserDocuments.map((item) =>
+      item.file === document.file ? document : item,
+    );
+    return document;
+  }
+
+  return invoke<RuleDocument>("save_rule", { document });
 }

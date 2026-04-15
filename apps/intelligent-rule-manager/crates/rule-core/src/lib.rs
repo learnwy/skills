@@ -1,8 +1,10 @@
 use std::env;
 use std::fs;
+use std::path::Path;
 use std::path::PathBuf;
+use std::time::{SystemTime, UNIX_EPOCH};
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Healthcheck {
@@ -28,6 +30,32 @@ pub struct RuleListItem {
     pub tags: Vec<String>,
     pub targets: Vec<String>,
     pub file: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RuleDocument {
+    pub id: String,
+    pub title: String,
+    pub summary: String,
+    pub groups: Vec<String>,
+    pub tags: Vec<String>,
+    pub targets: Vec<String>,
+    pub complexity: u8,
+    pub update_frequency: String,
+    pub maintenance_cost: String,
+    pub priority: i32,
+    pub last_reviewed: String,
+    pub file: String,
+    pub body: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct NewRuleInput {
+    pub title: String,
+    pub summary: Option<String>,
+    pub groups: Vec<String>,
+    pub tags: Vec<String>,
+    pub targets: Vec<String>,
 }
 
 pub fn healthcheck() -> Healthcheck {
@@ -83,46 +111,97 @@ pub fn list_rules() -> Result<Vec<RuleListItem>, String> {
 
         let source = fs::read_to_string(&file_path)
             .map_err(|error| format!("Failed to read {}: {error}", file_path.display()))?;
-
-        let Some((frontmatter, _body)) = split_frontmatter(&source) else {
-            continue;
-        };
-
-        let meta = parse_frontmatter(frontmatter);
-        let title = meta
-            .get("title")
-            .and_then(|value| value.first())
-            .cloned()
-            .unwrap_or_else(|| {
-                file_path
-                    .file_stem()
-                    .and_then(|value| value.to_str())
-                    .unwrap_or("untitled-rule")
-                    .to_string()
-            });
-        let id = meta
-            .get("id")
-            .and_then(|value| value.first())
-            .cloned()
-            .unwrap_or_else(|| slugify(&title));
-
-        items.push(RuleListItem {
-            id,
-            title,
-            summary: meta
-                .get("summary")
-                .and_then(|value| value.first())
-                .cloned()
-                .unwrap_or_default(),
-            groups: meta.get("groups").cloned().unwrap_or_default(),
-            tags: meta.get("tags").cloned().unwrap_or_default(),
-            targets: meta.get("targets").cloned().unwrap_or_else(|| vec!["generic".to_string()]),
-            file: file_path.display().to_string(),
-        });
+        let document = parse_rule_document(&file_path, &source)?;
+        items.push(as_list_item(&document));
     }
 
     items.sort_by(|left, right| left.title.cmp(&right.title));
     Ok(items)
+}
+
+pub fn load_rule(file: String) -> Result<RuleDocument, String> {
+    let path = PathBuf::from(file);
+    let source = fs::read_to_string(&path)
+        .map_err(|error| format!("Failed to read {}: {error}", path.display()))?;
+
+    parse_rule_document(&path, &source)
+}
+
+pub fn create_rule(input: NewRuleInput) -> Result<RuleDocument, String> {
+    let title = input.title.trim();
+    if title.is_empty() {
+        return Err("Rule title is required.".to_string());
+    }
+
+    let rules_root = default_rules_root();
+    fs::create_dir_all(&rules_root)
+        .map_err(|error| format!("Failed to create rules directory: {error}"))?;
+
+    let id = slugify(title);
+    let file = rules_root.join(format!("{id}.md"));
+    if file.exists() {
+        return Err(format!("A rule already exists at {}.", file.display()));
+    }
+
+    let document = RuleDocument {
+        id,
+        title: title.to_string(),
+        summary: input
+            .summary
+            .unwrap_or_else(|| format!("Reusable rule for {}.", title.to_lowercase())),
+        groups: normalize_values(input.groups, vec!["shared".to_string()]),
+        tags: normalize_values(input.tags, Vec::new()),
+        targets: normalize_values(input.targets, vec!["agents-md".to_string(), "trae-rule".to_string()]),
+        complexity: 2,
+        update_frequency: "occasional".to_string(),
+        maintenance_cost: "low".to_string(),
+        priority: 50,
+        last_reviewed: today_iso_utc(),
+        file: file.display().to_string(),
+        body: default_rule_body(),
+    };
+
+    save_rule(document)
+}
+
+pub fn save_rule(mut document: RuleDocument) -> Result<RuleDocument, String> {
+    if document.title.trim().is_empty() {
+        return Err("Rule title is required.".to_string());
+    }
+
+    if document.file.trim().is_empty() {
+        return Err("Rule file path is required.".to_string());
+    }
+
+    document.id = if document.id.trim().is_empty() {
+        slugify(&document.title)
+    } else {
+        slugify(&document.id)
+    };
+    document.summary = document.summary.trim().to_string();
+    document.groups = normalize_values(document.groups, vec!["shared".to_string()]);
+    document.tags = normalize_values(document.tags, Vec::new());
+    document.targets = normalize_values(document.targets, vec!["generic".to_string()]);
+    document.body = if document.body.trim().is_empty() {
+        default_rule_body()
+    } else {
+        document.body.trim().to_string()
+    };
+    if document.last_reviewed.trim().is_empty() {
+        document.last_reviewed = today_iso_utc();
+    }
+
+    let file_path = PathBuf::from(&document.file);
+    if let Some(parent) = file_path.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|error| format!("Failed to create {}: {error}", parent.display()))?;
+    }
+
+    let serialized = render_rule_document(&document);
+    fs::write(&file_path, serialized)
+        .map_err(|error| format!("Failed to write {}: {error}", file_path.display()))?;
+
+    load_rule(document.file)
 }
 
 fn split_frontmatter(source: &str) -> Option<(&str, &str)> {
@@ -136,6 +215,47 @@ fn split_frontmatter(source: &str) -> Option<(&str, &str)> {
     let body = &source[(frontmatter_end + 5)..];
 
     Some((frontmatter, body))
+}
+
+fn parse_rule_document(file_path: &Path, source: &str) -> Result<RuleDocument, String> {
+    let Some((frontmatter, body)) = split_frontmatter(source) else {
+        return Err(format!("Rule file {} is missing YAML frontmatter.", file_path.display()));
+    };
+
+    let meta = parse_frontmatter(frontmatter);
+    let title = first_value(&meta, "title").unwrap_or_else(|| {
+        file_path
+            .file_stem()
+            .and_then(|value| value.to_str())
+            .unwrap_or("untitled-rule")
+            .to_string()
+    });
+    let id = first_value(&meta, "id").unwrap_or_else(|| slugify(&title));
+
+    Ok(RuleDocument {
+        id,
+        title,
+        summary: first_value(&meta, "summary").unwrap_or_default(),
+        groups: meta.get("groups").cloned().unwrap_or_default(),
+        tags: meta.get("tags").cloned().unwrap_or_default(),
+        targets: meta
+            .get("targets")
+            .cloned()
+            .unwrap_or_else(|| vec!["generic".to_string()]),
+        complexity: first_value(&meta, "complexity")
+            .and_then(|value| value.parse::<u8>().ok())
+            .unwrap_or(2),
+        update_frequency: first_value(&meta, "update_frequency")
+            .unwrap_or_else(|| "occasional".to_string()),
+        maintenance_cost: first_value(&meta, "maintenance_cost")
+            .unwrap_or_else(|| "low".to_string()),
+        priority: first_value(&meta, "priority")
+            .and_then(|value| value.parse::<i32>().ok())
+            .unwrap_or(50),
+        last_reviewed: first_value(&meta, "last_reviewed").unwrap_or_else(today_iso_utc),
+        file: file_path.display().to_string(),
+        body: body.trim().to_string(),
+    })
 }
 
 fn parse_frontmatter(frontmatter: &str) -> std::collections::BTreeMap<String, Vec<String>> {
@@ -214,9 +334,122 @@ fn slugify(value: &str) -> String {
     slug.trim_matches('-').to_string()
 }
 
+fn as_list_item(document: &RuleDocument) -> RuleListItem {
+    RuleListItem {
+        id: document.id.clone(),
+        title: document.title.clone(),
+        summary: document.summary.clone(),
+        groups: document.groups.clone(),
+        tags: document.tags.clone(),
+        targets: document.targets.clone(),
+        file: document.file.clone(),
+    }
+}
+
+fn normalize_values(values: Vec<String>, fallback: Vec<String>) -> Vec<String> {
+    let normalized: Vec<String> = values
+        .into_iter()
+        .map(|value| value.trim().to_lowercase())
+        .filter(|value| !value.is_empty())
+        .collect();
+
+    if normalized.is_empty() {
+        fallback
+    } else {
+        normalized
+    }
+}
+
+fn first_value(
+    meta: &std::collections::BTreeMap<String, Vec<String>>,
+    key: &str,
+) -> Option<String> {
+    meta.get(key).and_then(|value| value.first()).cloned()
+}
+
+fn render_rule_document(document: &RuleDocument) -> String {
+    let mut lines = vec![
+        "---".to_string(),
+        format!("id: {}", document.id),
+        format!("title: {}", document.title),
+        format!("summary: {}", document.summary),
+        "groups:".to_string(),
+    ];
+
+    for group in &document.groups {
+        lines.push(format!("  - {group}"));
+    }
+
+    lines.push("tags:".to_string());
+    for tag in &document.tags {
+        lines.push(format!("  - {tag}"));
+    }
+
+    lines.push("targets:".to_string());
+    for target in &document.targets {
+        lines.push(format!("  - {target}"));
+    }
+
+    lines.extend([
+        format!("complexity: {}", document.complexity),
+        format!("update_frequency: {}", document.update_frequency),
+        format!("maintenance_cost: {}", document.maintenance_cost),
+        format!("priority: {}", document.priority),
+        format!("last_reviewed: {}", document.last_reviewed),
+        "---".to_string(),
+        String::new(),
+        document.body.trim().to_string(),
+        String::new(),
+    ]);
+
+    lines.join("\n")
+}
+
+fn default_rule_body() -> String {
+    [
+        "# Intent",
+        "",
+        "State the scenario or goal this rule is meant to support.",
+        "",
+        "# Rule",
+        "",
+        "Write the rule in normal Markdown so it stays compatible with AGENTS-style documents and Trae rule files.",
+        "",
+        "# Notes",
+        "",
+        "- Mention important tradeoffs.",
+        "- Call out when the rule should not be applied.",
+    ]
+    .join("\n")
+}
+
+fn today_iso_utc() -> String {
+    let seconds_since_epoch = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_secs() as i64)
+        .unwrap_or(0);
+    let days_since_epoch = seconds_since_epoch / 86_400;
+    let (year, month, day) = civil_from_days(days_since_epoch);
+    format!("{year:04}-{month:02}-{day:02}")
+}
+
+fn civil_from_days(days_since_epoch: i64) -> (i64, i64, i64) {
+    let z = days_since_epoch + 719_468;
+    let era = if z >= 0 { z } else { z - 146_096 } / 146_097;
+    let doe = z - era * 146_097;
+    let yoe = (doe - doe / 1_460 + doe / 36_524 - doe / 146_096) / 365;
+    let mut year = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let day = doy - (153 * mp + 2) / 5 + 1;
+    let month = mp + if mp < 10 { 3 } else { -9 };
+    year += if month <= 2 { 1 } else { 0 };
+    (year, month, day)
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{parse_frontmatter, split_frontmatter};
+    use super::{civil_from_days, parse_frontmatter, split_frontmatter};
 
     #[test]
     fn parses_frontmatter_lists_and_scalars() {
@@ -242,5 +475,10 @@ targets:
         assert_eq!(parsed.get("groups").expect("groups").len(), 2);
         assert_eq!(parsed.get("tags").expect("tags").len(), 2);
         assert_eq!(parsed.get("targets").expect("targets").len(), 1);
+    }
+
+    #[test]
+    fn converts_epoch_days_to_calendar_date() {
+        assert_eq!(civil_from_days(0), (1970, 1, 1));
     }
 }

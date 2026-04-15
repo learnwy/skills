@@ -19,9 +19,9 @@
 ## Phase 3: CLI Parity
 
 - [ ] Implement `init`
-- [ ] Implement `create`
+- [x] Implement `create`
 - [x] Implement `list`
-- [ ] Implement `inspect`
+- [x] Implement `inspect`
 - [ ] Implement `stats`
 - [ ] Implement `decide`
 - [ ] Implement `compose`
@@ -31,27 +31,27 @@
 
 - [x] Add typed Tauri invoke helpers in the frontend
 - [x] Replace static summary content with live Tauri data
-- [ ] Build the three-pane desktop layout
-- [ ] Add loading, empty, and error states
+- [x] Build the three-pane desktop layout
+- [x] Add loading, empty, and error states
 
 ## Phase 5: Rule Library UI
 
 - [x] Implement rule list and search
-- [ ] Implement tag/group/target filters
+- [x] Implement tag/group/target filters
 - [x] Implement rule detail viewer
-- [ ] Implement create-rule flow from template
+- [x] Implement create-rule flow from template
 
 ## Phase 6: Editing And Composition
 
-- [ ] Implement metadata editor
-- [ ] Implement Markdown body editor
-- [ ] Implement live preview
+- [x] Implement metadata editor
+- [x] Implement Markdown body editor
+- [x] Implement live preview
 - [ ] Implement compose studio
 - [ ] Implement export actions
 
 ## Phase 7: Verification
 
-- [ ] Run frontend typecheck
-- [ ] Run Rust formatting and checks
+- [x] Run frontend typecheck
+- [x] Run Rust formatting and checks
 - [ ] Run manual Tauri smoke test
 - [ ] Review behavior against `docs/spec.md`

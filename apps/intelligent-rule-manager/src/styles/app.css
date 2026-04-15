@@ -133,8 +133,15 @@ body {
   padding: 24px;
 }
 
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
 .rule-list {
-  margin-top: 18px;
   display: grid;
   gap: 12px;
 }
@@ -157,6 +164,37 @@ body {
   color: var(--text);
 }
 
+.filter-grid,
+.field-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.field {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--text);
+}
+
+.field textarea {
+  min-height: 240px;
+  resize: vertical;
+}
+
 .rule-card,
 .empty-state,
 .detail-block {
@@ -170,6 +208,7 @@ body {
   width: 100%;
   text-align: left;
   cursor: pointer;
+  appearance: none;
 }
 
 .rule-card.selected {
@@ -224,6 +263,51 @@ body {
   font-weight: 600;
 }
 
+.editor-stack {
+  display: grid;
+  gap: 16px;
+}
+
+.preview-surface {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.button-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.primary-button,
+.ghost-button {
+  min-height: 42px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary-button {
+  border: 0;
+  background: var(--accent);
+  color: white;
+}
+
+.primary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.ghost-button {
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.65);
+  color: var(--text);
+}
+
 .milestones {
   padding: 24px 28px;
 }
@@ -239,6 +323,11 @@ body {
   .status-grid,
   .facts-grid,
   .workspace-frame {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-grid,
+  .field-grid {
     grid-template-columns: 1fr;
   }
 
