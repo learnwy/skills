@@ -11,8 +11,8 @@
 
 ## Phase 2: Domain Foundation
 
-- [ ] Define shared rule metadata and workspace summary models
-- [ ] Implement storage root resolution in `rule-core`
+- [x] Define shared rule metadata and workspace summary models
+- [x] Implement storage root resolution in `rule-core`
 - [ ] Add error handling strategy for domain and CLI usage
 - [ ] Add fixture-based tests for sample rule files
 
@@ -20,7 +20,7 @@
 
 - [ ] Implement `init`
 - [ ] Implement `create`
-- [ ] Implement `list`
+- [x] Implement `list`
 - [ ] Implement `inspect`
 - [ ] Implement `stats`
 - [ ] Implement `decide`
@@ -36,7 +36,7 @@
 
 ## Phase 5: Rule Library UI
 
-- [ ] Implement rule list and search
+- [x] Implement rule list and search
 - [ ] Implement tag/group/target filters
 - [ ] Implement rule detail viewer
 - [ ] Implement create-rule flow from template

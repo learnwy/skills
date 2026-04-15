@@ -133,6 +133,86 @@ body {
   padding: 24px;
 }
 
+.rule-list {
+  margin-top: 18px;
+  display: grid;
+  gap: 12px;
+}
+
+.search-box {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.search-box input {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 0 14px;
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--text);
+}
+
+.rule-card,
+.empty-state,
+.detail-block {
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.55);
+  padding: 16px;
+}
+
+.rule-card-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.rule-card-header h3,
+.empty-state h3,
+.detail-block h3 {
+  margin: 0;
+  font-size: 0.98rem;
+}
+
+.rule-card-header span {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.rule-card p,
+.empty-state p,
+.detail-block p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.token-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.token {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
 .milestones {
   padding: 24px 28px;
 }

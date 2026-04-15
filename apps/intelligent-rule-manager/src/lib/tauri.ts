@@ -13,10 +13,21 @@ export type WorkspaceSummary = {
   supported_targets: string[];
 };
 
+export type RuleListItem = {
+  id: string;
+  title: string;
+  summary: string;
+  groups: string[];
+  tags: string[];
+  targets: string[];
+  file: string;
+};
+
 type WorkspaceSnapshot = {
   mode: "tauri" | "browser";
   healthcheck: Healthcheck;
   summary: WorkspaceSummary;
+  rules: RuleListItem[];
 };
 
 const browserFallback: WorkspaceSnapshot = {
@@ -32,6 +43,17 @@ const browserFallback: WorkspaceSnapshot = {
     supported_artifacts: ["single-rule", "rule-set", "config-file"],
     supported_targets: ["agents-md", "trae-rule", "generic"],
   },
+  rules: [
+    {
+      id: "browser-preview-rule",
+      title: "Browser Preview Rule",
+      summary: "Fallback example shown when the app is running outside Tauri.",
+      groups: ["preview"],
+      tags: ["fallback"],
+      targets: ["generic"],
+      file: "Browser-only preview data",
+    },
+  ],
 };
 
 function isTauriRuntime(): boolean {
@@ -47,15 +69,16 @@ export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
     return browserFallback;
   }
 
-  const [healthcheck, summary] = await Promise.all([
+  const [healthcheck, summary, rules] = await Promise.all([
     invoke<Healthcheck>("healthcheck"),
     invoke<WorkspaceSummary>("workspace_summary"),
+    invoke<RuleListItem[]>("list_rules"),
   ]);
 
   return {
     mode: "tauri",
     healthcheck,
     summary,
+    rules,
   };
 }
-

@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+use rule_core::RuleListItem;
 
 #[derive(Debug, Parser)]
 #[command(name = "rule-cli")]
@@ -12,6 +13,7 @@ struct Cli {
 enum Commands {
     Healthcheck,
     WorkspaceSummary,
+    List,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -26,6 +28,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "{}",
                 serde_json::to_string_pretty(&rule_core::workspace_summary())?
             );
+        }
+        Commands::List => {
+            let rules: Vec<RuleListItem> = rule_core::list_rules()?;
+            println!("{}", serde_json::to_string_pretty(&rules)?);
         }
     }
 

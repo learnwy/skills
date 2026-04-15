@@ -5,9 +5,9 @@ pub fn run() {
     tauri::Builder::default()
         .invoke_handler(tauri::generate_handler![
             commands::healthcheck,
-            commands::workspace_summary
+            commands::workspace_summary,
+            commands::list_rules
         ])
         .run(tauri::generate_context!())
         .expect("error while running intelligent-rule-manager");
 }
-
