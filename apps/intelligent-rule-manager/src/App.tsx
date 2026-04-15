@@ -30,6 +30,7 @@ export default function App() {
   const [summary, setSummary] = useState<WorkspaceSummary | null>(null);
   const [rules, setRules] = useState<RuleListItem[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedRuleId, setSelectedRuleId] = useState<string | null>(null);
   const [runtimeMode, setRuntimeMode] = useState<"tauri" | "browser">("browser");
   const [runtimeLayer, setRuntimeLayer] = useState<string>("loading");
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +48,10 @@ export default function App() {
 
     return haystack.includes(searchQuery.trim().toLowerCase());
   });
+  const selectedRule =
+    filteredRules.find((rule) => rule.id === selectedRuleId) ??
+    filteredRules[0] ??
+    null;
 
   useEffect(() => {
     let isActive = true;
@@ -63,6 +68,7 @@ export default function App() {
           setRuntimeLayer(snapshot.healthcheck.layer);
           setSummary(snapshot.summary);
           setRules(snapshot.rules);
+          setSelectedRuleId(snapshot.rules[0]?.id ?? null);
           setError(null);
         });
       } catch (loadError) {
@@ -175,7 +181,12 @@ export default function App() {
 
             {filteredRules.length > 0 ? (
               filteredRules.map((rule) => (
-                <article className="rule-card" key={rule.id}>
+                <button
+                  className={`rule-card ${selectedRule?.id === rule.id ? "selected" : ""}`}
+                  key={rule.id}
+                  onClick={() => setSelectedRuleId(rule.id)}
+                  type="button"
+                >
                   <div className="rule-card-header">
                     <h3>{rule.title}</h3>
                     <span>{rule.id}</span>
@@ -188,7 +199,7 @@ export default function App() {
                       </span>
                     ))}
                   </div>
-                </article>
+                </button>
               ))
             ) : rules.length > 0 ? (
               <div className="empty-state">
@@ -223,16 +234,65 @@ export default function App() {
         <article className="panel">
           <h2>{panels[2]?.title}</h2>
           <p>{panels[2]?.body}</p>
-          <div className="detail-block">
-            <h3>Selected targets in this workspace</h3>
-            <div className="token-row">
-              {(summary?.supported_targets ?? []).map((target) => (
-                <span className="token" key={target}>
-                  {target}
-                </span>
-              ))}
+          {selectedRule ? (
+            <>
+              <div className="detail-block">
+                <h3>{selectedRule.title}</h3>
+                <p>{selectedRule.summary || "No summary is defined for this rule yet."}</p>
+              </div>
+
+              <div className="detail-block">
+                <h3>Groups</h3>
+                <div className="token-row">
+                  {selectedRule.groups.length > 0 ? (
+                    selectedRule.groups.map((group) => (
+                      <span className="token" key={`${selectedRule.id}-detail-group-${group}`}>
+                        {group}
+                      </span>
+                    ))
+                  ) : (
+                    <p>No groups assigned.</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="detail-block">
+                <h3>Tags</h3>
+                <div className="token-row">
+                  {selectedRule.tags.length > 0 ? (
+                    selectedRule.tags.map((tag) => (
+                      <span className="token" key={`${selectedRule.id}-detail-tag-${tag}`}>
+                        {tag}
+                      </span>
+                    ))
+                  ) : (
+                    <p>No tags assigned.</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="detail-block">
+                <h3>Targets</h3>
+                <div className="token-row">
+                  {selectedRule.targets.map((target) => (
+                    <span className="token" key={`${selectedRule.id}-detail-target-${target}`}>
+                      {target}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="detail-block">
+                <h3>File</h3>
+                <p>{selectedRule.file}</p>
+              </div>
+            </>
+          ) : (
+            <div className="empty-state">
+              <h3>No rule selected</h3>
+              <p>Select a rule from the library pane to inspect its metadata here.</p>
             </div>
-          </div>
+          )}
         </article>
       </section>
 

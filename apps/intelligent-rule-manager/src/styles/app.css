@@ -166,6 +166,17 @@ body {
   padding: 16px;
 }
 
+.rule-card {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rule-card.selected {
+  border-color: rgba(198, 106, 43, 0.45);
+  background: rgba(198, 106, 43, 0.12);
+}
+
 .rule-card-header {
   display: flex;
   align-items: baseline;

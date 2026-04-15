@@ -38,7 +38,7 @@
 
 - [x] Implement rule list and search
 - [ ] Implement tag/group/target filters
-- [ ] Implement rule detail viewer
+- [x] Implement rule detail viewer
 - [ ] Implement create-rule flow from template
 
 ## Phase 6: Editing And Composition
