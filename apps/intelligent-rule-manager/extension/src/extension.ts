@@ -14,7 +14,9 @@ type WorkspaceSummary = {
 
 export function activate(context: vscode.ExtensionContext): void {
   const output = vscode.window.createOutputChannel("Intelligent Rule Manager");
-  const clientPath = path.join(context.extensionPath, "client");
+  const appRoot = path.resolve(context.extensionPath, "..");
+  const clientPath = path.join(appRoot, "client");
+  const cliManifestPath = path.join(appRoot, "cli", "Cargo.toml");
   const clientSpecPath = path.join(clientPath, "docs", "spec.md");
 
   context.subscriptions.push(output);
@@ -59,12 +61,12 @@ export function activate(context: vscode.ExtensionContext): void {
               "-p",
               "rule-cli",
               "--manifest-path",
-              path.join(clientPath, "Cargo.toml"),
+              cliManifestPath,
               "--",
               "workspace-summary",
             ],
             {
-              cwd: clientPath,
+              cwd: appRoot,
             },
           );
 
@@ -92,7 +94,7 @@ export function activate(context: vscode.ExtensionContext): void {
       "intelligentRuleManager.openRulesRoot",
       async () => {
         try {
-          const summary = await runWorkspaceSummary(clientPath);
+          const summary = await runWorkspaceSummary(appRoot, cliManifestPath);
           await vscode.commands.executeCommand(
             "vscode.openFolder",
             vscode.Uri.file(summary.storage_root),
@@ -114,7 +116,10 @@ export function activate(context: vscode.ExtensionContext): void {
 
 export function deactivate(): void {}
 
-async function runWorkspaceSummary(clientPath: string): Promise<WorkspaceSummary> {
+async function runWorkspaceSummary(
+  appRoot: string,
+  cliManifestPath: string,
+): Promise<WorkspaceSummary> {
   const { stdout } = await execFileAsync(
     "cargo",
     [
@@ -122,15 +127,14 @@ async function runWorkspaceSummary(clientPath: string): Promise<WorkspaceSummary
       "-p",
       "rule-cli",
       "--manifest-path",
-      path.join(clientPath, "Cargo.toml"),
+      cliManifestPath,
       "--",
       "workspace-summary",
     ],
     {
-      cwd: clientPath,
+      cwd: appRoot,
     },
   );
 
   return JSON.parse(stdout) as WorkspaceSummary;
 }
-

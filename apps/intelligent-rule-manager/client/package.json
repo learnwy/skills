@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
-    "cli:help": "cargo run -p rule-cli -- --help"
+    "cli:help": "cargo run -p rule-cli --manifest-path ../cli/Cargo.toml -- --help"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",

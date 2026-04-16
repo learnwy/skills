@@ -1,5 +1,5 @@
 {
-  "name": "intelligent-rule-manager-vscode",
+  "name": "intelligent-rule-manager-extension",
   "displayName": "Intelligent Rule Manager",
   "description": "VS Code-compatible extension for opening and operating the Intelligent Rule Manager workspace.",
   "version": "0.1.0",
@@ -49,4 +49,3 @@
     "typescript": "^5"
   }
 }
-
