@@ -13,9 +13,17 @@
   ],
   "activationEvents": [
     "onCommand:intelligentRuleManager.openClientFolder",
+    "onCommand:intelligentRuleManager.openCliFolder",
+    "onCommand:intelligentRuleManager.openExtensionFolder",
+    "onCommand:intelligentRuleManager.openWorkspaceOverview",
     "onCommand:intelligentRuleManager.openClientSpec",
     "onCommand:intelligentRuleManager.runWorkspaceSummary",
-    "onCommand:intelligentRuleManager.openRulesRoot"
+    "onCommand:intelligentRuleManager.openRulesRoot",
+    "onCommand:intelligentRuleManager.listRules",
+    "onCommand:intelligentRuleManager.inspectRule",
+    "onCommand:intelligentRuleManager.createRule",
+    "onCommand:intelligentRuleManager.showStats",
+    "onCommand:intelligentRuleManager.showVisualizationRecommendation"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -23,6 +31,18 @@
       {
         "command": "intelligentRuleManager.openClientFolder",
         "title": "Intelligent Rule Manager: Open Client Folder"
+      },
+      {
+        "command": "intelligentRuleManager.openCliFolder",
+        "title": "Intelligent Rule Manager: Open CLI Folder"
+      },
+      {
+        "command": "intelligentRuleManager.openExtensionFolder",
+        "title": "Intelligent Rule Manager: Open Extension Folder"
+      },
+      {
+        "command": "intelligentRuleManager.openWorkspaceOverview",
+        "title": "Intelligent Rule Manager: Open Workspace Overview"
       },
       {
         "command": "intelligentRuleManager.openClientSpec",
@@ -35,6 +55,26 @@
       {
         "command": "intelligentRuleManager.openRulesRoot",
         "title": "Intelligent Rule Manager: Open Rules Root"
+      },
+      {
+        "command": "intelligentRuleManager.listRules",
+        "title": "Intelligent Rule Manager: List Rules"
+      },
+      {
+        "command": "intelligentRuleManager.inspectRule",
+        "title": "Intelligent Rule Manager: Inspect Rule"
+      },
+      {
+        "command": "intelligentRuleManager.createRule",
+        "title": "Intelligent Rule Manager: Create Rule"
+      },
+      {
+        "command": "intelligentRuleManager.showStats",
+        "title": "Intelligent Rule Manager: Show Stats"
+      },
+      {
+        "command": "intelligentRuleManager.showVisualizationRecommendation",
+        "title": "Intelligent Rule Manager: Show Visualization Recommendation"
       }
     ]
   },

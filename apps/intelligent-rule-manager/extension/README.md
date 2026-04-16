@@ -15,9 +15,17 @@ apps/intelligent-rule-manager/
 ## Commands
 
 - `Intelligent Rule Manager: Open Client Folder`
+- `Intelligent Rule Manager: Open CLI Folder`
+- `Intelligent Rule Manager: Open Extension Folder`
+- `Intelligent Rule Manager: Open Workspace Overview`
 - `Intelligent Rule Manager: Open Client Spec`
 - `Intelligent Rule Manager: Run Workspace Summary`
 - `Intelligent Rule Manager: Open Rules Root`
+- `Intelligent Rule Manager: List Rules`
+- `Intelligent Rule Manager: Inspect Rule`
+- `Intelligent Rule Manager: Create Rule`
+- `Intelligent Rule Manager: Show Stats`
+- `Intelligent Rule Manager: Show Visualization Recommendation`
 
 These commands are built on the standard VS Code extension API, so they are intended to work in VS Code and other IDEs built on the same extension model.
 
@@ -49,5 +57,5 @@ These commands are built on the standard VS Code extension API, so they are inte
 ### Improve
 
 - Add compose/export commands from the extension.
-- Add richer IDE integration for rule creation and quick actions.
+- Add richer IDE integration for editing and saving rule documents directly through extension commands.
 - Add packaged release workflows for both the client and the extension.
