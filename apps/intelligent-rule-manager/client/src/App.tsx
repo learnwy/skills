@@ -52,6 +52,12 @@ function joinValues(values: string[]): string {
   return values.join(", ");
 }
 
+function getFilterTags(rule: RuleListItem): string[] {
+  return rule.resolved_tags && rule.resolved_tags.length > 0
+    ? rule.resolved_tags
+    : rule.tags;
+}
+
 export default function App() {
   const [summary, setSummary] = useState<WorkspaceSummary | null>(null);
   const [rules, setRules] = useState<RuleListItem[]>([]);
@@ -80,7 +86,7 @@ export default function App() {
     [rules],
   );
   const availableTags = useMemo(
-    () => Array.from(new Set(rules.flatMap((rule) => rule.tags))).sort(),
+    () => Array.from(new Set(rules.flatMap((rule) => getFilterTags(rule)))).sort(),
     [rules],
   );
   const availableTargets = useMemo(
@@ -89,12 +95,13 @@ export default function App() {
   );
 
   const filteredRules = rules.filter((rule) => {
+    const filterTags = getFilterTags(rule);
     const haystack = [
       rule.id,
       rule.title,
       rule.summary,
       rule.groups.join(" "),
-      rule.tags.join(" "),
+      filterTags.join(" "),
       rule.targets.join(" "),
     ]
       .join(" ")
@@ -102,7 +109,7 @@ export default function App() {
 
     const matchesSearch = haystack.includes(searchQuery.trim().toLowerCase());
     const matchesGroup = groupFilter === "all" || rule.groups.includes(groupFilter);
-    const matchesTag = tagFilter === "all" || rule.tags.includes(tagFilter);
+    const matchesTag = tagFilter === "all" || filterTags.includes(tagFilter);
     const matchesTarget = targetFilter === "all" || rule.targets.includes(targetFilter);
 
     return matchesSearch && matchesGroup && matchesTag && matchesTarget;

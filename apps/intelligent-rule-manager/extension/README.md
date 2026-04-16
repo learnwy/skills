@@ -6,6 +6,7 @@ This package is a VS Code-compatible extension that sits beside the desktop clie
 
 ```text
 apps/intelligent-rule-manager/
+├── docs/        # workspace spec, design, and tasks
 ├── client/      # Tauri + React desktop app
 ├── cli/         # shared Rust CLI workspace
 ├── extension/   # this VS Code-compatible extension
@@ -18,7 +19,7 @@ apps/intelligent-rule-manager/
 - `Intelligent Rule Manager: Open CLI Folder`
 - `Intelligent Rule Manager: Open Extension Folder`
 - `Intelligent Rule Manager: Open Workspace Overview`
-- `Intelligent Rule Manager: Open Client Spec`
+- `Intelligent Rule Manager: Open Workspace Spec`
 - `Intelligent Rule Manager: Run Workspace Summary`
 - `Intelligent Rule Manager: Open Rules Root`
 - `Intelligent Rule Manager: List Rules`
@@ -45,7 +46,7 @@ These commands are built on the standard VS Code extension API, so they are inte
 ### Do
 
 - Pointed the extension at sibling `client/` and `cli/` folders.
-- Added commands that open the client, inspect the client spec, and run the Rust CLI.
+- Added commands that open the client, inspect the workspace spec, and run the Rust CLI.
 - Kept the extension package isolated so it can be compiled independently.
 
 ### Review

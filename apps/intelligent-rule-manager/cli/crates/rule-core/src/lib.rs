@@ -28,6 +28,7 @@ pub struct RuleListItem {
     pub summary: String,
     pub groups: Vec<String>,
     pub tags: Vec<String>,
+    pub resolved_tags: Vec<String>,
     pub targets: Vec<String>,
     pub file: String,
 }
@@ -98,12 +99,23 @@ pub fn workspace_summary() -> WorkspaceSummary {
 }
 
 pub fn default_rules_root() -> PathBuf {
+    if let Ok(root) = env::var("LEARNWY_RULES_ROOT") {
+        return PathBuf::from(root);
+    }
+
+    if let Ok(home) = env::var("LEARNWY_AI_HOME") {
+        return PathBuf::from(home).join("rules");
+    }
+
     if let Ok(home) = env::var("AGENTS_HOME") {
         return PathBuf::from(home).join("rules");
     }
 
     let user_home = env::var("HOME").unwrap_or_else(|_| "~".to_string());
-    PathBuf::from(user_home).join(".agents").join("rules")
+    PathBuf::from(user_home)
+        .join(".learnwy")
+        .join("ai")
+        .join("rules")
 }
 
 pub fn list_rules() -> Result<Vec<RuleListItem>, String> {
@@ -228,26 +240,18 @@ fn split_frontmatter(source: &str) -> Option<(&str, &str)> {
 
 fn read_rule_documents() -> Result<Vec<RuleDocument>, String> {
     let rules_root = default_rules_root();
+    read_rule_documents_from_root(&rules_root)
+}
+
+fn read_rule_documents_from_root(rules_root: &Path) -> Result<Vec<RuleDocument>, String> {
     if !rules_root.exists() {
         return Ok(Vec::new());
     }
 
     let mut documents = Vec::new();
-    let entries = fs::read_dir(&rules_root)
-        .map_err(|error| format!("Failed to read rules directory: {error}"))?;
+    let markdown_files = collect_markdown_files(rules_root)?;
 
-    for entry in entries {
-        let entry = entry.map_err(|error| format!("Failed to read directory entry: {error}"))?;
-        let file_path = entry.path();
-
-        if !file_path.is_file() {
-            continue;
-        }
-
-        if file_path.extension().and_then(|value| value.to_str()) != Some("md") {
-            continue;
-        }
-
+    for file_path in markdown_files {
         let source = fs::read_to_string(&file_path)
             .map_err(|error| format!("Failed to read {}: {error}", file_path.display()))?;
         documents.push(parse_rule_document(&file_path, &source)?);
@@ -255,6 +259,34 @@ fn read_rule_documents() -> Result<Vec<RuleDocument>, String> {
 
     documents.sort_by(|left, right| left.title.cmp(&right.title));
     Ok(documents)
+}
+
+fn collect_markdown_files(root: &Path) -> Result<Vec<PathBuf>, String> {
+    let mut files = Vec::new();
+    collect_markdown_files_into(root, &mut files)?;
+    files.sort();
+    Ok(files)
+}
+
+fn collect_markdown_files_into(root: &Path, files: &mut Vec<PathBuf>) -> Result<(), String> {
+    let entries =
+        fs::read_dir(root).map_err(|error| format!("Failed to read {}: {error}", root.display()))?;
+
+    for entry in entries {
+        let entry = entry.map_err(|error| format!("Failed to read directory entry: {error}"))?;
+        let file_path = entry.path();
+
+        if file_path.is_dir() {
+            collect_markdown_files_into(&file_path, files)?;
+            continue;
+        }
+
+        if file_path.extension().and_then(|value| value.to_str()) == Some("md") {
+            files.push(file_path);
+        }
+    }
+
+    Ok(())
 }
 
 fn parse_rule_document(file_path: &Path, source: &str) -> Result<RuleDocument, String> {
@@ -381,17 +413,22 @@ fn as_list_item(document: &RuleDocument) -> RuleListItem {
         summary: document.summary.clone(),
         groups: document.groups.clone(),
         tags: document.tags.clone(),
+        resolved_tags: resolve_rule_tags(&document.tags),
         targets: document.targets.clone(),
         file: document.file.clone(),
     }
 }
 
 fn normalize_values(values: Vec<String>, fallback: Vec<String>) -> Vec<String> {
-    let normalized: Vec<String> = values
-        .into_iter()
-        .map(|value| value.trim().to_lowercase())
-        .filter(|value| !value.is_empty())
-        .collect();
+    let mut normalized = Vec::new();
+
+    for value in values {
+        let value = value.trim().to_lowercase();
+        if value.is_empty() || normalized.contains(&value) {
+            continue;
+        }
+        normalized.push(value);
+    }
 
     if normalized.is_empty() {
         fallback
@@ -405,6 +442,59 @@ fn first_value(
     key: &str,
 ) -> Option<String> {
     meta.get(key).and_then(|value| value.first()).cloned()
+}
+
+fn tag_parent_map(tag: &str) -> &'static [&'static str] {
+    match tag {
+        "typescript" => &["web", "javascript", "tooling"],
+        "javascript" => &["web"],
+        "react" => &["frontend", "web", "typescript"],
+        "node" => &["backend", "tooling", "javascript"],
+        "lint" => &["quality", "tooling"],
+        "eslint" => &["lint", "javascript", "typescript", "web"],
+        "format" => &["quality", "tooling"],
+        "prettier" => &["format", "javascript", "typescript", "web"],
+        "git-hooks" => &["quality", "tooling"],
+        "husky" => &["git-hooks", "tooling"],
+        "lint-staged" => &["git-hooks", "lint", "format", "tooling"],
+        "tsconfig" => &["typescript", "build-tools", "tooling"],
+        "path-alias" => &["typescript", "module-resolution", "build-tools"],
+        "module-resolution" => &["tooling"],
+        "exports" => &["typescript", "module-structure"],
+        "imports" => &["typescript", "module-structure"],
+        "barrel-exports" => &["exports", "module-structure", "typescript"],
+        "project-structure" => &["typescript", "module-structure", "tooling"],
+        "shared-config" => &["typescript", "tooling"],
+        "build-tools" => &["tooling"],
+        "bundler" => &["build-tools", "web"],
+        "vite" => &["bundler", "build-tools", "web", "typescript"],
+        "tsup" => &["build-tools", "typescript"],
+        "module-structure" => &["tooling"],
+        _ => &[],
+    }
+}
+
+fn resolve_rule_tags(tags: &[String]) -> Vec<String> {
+    let mut resolved = Vec::new();
+
+    for tag in tags {
+        collect_tag_with_ancestors(tag, &mut resolved);
+    }
+
+    resolved
+}
+
+fn collect_tag_with_ancestors(tag: &str, resolved: &mut Vec<String>) {
+    let normalized = tag.trim().to_lowercase();
+    if normalized.is_empty() || resolved.contains(&normalized) {
+        return;
+    }
+
+    resolved.push(normalized.clone());
+
+    for parent in tag_parent_map(&normalized) {
+        collect_tag_with_ancestors(parent, resolved);
+    }
 }
 
 fn render_rule_document(document: &RuleDocument) -> String {
@@ -627,7 +717,14 @@ fn civil_from_days(days_since_epoch: i64) -> (i64, i64, i64) {
 
 #[cfg(test)]
 mod tests {
-    use super::{civil_from_days, parse_frontmatter, split_frontmatter};
+    use std::fs;
+    use std::path::PathBuf;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    use super::{
+        civil_from_days, default_rules_root, parse_frontmatter, read_rule_documents_from_root,
+        resolve_rule_tags, split_frontmatter,
+    };
 
     #[test]
     fn parses_frontmatter_lists_and_scalars() {
@@ -658,5 +755,93 @@ targets:
     #[test]
     fn converts_epoch_days_to_calendar_date() {
         assert_eq!(civil_from_days(0), (1970, 1, 1));
+    }
+
+    #[test]
+    fn defaults_to_learnwy_shared_rules_root() {
+        let original_home = std::env::var("HOME").ok();
+        let original_learnwy_root = std::env::var("LEARNWY_RULES_ROOT").ok();
+        let original_learnwy_home = std::env::var("LEARNWY_AI_HOME").ok();
+        let original_agents_home = std::env::var("AGENTS_HOME").ok();
+
+        unsafe {
+            std::env::remove_var("LEARNWY_RULES_ROOT");
+            std::env::remove_var("LEARNWY_AI_HOME");
+            std::env::remove_var("AGENTS_HOME");
+            std::env::set_var("HOME", "/tmp/learnwy-home");
+        }
+
+        assert_eq!(
+            default_rules_root(),
+            PathBuf::from("/tmp/learnwy-home/.learnwy/ai/rules")
+        );
+
+        restore_env("HOME", original_home);
+        restore_env("LEARNWY_RULES_ROOT", original_learnwy_root);
+        restore_env("LEARNWY_AI_HOME", original_learnwy_home);
+        restore_env("AGENTS_HOME", original_agents_home);
+    }
+
+    #[test]
+    fn resolves_parent_tags_for_filtering() {
+        let resolved = resolve_rule_tags(&[
+            "typescript".to_string(),
+            "eslint".to_string(),
+            "lint-staged".to_string(),
+        ]);
+
+        assert!(resolved.contains(&"typescript".to_string()));
+        assert!(resolved.contains(&"web".to_string()));
+        assert!(resolved.contains(&"lint".to_string()));
+        assert!(resolved.contains(&"format".to_string()));
+        assert!(resolved.contains(&"git-hooks".to_string()));
+        assert!(resolved.contains(&"quality".to_string()));
+    }
+
+    #[test]
+    fn reads_markdown_rules_recursively() {
+        let fixture_root = temp_fixture_root("intelligent-rule-manager");
+        let nested_dir = fixture_root.join("web").join("typescript");
+        fs::create_dir_all(&nested_dir).expect("create nested rules directory");
+
+        fs::write(
+            nested_dir.join("named-exports.md"),
+            r#"---
+id: named-exports
+title: Named exports
+summary: Prefer named exports.
+groups: [frontend]
+tags: [typescript, exports]
+targets: [agents-md]
+---
+
+# Rule
+
+Prefer named exports over default exports.
+"#,
+        )
+        .expect("write nested rule");
+
+        let documents = read_rule_documents_from_root(&fixture_root).expect("read rule documents");
+        assert_eq!(documents.len(), 1);
+        assert_eq!(documents[0].id, "named-exports");
+
+        fs::remove_dir_all(&fixture_root).expect("remove fixture root");
+    }
+
+    fn temp_fixture_root(name: &str) -> PathBuf {
+        let suffix = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|duration| duration.as_nanos())
+            .unwrap_or(0);
+
+        std::env::temp_dir().join(format!("{name}-{suffix}"))
+    }
+
+    fn restore_env(key: &str, value: Option<String>) {
+        match value {
+            Some(value) => unsafe { std::env::set_var(key, value) },
+            None => unsafe { std::env::remove_var(key) },
+        }
     }
 }

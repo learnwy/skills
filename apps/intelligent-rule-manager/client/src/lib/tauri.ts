@@ -36,6 +36,7 @@ export type RuleListItem = {
   summary: string;
   groups: string[];
   tags: string[];
+  resolved_tags?: string[];
   targets: string[];
   file: string;
 };
@@ -86,6 +87,7 @@ const browserFallback: WorkspaceSnapshot = {
       summary: "Fallback example shown when the app is running outside Tauri.",
       groups: ["preview"],
       tags: ["fallback"],
+      resolved_tags: ["fallback"],
       targets: ["generic"],
       file: "Browser-only preview data",
     },
@@ -159,6 +161,7 @@ function asListItem(document: RuleDocument): RuleListItem {
     summary: document.summary,
     groups: document.groups,
     tags: document.tags,
+    resolved_tags: document.tags,
     targets: document.targets,
     file: document.file,
   };

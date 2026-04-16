@@ -18,6 +18,7 @@ type RuleListItem = {
   summary: string;
   groups: string[];
   tags: string[];
+  resolved_tags?: string[];
   targets: string[];
   file: string;
 };
@@ -52,6 +53,7 @@ type AppContext = {
   appRoot: string;
   clientPath: string;
   cliManifestPath: string;
+  docsPath: string;
   extensionPath: string;
   output: vscode.OutputChannel;
 };
@@ -63,6 +65,7 @@ export function activate(context: vscode.ExtensionContext): void {
     appRoot,
     clientPath: path.join(appRoot, "client"),
     cliManifestPath: path.join(appRoot, "cli", "Cargo.toml"),
+    docsPath: path.join(appRoot, "docs"),
     extensionPath: context.extensionPath,
     output,
   };
@@ -103,7 +106,7 @@ export function activate(context: vscode.ExtensionContext): void {
   });
 
   register("intelligentRuleManager.openClientSpec", async () => {
-    await openTextDocument(path.join(app.clientPath, "docs", "spec.md"));
+    await openTextDocument(path.join(app.docsPath, "spec.md"));
   });
 
   register("intelligentRuleManager.runWorkspaceSummary", async () => {

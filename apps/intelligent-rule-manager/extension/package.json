@@ -46,7 +46,7 @@
       },
       {
         "command": "intelligentRuleManager.openClientSpec",
-        "title": "Intelligent Rule Manager: Open Client Spec"
+        "title": "Intelligent Rule Manager: Open Workspace Spec"
       },
       {
         "command": "intelligentRuleManager.runWorkspaceSummary",
