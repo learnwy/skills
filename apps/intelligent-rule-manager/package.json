@@ -1,29 +1,52 @@
 {
-  "name": "intelligent-rule-manager",
-  "private": true,
+  "name": "intelligent-rule-manager-vscode",
+  "displayName": "Intelligent Rule Manager",
+  "description": "VS Code-compatible extension for opening and operating the Intelligent Rule Manager workspace.",
   "version": "0.1.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "typecheck": "tsc --project tsconfig.json --noEmit",
-    "build": "pnpm typecheck && vite build",
-    "preview": "vite preview",
-    "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build",
-    "cli:help": "cargo run -p rule-cli -- --help"
+  "publisher": "learnwy",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.96.0"
   },
-  "dependencies": {
-    "@tauri-apps/api": "^2",
-    "react": "^19",
-    "react-dom": "^19"
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:intelligentRuleManager.openClientFolder",
+    "onCommand:intelligentRuleManager.openClientSpec",
+    "onCommand:intelligentRuleManager.runWorkspaceSummary",
+    "onCommand:intelligentRuleManager.openRulesRoot"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "intelligentRuleManager.openClientFolder",
+        "title": "Intelligent Rule Manager: Open Client Folder"
+      },
+      {
+        "command": "intelligentRuleManager.openClientSpec",
+        "title": "Intelligent Rule Manager: Open Client Spec"
+      },
+      {
+        "command": "intelligentRuleManager.runWorkspaceSummary",
+        "title": "Intelligent Rule Manager: Run Workspace Summary"
+      },
+      {
+        "command": "intelligentRuleManager.openRulesRoot",
+        "title": "Intelligent Rule Manager: Open Rules Root"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./tsconfig.json",
+    "watch": "tsc -w -p ./tsconfig.json",
+    "vscode:prepublish": "pnpm compile"
   },
   "devDependencies": {
-    "@tauri-apps/cli": "^2",
     "@types/node": "^24",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "@vitejs/plugin-react": "^5",
-    "typescript": "^5",
-    "vite": "^6"
+    "@types/vscode": "^1.96.0",
+    "typescript": "^5"
   }
 }
+

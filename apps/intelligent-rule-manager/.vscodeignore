@@ -1,0 +1,8 @@
+**/.DS_Store
+**/.git/**
+client/node_modules/**
+client/target/**
+client/dist/**
+src/**
+tsconfig.json
+
