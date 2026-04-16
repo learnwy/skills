@@ -9,6 +9,7 @@ The workspace is a three-product system:
 - `extension/` bridges the workspace into VS Code-compatible IDEs
 
 The Rust core remains the behavioral center. The UI and IDE layers should stay thin and consume that shared contract.
+Localization should follow the same philosophy: one shared source, thin per-target adapters, and generated artifacts where packaging requires them.
 
 ## Workspace Layout
 
@@ -76,6 +77,23 @@ Why:
 - Shared storage behavior should not drift between surfaces.
 - The extension can remain simple by shelling out to the CLI.
 - The client can focus on UX while Rust owns parsing, storage, and rule semantics.
+
+### 5. Generated I18n With One Canonical Source
+
+Decision:
+Keep canonical locale content in shared JSON files and generate target-specific outputs for the client, CLI, and extension.
+
+Why:
+
+- Copying strings into each runtime creates drift very quickly.
+- The client wants typed TS access, the CLI wants generated Rust message tables, and the extension needs both runtime strings and `package.nls*.json`.
+- Key and placeholder validation should happen once at generation time instead of being discovered through UI regressions.
+
+Implementation direction:
+
+- `i18n/en.json` and `i18n/zh-CN.json` are the only hand-edited locale sources.
+- `scripts/generate-i18n.mjs` validates shape and placeholder parity across locales.
+- Generated outputs are committed where downstream tools need direct file inputs.
 
 ## Rule-Core Responsibilities
 

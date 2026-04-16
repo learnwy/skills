@@ -17,6 +17,7 @@ Deliver a self-contained workspace under `apps/intelligent-rule-manager/` where 
 - one rule storage root
 - one Rust domain model
 - one tag taxonomy with hierarchical filtering
+- one i18n source of truth with generated per-target outputs
 - one app-local documentation set in `docs/`
 
 ## Scope
@@ -27,6 +28,7 @@ Deliver a self-contained workspace under `apps/intelligent-rule-manager/` where 
 - Shared rule storage at `~/.learnwy/ai/rules/**/*`
 - Recursive discovery of nested Markdown rule files
 - Hierarchical tag resolution such that selecting a parent tag can include child-tagged rules
+- Shared locale JSON files with generated outputs for the client, CLI, and extension
 - Initial reusable rules for TypeScript, module structure, tsconfig aliases, lint, format, and git hooks
 - Unit tests for storage resolution and tag behavior
 
@@ -62,6 +64,13 @@ Deliver a self-contained workspace under `apps/intelligent-rule-manager/` where 
 - The system shall keep `spec.md`, `design.md`, and `tasks.md` in `apps/intelligent-rule-manager/docs/`.
 - The extension shall open the root workspace spec rather than a client-local copy.
 
+### Shared I18n
+
+- The system shall keep canonical locale content in shared JSON files under `apps/intelligent-rule-manager/i18n/`.
+- The system shall generate client, CLI, and extension localization outputs from that shared source.
+- The system shall infer translation keys from the locale data instead of maintaining handwritten key unions or parallel key tables.
+- The system shall validate locale shape consistency and placeholder consistency across supported locales.
+
 ### Initial Shared Rules
 
 - The system shall include initial rules for named exports, project structure, barrel exports, tsconfig aliases, lint/format setup, and git hooks.
@@ -74,6 +83,9 @@ Deliver a self-contained workspace under `apps/intelligent-rule-manager/` where 
 - [ ] `rule-core` discovers nested Markdown rules below the shared root.
 - [ ] Selecting a parent tag such as `web` can match rules tagged with child tags such as `typescript`.
 - [ ] The client and extension both follow the moved docs path.
+- [ ] `apps/intelligent-rule-manager/i18n/*.json` are the canonical locale source for all three products.
+- [ ] A generator updates the client, CLI, and extension localization outputs from that source.
+- [ ] Locale placeholder names are validated across supported languages.
 - [ ] Unit tests cover storage-root resolution and hierarchical tag expansion.
 
 ## Constraints

@@ -34,6 +34,7 @@ apps/intelligent-rule-manager/
 - Updated the extension commands to operate on sibling `client/` and `cli/` folders.
 - Moved the active planning docs to `apps/intelligent-rule-manager/docs/`.
 - Changed the default shared rules root to `~/.learnwy/ai/rules`.
+- Added a generated i18n pipeline so `client/`, `cli/`, and `extension/` all consume one shared locale source.
 
 ### Review
 
@@ -41,9 +42,17 @@ apps/intelligent-rule-manager/
 - Run the Rust CLI from `cli/`.
 - Compile the extension from `extension/`.
 - Verify nested rules are visible through the shared storage root.
+- Verify generated i18n outputs are up to date with `pnpm --dir apps/intelligent-rule-manager check:i18n`.
 
 ### Improve
 
 - Add compose/export commands to the CLI and surface them in both the client and the extension.
 - Add richer tag taxonomy visibility in the client and extension.
 - Add release workflows for the client and the extension separately.
+
+## Shared I18n
+
+- Canonical locale data lives in `apps/intelligent-rule-manager/i18n/`.
+- Generated outputs are produced by `apps/intelligent-rule-manager/scripts/generate-i18n.mjs`.
+- `client/`, `cli/`, and `extension/` should consume generated i18n artifacts instead of maintaining separate handwritten message tables.
+- Key shape and placeholder shape must match across locales.

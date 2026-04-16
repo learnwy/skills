@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { type Locale, translate } from "./i18n";
+import { browserRecommendation, type Locale, translate } from "./i18n";
 
 export type Healthcheck = {
   ok: boolean;
@@ -157,14 +157,10 @@ export async function getWorkspaceSnapshot(locale: Locale): Promise<WorkspaceSna
           group_count: 1,
         },
         reasons: [
-          locale === "zh-CN"
-            ? "当前规则库规模仍然较小，CLI 工作流已经足够高效。"
-            : "The current library is still small enough that a CLI-first workflow is efficient.",
+          ...browserRecommendation(locale, "cli-is-enough").reasons,
         ],
         suggested_features: [
-          locale === "zh-CN"
-            ? "继续使用 Markdown 文件和 CLI 来完成组合与导出。"
-            : "Keep using Markdown files plus the CLI for assembly and export.",
+          ...browserRecommendation(locale, "cli-is-enough").suggestedFeatures,
         ],
       },
     };
@@ -188,11 +184,11 @@ export async function getWorkspaceSnapshot(locale: Locale): Promise<WorkspaceSna
   };
 }
 
-export async function loadRule(file: string): Promise<RuleDocument> {
+export async function loadRule(file: string, locale: Locale): Promise<RuleDocument> {
   if (!isTauriRuntime()) {
     const document = browserDocuments.find((item) => item.file === file);
     if (!document) {
-      throw new Error(translate("en", "browser.ruleNotFound", { file }));
+      throw new Error(translate(locale, "browser.ruleNotFound", { file }));
     }
     return document;
   }

@@ -177,7 +177,7 @@ export default function App() {
 
     async function loadSelectedRule() {
       try {
-        const document = await loadRule(selectedRule.file);
+        const document = await loadRule(selectedRule.file, locale);
         if (!isActive) {
           return;
         }
@@ -210,7 +210,7 @@ export default function App() {
     return () => {
       isActive = false;
     };
-  }, [selectedRule?.file]);
+  }, [locale, selectedRule?.file]);
 
   useEffect(() => {
     if (filteredRules.length === 0) {
@@ -322,7 +322,6 @@ export default function App() {
             {summary
               ? t("status.ruleCountValue", {
                   count: rules.length,
-                  suffix: locale === "en" && rules.length !== 1 ? "s" : "",
                 })
               : t("status.ruleCountLoading")}
           </p>
@@ -360,9 +359,9 @@ export default function App() {
         </article>
       </section>
 
-      <section className="insight-grid" aria-label="Recommendation insights">
+      <section className="insight-grid" aria-label={t("insights.label")}>
         <article className="fact-card">
-          <h2>Why this recommendation</h2>
+          <h2>{t("insights.why")}</h2>
           <ul>
             {(recommendation?.reasons ?? []).map((reason) => (
               <li key={reason}>{reason}</li>
@@ -371,7 +370,7 @@ export default function App() {
         </article>
 
         <article className="fact-card">
-          <h2>Suggested capabilities</h2>
+          <h2>{t("insights.features")}</h2>
           <ul>
             {(recommendation?.suggested_features ?? []).map((feature) => (
               <li key={feature}>{feature}</li>
@@ -380,7 +379,7 @@ export default function App() {
         </article>
 
         <article className="fact-card">
-          <h2>Supported targets</h2>
+          <h2>{t("insights.targets")}</h2>
           <ul>
             {(summary?.supported_targets ?? []).map((item) => (
               <li key={item}>{item}</li>
@@ -389,7 +388,7 @@ export default function App() {
         </article>
       </section>
 
-      <section className="workspace-frame" aria-label="Rule manager workspace">
+      <section className="workspace-frame" aria-label={t("workspace.label")}>
         <article className="panel">
           <div className="panel-header">
             <div>

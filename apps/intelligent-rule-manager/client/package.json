@@ -4,13 +4,13 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "node ../scripts/generate-i18n.mjs && vite",
     "typecheck": "tsc --project tsconfig.json --noEmit",
-    "build": "pnpm typecheck && vite build",
+    "build": "node ../scripts/generate-i18n.mjs && pnpm typecheck && vite build",
     "preview": "vite preview",
-    "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build",
-    "tauri:build:dmg": "tauri build --bundles dmg",
+    "tauri:dev": "node ../scripts/generate-i18n.mjs && tauri dev",
+    "tauri:build": "node ../scripts/generate-i18n.mjs && tauri build",
+    "tauri:build:dmg": "node ../scripts/generate-i18n.mjs && tauri build --bundles dmg",
     "cli:help": "cargo run -p rule-cli --manifest-path ../cli/Cargo.toml -- --help"
   },
   "dependencies": {

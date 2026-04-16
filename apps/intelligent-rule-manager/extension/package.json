@@ -79,8 +79,8 @@
     ]
   },
   "scripts": {
-    "compile": "tsc -p ./tsconfig.json",
-    "watch": "tsc -w -p ./tsconfig.json",
+    "compile": "node ../scripts/generate-i18n.mjs && tsc -p ./tsconfig.json",
+    "watch": "node ../scripts/generate-i18n.mjs && tsc -w -p ./tsconfig.json",
     "vscode:prepublish": "pnpm compile"
   },
   "devDependencies": {

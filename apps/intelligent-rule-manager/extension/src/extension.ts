@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import * as path from "node:path";
+import { normalizeLocale, translate, type Locale } from "./i18n";
 
 const execFileAsync = promisify(execFile);
 
@@ -55,12 +56,14 @@ type AppContext = {
   cliManifestPath: string;
   docsPath: string;
   extensionPath: string;
+  locale: Locale;
   output: vscode.OutputChannel;
 };
 
 export function activate(context: vscode.ExtensionContext): void {
+  const locale = normalizeLocale(vscode.env.language);
   const output = vscode.window.createOutputChannel(
-    vscode.l10n.t("Intelligent Rule Manager"),
+    translate(locale, "channel.name"),
   );
   const appRoot = path.resolve(context.extensionPath, "..");
   const app: AppContext = {
@@ -69,6 +72,7 @@ export function activate(context: vscode.ExtensionContext): void {
     cliManifestPath: path.join(appRoot, "cli", "Cargo.toml"),
     docsPath: path.join(appRoot, "docs"),
     extensionPath: context.extensionPath,
+    locale,
     output,
   };
 
@@ -117,12 +121,12 @@ export function activate(context: vscode.ExtensionContext): void {
     ]);
 
     app.output.clear();
-    app.output.appendLine(vscode.l10n.t("Workspace summary"));
+    app.output.appendLine(translate(app.locale, "output.workspaceSummary"));
     app.output.appendLine(JSON.stringify(summary, null, 2));
     app.output.show(true);
 
     void vscode.window.showInformationMessage(
-      vscode.l10n.t("Rules root: {0}", summary.storage_root),
+      translate(app.locale, "info.rulesRoot", { path: summary.storage_root }),
     );
   });
 
@@ -159,7 +163,7 @@ export function activate(context: vscode.ExtensionContext): void {
     ]);
 
     app.output.clear();
-    app.output.appendLine(vscode.l10n.t("Rule detail: {0}", document.title));
+    app.output.appendLine(translate(app.locale, "output.ruleDetail", { title: document.title }));
     app.output.appendLine(JSON.stringify(document, null, 2));
     app.output.show(true);
 
@@ -169,8 +173,8 @@ export function activate(context: vscode.ExtensionContext): void {
   register("intelligentRuleManager.createRule", async () => {
     const title = await vscode.window.showInputBox({
       ignoreFocusOut: true,
-      placeHolder: vscode.l10n.t("TypeScript Import Hygiene"),
-      prompt: vscode.l10n.t("Enter the new rule title"),
+      placeHolder: translate(app.locale, "input.create.title.placeholder"),
+      prompt: translate(app.locale, "input.create.title.prompt"),
     });
     if (!title?.trim()) {
       return;
@@ -178,20 +182,23 @@ export function activate(context: vscode.ExtensionContext): void {
 
     const summary = await vscode.window.showInputBox({
       ignoreFocusOut: true,
-      placeHolder: vscode.l10n.t("One sentence explaining the purpose of the rule."),
-      prompt: vscode.l10n.t("Enter an optional summary"),
+      placeHolder: translate(app.locale, "input.create.summary.placeholder"),
+      prompt: translate(app.locale, "input.create.summary.prompt"),
     });
     const groups = await askForCsv(
-      vscode.l10n.t("Groups"),
-      vscode.l10n.t("shared, frontend"),
+      app,
+      translate(app.locale, "field.groups.label"),
+      translate(app.locale, "field.groups.placeholder"),
     );
     const tags = await askForCsv(
-      vscode.l10n.t("Tags"),
-      vscode.l10n.t("typescript, imports"),
+      app,
+      translate(app.locale, "field.tags.label"),
+      translate(app.locale, "field.tags.placeholder"),
     );
     const targets = await askForCsv(
-      vscode.l10n.t("Targets"),
-      vscode.l10n.t("agents-md, trae-rule"),
+      app,
+      translate(app.locale, "field.targets.label"),
+      translate(app.locale, "field.targets.placeholder"),
     );
 
     const args = ["create", "--title", title];
@@ -211,24 +218,23 @@ export function activate(context: vscode.ExtensionContext): void {
     const created = await runRuleCliJson<RuleDocument>(app, args);
     await openTextDocument(created.file);
     void vscode.window.showInformationMessage(
-      vscode.l10n.t("Created rule: {0}", created.title),
+      translate(app.locale, "info.createdRule", { title: created.title }),
     );
   });
 
   register("intelligentRuleManager.showStats", async () => {
     const stats = await runRuleCliJson<RuleLibraryStats>(app, ["stats"]);
     app.output.clear();
-    app.output.appendLine(vscode.l10n.t("Rule library stats"));
+    app.output.appendLine(translate(app.locale, "output.ruleLibraryStats"));
     app.output.appendLine(JSON.stringify(stats, null, 2));
     app.output.show(true);
 
     void vscode.window.showInformationMessage(
-      vscode.l10n.t(
-        "{0} rules, {1} tags, {2} groups",
-        stats.count,
-        stats.tag_count,
-        stats.group_count,
-      ),
+      translate(app.locale, "info.statsSummary", {
+        count: stats.count,
+        tagCount: stats.tag_count,
+        groupCount: stats.group_count,
+      }),
     );
   });
 
@@ -237,16 +243,15 @@ export function activate(context: vscode.ExtensionContext): void {
       "recommend-visualization",
     ]);
     app.output.clear();
-    app.output.appendLine(vscode.l10n.t("Visualization recommendation"));
+    app.output.appendLine(translate(app.locale, "output.visualizationRecommendation"));
     app.output.appendLine(JSON.stringify(recommendation, null, 2));
     app.output.show(true);
 
     void vscode.window.showInformationMessage(
-      vscode.l10n.t(
-        "Recommendation: {0} (score {1})",
-        recommendation.recommendation,
-        recommendation.score,
-      ),
+      translate(app.locale, "info.recommendationSummary", {
+        recommendation: recommendation.recommendation,
+        score: recommendation.score,
+      }),
     );
   });
 }
@@ -256,7 +261,7 @@ export function deactivate(): void {}
 async function pickRule(app: AppContext): Promise<RuleListItem | undefined> {
   const rules = await runRuleCliJson<RuleListItem[]>(app, ["list"]);
   if (rules.length === 0) {
-    void vscode.window.showInformationMessage(vscode.l10n.t("No rules were found."));
+    void vscode.window.showInformationMessage(translate(app.locale, "info.noRulesFound"));
     return undefined;
   }
 
@@ -269,19 +274,22 @@ async function pickRule(app: AppContext): Promise<RuleListItem | undefined> {
     })),
     {
       ignoreFocusOut: true,
-      placeHolder: vscode.l10n.t("Select a rule"),
+      placeHolder: translate(app.locale, "quickPick.selectRule"),
     },
   ).then((item) => item?.rule);
 }
 
 async function askForCsv(
+  app: AppContext,
   label: string,
   placeholder: string,
 ): Promise<string[]> {
   const response = await vscode.window.showInputBox({
     ignoreFocusOut: true,
     placeHolder: placeholder,
-    prompt: vscode.l10n.t("Enter {0} as a comma-separated list", label.toLowerCase()),
+    prompt: translate(app.locale, "input.csv.prompt", {
+      label: label.toLowerCase(),
+    }),
   });
 
   return (response ?? "")
@@ -322,7 +330,9 @@ async function runRuleCliJson<T>(app: AppContext, args: string[]): Promise<T> {
     return JSON.parse(stdout) as T;
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : vscode.l10n.t("Unknown cargo command error");
+      error instanceof Error
+        ? error.message
+        : translate(app.locale, "error.unknownCargoCommand");
     app.output.appendLine(message);
     app.output.show(true);
     void vscode.window.showErrorMessage(message);
