@@ -28,6 +28,29 @@ body {
   margin-bottom: 32px;
 }
 
+.hero-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+
+.locale-picker {
+  display: grid;
+  gap: 8px;
+  min-width: 160px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.locale-picker select {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--text);
+}
+
 .eyebrow {
   margin: 0 0 10px;
   font-size: 0.84rem;

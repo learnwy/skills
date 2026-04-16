@@ -11,27 +11,12 @@ import {
   type VisualizationRecommendation,
   type WorkspaceSummary,
 } from "./lib/tauri";
-
-const milestones = [
-  "Implement rule compose and export actions from the shared Rust core",
-  "Add validation polish and richer markdown preview rendering",
-  "Run a full Tauri smoke test against the desktop shell",
-];
-
-const panels = [
-  {
-    title: "Library",
-    body: "Search, group, tag, and target filters make the file-backed rule store navigable.",
-  },
-  {
-    title: "Workspace",
-    body: "Create new rules, edit body content, and review a live preview before saving.",
-  },
-  {
-    title: "Inspector",
-    body: "Metadata editing stays visible while the body editor remains in the main workspace.",
-  },
-];
+import {
+  detectBrowserLocale,
+  recommendationLabel,
+  translate,
+  type Locale,
+} from "./lib/i18n";
 
 const defaultCreateForm: NewRuleInput = {
   title: "",
@@ -59,6 +44,7 @@ function getFilterTags(rule: RuleListItem): string[] {
 }
 
 export default function App() {
+  const [locale, setLocale] = useState<Locale>(detectBrowserLocale());
   const [summary, setSummary] = useState<WorkspaceSummary | null>(null);
   const [rules, setRules] = useState<RuleListItem[]>([]);
   const [stats, setStats] = useState<RuleLibraryStats | null>(null);
@@ -80,6 +66,29 @@ export default function App() {
   const [runtimeMode, setRuntimeMode] = useState<"tauri" | "browser">("browser");
   const [runtimeLayer, setRuntimeLayer] = useState<string>("loading");
   const [error, setError] = useState<string | null>(null);
+  const t = (key: Parameters<typeof translate>[1], variables?: Record<string, string | number>) =>
+    translate(locale, key, variables);
+
+  const panels = [
+    {
+      title: t("panel.library.title"),
+      body: t("panel.library.body"),
+    },
+    {
+      title: t("panel.workspace.title"),
+      body: t("panel.workspace.body"),
+    },
+    {
+      title: t("panel.inspector.title"),
+      body: t("panel.inspector.body"),
+    },
+  ];
+
+  const milestones = [
+    t("milestone.composeExport"),
+    t("milestone.previewPolish"),
+    t("milestone.smokeTest"),
+  ];
 
   const availableGroups = useMemo(
     () => Array.from(new Set(rules.flatMap((rule) => rule.groups))).sort(),
@@ -122,7 +131,7 @@ export default function App() {
     setIsLoadingWorkspace(true);
 
     try {
-      const snapshot = await getWorkspaceSnapshot();
+      const snapshot = await getWorkspaceSnapshot(locale);
 
       startTransition(() => {
         setRuntimeMode(snapshot.mode);
@@ -144,7 +153,7 @@ export default function App() {
         setError(
           loadError instanceof Error
             ? loadError.message
-            : "Unknown workspace loading error",
+            : t("errors.workspaceLoad"),
         );
       });
     } finally {
@@ -154,7 +163,7 @@ export default function App() {
 
   useEffect(() => {
     void refreshWorkspace();
-  }, []);
+  }, [locale]);
 
   useEffect(() => {
     if (!selectedRule?.file) {
@@ -186,7 +195,7 @@ export default function App() {
           setError(
             loadError instanceof Error
               ? loadError.message
-              : "Unknown rule loading error",
+              : t("errors.ruleLoad"),
           );
         });
       } finally {
@@ -222,7 +231,7 @@ export default function App() {
         groups: splitCommaSeparated(joinValues(createForm.groups)),
         tags: splitCommaSeparated(joinValues(createForm.tags)),
         targets: splitCommaSeparated(joinValues(createForm.targets)),
-      });
+      }, locale);
       await refreshWorkspace(created.id);
       setSelectedRuleId(created.id);
       setCreateForm(defaultCreateForm);
@@ -231,7 +240,7 @@ export default function App() {
       setError(
         createError instanceof Error
           ? createError.message
-          : "Unknown create rule error",
+          : t("errors.createRule"),
       );
     } finally {
       setIsCreating(false);
@@ -259,7 +268,7 @@ export default function App() {
       setError(null);
     } catch (saveError) {
       setError(
-        saveError instanceof Error ? saveError.message : "Unknown save rule error",
+        saveError instanceof Error ? saveError.message : t("errors.saveRule"),
       );
     } finally {
       setIsSaving(false);
@@ -273,46 +282,56 @@ export default function App() {
   return (
     <div className="app-shell">
       <header className="hero">
-        <p className="eyebrow">Tauri + React + Rust workspace</p>
-        <h1>Intelligent Rule Manager</h1>
-        <p className="lede">
-          A cross-platform desktop app for browsing, editing, composing, and
-          exporting Markdown rule libraries backed by a shared Rust core and
-          CLI.
-        </p>
+        <div className="hero-toolbar">
+          <label className="locale-picker">
+            <span>{t("locale.label")}</span>
+            <select
+              onChange={(event) => setLocale(event.target.value as Locale)}
+              value={locale}
+            >
+              <option value="en">{t("locale.en")}</option>
+              <option value="zh-CN">{t("locale.zh-CN")}</option>
+            </select>
+          </label>
+        </div>
+        <p className="eyebrow">{t("hero.eyebrow")}</p>
+        <h1>{t("hero.title")}</h1>
+        <p className="lede">{t("hero.lede")}</p>
       </header>
 
-      <section className="status-grid" aria-label="Current foundation">
+      <section className="status-grid" aria-label={t("status.foundation")}>
         <article className="status-card accent">
-          <h2>Runtime</h2>
+          <h2>{t("status.runtime")}</h2>
           <p>
-            Running in <strong>{runtimeMode}</strong> mode with data from{" "}
-            <strong>{runtimeLayer}</strong>.
+            {t("status.runtimeValue", { mode: runtimeMode, layer: runtimeLayer })}
           </p>
         </article>
 
         <article className="status-card">
-          <h2>Storage model</h2>
+          <h2>{t("status.storage")}</h2>
           <p>
             {summary
               ? summary.storage_root
-              : "Loading storage root from rule-core workspace summary..."}
+              : t("status.storageLoading")}
           </p>
         </article>
 
         <article className="status-card">
-          <h2>Rule count</h2>
+          <h2>{t("status.ruleCount")}</h2>
           <p>
             {summary
-              ? `${rules.length} discovered rule${rules.length === 1 ? "" : "s"}`
-              : "Loading discovered rules from rule-core..."}
+              ? t("status.ruleCountValue", {
+                  count: rules.length,
+                  suffix: locale === "en" && rules.length !== 1 ? "s" : "",
+                })
+              : t("status.ruleCountLoading")}
           </p>
         </article>
       </section>
 
-      <section className="facts-grid" aria-label="Workspace capabilities">
+      <section className="facts-grid" aria-label={t("facts.capabilities")}>
         <article className="fact-card">
-          <h2>Supported artifacts</h2>
+          <h2>{t("facts.supportedArtifacts")}</h2>
           <ul>
             {(summary?.supported_artifacts ?? []).map((item) => (
               <li key={item}>{item}</li>
@@ -321,21 +340,22 @@ export default function App() {
         </article>
 
         <article className="fact-card">
-          <h2>Library metrics</h2>
+          <h2>{t("facts.libraryMetrics")}</h2>
           <ul>
-            <li>Tags: {stats?.tag_count ?? 0}</li>
-            <li>Groups: {stats?.group_count ?? 0}</li>
-            <li>Avg complexity: {stats?.average_complexity ?? 0}</li>
+            <li>{t("facts.tags", { count: stats?.tag_count ?? 0 })}</li>
+            <li>{t("facts.groups", { count: stats?.group_count ?? 0 })}</li>
+            <li>{t("facts.averageComplexity", { value: stats?.average_complexity ?? 0 })}</li>
           </ul>
         </article>
 
         <article className="fact-card">
-          <h2>Visualization signal</h2>
+          <h2>{t("facts.visualizationSignal")}</h2>
           <p>
-            Recommendation:{" "}
-            <strong>{recommendation?.recommendation ?? "loading"}</strong>
+            {t("facts.recommendation", {
+              value: recommendationLabel(locale, recommendation?.recommendation),
+            })}
           </p>
-          <p>Score: {recommendation?.score ?? 0}</p>
+          <p>{t("facts.score", { value: recommendation?.score ?? 0 })}</p>
           {error ? <p className="error-text">{error}</p> : null}
         </article>
       </section>
@@ -381,17 +401,17 @@ export default function App() {
               onClick={() => setIsCreateOpen((value) => !value)}
               type="button"
             >
-              {isCreateOpen ? "Close new rule" : "New rule"}
+              {isCreateOpen ? t("action.closeNewRule") : t("action.newRule")}
             </button>
           </div>
 
           <div className="rule-list">
             <label className="search-box">
-              <span>Search rules</span>
+              <span>{t("search.label")}</span>
               <input
-                aria-label="Search rules"
+                aria-label={t("search.label")}
                 onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Search by title, id, tag, or group"
+                placeholder={t("search.placeholder")}
                 type="search"
                 value={searchQuery}
               />
@@ -399,12 +419,12 @@ export default function App() {
 
             <div className="filter-grid">
               <label className="field">
-                <span>Group</span>
+                <span>{t("filters.group")}</span>
                 <select
                   onChange={(event) => setGroupFilter(event.target.value)}
                   value={groupFilter}
                 >
-                  <option value="all">All groups</option>
+                  <option value="all">{t("filters.allGroups")}</option>
                   {availableGroups.map((group) => (
                     <option key={group} value={group}>
                       {group}
@@ -414,12 +434,12 @@ export default function App() {
               </label>
 
               <label className="field">
-                <span>Tag</span>
+                <span>{t("filters.tag")}</span>
                 <select
                   onChange={(event) => setTagFilter(event.target.value)}
                   value={tagFilter}
                 >
-                  <option value="all">All tags</option>
+                  <option value="all">{t("filters.allTags")}</option>
                   {availableTags.map((tag) => (
                     <option key={tag} value={tag}>
                       {tag}
@@ -429,12 +449,12 @@ export default function App() {
               </label>
 
               <label className="field">
-                <span>Target</span>
+                <span>{t("filters.target")}</span>
                 <select
                   onChange={(event) => setTargetFilter(event.target.value)}
                   value={targetFilter}
                 >
-                  <option value="all">All targets</option>
+                  <option value="all">{t("filters.allTargets")}</option>
                   {availableTargets.map((target) => (
                     <option key={target} value={target}>
                       {target}
@@ -446,8 +466,8 @@ export default function App() {
 
             {isLoadingWorkspace ? (
               <div className="empty-state">
-                <h3>Loading workspace</h3>
-                <p>Fetching the current rule library summary and list.</p>
+                <h3>{t("empty.loadingWorkspaceTitle")}</h3>
+                <p>{t("empty.loadingWorkspaceBody")}</p>
               </div>
             ) : null}
 
@@ -463,7 +483,7 @@ export default function App() {
                     <h3>{rule.title}</h3>
                     <span>{rule.id}</span>
                   </div>
-                  <p>{rule.summary || "No summary yet."}</p>
+                  <p>{rule.summary || t("rule.noSummary")}</p>
                   <div className="token-row">
                     {rule.groups.map((group) => (
                       <span className="token" key={`${rule.id}-group-${group}`}>
@@ -475,16 +495,13 @@ export default function App() {
               ))
             ) : rules.length > 0 ? (
               <div className="empty-state">
-                <h3>No matching rules</h3>
-                <p>Try a broader search term or reset one of the active filters.</p>
+                <h3>{t("empty.noMatchingRulesTitle")}</h3>
+                <p>{t("empty.noMatchingRulesBody")}</p>
               </div>
             ) : (
               <div className="empty-state">
-                <h3>No rules discovered yet</h3>
-                <p>
-                  Create Markdown rule files in the resolved rule storage root to
-                  populate this list.
-                </p>
+                <h3>{t("empty.noRulesTitle")}</h3>
+                <p>{t("empty.noRulesBody")}</p>
               </div>
             )}
           </div>
@@ -503,7 +520,7 @@ export default function App() {
                 onClick={() => void handleSaveRule()}
                 type="button"
               >
-                {isSaving ? "Saving..." : isDirty ? "Save changes" : "Saved"}
+                {isSaving ? t("action.saving") : isDirty ? t("action.saveChanges") : t("action.saved")}
               </button>
             ) : null}
           </div>
@@ -511,32 +528,32 @@ export default function App() {
           {isCreateOpen ? (
             <div className="editor-stack">
               <div className="detail-block">
-                <h3>Create rule from template</h3>
+                <h3>{t("create.title")}</h3>
                 <div className="field-grid">
                   <label className="field">
-                    <span>Title</span>
+                    <span>{t("create.fieldTitle")}</span>
                     <input
                       onChange={(event) =>
                         setCreateForm((form) => ({ ...form, title: event.target.value }))
                       }
-                      placeholder="TypeScript Import Hygiene"
+                      placeholder={t("create.titlePlaceholder")}
                       value={createForm.title}
                     />
                   </label>
 
                   <label className="field">
-                    <span>Summary</span>
+                    <span>{t("create.fieldSummary")}</span>
                     <input
                       onChange={(event) =>
                         setCreateForm((form) => ({ ...form, summary: event.target.value }))
                       }
-                      placeholder="One sentence explaining the purpose of the rule."
+                      placeholder={t("create.summaryPlaceholder")}
                       value={createForm.summary ?? ""}
                     />
                   </label>
 
                   <label className="field">
-                    <span>Groups</span>
+                    <span>{t("create.fieldGroups")}</span>
                     <input
                       onChange={(event) =>
                         setCreateForm((form) => ({
@@ -544,13 +561,13 @@ export default function App() {
                           groups: splitCommaSeparated(event.target.value),
                         }))
                       }
-                      placeholder="shared, frontend"
+                      placeholder={t("create.groupsPlaceholder")}
                       value={joinValues(createForm.groups)}
                     />
                   </label>
 
                   <label className="field">
-                    <span>Tags</span>
+                    <span>{t("create.fieldTags")}</span>
                     <input
                       onChange={(event) =>
                         setCreateForm((form) => ({
@@ -558,13 +575,13 @@ export default function App() {
                           tags: splitCommaSeparated(event.target.value),
                         }))
                       }
-                      placeholder="typescript, imports, lint"
+                      placeholder={t("create.tagsPlaceholder")}
                       value={joinValues(createForm.tags)}
                     />
                   </label>
 
                   <label className="field">
-                    <span>Targets</span>
+                    <span>{t("create.fieldTargets")}</span>
                     <input
                       onChange={(event) =>
                         setCreateForm((form) => ({
@@ -572,7 +589,7 @@ export default function App() {
                           targets: splitCommaSeparated(event.target.value),
                         }))
                       }
-                      placeholder="agents-md, trae-rule"
+                      placeholder={t("create.targetsPlaceholder")}
                       value={joinValues(createForm.targets)}
                     />
                   </label>
@@ -585,7 +602,7 @@ export default function App() {
                     onClick={() => void handleCreateRule()}
                     type="button"
                   >
-                    {isCreating ? "Creating..." : "Create rule"}
+                    {isCreating ? t("action.creating") : t("action.createRule")}
                   </button>
                   <button
                     className="ghost-button"
@@ -595,7 +612,7 @@ export default function App() {
                     }}
                     type="button"
                   >
-                    Cancel
+                    {t("action.cancel")}
                   </button>
                 </div>
               </div>
@@ -603,9 +620,9 @@ export default function App() {
           ) : draftDocument ? (
             <div className="editor-stack">
               <div className="detail-block">
-                <h3>Body editor</h3>
+                <h3>{t("editor.bodyTitle")}</h3>
                 <label className="field">
-                  <span>Markdown body</span>
+                  <span>{t("editor.bodyField")}</span>
                   <textarea
                     className="body-editor"
                     onChange={(event) =>
@@ -619,9 +636,9 @@ export default function App() {
               </div>
 
               <div className="detail-block">
-                <h3>Live body preview</h3>
+                <h3>{t("editor.previewTitle")}</h3>
                 {isLoadingDocument ? (
-                  <p>Loading the selected rule document...</p>
+                  <p>{t("editor.previewLoading")}</p>
                 ) : (
                   <pre className="preview-surface">{draftDocument.body}</pre>
                 )}
@@ -629,8 +646,8 @@ export default function App() {
             </div>
           ) : (
             <div className="empty-state">
-              <h3>No document loaded</h3>
-              <p>Select a rule to edit its body or open the new-rule form.</p>
+              <h3>{t("empty.noDocumentTitle")}</h3>
+              <p>{t("empty.noDocumentBody")}</p>
             </div>
           )}
         </article>
@@ -641,10 +658,10 @@ export default function App() {
           {draftDocument ? (
             <div className="editor-stack">
               <div className="detail-block">
-                <h3>Metadata editor</h3>
+                <h3>{t("inspector.metaTitle")}</h3>
                 <div className="field-grid">
                   <label className="field">
-                    <span>Title</span>
+                    <span>{t("create.fieldTitle")}</span>
                     <input
                       onChange={(event) =>
                         setDraftDocument((document) =>
@@ -656,7 +673,7 @@ export default function App() {
                   </label>
 
                   <label className="field">
-                    <span>Summary</span>
+                    <span>{t("create.fieldSummary")}</span>
                     <input
                       onChange={(event) =>
                         setDraftDocument((document) =>
@@ -668,7 +685,7 @@ export default function App() {
                   </label>
 
                   <label className="field">
-                    <span>Groups</span>
+                    <span>{t("create.fieldGroups")}</span>
                     <input
                       onChange={(event) =>
                         setDraftDocument((document) =>
@@ -685,7 +702,7 @@ export default function App() {
                   </label>
 
                   <label className="field">
-                    <span>Tags</span>
+                    <span>{t("create.fieldTags")}</span>
                     <input
                       onChange={(event) =>
                         setDraftDocument((document) =>
@@ -702,7 +719,7 @@ export default function App() {
                   </label>
 
                   <label className="field">
-                    <span>Targets</span>
+                    <span>{t("create.fieldTargets")}</span>
                     <input
                       onChange={(event) =>
                         setDraftDocument((document) =>
@@ -721,21 +738,21 @@ export default function App() {
               </div>
 
               <div className="detail-block">
-                <h3>File</h3>
+                <h3>{t("inspector.fileTitle")}</h3>
                 <p>{draftDocument.file}</p>
               </div>
             </div>
           ) : (
             <div className="empty-state">
-              <h3>No rule selected</h3>
-              <p>Select a rule from the library pane to inspect and edit it here.</p>
+              <h3>{t("empty.noRuleSelectedTitle")}</h3>
+              <p>{t("empty.noRuleSelectedBody")}</p>
             </div>
           )}
         </article>
       </section>
 
-      <section className="milestones" aria-label="Implementation milestones">
-        <h2>Next milestones</h2>
+      <section className="milestones" aria-label={t("milestones.label")}>
+        <h2>{t("milestones.label")}</h2>
         <ol>
           {milestones.map((item) => (
             <li key={item}>{item}</li>

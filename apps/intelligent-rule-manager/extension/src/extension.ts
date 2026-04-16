@@ -59,7 +59,9 @@ type AppContext = {
 };
 
 export function activate(context: vscode.ExtensionContext): void {
-  const output = vscode.window.createOutputChannel("Intelligent Rule Manager");
+  const output = vscode.window.createOutputChannel(
+    vscode.l10n.t("Intelligent Rule Manager"),
+  );
   const appRoot = path.resolve(context.extensionPath, "..");
   const app: AppContext = {
     appRoot,
@@ -115,12 +117,12 @@ export function activate(context: vscode.ExtensionContext): void {
     ]);
 
     app.output.clear();
-    app.output.appendLine("Workspace summary");
+    app.output.appendLine(vscode.l10n.t("Workspace summary"));
     app.output.appendLine(JSON.stringify(summary, null, 2));
     app.output.show(true);
 
     void vscode.window.showInformationMessage(
-      `Rules root: ${summary.storage_root}`,
+      vscode.l10n.t("Rules root: {0}", summary.storage_root),
     );
   });
 
@@ -157,7 +159,7 @@ export function activate(context: vscode.ExtensionContext): void {
     ]);
 
     app.output.clear();
-    app.output.appendLine(`Rule detail: ${document.title}`);
+    app.output.appendLine(vscode.l10n.t("Rule detail: {0}", document.title));
     app.output.appendLine(JSON.stringify(document, null, 2));
     app.output.show(true);
 
@@ -167,8 +169,8 @@ export function activate(context: vscode.ExtensionContext): void {
   register("intelligentRuleManager.createRule", async () => {
     const title = await vscode.window.showInputBox({
       ignoreFocusOut: true,
-      placeHolder: "TypeScript Import Hygiene",
-      prompt: "Enter the new rule title",
+      placeHolder: vscode.l10n.t("TypeScript Import Hygiene"),
+      prompt: vscode.l10n.t("Enter the new rule title"),
     });
     if (!title?.trim()) {
       return;
@@ -176,12 +178,21 @@ export function activate(context: vscode.ExtensionContext): void {
 
     const summary = await vscode.window.showInputBox({
       ignoreFocusOut: true,
-      placeHolder: "One sentence explaining the purpose of the rule.",
-      prompt: "Enter an optional summary",
+      placeHolder: vscode.l10n.t("One sentence explaining the purpose of the rule."),
+      prompt: vscode.l10n.t("Enter an optional summary"),
     });
-    const groups = await askForCsv("Groups", "shared, frontend");
-    const tags = await askForCsv("Tags", "typescript, imports");
-    const targets = await askForCsv("Targets", "agents-md, trae-rule");
+    const groups = await askForCsv(
+      vscode.l10n.t("Groups"),
+      vscode.l10n.t("shared, frontend"),
+    );
+    const tags = await askForCsv(
+      vscode.l10n.t("Tags"),
+      vscode.l10n.t("typescript, imports"),
+    );
+    const targets = await askForCsv(
+      vscode.l10n.t("Targets"),
+      vscode.l10n.t("agents-md, trae-rule"),
+    );
 
     const args = ["create", "--title", title];
     if (summary?.trim()) {
@@ -199,18 +210,25 @@ export function activate(context: vscode.ExtensionContext): void {
 
     const created = await runRuleCliJson<RuleDocument>(app, args);
     await openTextDocument(created.file);
-    void vscode.window.showInformationMessage(`Created rule: ${created.title}`);
+    void vscode.window.showInformationMessage(
+      vscode.l10n.t("Created rule: {0}", created.title),
+    );
   });
 
   register("intelligentRuleManager.showStats", async () => {
     const stats = await runRuleCliJson<RuleLibraryStats>(app, ["stats"]);
     app.output.clear();
-    app.output.appendLine("Rule library stats");
+    app.output.appendLine(vscode.l10n.t("Rule library stats"));
     app.output.appendLine(JSON.stringify(stats, null, 2));
     app.output.show(true);
 
     void vscode.window.showInformationMessage(
-      `${stats.count} rules, ${stats.tag_count} tags, ${stats.group_count} groups`,
+      vscode.l10n.t(
+        "{0} rules, {1} tags, {2} groups",
+        stats.count,
+        stats.tag_count,
+        stats.group_count,
+      ),
     );
   });
 
@@ -219,12 +237,16 @@ export function activate(context: vscode.ExtensionContext): void {
       "recommend-visualization",
     ]);
     app.output.clear();
-    app.output.appendLine("Visualization recommendation");
+    app.output.appendLine(vscode.l10n.t("Visualization recommendation"));
     app.output.appendLine(JSON.stringify(recommendation, null, 2));
     app.output.show(true);
 
     void vscode.window.showInformationMessage(
-      `Recommendation: ${recommendation.recommendation} (score ${recommendation.score})`,
+      vscode.l10n.t(
+        "Recommendation: {0} (score {1})",
+        recommendation.recommendation,
+        recommendation.score,
+      ),
     );
   });
 }
@@ -234,7 +256,7 @@ export function deactivate(): void {}
 async function pickRule(app: AppContext): Promise<RuleListItem | undefined> {
   const rules = await runRuleCliJson<RuleListItem[]>(app, ["list"]);
   if (rules.length === 0) {
-    void vscode.window.showInformationMessage("No rules were found.");
+    void vscode.window.showInformationMessage(vscode.l10n.t("No rules were found."));
     return undefined;
   }
 
@@ -247,7 +269,7 @@ async function pickRule(app: AppContext): Promise<RuleListItem | undefined> {
     })),
     {
       ignoreFocusOut: true,
-      placeHolder: "Select a rule",
+      placeHolder: vscode.l10n.t("Select a rule"),
     },
   ).then((item) => item?.rule);
 }
@@ -259,7 +281,7 @@ async function askForCsv(
   const response = await vscode.window.showInputBox({
     ignoreFocusOut: true,
     placeHolder: placeholder,
-    prompt: `Enter ${label.toLowerCase()} as a comma-separated list`,
+    prompt: vscode.l10n.t("Enter {0} as a comma-separated list", label.toLowerCase()),
   });
 
   return (response ?? "")
@@ -300,7 +322,7 @@ async function runRuleCliJson<T>(app: AppContext, args: string[]): Promise<T> {
     return JSON.parse(stdout) as T;
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Unknown cargo command error";
+      error instanceof Error ? error.message : vscode.l10n.t("Unknown cargo command error");
     app.output.appendLine(message);
     app.output.show(true);
     void vscode.window.showErrorMessage(message);

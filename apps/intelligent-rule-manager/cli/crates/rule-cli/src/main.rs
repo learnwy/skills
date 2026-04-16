@@ -1,10 +1,14 @@
-use clap::{Parser, Subcommand};
+mod i18n;
+
+use clap::{CommandFactory, FromArgMatches, Parser, Subcommand};
 use rule_core::{NewRuleInput, RuleListItem};
 
 #[derive(Debug, Parser)]
 #[command(name = "rule-cli")]
-#[command(about = "CLI for the intelligent rule manager workspace")]
 struct Cli {
+    #[arg(long, global = true)]
+    locale: Option<String>,
+
     #[command(subcommand)]
     command: Option<Commands>,
 }
@@ -35,7 +39,10 @@ enum Commands {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let cli = Cli::parse();
+    let hint_locale = i18n::detect_locale_from_args_or_env();
+    let command = i18n::localize_command(Cli::command(), hint_locale);
+    let matches = command.get_matches();
+    let cli = Cli::from_arg_matches(&matches)?;
 
     match cli.command.unwrap_or(Commands::WorkspaceSummary) {
         Commands::Healthcheck => {

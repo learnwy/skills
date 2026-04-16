@@ -1,7 +1,7 @@
 {
   "name": "intelligent-rule-manager-extension",
-  "displayName": "Intelligent Rule Manager",
-  "description": "VS Code-compatible extension for opening and operating the Intelligent Rule Manager workspace.",
+  "displayName": "%extension.displayName%",
+  "description": "%extension.description%",
   "version": "0.1.0",
   "publisher": "learnwy",
   "license": "MIT",
@@ -30,51 +30,51 @@
     "commands": [
       {
         "command": "intelligentRuleManager.openClientFolder",
-        "title": "Intelligent Rule Manager: Open Client Folder"
+        "title": "%command.openClientFolder.title%"
       },
       {
         "command": "intelligentRuleManager.openCliFolder",
-        "title": "Intelligent Rule Manager: Open CLI Folder"
+        "title": "%command.openCliFolder.title%"
       },
       {
         "command": "intelligentRuleManager.openExtensionFolder",
-        "title": "Intelligent Rule Manager: Open Extension Folder"
+        "title": "%command.openExtensionFolder.title%"
       },
       {
         "command": "intelligentRuleManager.openWorkspaceOverview",
-        "title": "Intelligent Rule Manager: Open Workspace Overview"
+        "title": "%command.openWorkspaceOverview.title%"
       },
       {
         "command": "intelligentRuleManager.openClientSpec",
-        "title": "Intelligent Rule Manager: Open Workspace Spec"
+        "title": "%command.openWorkspaceSpec.title%"
       },
       {
         "command": "intelligentRuleManager.runWorkspaceSummary",
-        "title": "Intelligent Rule Manager: Run Workspace Summary"
+        "title": "%command.runWorkspaceSummary.title%"
       },
       {
         "command": "intelligentRuleManager.openRulesRoot",
-        "title": "Intelligent Rule Manager: Open Rules Root"
+        "title": "%command.openRulesRoot.title%"
       },
       {
         "command": "intelligentRuleManager.listRules",
-        "title": "Intelligent Rule Manager: List Rules"
+        "title": "%command.listRules.title%"
       },
       {
         "command": "intelligentRuleManager.inspectRule",
-        "title": "Intelligent Rule Manager: Inspect Rule"
+        "title": "%command.inspectRule.title%"
       },
       {
         "command": "intelligentRuleManager.createRule",
-        "title": "Intelligent Rule Manager: Create Rule"
+        "title": "%command.createRule.title%"
       },
       {
         "command": "intelligentRuleManager.showStats",
-        "title": "Intelligent Rule Manager: Show Stats"
+        "title": "%command.showStats.title%"
       },
       {
         "command": "intelligentRuleManager.showVisualizationRecommendation",
-        "title": "Intelligent Rule Manager: Show Visualization Recommendation"
+        "title": "%command.showVisualizationRecommendation.title%"
       }
     ]
   },

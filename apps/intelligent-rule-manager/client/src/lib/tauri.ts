@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { type Locale, translate } from "./i18n";
 
 export type Healthcheck = {
   ok: boolean;
@@ -58,7 +59,7 @@ export type NewRuleInput = {
   targets: string[];
 };
 
-type WorkspaceSnapshot = {
+export type WorkspaceSnapshot = {
   mode: "tauri" | "browser";
   healthcheck: Healthcheck;
   summary: WorkspaceSummary;
@@ -67,84 +68,35 @@ type WorkspaceSnapshot = {
   recommendation: VisualizationRecommendation;
 };
 
-const browserFallback: WorkspaceSnapshot = {
-  mode: "browser",
-  healthcheck: {
-    ok: true,
-    app: "intelligent-rule-manager",
-    layer: "browser-fallback",
-  },
-  summary: {
-    storage_root: "Unavailable in browser preview",
-    exports_dir: "Unavailable in browser preview",
-    supported_artifacts: ["single-rule", "rule-set", "config-file"],
-    supported_targets: ["agents-md", "trae-rule", "generic"],
-  },
-  rules: [
+function makeBrowserDocuments(locale: Locale): RuleDocument[] {
+  return [
     {
       id: "browser-preview-rule",
-      title: "Browser Preview Rule",
-      summary: "Fallback example shown when the app is running outside Tauri.",
+      title: translate(locale, "browser.previewRuleTitle"),
+      summary: translate(locale, "browser.previewRuleSummary"),
       groups: ["preview"],
       tags: ["fallback"],
-      resolved_tags: ["fallback"],
       targets: ["generic"],
-      file: "Browser-only preview data",
+      complexity: 2,
+      update_frequency: "occasional",
+      maintenance_cost: "low",
+      priority: 50,
+      last_reviewed: "2026-04-16",
+      file: translate(locale, "browser.previewRuleFile"),
+      body: [
+        "# Intent",
+        "",
+        translate(locale, "browser.previewRuleIntent"),
+        "",
+        "# Rule",
+        "",
+        translate(locale, "browser.previewRuleBody"),
+      ].join("\n"),
     },
-  ],
-  stats: {
-    count: 1,
-    average_complexity: 2,
-    average_update_frequency: 2,
-    average_maintenance_cost: 1,
-    tag_count: 1,
-    group_count: 1,
-  },
-  recommendation: {
-    recommendation: "cli-is-enough",
-    score: 19,
-    stats: {
-      count: 1,
-      average_complexity: 2,
-      average_update_frequency: 2,
-      average_maintenance_cost: 1,
-      tag_count: 1,
-      group_count: 1,
-    },
-    reasons: [
-      "The current library is still small enough that a CLI-first workflow is efficient.",
-    ],
-    suggested_features: [
-      "Keep using Markdown files plus the CLI for assembly and export.",
-    ],
-  },
-};
+  ];
+}
 
-let browserDocuments: RuleDocument[] = [
-  {
-    id: "browser-preview-rule",
-    title: "Browser Preview Rule",
-    summary: "Fallback example shown when the app is running outside Tauri.",
-    groups: ["preview"],
-    tags: ["fallback"],
-    targets: ["generic"],
-    complexity: 2,
-    update_frequency: "occasional",
-    maintenance_cost: "low",
-    priority: 50,
-    last_reviewed: "2026-04-16",
-    file: "Browser-only preview data",
-    body: [
-      "# Intent",
-      "",
-      "Preview how the desktop app behaves before the Tauri runtime is attached.",
-      "",
-      "# Rule",
-      "",
-      "This sample rule lets the browser build stay interactive during local UI work.",
-    ].join("\n"),
-  },
-];
+let browserDocuments = makeBrowserDocuments("en");
 
 function isTauriRuntime(): boolean {
   const candidate = window as Window & {
@@ -167,21 +119,53 @@ function asListItem(document: RuleDocument): RuleListItem {
   };
 }
 
-export async function getWorkspaceSnapshot(): Promise<WorkspaceSnapshot> {
+export async function getWorkspaceSnapshot(locale: Locale): Promise<WorkspaceSnapshot> {
   if (!isTauriRuntime()) {
+    browserDocuments = makeBrowserDocuments(locale);
+
     return {
-      ...browserFallback,
+      mode: "browser",
+      healthcheck: {
+        ok: true,
+        app: "intelligent-rule-manager",
+        layer: "browser-fallback",
+      },
+      summary: {
+        storage_root: translate(locale, "browser.storageUnavailable"),
+        exports_dir: translate(locale, "browser.exportsUnavailable"),
+        supported_artifacts: ["single-rule", "rule-set", "config-file"],
+        supported_targets: ["agents-md", "trae-rule", "generic"],
+      },
       rules: browserDocuments.map(asListItem),
       stats: {
-        ...browserFallback.stats,
         count: browserDocuments.length,
+        average_complexity: 2,
+        average_update_frequency: 2,
+        average_maintenance_cost: 1,
+        tag_count: 1,
+        group_count: 1,
       },
       recommendation: {
-        ...browserFallback.recommendation,
+        recommendation: "cli-is-enough",
+        score: 19,
         stats: {
-          ...browserFallback.recommendation.stats,
           count: browserDocuments.length,
+          average_complexity: 2,
+          average_update_frequency: 2,
+          average_maintenance_cost: 1,
+          tag_count: 1,
+          group_count: 1,
         },
+        reasons: [
+          locale === "zh-CN"
+            ? "当前规则库规模仍然较小，CLI 工作流已经足够高效。"
+            : "The current library is still small enough that a CLI-first workflow is efficient.",
+        ],
+        suggested_features: [
+          locale === "zh-CN"
+            ? "继续使用 Markdown 文件和 CLI 来完成组合与导出。"
+            : "Keep using Markdown files plus the CLI for assembly and export.",
+        ],
       },
     };
   }
@@ -208,7 +192,7 @@ export async function loadRule(file: string): Promise<RuleDocument> {
   if (!isTauriRuntime()) {
     const document = browserDocuments.find((item) => item.file === file);
     if (!document) {
-      throw new Error(`No browser fallback rule found for ${file}`);
+      throw new Error(translate("en", "browser.ruleNotFound", { file }));
     }
     return document;
   }
@@ -216,14 +200,21 @@ export async function loadRule(file: string): Promise<RuleDocument> {
   return invoke<RuleDocument>("load_rule", { file });
 }
 
-export async function createRule(input: NewRuleInput): Promise<RuleDocument> {
+export async function createRule(
+  input: NewRuleInput,
+  locale: Locale,
+): Promise<RuleDocument> {
   if (!isTauriRuntime()) {
     const title = input.title.trim();
     const id = title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
     const created: RuleDocument = {
       id,
       title,
-      summary: input.summary?.trim() || `Reusable rule for ${title.toLowerCase()}.`,
+      summary:
+        input.summary?.trim() ||
+        translate(locale, "browser.createdSummary", {
+          title: title.toLowerCase(),
+        }),
       groups: input.groups.length > 0 ? input.groups : ["shared"],
       tags: input.tags,
       targets: input.targets.length > 0 ? input.targets : ["agents-md", "trae-rule"],
@@ -232,15 +223,15 @@ export async function createRule(input: NewRuleInput): Promise<RuleDocument> {
       maintenance_cost: "low",
       priority: 50,
       last_reviewed: "2026-04-16",
-      file: `Browser preview/${id}.md`,
+      file: translate(locale, "browser.createdFile", { id }),
       body: [
         "# Intent",
         "",
-        "State the scenario or goal this rule is meant to support.",
+        translate(locale, "browser.newRuleIntent"),
         "",
         "# Rule",
         "",
-        "Write the rule in normal Markdown so it stays compatible with AGENTS-style documents and Trae rule files.",
+        translate(locale, "browser.newRuleBody"),
       ].join("\n"),
     };
     browserDocuments = [...browserDocuments, created];
