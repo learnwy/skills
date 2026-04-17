@@ -1,6 +1,6 @@
 # Rule Schema
 
-Rules are stored as Markdown files with YAML frontmatter.
+Rules are stored as Markdown files with YAML frontmatter under `~/.learnwy/ai/rules`.
 
 ## Required shape
 
@@ -51,6 +51,7 @@ Put the actual Markdown rule content here.
 
 - The body stays plain Markdown so it can be reused in AGENTS-style documents and Trae-compatible rule files.
 - Frontmatter is metadata for management and assembly. Exported rule sets keep the Markdown body readable even if a target tool ignores metadata.
-- If a target expects a single consolidated document, use the `rule-set` artifact.
-- If a target expects one focused rule, use the `single-rule` artifact.
-- If a downstream tool needs structured metadata, use the `config-file` artifact.
+- Hierarchical tag resolution may widen matching. A higher-level selection such as `web` can intentionally include rules tagged more specifically such as `typescript`.
+- Composition now focuses on export targets rather than artifact labels:
+  - `agents-md` writes one consolidated `AGENTS.md`
+  - `trae-rule` writes split rule files for `.trae/rules/`

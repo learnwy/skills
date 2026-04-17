@@ -28,3 +28,4 @@ Write the rule in normal Markdown so it stays compatible with AGENTS-style docum
 
 - Mention important tradeoffs.
 - Call out when the rule should not be applied.
+- Keep tags specific enough for composition, knowing that broader ancestor tags may also match this rule.

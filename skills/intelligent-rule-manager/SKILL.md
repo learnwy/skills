@@ -1,124 +1,132 @@
 ---
 name: intelligent-rule-manager
-description: Manage globally stored Markdown rules in AGENTS_HOME/rules or ~/.agents/rules with grouping, tagging, dynamic assembly, script-vs-AI composition decisions, target-specific exports, and macOS visualization recommendations.
+description: Manage a shared Markdown rule library in ~/.learnwy/ai/rules with tagging, hierarchical tag matching, rule editing, rule selection, and composition into AGENTS.md bundles or split Trae rules.
+metadata:
+  author: "learnwy"
+  version: "2.0"
 ---
 
 # Intelligent Rule Manager
 
-Use this skill when the user wants to create, organize, filter, assemble, export, or evaluate reusable agent rules across projects.
+Use this skill when the user wants to create, review, organize, compose, or export reusable AI rules that should be shared across repositories and tools.
 
-## What This Skill Solves
+## What This Skill Covers
 
-- Rules live independently from the current repository under `AGENTS_HOME/rules` or `~/.agents/rules`.
-- Each rule is a standalone Markdown file with frontmatter for tags, groups, targets, complexity, update frequency, and maintenance cost.
-- The skill can decide whether the job should be handled deterministically by scripts or synthesized directly by AI.
-- The skill can dynamically assemble rule sets for different task goals and export them as a single rule, a merged rule set, or a config manifest.
-- The skill can recommend when the rule library has grown enough to justify a visual macOS editor.
+- One shared rule library lives in `~/.learnwy/ai/rules`.
+- Rules are plain Markdown files with YAML frontmatter and normal Markdown bodies.
+- The same library is used from four peer surfaces:
+  - this skill
+  - the Rust CLI
+  - the desktop client
+  - the VS Code-compatible extension
+- Users can select rules by explicit rule id, by tags, or by both.
+- Composition supports:
+  - one consolidated `AGENTS.md` bundle
+  - split Trae rule files under `.trae/rules/`
 
-## Storage Rules
+## When To Use
 
-1. Resolve the storage root with:
-   - `AGENTS_HOME/rules` when `AGENTS_HOME` is set
-   - Otherwise `~/.agents/rules`
+- The user wants to add or strengthen a reusable coding rule.
+- The user wants to browse or filter the shared rule library.
+- The user wants to compose a project-facing `AGENTS.md` from selected rules.
+- The user wants to export selected rules as split Trae rule files.
+- The user wants to understand the current storage model, schema, or export targets.
+
+## When Not To Use
+
+- The user needs one project-local rule that should not live in the shared library.
+- The user wants a project skill or agent rather than a reusable rule.
+- The user needs a one-off answer and there is no reuse value in turning it into a rule.
+
+## Shared Model
+
+1. Treat `~/.learnwy/ai/rules` as the canonical storage root.
 2. Treat Markdown rule files as the source of truth.
-3. Keep rules compatible with AGENTS-style and Trae-style Markdown by storing the actual instruction body in normal Markdown beneath YAML frontmatter.
+3. Keep the Markdown body readable on its own so it can be reused in:
+   - `AGENTS.md`
+   - Trae project rules
+   - rule review flows in the desktop client or extension
+4. Use tags for filtering and composition.
+5. Remember that tags can resolve hierarchically. A broader selection such as `web` may intentionally include a more specific rule tagged `typescript`.
 
-## Rule Lifecycle
+## Default Workflow
 
-Use the CLI in `scripts/rule-manager.mjs`.
+1. Inspect the library state.
+2. Create or update one rule at a time.
+3. Verify tags, groups, and targets.
+4. Compose by selected tags and explicit rules.
+5. Review the generated `AGENTS.md` or Trae bundle before using it in a project.
 
-### Initialize storage
+## Preferred Operations
+
+### Inspect the workspace
 
 ```bash
-node .agents/skills/intelligent-rule-manager/scripts/rule-manager.mjs init
+cargo run -p rule-cli --manifest-path apps/intelligent-rule-manager/cli/Cargo.toml -- workspace-summary
+```
+
+```bash
+cargo run -p rule-cli --manifest-path apps/intelligent-rule-manager/cli/Cargo.toml -- list
+```
+
+```bash
+cargo run -p rule-cli --manifest-path apps/intelligent-rule-manager/cli/Cargo.toml -- stats
+```
+
+### Inspect one rule
+
+```bash
+cargo run -p rule-cli --manifest-path apps/intelligent-rule-manager/cli/Cargo.toml -- inspect --file ~/.learnwy/ai/rules/web/typescript/no-default-export.md
 ```
 
 ### Create a rule
 
 ```bash
-node .agents/skills/intelligent-rule-manager/scripts/rule-manager.mjs create \
+cargo run -p rule-cli --manifest-path apps/intelligent-rule-manager/cli/Cargo.toml -- create \
   --title "TypeScript Import Hygiene" \
-  --group frontend \
-  --tags typescript,imports,lint \
+  --summary "Keep imports explicit, stable, and easy to refactor." \
+  --groups frontend,shared \
+  --tags web,typescript,imports \
   --targets agents-md,trae-rule
 ```
 
-### Inspect and filter
+### Compose an AGENTS bundle
 
 ```bash
-node .agents/skills/intelligent-rule-manager/scripts/rule-manager.mjs list --tags typescript --groups frontend
-node .agents/skills/intelligent-rule-manager/scripts/rule-manager.mjs stats
+cargo run -p rule-cli --manifest-path apps/intelligent-rule-manager/cli/Cargo.toml -- compose \
+  --target agents-md \
+  --tags web,typescript \
+  --rule-ids no-default-export,import-path-boundaries
 ```
 
-## Intelligent Decision Workflow
-
-1. Run `decide` when the user wants a composed deliverable or a rewritten rule set.
-2. If the result is `script-first`, use `compose` directly.
-3. If the result is `ai-first`, use `compose --mode ai-prep` to gather the selected rules, scoring, outline, and rationale, then let the model rewrite or reorganize the final artifact.
-
-### Decision command
+### Compose split Trae rules
 
 ```bash
-node .agents/skills/intelligent-rule-manager/scripts/rule-manager.mjs decide \
-  --objective "Assemble cross-project frontend safety rules for AI coding tasks" \
-  --artifact rule-set \
-  --target agents-md
-```
-
-## Dynamic Assembly
-
-Users can pick tags, groups, targets, and an objective. The skill should:
-
-1. Filter rules by user-selected tags/groups/targets.
-2. Score the remaining rules against the stated objective.
-3. Produce the requested artifact:
-   - `single-rule`
-   - `rule-set`
-   - `config-file`
-
-### Script-first assembly
-
-```bash
-node .agents/skills/intelligent-rule-manager/scripts/rule-manager.mjs compose \
-  --objective "Mobile app review rules" \
-  --groups ios \
-  --tags review,swiftui \
-  --artifact rule-set \
+cargo run -p rule-cli --manifest-path apps/intelligent-rule-manager/cli/Cargo.toml -- compose \
   --target trae-rule \
-  --mode auto
+  --tags lint,format \
+  --rule-ids eslint-prettier-baseline
 ```
 
-### AI-first preparation
+## Composition Guidance
 
-```bash
-node .agents/skills/intelligent-rule-manager/scripts/rule-manager.mjs compose \
-  --objective "Merge overlapping platform rules into one concise onboarding pack" \
-  --artifact rule-set \
-  --mode ai-prep \
-  --format json
-```
+- Prefer tags when the user is describing a category or stack.
+- Prefer explicit rule ids when the user is curating a precise bundle.
+- Use both when the user wants a broad baseline plus a few hand-picked rules.
+- Review the matched rules before finalizing the export, especially when ancestor tags widen the selection.
 
-When `ai-first` is chosen, rewrite the final output from the prepared structure rather than simply concatenating rule files.
+## Authoring Guidance
 
-## Visualization Recommendation
-
-Use the recommender whenever the user asks whether a GUI is worth building, or when the rule library looks large and expensive to maintain.
-
-```bash
-node .agents/skills/intelligent-rule-manager/scripts/rule-manager.mjs recommend-visualization
-```
-
-The recommendation weighs:
-
-- total rule count
-- average and peak complexity
-- update frequency
-- maintenance cost
-- tag/group sprawl
-
-If the result recommends a macOS app, propose features such as rule editing, tagging, grouping, preview, one-click export, and sync.
+- Make each rule strong, explicit, and reviewable.
+- Prefer mandatory language when the rule is intended to be enforced.
+- Include exceptions when there are valid escape hatches.
+- Include examples when the rule is easy to misread.
+- Keep one rule focused on one decision or behavior.
 
 ## References
 
-- Read [references/rule-schema.md](references/rule-schema.md) for the supported frontmatter schema.
-- Use [assets/rule-template.md](assets/rule-template.md) as the starting shape for new rules.
+- Read [references/rule-schema.md](references/rule-schema.md) for the frontmatter shape.
+- Read [references/storage-and-surfaces.md](references/storage-and-surfaces.md) for the shared storage model and surfaces.
+- Read [references/compose-targets.md](references/compose-targets.md) for `AGENTS.md` and Trae export behavior.
+- Read [references/operating-workflow.md](references/operating-workflow.md) for the recommended day-to-day workflow.
+- Use [assets/rule-template.md](assets/rule-template.md) as the starting point for new rules.
