@@ -1,7 +1,7 @@
 mod i18n;
 
 use clap::{CommandFactory, FromArgMatches, Parser, Subcommand};
-use rule_core::{NewRuleInput, RuleListItem};
+use rule_core::{ComposeRequest, NewRuleInput, RuleListItem};
 
 #[derive(Debug, Parser)]
 #[command(name = "rule-cli")]
@@ -35,6 +35,16 @@ enum Commands {
         tags: Vec<String>,
         #[arg(long, value_delimiter = ',')]
         targets: Vec<String>,
+    },
+    Compose {
+        #[arg(long)]
+        target: String,
+        #[arg(long, value_delimiter = ',')]
+        rule_ids: Vec<String>,
+        #[arg(long, value_delimiter = ',')]
+        tags: Vec<String>,
+        #[arg(long)]
+        output_name: Option<String>,
     },
 }
 
@@ -85,6 +95,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 targets,
             })?;
             println!("{}", serde_json::to_string_pretty(&created)?);
+        }
+        Commands::Compose {
+            target,
+            rule_ids,
+            tags,
+            output_name,
+        } => {
+            let composed = rule_core::compose_rules(ComposeRequest {
+                target,
+                rule_ids,
+                tags,
+                output_name,
+            })?;
+            println!("{}", serde_json::to_string_pretty(&composed)?);
         }
     }
 

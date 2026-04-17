@@ -215,6 +215,16 @@ pub fn localize_command(command: Command, locale: Locale) -> Command {
                 .mut_arg("tags", |argument| argument.help(message(locale, "arg.tags.help")))
                 .mut_arg("targets", |argument| argument.help(message(locale, "arg.targets.help")))
         })
+        .mut_subcommand("compose", |subcommand| {
+            subcommand
+                .about(message(locale, "command.compose.about"))
+                .mut_arg("target", |argument| argument.help(message(locale, "arg.target.help")))
+                .mut_arg("rule_ids", |argument| argument.help(message(locale, "arg.rule_ids.help")))
+                .mut_arg("tags", |argument| argument.help(message(locale, "arg.tags.help")))
+                .mut_arg("output_name", |argument| {
+                    argument.help(message(locale, "arg.output_name.help"))
+                })
+        })
 }
 
 fn message(locale: Locale, key: &str) -> &'static str {

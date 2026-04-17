@@ -10,6 +10,7 @@ pub fn run() {
             commands::load_rule,
             commands::create_rule,
             commands::save_rule,
+            commands::compose_rules,
             commands::stats,
             commands::recommend_visualization
         ])

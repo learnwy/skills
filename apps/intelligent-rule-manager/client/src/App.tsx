@@ -1,9 +1,12 @@
 import { startTransition, useEffect, useMemo, useState } from "react";
 import {
+  composeRules,
   createRule,
   getWorkspaceSnapshot,
   loadRule,
   saveRule,
+  type ComposeResult,
+  type ComposeTarget,
   type NewRuleInput,
   type RuleDocument,
   type RuleLibraryStats,
@@ -18,7 +21,7 @@ import {
   type Locale,
 } from "./lib/i18n";
 
-type WorkspaceView = "overview" | "library" | "editor";
+type WorkspaceView = "overview" | "library" | "editor" | "compose";
 
 const defaultCreateForm: NewRuleInput = {
   title: "",
@@ -74,9 +77,14 @@ export default function App() {
   const [isLoadingDocument, setIsLoadingDocument] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [isComposing, setIsComposing] = useState(false);
   const [runtimeMode, setRuntimeMode] = useState<"tauri" | "browser">("browser");
   const [runtimeLayer, setRuntimeLayer] = useState<string>("loading");
   const [error, setError] = useState<string | null>(null);
+  const [composeTarget, setComposeTarget] = useState<ComposeTarget>("agents-md");
+  const [selectedComposeTags, setSelectedComposeTags] = useState<string[]>([]);
+  const [selectedComposeRuleIds, setSelectedComposeRuleIds] = useState<string[]>([]);
+  const [composeResult, setComposeResult] = useState<ComposeResult | null>(null);
   const t = (key: Parameters<typeof translate>[1], variables?: Record<string, string | number>) =>
     translate(locale, key, variables);
 
@@ -105,6 +113,7 @@ export default function App() {
     { id: "overview" as const, label: t("tabs.overview") },
     { id: "library" as const, label: t("tabs.library") },
     { id: "editor" as const, label: t("tabs.editor") },
+    { id: "compose" as const, label: t("tabs.compose") },
   ];
 
   const availableGroups = useMemo(
@@ -143,6 +152,16 @@ export default function App() {
 
   const selectedRule =
     rules.find((rule) => rule.id === selectedRuleId) ?? filteredRules[0] ?? null;
+
+  const composeMatchingRules = useMemo(() => {
+    return rules
+      .filter((rule) => rule.targets.includes(composeTarget) || rule.targets.includes("generic"))
+      .filter((rule) => {
+        const matchesRule = selectedComposeRuleIds.includes(rule.id);
+        const matchesTag = selectedComposeTags.some((tag) => getFilterTags(rule).includes(tag));
+        return matchesRule || matchesTag;
+      });
+  }, [composeTarget, rules, selectedComposeRuleIds, selectedComposeTags]);
 
   async function refreshWorkspace(preferredRuleId?: string) {
     setIsLoadingWorkspace(true);
@@ -296,10 +315,54 @@ export default function App() {
     }
   }
 
+  async function handleComposeExport() {
+    setIsComposing(true);
+
+    try {
+      const composed = await composeRules({
+        target: composeTarget,
+        rule_ids: selectedComposeRuleIds,
+        tags: selectedComposeTags,
+      });
+      setComposeResult(composed);
+      setError(null);
+    } catch (composeError) {
+      setError(
+        composeError instanceof Error
+          ? composeError.message
+          : t("errors.composeRule"),
+      );
+    } finally {
+      setIsComposing(false);
+    }
+  }
+
   function openCreateFlow() {
     setCreateForm(defaultCreateForm);
     setIsCreateOpen(true);
     setActiveView("editor");
+  }
+
+  function toggleComposeTag(tag: string) {
+    setSelectedComposeTags((current) =>
+      current.includes(tag)
+        ? current.filter((item) => item !== tag)
+        : [...current, tag],
+    );
+  }
+
+  function toggleComposeRule(ruleId: string) {
+    setSelectedComposeRuleIds((current) =>
+      current.includes(ruleId)
+        ? current.filter((item) => item !== ruleId)
+        : [...current, ruleId],
+    );
+  }
+
+  function clearComposeSelection() {
+    setSelectedComposeTags([]);
+    setSelectedComposeRuleIds([]);
+    setComposeResult(null);
   }
 
   const isDirty =
@@ -876,6 +939,149 @@ export default function App() {
                 <p>{t("empty.noRuleSelectedBody")}</p>
               </div>
             )}
+          </article>
+        </section>
+      ) : null}
+
+      {activeView === "compose" ? (
+        <section className="split-view split-view-compose" aria-label={t("workspace.label")}>
+          <article className="panel">
+            <div className="panel-header">
+              <div>
+                <h2>{t("compose.selectionTitle")}</h2>
+                <p>{t("compose.selectionBody")}</p>
+              </div>
+              <button className="ghost-button" onClick={clearComposeSelection} type="button">
+                {t("action.clearSelection")}
+              </button>
+            </div>
+
+            <div className="editor-stack">
+              <div className="detail-block">
+                <h3>{t("compose.selectedTags")}</h3>
+                <p>{t("compose.tagHint")}</p>
+                <div className="token-row token-grid">
+                  {availableTags.map((tag) => (
+                    <button
+                      className={`token-button ${selectedComposeTags.includes(tag) ? "active" : ""}`}
+                      key={tag}
+                      onClick={() => toggleComposeTag(tag)}
+                      type="button"
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="detail-block">
+                <h3>{t("compose.selectedRules")}</h3>
+                <p>{t("compose.ruleHint")}</p>
+                <div className="compose-rule-list">
+                  {filteredRules.map((rule) => (
+                    <label className="compose-rule-item" key={`compose-${rule.id}`}>
+                      <input
+                        checked={selectedComposeRuleIds.includes(rule.id)}
+                        onChange={() => toggleComposeRule(rule.id)}
+                        type="checkbox"
+                      />
+                      <div>
+                        <strong>{rule.title}</strong>
+                        <p>{rule.summary || t("rule.noSummary")}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              <div className="detail-block">
+                <h3>{t("compose.matchingRules")}</h3>
+                {composeMatchingRules.length > 0 ? (
+                  <div className="token-row">
+                    {composeMatchingRules.map((rule) => (
+                      <span className="token" key={`match-${rule.id}`}>
+                        {rule.id}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="empty-state compact">
+                    <h3>{t("compose.noSelectionTitle")}</h3>
+                    <p>{t("compose.noSelectionBody")}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </article>
+
+          <article className="panel">
+            <div className="panel-header">
+              <div>
+                <h2>{t("compose.exportTitle")}</h2>
+                <p>{t("compose.exportBody")}</p>
+              </div>
+            </div>
+
+            <div className="editor-stack">
+              <div className="detail-block">
+                <label className="field">
+                  <span>{t("compose.targetLabel")}</span>
+                  <select
+                    onChange={(event) => setComposeTarget(event.target.value as ComposeTarget)}
+                    value={composeTarget}
+                  >
+                    <option value="agents-md">{t("compose.targetAgents")}</option>
+                    <option value="trae-rule">{t("compose.targetTrae")}</option>
+                  </select>
+                </label>
+
+                <div className="button-row">
+                  <button
+                    className="primary-button"
+                    disabled={isComposing || composeMatchingRules.length === 0}
+                    onClick={() => void handleComposeExport()}
+                    type="button"
+                  >
+                    {isComposing ? t("action.composing") : t("action.composeExport")}
+                  </button>
+                </div>
+              </div>
+
+              <div className="detail-block">
+                <h3>{t("compose.resultTitle")}</h3>
+                {composeResult ? (
+                  <>
+                    <p>
+                      {t("compose.resultSummary", {
+                        count: composeResult.files.length,
+                        path: composeResult.export_root,
+                      })}
+                    </p>
+                    <div className="compose-file-list">
+                      {composeResult.files.map((file) => (
+                        <div className="compose-file-item" key={file.path}>
+                          <strong>{file.title}</strong>
+                          <p>{file.path}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <p>{t("compose.emptyResult")}</p>
+                )}
+              </div>
+
+              <div className="detail-block">
+                <h3>{t("compose.previewTitle")}</h3>
+                {composeResult?.files[0] ? (
+                  <pre className="preview-surface preview-export">
+                    {composeResult.files[0].content}
+                  </pre>
+                ) : (
+                  <p>{t("compose.previewEmpty")}</p>
+                )}
+              </div>
+            </div>
           </article>
         </section>
       ) : null}

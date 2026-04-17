@@ -75,6 +75,16 @@ pub fn localize_command(command: Command, locale: Locale) -> Command {
                 .mut_arg("tags", |argument| argument.help(message(locale, "arg.tags.help")))
                 .mut_arg("targets", |argument| argument.help(message(locale, "arg.targets.help")))
         })
+        .mut_subcommand("compose", |subcommand| {
+            subcommand
+                .about(message(locale, "command.compose.about"))
+                .mut_arg("target", |argument| argument.help(message(locale, "arg.target.help")))
+                .mut_arg("rule_ids", |argument| argument.help(message(locale, "arg.rule_ids.help")))
+                .mut_arg("tags", |argument| argument.help(message(locale, "arg.tags.help")))
+                .mut_arg("output_name", |argument| {
+                    argument.help(message(locale, "arg.output_name.help"))
+                })
+        })
 }
 
 fn message(locale: Locale, key: &str) -> &'static str {
@@ -88,12 +98,16 @@ fn message(locale: Locale, key: &str) -> &'static str {
         (Locale::En, "command.recommend.about") => r#"Print the current visualization recommendation as JSON"#,
         (Locale::En, "command.inspect.about") => r#"Inspect one rule document as JSON"#,
         (Locale::En, "command.create.about") => r#"Create one rule document and print it as JSON"#,
+        (Locale::En, "command.compose.about") => r#"Compose selected rules into AGENTS.md or split Trae exports"#,
         (Locale::En, "arg.file.help") => r#"Path to the rule Markdown file"#,
         (Locale::En, "arg.title.help") => r#"Rule title"#,
         (Locale::En, "arg.summary.help") => r#"Optional one-line summary"#,
         (Locale::En, "arg.groups.help") => r#"Comma-separated groups"#,
         (Locale::En, "arg.tags.help") => r#"Comma-separated tags"#,
         (Locale::En, "arg.targets.help") => r#"Comma-separated targets"#,
+        (Locale::En, "arg.target.help") => r#"Compose target, for example agents-md or trae-rule"#,
+        (Locale::En, "arg.rule_ids.help") => r#"Comma-separated rule ids to include"#,
+        (Locale::En, "arg.output_name.help") => r#"Optional export bundle name"#,
         (Locale::ZhCn, "cli.about") => r#"智能规则管理器工作区 CLI"#,
         (Locale::ZhCn, "arg.locale.help") => r#"选择 CLI 语言，例如 en 或 zh-CN"#,
         (Locale::ZhCn, "command.healthcheck.about") => r#"以 JSON 输出共享 rule-core 健康检查结果"#,
@@ -103,12 +117,16 @@ fn message(locale: Locale, key: &str) -> &'static str {
         (Locale::ZhCn, "command.recommend.about") => r#"以 JSON 输出当前可视化建议"#,
         (Locale::ZhCn, "command.inspect.about") => r#"以 JSON 查看单条规则文档"#,
         (Locale::ZhCn, "command.create.about") => r#"创建一条规则文档并以 JSON 输出"#,
+        (Locale::ZhCn, "command.compose.about") => r#"把所选规则组合成 AGENTS.md 或拆分 Trae 导出"#,
         (Locale::ZhCn, "arg.file.help") => r#"规则 Markdown 文件路径"#,
         (Locale::ZhCn, "arg.title.help") => r#"规则标题"#,
         (Locale::ZhCn, "arg.summary.help") => r#"可选的一行摘要"#,
         (Locale::ZhCn, "arg.groups.help") => r#"逗号分隔的分组列表"#,
         (Locale::ZhCn, "arg.tags.help") => r#"逗号分隔的标签列表"#,
         (Locale::ZhCn, "arg.targets.help") => r#"逗号分隔的目标列表"#,
+        (Locale::ZhCn, "arg.target.help") => r#"导出目标，例如 agents-md 或 trae-rule"#,
+        (Locale::ZhCn, "arg.rule_ids.help") => r#"要包含的规则 id，使用逗号分隔"#,
+        (Locale::ZhCn, "arg.output_name.help") => r#"可选的导出包名称"#,
         _ => "",
     }
 }

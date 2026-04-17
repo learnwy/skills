@@ -1,6 +1,6 @@
 use rule_core::{
-    Healthcheck, NewRuleInput, RuleDocument, RuleLibraryStats, RuleListItem,
-    VisualizationRecommendation, WorkspaceSummary,
+    ComposeRequest, ComposeResult, Healthcheck, NewRuleInput, RuleDocument,
+    RuleLibraryStats, RuleListItem, VisualizationRecommendation, WorkspaceSummary,
 };
 
 #[tauri::command]
@@ -31,6 +31,11 @@ pub fn create_rule(input: NewRuleInput) -> Result<RuleDocument, String> {
 #[tauri::command]
 pub fn save_rule(document: RuleDocument) -> Result<RuleDocument, String> {
     rule_core::save_rule(document)
+}
+
+#[tauri::command]
+pub fn compose_rules(request: ComposeRequest) -> Result<ComposeResult, String> {
+    rule_core::compose_rules(request)
 }
 
 #[tauri::command]

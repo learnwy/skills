@@ -59,6 +59,29 @@ export type NewRuleInput = {
   targets: string[];
 };
 
+export type ComposeTarget = "agents-md" | "trae-rule";
+
+export type ComposeRequest = {
+  target: ComposeTarget;
+  rule_ids: string[];
+  tags: string[];
+  output_name?: string;
+};
+
+export type ComposedFile = {
+  path: string;
+  title: string;
+  content: string;
+};
+
+export type ComposeResult = {
+  target: ComposeTarget;
+  export_root: string;
+  selected_rule_ids: string[];
+  selected_tags: string[];
+  files: ComposedFile[];
+};
+
 export type WorkspaceSnapshot = {
   mode: "tauri" | "browser";
   healthcheck: Healthcheck;
@@ -246,4 +269,33 @@ export async function saveRule(document: RuleDocument): Promise<RuleDocument> {
   }
 
   return invoke<RuleDocument>("save_rule", { document });
+}
+
+export async function composeRules(request: ComposeRequest): Promise<ComposeResult> {
+  if (!isTauriRuntime()) {
+    const fallbackName = request.output_name?.trim() || `preview-${request.target}`;
+    const fallbackPath =
+      request.target === "agents-md"
+        ? `browser preview/exports/${fallbackName}/AGENTS.md`
+        : `browser preview/exports/${fallbackName}/.trae/rules/browser-preview-rule.md`;
+
+    return {
+      target: request.target,
+      export_root: translate("en", "browser.exportsUnavailable"),
+      selected_rule_ids: request.rule_ids,
+      selected_tags: request.tags,
+      files: [
+        {
+          path: fallbackPath,
+          title: request.target === "agents-md" ? "AGENTS.md" : "Browser Preview Rule",
+          content:
+            request.target === "agents-md"
+              ? "# AGENTS.md\n\nBrowser preview export.\n"
+              : "---\ndescription: \"Browser preview export\"\nalwaysApply: false\n---\n\n# Browser Preview Rule\n",
+        },
+      ],
+    };
+  }
+
+  return invoke<ComposeResult>("compose_rules", { request });
 }

@@ -143,6 +143,10 @@ body {
   grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.85fr);
 }
 
+.split-view-compose {
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+}
+
 .status-card,
 .fact-card,
 .panel,
@@ -217,6 +221,12 @@ body {
   gap: 12px;
 }
 
+.compose-rule-list,
+.compose-file-list {
+  display: grid;
+  gap: 10px;
+}
+
 .search-box {
   display: grid;
   gap: 8px;
@@ -273,6 +283,10 @@ body {
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.55);
   padding: 16px;
+}
+
+.empty-state.compact {
+  padding: 14px;
 }
 
 .rule-card {
@@ -334,9 +348,65 @@ body {
   font-weight: 600;
 }
 
+.token-grid {
+  align-items: stretch;
+}
+
+.token-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(198, 106, 43, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.token-button.active {
+  background: var(--accent-soft);
+  border-color: rgba(198, 106, 43, 0.35);
+  color: var(--accent);
+}
+
 .meta-grid {
   display: grid;
   gap: 10px;
+}
+
+.compose-rule-item,
+.compose-file-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.52);
+}
+
+.compose-rule-item input {
+  margin-top: 3px;
+}
+
+.compose-rule-item strong,
+.compose-file-item strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.compose-file-item {
+  grid-template-columns: 1fr;
+}
+
+.preview-export {
+  max-height: 420px;
+  overflow: auto;
 }
 
 .preview-surface {

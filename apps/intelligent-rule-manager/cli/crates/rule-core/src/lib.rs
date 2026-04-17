@@ -78,6 +78,30 @@ pub struct VisualizationRecommendation {
     pub suggested_features: Vec<String>,
 }
 
+#[derive(Debug, Clone, Deserialize)]
+pub struct ComposeRequest {
+    pub target: String,
+    pub rule_ids: Vec<String>,
+    pub tags: Vec<String>,
+    pub output_name: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ComposedFile {
+    pub path: String,
+    pub title: String,
+    pub content: String,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct ComposeResult {
+    pub target: String,
+    pub export_root: String,
+    pub selected_rule_ids: Vec<String>,
+    pub selected_tags: Vec<String>,
+    pub files: Vec<ComposedFile>,
+}
+
 pub fn healthcheck() -> Healthcheck {
     Healthcheck {
         ok: true,
@@ -225,6 +249,12 @@ pub fn recommend_visualization() -> Result<VisualizationRecommendation, String> 
     Ok(build_visualization_recommendation(&documents))
 }
 
+pub fn compose_rules(request: ComposeRequest) -> Result<ComposeResult, String> {
+    let documents = read_rule_documents()?;
+    let export_root = default_rules_root().join("exports");
+    compose_documents(&documents, &export_root, request)
+}
+
 fn split_frontmatter(source: &str) -> Option<(&str, &str)> {
     if !source.starts_with("---\n") {
         return None;
@@ -277,6 +307,9 @@ fn collect_markdown_files_into(root: &Path, files: &mut Vec<PathBuf>) -> Result<
         let file_path = entry.path();
 
         if file_path.is_dir() {
+            if file_path.file_name().and_then(|value| value.to_str()) == Some("exports") {
+                continue;
+            }
             collect_markdown_files_into(&file_path, files)?;
             continue;
         }
@@ -417,6 +450,239 @@ fn as_list_item(document: &RuleDocument) -> RuleListItem {
         targets: document.targets.clone(),
         file: document.file.clone(),
     }
+}
+
+fn compose_documents(
+    documents: &[RuleDocument],
+    export_root: &Path,
+    request: ComposeRequest,
+) -> Result<ComposeResult, String> {
+    let target = request.target.trim().to_lowercase();
+    if target.is_empty() {
+        return Err("Compose target is required.".to_string());
+    }
+
+    if target != "agents-md" && target != "trae-rule" {
+        return Err(format!("Unsupported compose target: {target}."));
+    }
+
+    let selected_rule_ids = normalize_values(request.rule_ids, Vec::new());
+    let selected_tags = normalize_values(request.tags, Vec::new());
+
+    if selected_rule_ids.is_empty() && selected_tags.is_empty() {
+        return Err("Select at least one tag or one rule before composing.".to_string());
+    }
+
+    let selected_documents =
+        select_documents_for_target(documents, &target, &selected_rule_ids, &selected_tags);
+
+    if selected_documents.is_empty() {
+        return Err(format!(
+            "No rules matched target {} for the selected tags or rule ids.",
+            target
+        ));
+    }
+
+    let bundle_name = request
+        .output_name
+        .as_deref()
+        .map(slugify)
+        .filter(|value| !value.is_empty())
+        .unwrap_or_else(|| format!("{}-{}", slugify(&target), today_iso_utc()));
+
+    let files = if target == "agents-md" {
+        build_agents_export(export_root, &bundle_name, &selected_documents, &selected_tags)?
+    } else {
+        build_trae_export(export_root, &bundle_name, &selected_documents)?
+    };
+
+    Ok(ComposeResult {
+        target,
+        export_root: export_root.display().to_string(),
+        selected_rule_ids,
+        selected_tags,
+        files,
+    })
+}
+
+fn select_documents_for_target(
+    documents: &[RuleDocument],
+    target: &str,
+    rule_ids: &[String],
+    tags: &[String],
+) -> Vec<RuleDocument> {
+    let mut selected = documents
+        .iter()
+        .filter(|document| supports_target(document, target))
+        .filter(|document| {
+            let matches_rule = rule_ids.contains(&document.id);
+            let resolved_tags = resolve_rule_tags(&document.tags);
+            let matches_tag = tags.iter().any(|tag| resolved_tags.contains(tag));
+            matches_rule || matches_tag
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+
+    selected.sort_by(|left, right| left.title.cmp(&right.title));
+    selected
+}
+
+fn supports_target(document: &RuleDocument, target: &str) -> bool {
+    document
+        .targets
+        .iter()
+        .any(|candidate| candidate == target || candidate == "generic")
+}
+
+fn build_agents_export(
+    export_root: &Path,
+    bundle_name: &str,
+    documents: &[RuleDocument],
+    selected_tags: &[String],
+) -> Result<Vec<ComposedFile>, String> {
+    let file_path = export_root
+        .join("agents")
+        .join(bundle_name)
+        .join("AGENTS.md");
+    let content = render_agents_document(documents, selected_tags);
+    write_export_file(&file_path, &content)?;
+
+    Ok(vec![ComposedFile {
+        path: file_path.display().to_string(),
+        title: "AGENTS.md".to_string(),
+        content,
+    }])
+}
+
+fn build_trae_export(
+    export_root: &Path,
+    bundle_name: &str,
+    documents: &[RuleDocument],
+) -> Result<Vec<ComposedFile>, String> {
+    let mut files = Vec::new();
+
+    for document in documents {
+        let file_path = export_root
+            .join("trae")
+            .join(bundle_name)
+            .join(".trae")
+            .join("rules")
+            .join(format!("{}.md", document.id));
+        let content = render_trae_document(document);
+        write_export_file(&file_path, &content)?;
+        files.push(ComposedFile {
+            path: file_path.display().to_string(),
+            title: document.title.clone(),
+            content,
+        });
+    }
+
+    Ok(files)
+}
+
+fn write_export_file(file_path: &Path, content: &str) -> Result<(), String> {
+    if let Some(parent) = file_path.parent() {
+        fs::create_dir_all(parent)
+            .map_err(|error| format!("Failed to create {}: {error}", parent.display()))?;
+    }
+
+    fs::write(file_path, content)
+        .map_err(|error| format!("Failed to write {}: {error}", file_path.display()))
+}
+
+fn render_agents_document(documents: &[RuleDocument], selected_tags: &[String]) -> String {
+    let mut lines = vec![
+        "# AGENTS.md".to_string(),
+        String::new(),
+        "This file was composed by Intelligent Rule Manager from selected reusable rules."
+            .to_string(),
+        String::new(),
+        format!("Generated on: {}", today_iso_utc()),
+        format!("Included rules: {}", documents.len()),
+    ];
+
+    if !selected_tags.is_empty() {
+        lines.push(format!("Selected tags: {}", selected_tags.join(", ")));
+    }
+
+    lines.extend([
+        String::new(),
+        "## Included Rules".to_string(),
+    ]);
+
+    for document in documents {
+        lines.push(format!("- {} (`{}`)", document.title, document.id));
+    }
+
+    lines.push(String::new());
+    lines.push("## Rule Guidance".to_string());
+    lines.push(String::new());
+
+    for document in documents {
+        lines.push(format!("## {}", document.title));
+        if !document.summary.trim().is_empty() {
+            lines.push(String::new());
+            lines.push(document.summary.trim().to_string());
+        }
+
+        lines.push(String::new());
+        lines.push(format!(
+            "Source rule: `{}` | Tags: {}",
+            document.id,
+            if document.tags.is_empty() {
+                "none".to_string()
+            } else {
+                document.tags.join(", ")
+            }
+        ));
+        lines.push(String::new());
+        lines.push(shift_headings(&document.body, 2));
+        lines.push(String::new());
+    }
+
+    lines.join("\n").trim_end().to_string() + "\n"
+}
+
+fn render_trae_document(document: &RuleDocument) -> String {
+    let description = if document.summary.trim().is_empty() {
+        document.title.trim().to_string()
+    } else {
+        document.summary.trim().to_string()
+    };
+
+    [
+        "---".to_string(),
+        format!("description: {:?}", description),
+        "alwaysApply: false".to_string(),
+        "---".to_string(),
+        String::new(),
+        format!("# {}", document.title.trim()),
+        String::new(),
+        shift_headings(&document.body, 1),
+        String::new(),
+    ]
+    .join("\n")
+}
+
+fn shift_headings(source: &str, offset: usize) -> String {
+    source
+        .lines()
+        .map(|line| {
+            let trimmed = line.trim_start();
+            let indent_len = line.len() - trimmed.len();
+            let indent = &line[..indent_len];
+
+            if !trimmed.starts_with('#') {
+                return line.to_string();
+            }
+
+            let level = trimmed.chars().take_while(|character| *character == '#').count();
+            let remainder = trimmed[level..].trim_start();
+            let shifted_level = usize::min(level + offset, 6);
+            format!("{}{} {}", indent, "#".repeat(shifted_level), remainder)
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 fn normalize_values(values: Vec<String>, fallback: Vec<String>) -> Vec<String> {
@@ -722,8 +988,9 @@ mod tests {
     use std::time::{SystemTime, UNIX_EPOCH};
 
     use super::{
-        civil_from_days, default_rules_root, parse_frontmatter, read_rule_documents_from_root,
-        resolve_rule_tags, split_frontmatter,
+        civil_from_days, compose_documents, default_rules_root, parse_frontmatter,
+        read_rule_documents_from_root, render_agents_document, render_trae_document,
+        resolve_rule_tags, split_frontmatter, ComposeRequest, RuleDocument,
     };
 
     #[test]
@@ -829,6 +1096,113 @@ Prefer named exports over default exports.
         fs::remove_dir_all(&fixture_root).expect("remove fixture root");
     }
 
+    #[test]
+    fn ignores_generated_exports_during_rule_discovery() {
+        let fixture_root = temp_fixture_root("intelligent-rule-manager-exports");
+        let exports_dir = fixture_root.join("exports").join("agents").join("bundle");
+        fs::create_dir_all(&exports_dir).expect("create exports dir");
+        fs::write(
+            exports_dir.join("AGENTS.md"),
+            "# Generated bundle\n\nThis should not be parsed as a source rule.\n",
+        )
+        .expect("write generated export");
+
+        let documents = read_rule_documents_from_root(&fixture_root).expect("read rule documents");
+        assert!(documents.is_empty());
+
+        fs::remove_dir_all(&fixture_root).expect("remove fixture root");
+    }
+
+    #[test]
+    fn renders_agents_document_with_nested_headings() {
+        let content = render_agents_document(
+            &[fixture_rule(
+                "named-exports",
+                "Named exports",
+                "Prefer named exports.",
+                vec!["typescript", "exports"],
+                vec!["agents-md", "trae-rule"],
+            )],
+            &["typescript".to_string()],
+        );
+
+        assert!(content.contains("# AGENTS.md"));
+        assert!(content.contains("## Named exports"));
+        assert!(content.contains("### Intent"));
+        assert!(content.contains("Selected tags: typescript"));
+    }
+
+    #[test]
+    fn renders_split_trae_rule_with_frontmatter() {
+        let content = render_trae_document(&fixture_rule(
+            "named-exports",
+            "Named exports",
+            "Prefer named exports.",
+            vec!["typescript", "exports"],
+            vec!["agents-md", "trae-rule"],
+        ));
+
+        assert!(content.contains("description: \"Prefer named exports.\""));
+        assert!(content.contains("alwaysApply: false"));
+        assert!(content.contains("# Named exports"));
+        assert!(content.contains("## Intent"));
+    }
+
+    #[test]
+    fn composes_agents_and_trae_exports_from_selected_tags_and_rules() {
+        let documents = vec![
+            fixture_rule(
+                "named-exports",
+                "Named exports",
+                "Prefer named exports.",
+                vec!["typescript", "exports"],
+                vec!["agents-md", "trae-rule"],
+            ),
+            fixture_rule(
+                "generated-i18n",
+                "Generated i18n",
+                "Use generated locale outputs.",
+                vec!["i18n", "tooling"],
+                vec!["agents-md", "trae-rule"],
+            ),
+        ];
+        let export_root = temp_fixture_root("compose-exports");
+
+        let agents = compose_documents(
+            &documents,
+            &export_root,
+            ComposeRequest {
+                target: "agents-md".to_string(),
+                rule_ids: vec!["named-exports".to_string()],
+                tags: vec!["i18n".to_string()],
+                output_name: Some("workspace-guidance".to_string()),
+            },
+        )
+        .expect("compose agents export");
+
+        assert_eq!(agents.files.len(), 1);
+        assert!(agents.files[0].path.ends_with("AGENTS.md"));
+        assert!(agents.files[0].content.contains("Named exports"));
+        assert!(agents.files[0].content.contains("Generated i18n"));
+
+        let trae = compose_documents(
+            &documents,
+            &export_root,
+            ComposeRequest {
+                target: "trae-rule".to_string(),
+                rule_ids: vec!["named-exports".to_string()],
+                tags: vec!["i18n".to_string()],
+                output_name: Some("workspace-guidance".to_string()),
+            },
+        )
+        .expect("compose trae export");
+
+        assert_eq!(trae.files.len(), 2);
+        assert!(trae.files.iter().all(|file| file.path.contains("/.trae/rules/")));
+
+        fs::remove_dir_all(&export_root).expect("remove export fixture");
+    }
+
     fn temp_fixture_root(name: &str) -> PathBuf {
         let suffix = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -842,6 +1216,39 @@ Prefer named exports over default exports.
         match value {
             Some(value) => unsafe { std::env::set_var(key, value) },
             None => unsafe { std::env::remove_var(key) },
+        }
+    }
+
+    fn fixture_rule(
+        id: &str,
+        title: &str,
+        summary: &str,
+        tags: Vec<&str>,
+        targets: Vec<&str>,
+    ) -> RuleDocument {
+        RuleDocument {
+            id: id.to_string(),
+            title: title.to_string(),
+            summary: summary.to_string(),
+            groups: vec!["shared".to_string()],
+            tags: tags.into_iter().map(str::to_string).collect(),
+            targets: targets.into_iter().map(str::to_string).collect(),
+            complexity: 2,
+            update_frequency: "occasional".to_string(),
+            maintenance_cost: "low".to_string(),
+            priority: 50,
+            last_reviewed: "2026-04-17".to_string(),
+            file: format!("/tmp/{id}.md"),
+            body: [
+                "# Intent",
+                "",
+                "Keep exports explicit.",
+                "",
+                "# Rule",
+                "",
+                "- Use named exports.",
+            ]
+            .join("\n"),
         }
     }
 }
