@@ -18,6 +18,8 @@ import {
   type Locale,
 } from "./lib/i18n";
 
+type WorkspaceView = "overview" | "library" | "editor";
+
 const defaultCreateForm: NewRuleInput = {
   title: "",
   summary: "",
@@ -43,8 +45,17 @@ function getFilterTags(rule: RuleListItem): string[] {
     : rule.tags;
 }
 
+function excerptBody(body?: string): string {
+  if (!body) {
+    return "";
+  }
+
+  return body.length > 320 ? `${body.slice(0, 320)}...` : body;
+}
+
 export default function App() {
   const [locale, setLocale] = useState<Locale>(detectBrowserLocale());
+  const [activeView, setActiveView] = useState<WorkspaceView>("overview");
   const [summary, setSummary] = useState<WorkspaceSummary | null>(null);
   const [rules, setRules] = useState<RuleListItem[]>([]);
   const [stats, setStats] = useState<RuleLibraryStats | null>(null);
@@ -88,6 +99,12 @@ export default function App() {
     t("milestone.composeExport"),
     t("milestone.previewPolish"),
     t("milestone.smokeTest"),
+  ];
+
+  const viewTabs = [
+    { id: "overview" as const, label: t("tabs.overview") },
+    { id: "library" as const, label: t("tabs.library") },
+    { id: "editor" as const, label: t("tabs.editor") },
   ];
 
   const availableGroups = useMemo(
@@ -226,16 +243,20 @@ export default function App() {
     setIsCreating(true);
 
     try {
-      const created = await createRule({
-        ...createForm,
-        groups: splitCommaSeparated(joinValues(createForm.groups)),
-        tags: splitCommaSeparated(joinValues(createForm.tags)),
-        targets: splitCommaSeparated(joinValues(createForm.targets)),
-      }, locale);
+      const created = await createRule(
+        {
+          ...createForm,
+          groups: splitCommaSeparated(joinValues(createForm.groups)),
+          tags: splitCommaSeparated(joinValues(createForm.tags)),
+          targets: splitCommaSeparated(joinValues(createForm.targets)),
+        },
+        locale,
+      );
       await refreshWorkspace(created.id);
       setSelectedRuleId(created.id);
       setCreateForm(defaultCreateForm);
       setIsCreateOpen(false);
+      setActiveView("editor");
     } catch (createError) {
       setError(
         createError instanceof Error
@@ -275,9 +296,19 @@ export default function App() {
     }
   }
 
+  function openCreateFlow() {
+    setCreateForm(defaultCreateForm);
+    setIsCreateOpen(true);
+    setActiveView("editor");
+  }
+
   const isDirty =
     JSON.stringify(selectedDocument) !== JSON.stringify(draftDocument) &&
     draftDocument !== null;
+
+  const selectedSummary = draftDocument?.summary || selectedRule?.summary || t("rule.noSummary");
+  const selectedFile = draftDocument?.file || selectedRule?.file || "";
+  const previewBody = draftDocument?.body || selectedDocument?.body || "";
 
   return (
     <div className="app-shell">
@@ -297,467 +328,557 @@ export default function App() {
         <p className="eyebrow">{t("hero.eyebrow")}</p>
         <h1>{t("hero.title")}</h1>
         <p className="lede">{t("hero.lede")}</p>
-      </header>
 
-      <section className="status-grid" aria-label={t("status.foundation")}>
-        <article className="status-card accent">
-          <h2>{t("status.runtime")}</h2>
-          <p>
-            {t("status.runtimeValue", { mode: runtimeMode, layer: runtimeLayer })}
-          </p>
-        </article>
-
-        <article className="status-card">
-          <h2>{t("status.storage")}</h2>
-          <p>
-            {summary
-              ? summary.storage_root
-              : t("status.storageLoading")}
-          </p>
-        </article>
-
-        <article className="status-card">
-          <h2>{t("status.ruleCount")}</h2>
-          <p>
-            {summary
-              ? t("status.ruleCountValue", {
-                  count: rules.length,
-                })
-              : t("status.ruleCountLoading")}
-          </p>
-        </article>
-      </section>
-
-      <section className="facts-grid" aria-label={t("facts.capabilities")}>
-        <article className="fact-card">
-          <h2>{t("facts.supportedArtifacts")}</h2>
-          <ul>
-            {(summary?.supported_artifacts ?? []).map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </article>
-
-        <article className="fact-card">
-          <h2>{t("facts.libraryMetrics")}</h2>
-          <ul>
-            <li>{t("facts.tags", { count: stats?.tag_count ?? 0 })}</li>
-            <li>{t("facts.groups", { count: stats?.group_count ?? 0 })}</li>
-            <li>{t("facts.averageComplexity", { value: stats?.average_complexity ?? 0 })}</li>
-          </ul>
-        </article>
-
-        <article className="fact-card">
-          <h2>{t("facts.visualizationSignal")}</h2>
-          <p>
-            {t("facts.recommendation", {
-              value: recommendationLabel(locale, recommendation?.recommendation),
-            })}
-          </p>
-          <p>{t("facts.score", { value: recommendation?.score ?? 0 })}</p>
-          {error ? <p className="error-text">{error}</p> : null}
-        </article>
-      </section>
-
-      <section className="insight-grid" aria-label={t("insights.label")}>
-        <article className="fact-card">
-          <h2>{t("insights.why")}</h2>
-          <ul>
-            {(recommendation?.reasons ?? []).map((reason) => (
-              <li key={reason}>{reason}</li>
-            ))}
-          </ul>
-        </article>
-
-        <article className="fact-card">
-          <h2>{t("insights.features")}</h2>
-          <ul>
-            {(recommendation?.suggested_features ?? []).map((feature) => (
-              <li key={feature}>{feature}</li>
-            ))}
-          </ul>
-        </article>
-
-        <article className="fact-card">
-          <h2>{t("insights.targets")}</h2>
-          <ul>
-            {(summary?.supported_targets ?? []).map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </article>
-      </section>
-
-      <section className="workspace-frame" aria-label={t("workspace.label")}>
-        <article className="panel">
-          <div className="panel-header">
-            <div>
-              <h2>{panels[0].title}</h2>
-              <p>{panels[0].body}</p>
-            </div>
-            <button
-              className="ghost-button"
-              onClick={() => setIsCreateOpen((value) => !value)}
-              type="button"
-            >
-              {isCreateOpen ? t("action.closeNewRule") : t("action.newRule")}
-            </button>
-          </div>
-
-          <div className="rule-list">
-            <label className="search-box">
-              <span>{t("search.label")}</span>
-              <input
-                aria-label={t("search.label")}
-                onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder={t("search.placeholder")}
-                type="search"
-                value={searchQuery}
-              />
-            </label>
-
-            <div className="filter-grid">
-              <label className="field">
-                <span>{t("filters.group")}</span>
-                <select
-                  onChange={(event) => setGroupFilter(event.target.value)}
-                  value={groupFilter}
-                >
-                  <option value="all">{t("filters.allGroups")}</option>
-                  {availableGroups.map((group) => (
-                    <option key={group} value={group}>
-                      {group}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="field">
-                <span>{t("filters.tag")}</span>
-                <select
-                  onChange={(event) => setTagFilter(event.target.value)}
-                  value={tagFilter}
-                >
-                  <option value="all">{t("filters.allTags")}</option>
-                  {availableTags.map((tag) => (
-                    <option key={tag} value={tag}>
-                      {tag}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="field">
-                <span>{t("filters.target")}</span>
-                <select
-                  onChange={(event) => setTargetFilter(event.target.value)}
-                  value={targetFilter}
-                >
-                  <option value="all">{t("filters.allTargets")}</option>
-                  {availableTargets.map((target) => (
-                    <option key={target} value={target}>
-                      {target}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-
-            {isLoadingWorkspace ? (
-              <div className="empty-state">
-                <h3>{t("empty.loadingWorkspaceTitle")}</h3>
-                <p>{t("empty.loadingWorkspaceBody")}</p>
-              </div>
-            ) : null}
-
-            {filteredRules.length > 0 ? (
-              filteredRules.map((rule) => (
-                <button
-                  className={`rule-card ${selectedRule?.id === rule.id ? "selected" : ""}`}
-                  key={rule.id}
-                  onClick={() => setSelectedRuleId(rule.id)}
-                  type="button"
-                >
-                  <div className="rule-card-header">
-                    <h3>{rule.title}</h3>
-                    <span>{rule.id}</span>
-                  </div>
-                  <p>{rule.summary || t("rule.noSummary")}</p>
-                  <div className="token-row">
-                    {rule.groups.map((group) => (
-                      <span className="token" key={`${rule.id}-group-${group}`}>
-                        {group}
-                      </span>
-                    ))}
-                  </div>
-                </button>
-              ))
-            ) : rules.length > 0 ? (
-              <div className="empty-state">
-                <h3>{t("empty.noMatchingRulesTitle")}</h3>
-                <p>{t("empty.noMatchingRulesBody")}</p>
-              </div>
-            ) : (
-              <div className="empty-state">
-                <h3>{t("empty.noRulesTitle")}</h3>
-                <p>{t("empty.noRulesBody")}</p>
-              </div>
-            )}
-          </div>
-        </article>
-
-        <article className="panel">
-          <div className="panel-header">
-            <div>
-              <h2>{panels[1].title}</h2>
-              <p>{panels[1].body}</p>
-            </div>
-            {draftDocument ? (
+        <div className="workspace-toolbar">
+          <div className="tab-strip" aria-label={t("tabs.label")}>
+            {viewTabs.map((tab) => (
               <button
-                className="primary-button"
-                disabled={isSaving || !isDirty}
-                onClick={() => void handleSaveRule()}
+                className={`tab-button ${activeView === tab.id ? "active" : ""}`}
+                key={tab.id}
+                onClick={() => setActiveView(tab.id)}
                 type="button"
               >
-                {isSaving ? t("action.saving") : isDirty ? t("action.saveChanges") : t("action.saved")}
+                {tab.label}
               </button>
-            ) : null}
+            ))}
           </div>
 
-          {isCreateOpen ? (
-            <div className="editor-stack">
-              <div className="detail-block">
-                <h3>{t("create.title")}</h3>
-                <div className="field-grid">
-                  <label className="field">
-                    <span>{t("create.fieldTitle")}</span>
-                    <input
-                      onChange={(event) =>
-                        setCreateForm((form) => ({ ...form, title: event.target.value }))
-                      }
-                      placeholder={t("create.titlePlaceholder")}
-                      value={createForm.title}
-                    />
-                  </label>
+          <div className="toolbar-actions">
+            <button className="ghost-button" onClick={openCreateFlow} type="button">
+              {t("action.newRule")}
+            </button>
+            <button
+              className="primary-button"
+              disabled={isSaving || !isDirty}
+              onClick={() => void handleSaveRule()}
+              type="button"
+            >
+              {isSaving ? t("action.saving") : isDirty ? t("action.saveChanges") : t("action.saved")}
+            </button>
+          </div>
+        </div>
+      </header>
 
-                  <label className="field">
-                    <span>{t("create.fieldSummary")}</span>
-                    <input
-                      onChange={(event) =>
-                        setCreateForm((form) => ({ ...form, summary: event.target.value }))
-                      }
-                      placeholder={t("create.summaryPlaceholder")}
-                      value={createForm.summary ?? ""}
-                    />
-                  </label>
+      {activeView === "overview" ? (
+        <>
+          <section className="status-grid" aria-label={t("status.foundation")}>
+            <article className="status-card accent">
+              <h2>{t("status.runtime")}</h2>
+              <p>
+                {t("status.runtimeValue", { mode: runtimeMode, layer: runtimeLayer })}
+              </p>
+            </article>
 
-                  <label className="field">
-                    <span>{t("create.fieldGroups")}</span>
-                    <input
-                      onChange={(event) =>
-                        setCreateForm((form) => ({
-                          ...form,
-                          groups: splitCommaSeparated(event.target.value),
-                        }))
-                      }
-                      placeholder={t("create.groupsPlaceholder")}
-                      value={joinValues(createForm.groups)}
-                    />
-                  </label>
+            <article className="status-card">
+              <h2>{t("status.storage")}</h2>
+              <p>{summary ? summary.storage_root : t("status.storageLoading")}</p>
+            </article>
 
-                  <label className="field">
-                    <span>{t("create.fieldTags")}</span>
-                    <input
-                      onChange={(event) =>
-                        setCreateForm((form) => ({
-                          ...form,
-                          tags: splitCommaSeparated(event.target.value),
-                        }))
-                      }
-                      placeholder={t("create.tagsPlaceholder")}
-                      value={joinValues(createForm.tags)}
-                    />
-                  </label>
+            <article className="status-card">
+              <h2>{t("status.ruleCount")}</h2>
+              <p>
+                {summary
+                  ? t("status.ruleCountValue", {
+                      count: rules.length,
+                    })
+                  : t("status.ruleCountLoading")}
+              </p>
+            </article>
+          </section>
 
-                  <label className="field">
-                    <span>{t("create.fieldTargets")}</span>
-                    <input
-                      onChange={(event) =>
-                        setCreateForm((form) => ({
-                          ...form,
-                          targets: splitCommaSeparated(event.target.value),
-                        }))
-                      }
-                      placeholder={t("create.targetsPlaceholder")}
-                      value={joinValues(createForm.targets)}
-                    />
-                  </label>
-                </div>
+          <section className="facts-grid" aria-label={t("facts.capabilities")}>
+            <article className="fact-card">
+              <h2>{t("facts.supportedArtifacts")}</h2>
+              <ul>
+                {(summary?.supported_artifacts ?? []).map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </article>
 
-                <div className="button-row">
-                  <button
-                    className="primary-button"
-                    disabled={isCreating || !createForm.title.trim()}
-                    onClick={() => void handleCreateRule()}
-                    type="button"
-                  >
-                    {isCreating ? t("action.creating") : t("action.createRule")}
-                  </button>
-                  <button
-                    className="ghost-button"
-                    onClick={() => {
-                      setCreateForm(defaultCreateForm);
-                      setIsCreateOpen(false);
-                    }}
-                    type="button"
-                  >
-                    {t("action.cancel")}
-                  </button>
-                </div>
+            <article className="fact-card">
+              <h2>{t("facts.libraryMetrics")}</h2>
+              <ul>
+                <li>{t("facts.tags", { count: stats?.tag_count ?? 0 })}</li>
+                <li>{t("facts.groups", { count: stats?.group_count ?? 0 })}</li>
+                <li>{t("facts.averageComplexity", { value: stats?.average_complexity ?? 0 })}</li>
+              </ul>
+            </article>
+
+            <article className="fact-card">
+              <h2>{t("facts.visualizationSignal")}</h2>
+              <p>
+                {t("facts.recommendation", {
+                  value: recommendationLabel(locale, recommendation?.recommendation),
+                })}
+              </p>
+              <p>{t("facts.score", { value: recommendation?.score ?? 0 })}</p>
+              {error ? <p className="error-text">{error}</p> : null}
+            </article>
+          </section>
+
+          <section className="insight-grid" aria-label={t("insights.label")}>
+            <article className="fact-card">
+              <h2>{t("insights.why")}</h2>
+              <ul>
+                {(recommendation?.reasons ?? []).map((reason) => (
+                  <li key={reason}>{reason}</li>
+                ))}
+              </ul>
+            </article>
+
+            <article className="fact-card">
+              <h2>{t("insights.features")}</h2>
+              <ul>
+                {(recommendation?.suggested_features ?? []).map((feature) => (
+                  <li key={feature}>{feature}</li>
+                ))}
+              </ul>
+            </article>
+
+            <article className="fact-card">
+              <h2>{t("insights.targets")}</h2>
+              <ul>
+                {(summary?.supported_targets ?? []).map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </article>
+          </section>
+
+          <section className="milestones" aria-label={t("milestones.label")}>
+            <h2>{t("milestones.label")}</h2>
+            <ol>
+              {milestones.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ol>
+          </section>
+        </>
+      ) : null}
+
+      {activeView === "library" ? (
+        <section className="split-view" aria-label={t("workspace.label")}>
+          <article className="panel">
+            <div className="panel-header">
+              <div>
+                <h2>{panels[0].title}</h2>
+                <p>{panels[0].body}</p>
               </div>
             </div>
-          ) : draftDocument ? (
-            <div className="editor-stack">
-              <div className="detail-block">
-                <h3>{t("editor.bodyTitle")}</h3>
+
+            <div className="rule-list">
+              <label className="search-box">
+                <span>{t("search.label")}</span>
+                <input
+                  aria-label={t("search.label")}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder={t("search.placeholder")}
+                  type="search"
+                  value={searchQuery}
+                />
+              </label>
+
+              <div className="filter-grid">
                 <label className="field">
-                  <span>{t("editor.bodyField")}</span>
-                  <textarea
-                    className="body-editor"
-                    onChange={(event) =>
-                      setDraftDocument((document) =>
-                        document ? { ...document, body: event.target.value } : document,
-                      )
-                    }
-                    value={draftDocument.body}
-                  />
+                  <span>{t("filters.group")}</span>
+                  <select
+                    onChange={(event) => setGroupFilter(event.target.value)}
+                    value={groupFilter}
+                  >
+                    <option value="all">{t("filters.allGroups")}</option>
+                    {availableGroups.map((group) => (
+                      <option key={group} value={group}>
+                        {group}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="field">
+                  <span>{t("filters.tag")}</span>
+                  <select
+                    onChange={(event) => setTagFilter(event.target.value)}
+                    value={tagFilter}
+                  >
+                    <option value="all">{t("filters.allTags")}</option>
+                    {availableTags.map((tag) => (
+                      <option key={tag} value={tag}>
+                        {tag}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="field">
+                  <span>{t("filters.target")}</span>
+                  <select
+                    onChange={(event) => setTargetFilter(event.target.value)}
+                    value={targetFilter}
+                  >
+                    <option value="all">{t("filters.allTargets")}</option>
+                    {availableTargets.map((target) => (
+                      <option key={target} value={target}>
+                        {target}
+                      </option>
+                    ))}
+                  </select>
                 </label>
               </div>
 
-              <div className="detail-block">
-                <h3>{t("editor.previewTitle")}</h3>
-                {isLoadingDocument ? (
-                  <p>{t("editor.previewLoading")}</p>
-                ) : (
-                  <pre className="preview-surface">{draftDocument.body}</pre>
-                )}
+              {isLoadingWorkspace ? (
+                <div className="empty-state">
+                  <h3>{t("empty.loadingWorkspaceTitle")}</h3>
+                  <p>{t("empty.loadingWorkspaceBody")}</p>
+                </div>
+              ) : null}
+
+              {filteredRules.length > 0 ? (
+                filteredRules.map((rule) => (
+                  <button
+                    className={`rule-card ${selectedRule?.id === rule.id ? "selected" : ""}`}
+                    key={rule.id}
+                    onClick={() => setSelectedRuleId(rule.id)}
+                    type="button"
+                  >
+                    <div className="rule-card-header">
+                      <h3>{rule.title}</h3>
+                      <span>{rule.id}</span>
+                    </div>
+                    <p>{rule.summary || t("rule.noSummary")}</p>
+                    <div className="token-row">
+                      {rule.groups.map((group) => (
+                        <span className="token" key={`${rule.id}-group-${group}`}>
+                          {group}
+                        </span>
+                      ))}
+                    </div>
+                  </button>
+                ))
+              ) : rules.length > 0 ? (
+                <div className="empty-state">
+                  <h3>{t("empty.noMatchingRulesTitle")}</h3>
+                  <p>{t("empty.noMatchingRulesBody")}</p>
+                </div>
+              ) : (
+                <div className="empty-state">
+                  <h3>{t("empty.noRulesTitle")}</h3>
+                  <p>{t("empty.noRulesBody")}</p>
+                </div>
+              )}
+            </div>
+          </article>
+
+          <article className="panel">
+            <div className="panel-header">
+              <div>
+                <h2>{panels[2].title}</h2>
+                <p>{panels[2].body}</p>
               </div>
+              {selectedRule ? (
+                <button
+                  className="ghost-button"
+                  onClick={() => setActiveView("editor")}
+                  type="button"
+                >
+                  {t("action.openEditor")}
+                </button>
+              ) : null}
             </div>
-          ) : (
-            <div className="empty-state">
-              <h3>{t("empty.noDocumentTitle")}</h3>
-              <p>{t("empty.noDocumentBody")}</p>
+
+            {selectedRule ? (
+              <div className="editor-stack">
+                <div className="detail-block">
+                  <h3>{selectedRule.title}</h3>
+                  <p>{selectedSummary}</p>
+                  <div className="token-row">
+                    {getFilterTags(selectedRule).map((tag) => (
+                      <span className="token" key={`${selectedRule.id}-tag-${tag}`}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="detail-block">
+                  <h3>{t("inspector.metaTitle")}</h3>
+                  <div className="meta-grid">
+                    <p><strong>{t("filters.group")}:</strong> {joinValues(selectedRule.groups)}</p>
+                    <p><strong>{t("filters.tag")}:</strong> {joinValues(getFilterTags(selectedRule))}</p>
+                    <p><strong>{t("filters.target")}:</strong> {joinValues(selectedRule.targets)}</p>
+                  </div>
+                </div>
+
+                <div className="detail-block">
+                  <h3>{t("inspector.fileTitle")}</h3>
+                  <p>{selectedFile}</p>
+                </div>
+
+                <div className="detail-block">
+                  <h3>{t("editor.previewTitle")}</h3>
+                  {isLoadingDocument ? (
+                    <p>{t("editor.previewLoading")}</p>
+                  ) : (
+                    <pre className="preview-surface">{excerptBody(previewBody)}</pre>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="empty-state">
+                <h3>{t("empty.noRuleSelectedTitle")}</h3>
+                <p>{t("empty.noRuleSelectedBody")}</p>
+              </div>
+            )}
+          </article>
+        </section>
+      ) : null}
+
+      {activeView === "editor" ? (
+        <section className="split-view split-view-editor" aria-label={t("workspace.label")}>
+          <article className="panel">
+            <div className="panel-header">
+              <div>
+                <h2>{panels[1].title}</h2>
+                <p>{panels[1].body}</p>
+              </div>
+              {isCreateOpen ? null : (
+                <button className="ghost-button" onClick={openCreateFlow} type="button">
+                  {t("action.newRule")}
+                </button>
+              )}
             </div>
-          )}
-        </article>
 
-        <article className="panel">
-          <h2>{panels[2].title}</h2>
-          <p>{panels[2].body}</p>
-          {draftDocument ? (
-            <div className="editor-stack">
-              <div className="detail-block">
-                <h3>{t("inspector.metaTitle")}</h3>
-                <div className="field-grid">
+            {isCreateOpen ? (
+              <div className="editor-stack">
+                <div className="detail-block">
+                  <h3>{t("create.title")}</h3>
+                  <div className="field-grid">
+                    <label className="field">
+                      <span>{t("create.fieldTitle")}</span>
+                      <input
+                        onChange={(event) =>
+                          setCreateForm((form) => ({ ...form, title: event.target.value }))
+                        }
+                        placeholder={t("create.titlePlaceholder")}
+                        value={createForm.title}
+                      />
+                    </label>
+
+                    <label className="field">
+                      <span>{t("create.fieldSummary")}</span>
+                      <input
+                        onChange={(event) =>
+                          setCreateForm((form) => ({ ...form, summary: event.target.value }))
+                        }
+                        placeholder={t("create.summaryPlaceholder")}
+                        value={createForm.summary ?? ""}
+                      />
+                    </label>
+
+                    <label className="field">
+                      <span>{t("create.fieldGroups")}</span>
+                      <input
+                        onChange={(event) =>
+                          setCreateForm((form) => ({
+                            ...form,
+                            groups: splitCommaSeparated(event.target.value),
+                          }))
+                        }
+                        placeholder={t("create.groupsPlaceholder")}
+                        value={joinValues(createForm.groups)}
+                      />
+                    </label>
+
+                    <label className="field">
+                      <span>{t("create.fieldTags")}</span>
+                      <input
+                        onChange={(event) =>
+                          setCreateForm((form) => ({
+                            ...form,
+                            tags: splitCommaSeparated(event.target.value),
+                          }))
+                        }
+                        placeholder={t("create.tagsPlaceholder")}
+                        value={joinValues(createForm.tags)}
+                      />
+                    </label>
+
+                    <label className="field">
+                      <span>{t("create.fieldTargets")}</span>
+                      <input
+                        onChange={(event) =>
+                          setCreateForm((form) => ({
+                            ...form,
+                            targets: splitCommaSeparated(event.target.value),
+                          }))
+                        }
+                        placeholder={t("create.targetsPlaceholder")}
+                        value={joinValues(createForm.targets)}
+                      />
+                    </label>
+                  </div>
+
+                  <div className="button-row">
+                    <button
+                      className="primary-button"
+                      disabled={isCreating || !createForm.title.trim()}
+                      onClick={() => void handleCreateRule()}
+                      type="button"
+                    >
+                      {isCreating ? t("action.creating") : t("action.createRule")}
+                    </button>
+                    <button
+                      className="ghost-button"
+                      onClick={() => {
+                        setCreateForm(defaultCreateForm);
+                        setIsCreateOpen(false);
+                      }}
+                      type="button"
+                    >
+                      {t("action.cancel")}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : draftDocument ? (
+              <div className="editor-stack">
+                <div className="detail-block">
+                  <h3>{t("editor.bodyTitle")}</h3>
                   <label className="field">
-                    <span>{t("create.fieldTitle")}</span>
-                    <input
+                    <span>{t("editor.bodyField")}</span>
+                    <textarea
+                      className="body-editor"
                       onChange={(event) =>
                         setDraftDocument((document) =>
-                          document ? { ...document, title: event.target.value } : document,
+                          document ? { ...document, body: event.target.value } : document,
                         )
                       }
-                      value={draftDocument.title}
-                    />
-                  </label>
-
-                  <label className="field">
-                    <span>{t("create.fieldSummary")}</span>
-                    <input
-                      onChange={(event) =>
-                        setDraftDocument((document) =>
-                          document ? { ...document, summary: event.target.value } : document,
-                        )
-                      }
-                      value={draftDocument.summary}
-                    />
-                  </label>
-
-                  <label className="field">
-                    <span>{t("create.fieldGroups")}</span>
-                    <input
-                      onChange={(event) =>
-                        setDraftDocument((document) =>
-                          document
-                            ? {
-                                ...document,
-                                groups: splitCommaSeparated(event.target.value),
-                              }
-                            : document,
-                        )
-                      }
-                      value={joinValues(draftDocument.groups)}
-                    />
-                  </label>
-
-                  <label className="field">
-                    <span>{t("create.fieldTags")}</span>
-                    <input
-                      onChange={(event) =>
-                        setDraftDocument((document) =>
-                          document
-                            ? {
-                                ...document,
-                                tags: splitCommaSeparated(event.target.value),
-                              }
-                            : document,
-                        )
-                      }
-                      value={joinValues(draftDocument.tags)}
-                    />
-                  </label>
-
-                  <label className="field">
-                    <span>{t("create.fieldTargets")}</span>
-                    <input
-                      onChange={(event) =>
-                        setDraftDocument((document) =>
-                          document
-                            ? {
-                                ...document,
-                                targets: splitCommaSeparated(event.target.value),
-                              }
-                            : document,
-                        )
-                      }
-                      value={joinValues(draftDocument.targets)}
+                      value={draftDocument.body}
                     />
                   </label>
                 </div>
-              </div>
 
-              <div className="detail-block">
-                <h3>{t("inspector.fileTitle")}</h3>
-                <p>{draftDocument.file}</p>
+                <div className="detail-block">
+                  <h3>{t("editor.previewTitle")}</h3>
+                  {isLoadingDocument ? (
+                    <p>{t("editor.previewLoading")}</p>
+                  ) : (
+                    <pre className="preview-surface">{draftDocument.body}</pre>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="empty-state">
+                <h3>{t("empty.noDocumentTitle")}</h3>
+                <p>{t("empty.noDocumentBody")}</p>
+              </div>
+            )}
+          </article>
+
+          <article className="panel">
+            <div className="panel-header">
+              <div>
+                <h2>{panels[2].title}</h2>
+                <p>{panels[2].body}</p>
               </div>
             </div>
-          ) : (
-            <div className="empty-state">
-              <h3>{t("empty.noRuleSelectedTitle")}</h3>
-              <p>{t("empty.noRuleSelectedBody")}</p>
-            </div>
-          )}
-        </article>
-      </section>
 
-      <section className="milestones" aria-label={t("milestones.label")}>
-        <h2>{t("milestones.label")}</h2>
-        <ol>
-          {milestones.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ol>
-      </section>
+            {draftDocument ? (
+              <div className="editor-stack">
+                <div className="detail-block">
+                  <h3>{t("inspector.metaTitle")}</h3>
+                  <div className="field-grid">
+                    <label className="field">
+                      <span>{t("create.fieldTitle")}</span>
+                      <input
+                        onChange={(event) =>
+                          setDraftDocument((document) =>
+                            document ? { ...document, title: event.target.value } : document,
+                          )
+                        }
+                        value={draftDocument.title}
+                      />
+                    </label>
+
+                    <label className="field">
+                      <span>{t("create.fieldSummary")}</span>
+                      <input
+                        onChange={(event) =>
+                          setDraftDocument((document) =>
+                            document ? { ...document, summary: event.target.value } : document,
+                          )
+                        }
+                        value={draftDocument.summary}
+                      />
+                    </label>
+
+                    <label className="field">
+                      <span>{t("create.fieldGroups")}</span>
+                      <input
+                        onChange={(event) =>
+                          setDraftDocument((document) =>
+                            document
+                              ? {
+                                  ...document,
+                                  groups: splitCommaSeparated(event.target.value),
+                                }
+                              : document,
+                          )
+                        }
+                        value={joinValues(draftDocument.groups)}
+                      />
+                    </label>
+
+                    <label className="field">
+                      <span>{t("create.fieldTags")}</span>
+                      <input
+                        onChange={(event) =>
+                          setDraftDocument((document) =>
+                            document
+                              ? {
+                                  ...document,
+                                  tags: splitCommaSeparated(event.target.value),
+                                }
+                              : document,
+                          )
+                        }
+                        value={joinValues(draftDocument.tags)}
+                      />
+                    </label>
+
+                    <label className="field">
+                      <span>{t("create.fieldTargets")}</span>
+                      <input
+                        onChange={(event) =>
+                          setDraftDocument((document) =>
+                            document
+                              ? {
+                                  ...document,
+                                  targets: splitCommaSeparated(event.target.value),
+                                }
+                              : document,
+                          )
+                        }
+                        value={joinValues(draftDocument.targets)}
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="detail-block">
+                  <h3>{t("inspector.fileTitle")}</h3>
+                  <p>{draftDocument.file}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="empty-state">
+                <h3>{t("empty.noRuleSelectedTitle")}</h3>
+                <p>{t("empty.noRuleSelectedBody")}</p>
+              </div>
+            )}
+          </article>
+        </section>
+      ) : null}
     </div>
   );
 }
