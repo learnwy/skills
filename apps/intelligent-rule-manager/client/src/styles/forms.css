@@ -1,0 +1,71 @@
+.sidebar-actions .ghost-button,
+.sidebar-actions .primary-button {
+  width: 100%;
+}
+
+.locale-picker,
+.search-box,
+.field {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.locale-picker {
+  min-width: 180px;
+  font-size: 0.84rem;
+}
+
+.locale-picker select,
+.field input,
+.field select,
+.field textarea,
+.search-box input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--text);
+}
+
+.field textarea {
+  min-height: 320px;
+  resize: vertical;
+}
+
+.primary-button,
+.ghost-button {
+  min-height: 42px;
+  padding: 0 15px;
+  border-radius: 999px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary-button {
+  border: 0;
+  background: var(--accent);
+  color: white;
+}
+
+.primary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.ghost-button {
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--text);
+}
+
+@media (max-width: 1200px) {
+  .sidebar-actions .ghost-button,
+  .sidebar-actions .primary-button {
+    width: auto;
+    flex: 1 1 160px;
+  }
+}
