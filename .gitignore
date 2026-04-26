@@ -10,6 +10,9 @@ __pycache__/
 # Skill packages (generated)
 *.skill
 
+# Logs
+log/
+
 # OS
 .DS_Store
 Thumbs.db

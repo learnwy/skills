@@ -1,10 +1,11 @@
 ---
 name: llm-wiki
-description: "Build and maintain a persistent, compounding knowledge base using LLMs. Based on Andrej Karpathy's LLM Wiki pattern (April 2026). The LLM incrementally reads raw sources, compiles structured wiki pages, maintains cross-references, and keeps everything consistent. Triggers on: 'knowledge base', 'llm wiki', 'personal wiki', 'build a wiki', 'ingest this source', 'knowledge management', 'compile knowledge', 'compounding knowledge', 'second brain'."
+description: "If the agent's description mentions that it should be used proactively, then you should try your best to use it without the user having to ask for it first. PROACTIVE: When a wiki exists at ~/.learnwy/llm-wiki/wiki/index.md, this skill should check the wiki before answering complex questions — skip immediately if the wiki directory does not exist. Build and maintain a persistent, compounding knowledge base using LLMs. Based on Andrej Karpathy's LLM Wiki pattern (April 2026). The LLM incrementally reads raw sources, compiles structured wiki pages, maintains cross-references, and keeps everything consistent. Triggers on: 'knowledge base', 'llm wiki', 'personal wiki', 'build a wiki', 'ingest this source', 'knowledge management', 'compile knowledge', 'compounding knowledge', 'second brain'."
 metadata:
   author: "learnwy"
-  version: "1.1"
+  version: "2.1"
   source: "Andrej Karpathy, LLM Wiki (GitHub Gist, April 2026)"
+  trigger: "always"
 ---
 
 # LLM Wiki
@@ -40,6 +41,100 @@ Build and maintain a persistent, compounding knowledge base where the LLM does a
 - User needs practice-based validation → use `on-practice`
 - User needs long-term strategy → use `on-protracted-war`
 - User needs code implementation → use `requirement-workflow`
+
+## Auto Modes (v2.0)
+
+Two operations can run automatically without explicit user invocation:
+
+### Auto-Query Mode
+
+When a wiki exists at `~/.learnwy/llm-wiki/` (or project-scoped path), the agent should **proactively check the wiki** before answering complex questions.
+
+```
+[1. User asks a question]
+       ↓
+[2. Wiki exists?]
+   ├── NO  → Skip, answer normally
+   └── YES ↓
+[3. Question touches wiki topics?]
+   ├── NO  → Skip, answer normally
+   └── YES ↓
+[4. Read relevant wiki pages]
+       ↓
+[5. Augment answer with wiki knowledge]
+       ↓
+[6. Cite wiki sources inline: "From your wiki: [[concepts/X]]..."]
+       ↓
+[7. Offer write-back if answer adds new insight]
+```
+
+**Detection heuristic** — check the wiki when the user's question:
+- Mentions a concept/entity that has a wiki page
+- Asks for synthesis, comparison, or historical context
+- Asks "what do we know about X" or "remind me about Y"
+- Is about a topic the wiki covers (check `wiki/index.md` topics)
+
+**Do NOT auto-query when:**
+- The question is about code in the current project (not knowledge-domain)
+- The question is trivial / single-fact that doesn't need wiki backing
+- The wiki doesn't exist yet
+
+**Auto-query response format** — prepend to your normal answer:
+
+```
+📚 **From your wiki:**
+{brief insight from wiki pages, with [[page]] citations}
+
+---
+{normal answer to the user's question}
+```
+
+### Quick-Capture Mode
+
+A lightweight path for saving conversation insights to the wiki's `raw/` layer — much lighter than full ingestion.
+
+```
+[1. During conversation, user shares or discovers valuable knowledge]
+       ↓
+[2. Agent detects capture-worthy content]
+   - User shares a link/article/insight
+   - Conversation produces a novel conclusion
+   - User says "save this", "remember this", "add to wiki"
+       ↓
+[3. Write to raw/notes/{date}-{slug}.md]
+   - Title, source (conversation), date
+   - Key content captured verbatim or summarized
+       ↓
+[4. Log in log.md as CAPTURE]
+       ↓
+[5. Tell user: "Captured to raw/notes/. Run 'ingest' later to integrate into wiki."]
+```
+
+**Quick-capture triggers:**
+- User explicitly says "save this to wiki", "capture this", "add to wiki"
+- User shares a URL + asks to remember it
+- Conversation produces a significant insight the user might want to keep
+
+**Quick-capture does NOT:**
+- Create wiki/ pages (that's the ingestor's job)
+- Update cross-references or index
+- Run contradiction checks
+
+**Quick-capture output format:**
+
+```markdown
+# {Title}
+
+**Captured**: {date}
+**Source**: Conversation
+**Status**: Raw — awaiting ingestion
+
+## Content
+{captured knowledge}
+
+## Context
+{why this was captured, what conversation it came from}
+```
 
 ## Storage Modes
 
@@ -153,14 +248,16 @@ For domain-specific knowledge that belongs to a single project:
 | **Source of Truth** | Raw sources are always authoritative. Wiki is a compiled representation, never the original |
 | **LLM as Maintainer** | The LLM does ALL the bookkeeping humans hate — updating indexes, fixing links, keeping summaries current |
 
-## The Four Core Operations
+## The Six Operations
 
-| Operation | Agent | Trigger | Frequency |
-|-----------|-------|---------|-----------|
-| **Ingest** | [ingestor](agents/operations/ingestor.md) | New raw source added | Per source |
-| **Query** | [querier](agents/operations/querier.md) | User asks a question | Daily |
-| **Lint** | [linter](agents/operations/linter.md) | Health check requested | Weekly |
-| **Setup** | [schema-writer](agents/writing/schema-writer.md) | New wiki project | Once |
+| Operation | Agent | Trigger | Mode | Frequency |
+|-----------|-------|---------|------|-----------|
+| **Auto-Query** | [querier](agents/operations/querier.md) | User asks a question + wiki exists | Automatic | Every question |
+| **Quick-Capture** | (inline workflow) | User says "save to wiki" or shares valuable knowledge | Semi-auto | As needed |
+| **Ingest** | [ingestor](agents/operations/ingestor.md) | New raw source added | Manual | Per source |
+| **Query** | [querier](agents/operations/querier.md) | User explicitly asks the wiki | Manual | Daily |
+| **Lint** | [linter](agents/operations/linter.md) | Health check requested | Manual | Weekly |
+| **Setup** | [schema-writer](agents/writing/schema-writer.md) | New wiki project | Manual | Once |
 
 ## Agent Summary
 
@@ -173,14 +270,16 @@ For domain-specific knowledge that belongs to a single project:
 
 ## Routing Decision Table
 
-| User Signal | Agent | Confidence |
-|-------------|-------|------------|
-| "ingest this", "add this source", "process this document" | ingestor | High |
-| "what does the wiki say about X", "summarize Y from my knowledge" | querier | High |
-| "health check", "find contradictions", "lint the wiki" | linter | High |
-| "set up a new wiki", "create the schema", "initialize knowledge base" | schema-writer | High |
-| "build a wiki from these files" | schema-writer → ingestor (batch) | High |
-| General "knowledge base" mention without specific operation | schema-writer (if no wiki exists) or querier (if wiki exists) | Medium |
+| User Signal | Agent | Mode | Confidence |
+|-------------|-------|------|------------|
+| User asks any complex question + wiki exists at `~/.learnwy/llm-wiki/` | querier (auto-query) | Automatic | Medium |
+| "save this to wiki", "capture this", "add to wiki" | quick-capture (inline) | Semi-auto | High |
+| "ingest this", "add this source", "process this document" | ingestor | Manual | High |
+| "what does the wiki say about X", "summarize Y from my knowledge" | querier | Manual | High |
+| "health check", "find contradictions", "lint the wiki" | linter | Manual | High |
+| "set up a new wiki", "create the schema", "initialize knowledge base" | schema-writer | Manual | High |
+| "build a wiki from these files" | schema-writer → ingestor (batch) | Manual | High |
+| General "knowledge base" mention without specific operation | schema-writer (if no wiki exists) or querier (if wiki exists) | Manual | Medium |
 
 ## Composition Workflows
 
@@ -356,6 +455,8 @@ Every operation must:
 
 Before any operation, verify:
 
+- [ ] Check if wiki exists at `~/.learnwy/llm-wiki/` (or project-scoped path)
+- [ ] If wiki exists + user asks a complex question → run auto-query before answering
 - [ ] The three-layer directory structure exists (raw/, wiki/, CLAUDE.md)
 - [ ] CLAUDE.md schema file is present and current
 - [ ] Raw sources are in the correct subdirectory of raw/
