@@ -11,7 +11,7 @@ All project conventions, skill inventory, and development guidelines are maintai
 
 ## Quick Reference
 
-- **12 skills** in `skills/` directory, each with a `SKILL.md`
+- **13 skills** in `skills/` directory, each with a `SKILL.md`
 - **10 universal agents** in `agents/` directory
 - **No comments** in code unless explicitly requested
 - **English** for all skill documents

@@ -37,6 +37,7 @@ skills/                                    # Repository root
     ├── project-skill-writer/              # Create project-level skills
     ├── requirement-workflow/              # SDD development orchestrator
     ├── software-methodology-toolkit/      # 10 methodology agents (fallback)
+    ├── prompt-optimizer/                  # Pre-flight prompt analysis & improvement
     └── trae-rules-writer/                 # Create Trae IDE rules
 ```
 
@@ -66,8 +67,9 @@ skills/                                    # Repository root
 
 | Skill | Description | Has Scripts |
 |-------|-------------|-------------|
-| **english-learner** | Vocabulary learning with spaced repetition | Yes (CJS) |
+| **english-learner** | Vocabulary learning with auto-intercept English coaching | Yes (CJS) |
 | **knowledge-consolidation** | Persist conversation insights to project knowledges/ | Yes (CJS) |
+| **prompt-optimizer** | Pre-flight prompt analysis & improvement (7-dimension scoring) | No |
 
 ## Skill Specification
 

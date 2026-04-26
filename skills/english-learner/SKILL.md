@@ -1,9 +1,10 @@
 ---
 name: english-learner
-description: "Personal English vocabulary learning assistant. Use when user queries English words, phrases, or sentences for translation and learning. Triggers on: single English words, phrases like 'break the ice', sentences to translate, requests for quiz/review, '查单词', '学英语'. Stores vocabulary in ~/.english-learner/ with mastery tracking."
+description: "If the agent's description mentions that it should be used proactively, then you should try your best to use it without the user having to ask for it first. Personal English vocabulary learning assistant with auto-intercept mode. PROACTIVE: This skill should be used on EVERY user message written in English — automatically detect grammar, word choice, and expression issues, teach corrections before proceeding with the task. Also supports explicit vocabulary lookup and quiz/review. Triggers on: every English user message (auto-intercept), single English words, phrases like 'break the ice', sentences to translate, requests for quiz/review, '查单词', '学英语'. Stores vocabulary in ~/.english-learner/ with mastery tracking."
 metadata:
   author: "learnwy"
-  version: "2.0"
+  version: "3.1"
+  trigger: "always"
 ---
 
 # English Learner
@@ -20,12 +21,74 @@ Personal vocabulary learning assistant with persistent storage, mastery tracking
 - User asks to learn, review, or quiz vocabulary (`学习`, `review`, `quiz`)
 - User asks for vocabulary stats (`stats`, `统计`)
 - User says `查单词`, `学英语`, or similar learning-intent phrases
+- **Auto-intercept**: User writes in English with detectable grammar/expression issues (passive mode — no explicit trigger needed)
 
 **Do NOT invoke when:**
 
 - User is asking about code, programming, or technical concepts
 - User is having a general conversation not related to language learning
 - Input is clearly a command or file path, not language content
+- User's English is already fluent and natural in the current message (auto-intercept: skip silently)
+- The message is clearly copy-pasted content, code, or technical output
+
+## Auto-Intercept Mode
+
+This mode runs **automatically** when the user writes in English. It does NOT require explicit invocation.
+
+### How It Works
+
+```
+[1. User sends message in English]
+       ↓
+[2. Scan for issues]  → grammar, word choice, awkward expressions, spelling
+       ↓
+[3. Issues found?]
+   ├── NO  → Proceed with user's task normally
+   └── YES → Show brief teaching moment, THEN proceed with task
+```
+
+### Teaching Moment Format
+
+When issues are found, prepend this to your response BEFORE doing the user's actual task:
+
+```
+💡 **English Tip:**
+
+| Your Expression | Better Expression | Why |
+|----------------|-------------------|-----|
+| {original} | {corrected} | {brief grammar/usage explanation} |
+
+---
+```
+
+### Rules
+
+1. **Never block the task** — always complete the user's original request after the teaching moment
+2. **Max 3 corrections per message** — don't overwhelm; pick the most important ones
+3. **Be encouraging** — frame as tips, not errors
+4. **Skip trivial issues** — don't correct informal style, abbreviations, or intentional slang
+5. **Skip when user is copy-pasting** — if the text is clearly copied content (code, quotes, etc.), don't correct
+6. **Auto-save new vocabulary** — any corrected words/phrases should be saved to the vocabulary store via `batch_save`
+7. **Track teaching frequency** — don't repeat the same correction within the same session
+
+### Issue Detection Categories
+
+| Category | Examples | Priority |
+|----------|----------|----------|
+| Grammar | Subject-verb agreement, tense errors, article misuse | High |
+| Word Choice | Wrong preposition, confusable words (affect/effect) | High |
+| Awkward Expression | Unnatural phrasing, Chinglish patterns | Medium |
+| Spelling | Typos, common misspellings | Low (skip if clearly a typo) |
+
+### Chinglish Patterns to Watch For
+
+| Pattern | Example | Correction |
+|---------|---------|------------|
+| Missing articles | "I need go store" | "I need to go to the store" |
+| Verb form errors | "I suggest to do" | "I suggest doing" / "I suggest we do" |
+| Preposition misuse | "discuss about" | "discuss" (no preposition needed) |
+| Double subject | "This problem it is" | "This problem is" |
+| Word order | "I very like it" | "I really like it" / "I like it very much" |
 
 ## Prerequisites
 
@@ -35,6 +98,8 @@ Personal vocabulary learning assistant with persistent storage, mastery tracking
 ## Workflow
 
 ```
+[0. Auto-Intercept Check] → English issues? → Show tip, then continue
+       ↓ (no issues or explicit learning request)
 [1. Detect Mode]  → keyword? → Learning Mode
        ↓ (no)
 [2. Classify Input]  → word / phrase / sentence
@@ -282,6 +347,9 @@ When user says `stats` / `统计`:
 
 Before responding to user, verify:
 
+- [ ] Auto-intercept: scanned user's English for issues (if writing in English)
+- [ ] Auto-intercept: corrections shown (max 3) with teaching moments
+- [ ] Auto-intercept: corrected words/phrases saved via batch_save
 - [ ] All words/phrases extracted from input
 - [ ] Batch lookup executed via `batch_get`
 - [ ] New words SAVED via `batch_save` (MANDATORY — not optional)
