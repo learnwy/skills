@@ -27,7 +27,6 @@ skills/                                    # Repository root
 │   └── test-strategist/
 └── skills/                                # Runnable skill modules
     ├── english-learner/                   # Vocabulary learning assistant
-    ├── intelligent-rule-manager/          # AI rule management
     ├── knowledge-consolidation/           # Persist conversation insights
     ├── llm-wiki/                          # Karpathy-style knowledge base
     ├── on-contradiction/                  # Mao's contradiction methodology
@@ -69,7 +68,6 @@ skills/                                    # Repository root
 |-------|-------------|-------------|
 | **english-learner** | Vocabulary learning with spaced repetition | Yes (CJS) |
 | **knowledge-consolidation** | Persist conversation insights to project knowledges/ | Yes (CJS) |
-| **intelligent-rule-manager** | AI rule management | No |
 
 ## Skill Specification
 
