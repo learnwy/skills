@@ -1,8 +1,0 @@
-{
-  "name": "intelligent-rule-manager-workspace",
-  "private": true,
-  "scripts": {
-    "generate:i18n": "node ./scripts/generate-i18n.mjs",
-    "check:i18n": "node ./scripts/generate-i18n.mjs --check"
-  }
-}

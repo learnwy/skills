@@ -1,3 +1,0 @@
-[workspace]
-members = ["crates/rule-core", "crates/rule-cli"]
-resolver = "2"
