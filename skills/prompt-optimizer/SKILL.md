@@ -1,6 +1,6 @@
 ---
 name: prompt-optimizer
-description: "If the agent's description mentions that it should be used proactively, then you should try your best to use it without the user having to ask for it first. PROACTIVE: This skill should be used on EVERY user message that contains a prompt or instruction for AI — automatically analyze for weaknesses and suggest improvements before executing. Transform vague prompts into precise, well-structured specifications using a 7-dimension analysis framework (Clarity, Specificity, Context, Structure, Examples, Constraints, Completeness). Triggers on: every user message (pre-flight check), 'optimize my prompt', 'improve this requirement', 'make this more specific', or when raw requirements lack detail and structure."
+description: "Use this skill on EVERY user message that contains a prompt or instruction for AI — analyze for weaknesses and suggest improvements before executing. Scores prompts across 7 dimensions (Clarity, Specificity, Context, Structure, Examples, Constraints, Completeness) and rewrites vague instructions into precise specifications. Triggers on: any AI prompt, 'optimize my prompt', 'improve this requirement', 'make this more specific', 'rewrite this prompt', or when raw requirements lack detail and structure."
 metadata:
   author: "learnwy"
   version: "1.1"

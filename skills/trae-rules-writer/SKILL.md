@@ -1,8 +1,6 @@
 ---
 name: trae-rules-writer
-description: "Create Trae IDE rules (.trae/rules/*.md) for AI behavior constraints. Use when: create rule, set up code style, enforce naming convention, make AI always do X, configure AI behavior. NOT for skills (use project-skill-writer) or agents (use project-agent-writer)."
-license: "MIT"
-compatibility: "Requires Trae IDE"
+description: "Use this skill when the user wants to create or update Trae IDE rules (.trae/rules/*.md) for AI behavior constraints. Use for: code style enforcement, naming conventions, commit message formats, or making the AI always follow specific patterns. NOT for skills (use project-skill-writer) or agents (use project-agent-writer). Triggers on: 'create rule', 'add rule', 'set up code style', 'enforce convention', 'configure AI behavior', 'AI rule', 'always do X', or when the user wants consistent AI behavior across sessions."
 metadata:
   author: "learnwy"
   version: "3.0"

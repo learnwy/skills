@@ -1,6 +1,6 @@
 ---
 name: knowledge-consolidation
-description: "Consolidate and persist knowledge from AI conversations into structured documents. Use when user asks to summarize, consolidate, save knowledge, document insights, or preserve learnings. Triggers on: '总结一下', '记录下来', 'save this knowledge', 'document this', 'we figured it out', 'that was hard to solve'. Saves to .trae/knowledges/, .claude/knowledges/, or .cursor/knowledges/ based on AI IDE."
+description: "Use this skill when the user wants to save, summarize, or persist knowledge from the current AI conversation into structured documents. Captures debugging breakthroughs, architecture decisions, patterns, and lessons learned. Triggers on: '总结一下', '记录下来', 'save this knowledge', 'document this', 'we figured it out', 'that was hard to solve', 'remember this', 'write this down', or when a hard-won insight should be preserved for future sessions. Saves to .trae/knowledges/, .claude/knowledges/, or .cursor/knowledges/ based on AI IDE."
 metadata:
   author: "learnwy"
   version: "2.0"

@@ -1,6 +1,6 @@
 ---
 name: requirement-workflow
-description: "Structured software development workflow orchestrator using Spec-Driven Development (SDD). Transforms vague requirements into spec.md → tasks.md → implementation → verification. Triggers on: '开发功能', '实现这个', 'build this feature', 'implement', 'add new module', 'fix bug', 'develop', 'create feature'."
+description: "Use this skill when the user wants to build, implement, or develop a feature using a structured workflow. Orchestrates Spec-Driven Development (SDD): spec.md → tasks.md → implementation → verification. Triggers on: '开发功能', '实现这个', 'build this feature', 'implement', 'add new module', 'fix bug', 'develop', 'create feature', 'new feature', 'build this', or when a vague requirement needs to be decomposed into actionable tasks."
 metadata:
   author: "learnwy"
   version: "4.0"

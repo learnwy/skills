@@ -1,6 +1,6 @@
 ---
 name: english-learner
-description: "If the agent's description mentions that it should be used proactively, then you should try your best to use it without the user having to ask for it first. Personal English vocabulary learning assistant with auto-intercept mode. PROACTIVE: This skill should be used on EVERY user message written in English — automatically detect grammar, word choice, and expression issues, teach corrections before proceeding with the task. Also supports explicit vocabulary lookup and quiz/review. Triggers on: every English user message (auto-intercept), single English words, phrases like 'break the ice', sentences to translate, requests for quiz/review, '查单词', '学英语'. Stores vocabulary in ~/.english-learner/ with mastery tracking."
+description: "Use this skill on EVERY user message written in English to auto-detect grammar, word choice, and expression issues — teach corrections before proceeding with the task. Also use when the user looks up a single word, asks about a phrase like 'break the ice', requests translation, or asks for quiz/review. Triggers on: any English message, single English words, idioms, '查单词', '学英语', 'what does X mean', vocabulary review. Stores vocabulary in ~/.english-learner/ with mastery tracking and spaced repetition."
 metadata:
   author: "learnwy"
   version: "3.1"

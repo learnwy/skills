@@ -1,6 +1,6 @@
 ---
 name: llm-wiki
-description: "If the agent's description mentions that it should be used proactively, then you should try your best to use it without the user having to ask for it first. PROACTIVE: When a wiki exists at ~/.learnwy/llm-wiki/wiki/index.md, this skill should check the wiki before answering complex questions — skip immediately if the wiki directory does not exist. Build and maintain a persistent, compounding knowledge base using LLMs. Based on Andrej Karpathy's LLM Wiki pattern (April 2026). The LLM incrementally reads raw sources, compiles structured wiki pages, maintains cross-references, and keeps everything consistent. Triggers on: 'knowledge base', 'llm wiki', 'personal wiki', 'build a wiki', 'ingest this source', 'knowledge management', 'compile knowledge', 'compounding knowledge', 'second brain'."
+description: "Use this skill to build and maintain a persistent, compounding knowledge base where the LLM summarizes sources, compiles wiki pages, and maintains cross-references. When a wiki exists at ~/.learnwy/llm-wiki/, check it before answering complex questions — skip if the directory does not exist. Use when the user mentions 'knowledge base', 'llm wiki', 'personal wiki', 'ingest this source', 'compile knowledge', 'second brain', 'build a wiki', 'knowledge management', or wants to add books, articles, or notes to a persistent store."
 metadata:
   author: "learnwy"
   version: "3.1"

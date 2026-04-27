@@ -1,6 +1,6 @@
 ---
 name: project-skill-installer
-description: "Install or configure project-level skills by understanding what users want to accomplish. NOT by asking where to install - by understanding the goal and finding the right skill. Keeps outputs in project scope."
+description: "Use this skill when the user wants to install, add, or configure a skill into their project. Analyzes the project's tech stack and workflows, then recommends and installs the best matching skills. Triggers on: 'install skill', 'add skill', 'configure skill', 'set up skill', 'enable skill', 'use skill in project', 'project skill', or when the user asks how to bring an existing skill capability into their current workspace."
 metadata:
   author: "learnwy"
   version: "3.0"

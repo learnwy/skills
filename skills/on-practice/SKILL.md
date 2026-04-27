@@ -1,6 +1,6 @@
 ---
 name: on-practice
-description: "Practical methodology toolkit based on Mao Zedong's *On Practice* (《实践论》). Applies the practice-cognition-re-practice spiral to decision-making, problem analysis, and report writing. Triggers on: 'practice-based', 'verify through practice', 'seek truth from facts', '实践论', '实事求是', 'On Practice', 'test assumptions', 'practice spiral', 'field investigation'."
+description: "Use this skill when validating assumptions through real-world testing using Mao Zedong's *On Practice* (《实践论》). Applies the practice-cognition-re-practice spiral to decision-making, problem analysis, and report writing. Triggers on: 'practice-based', 'verify through practice', 'seek truth from facts', '实践论', '实事求是', 'On Practice', 'test assumptions', 'practice spiral', 'field investigation', 'validate hypothesis', or when the user needs to move from theory to verified action."
 metadata:
   author: "learnwy"
   version: "1.1"

@@ -1,8 +1,6 @@
 ---
 name: project-skill-writer
-description: "Create or update project-level skills by analyzing user problems and project context. NOT by asking questions - by understanding what users struggle with and designing solutions. Keeps outputs in project scope."
-license: "MIT"
-compatibility: "Any skill-enabled workspace"
+description: "Use this skill when the user wants to create, update, or design a project-level skill (.trae/skills/*/SKILL.md). Analyzes user problems and project context to design reusable skill solutions. Triggers on: 'create skill', 'write skill', 'build skill', 'add skill', 'update skill', 'project skill', 'new skill', 'design skill', or when the user describes a recurring workflow that should be captured as a reusable AI skill."
 metadata:
   author: "learnwy"
   version: "3.1"

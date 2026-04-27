@@ -1,6 +1,6 @@
 ---
 name: project-agent-writer
-description: "Create or update project-level agents by analyzing user problems and project context. NOT by asking questions - by understanding what users struggle with and designing worker solutions. Keeps outputs in project scope."
+description: "Use this skill when the user wants to create, update, or design a project-level agent (.trae/agents/*.md or agents/*.md). Analyzes user problems and project context to design worker solutions. Triggers on: 'create agent', 'build an agent', 'add agent', 'design agent', 'update agent', 'project agent', 'subagent', 'worker agent', 'automated worker', or when the user describes a repetitive task that should be handled by an autonomous agent."
 metadata:
   author: "learnwy"
   version: "4.0"

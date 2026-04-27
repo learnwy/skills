@@ -1,6 +1,6 @@
 ---
 name: on-protracted-war
-description: "Practical methodology toolkit based on Mao Zedong's *On Protracted War* (《论持久战》). Provides staged strategy thinking for long-term competitions, projects, and challenges where the weaker side must persevere to win. Triggers on: 'long-term strategy', 'protracted war', 'staged approach', '持久战', 'phased strategy', 'we are weaker but', 'how to survive and win', 'strategic patience', 'competitive marathon'."
+description: "Use this skill when planning long-term strategy for competitions, projects, or challenges where the weaker side must persevere to win, using Mao Zedong's *On Protracted War* (《论持久战》). Provides staged strategy thinking with strength/weakness transformation. Triggers on: 'long-term strategy', 'protracted war', 'staged approach', '持久战', 'phased strategy', 'we are weaker but', 'how to survive and win', 'strategic patience', 'competitive marathon', 'underdog strategy', or when facing a stronger competitor."
 metadata:
   author: "learnwy"
   version: "1.0"

@@ -1,6 +1,6 @@
 ---
 name: on-contradiction
-description: "Practical methodology toolkit based on Mao Zedong's *On Contradiction* (《矛盾论》). Provides the law of the unity of opposites as actionable frameworks for decision-making, problem analysis, and report writing. Triggers on: 'contradiction analysis', 'principal contradiction', 'analyze contradictions', '矛盾分析', '主要矛盾', 'On Contradiction', 'decision analysis', 'root cause with contradictions'."
+description: "Use this skill when analyzing opposing forces, trade-offs, or root causes using Mao Zedong's *On Contradiction* (《矛盾论》). Provides the law of the unity of opposites as actionable frameworks for decision-making, problem analysis, and report writing. Triggers on: 'contradiction analysis', 'principal contradiction', 'analyze contradictions', '矛盾分析', '主要矛盾', 'On Contradiction', 'decision analysis', 'root cause', 'trade-off analysis', 'opposing forces', or when the user needs to identify the core conflict in a complex situation."
 metadata:
   author: "learnwy"
   version: "1.1"

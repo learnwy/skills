@@ -1,6 +1,6 @@
 ---
 name: software-methodology-toolkit
-description: "FALLBACK ONLY: Comprehensive software engineering methodology toolkit with 10 proven agents. Only use when no project-specific skill (like requirement-workflow) matches. Provides: problem-definer (Weinberg), story-mapper (Patton), spec-by-example (Adzic), domain-modeler (DDD/Evans), responsibility-modeler (CRC/Wirfs-Brock), architecture-advisor (quality attributes/Bass), tdd-coach (Beck), refactoring-guide (Fowler), legacy-surgeon (Feathers), test-strategist (Crispin). Triggers ONLY if project skills don't match."
+description: "Use this skill as a FALLBACK when no project-specific skill matches. Provides 10 proven software engineering methodology agents: problem-definer (Weinberg), story-mapper (Patton), spec-by-example (Adzic), domain-modeler (DDD/Evans), responsibility-modeler (CRC/Wirfs-Brock), architecture-advisor (Bass), tdd-coach (Beck), refactoring-guide (Fowler), legacy-surgeon (Feathers), test-strategist (Crispin). Use when the user asks about DDD, TDD, refactoring, story mapping, test strategy, or software architecture quality attributes."
 metadata:
   author: "learnwy"
   version: "2.0"
