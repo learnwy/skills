@@ -1,18 +1,40 @@
 #!/usr/bin/env node
-import { readFile } from 'node:fs/promises'
+import { readFile, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
-import { WIKI_DIR, PAGE_DIRS, readMdFiles } from '../shared/index.mjs'
+import { WIKI_DIR, PAGE_DIRS, readMdFiles, readMdFilesDeep } from '../shared/index.mjs'
+
+const DEEP_SCAN_TYPES = new Set(['concepts'])
 
 async function buildInventory() {
   const inventory = new Set()
   const allFiles = {}
 
   for (const dir of PAGE_DIRS) {
-    const files = await readMdFiles(join(WIKI_DIR, dir))
-    allFiles[dir] = files
-    for (const file of files) {
-      inventory.add(`${dir}/${file.replace('.md', '')}`)
-      inventory.add(`${dir}/${file}`)
+    const dirPath = join(WIKI_DIR, dir)
+    allFiles[dir] = []
+
+    if (DEEP_SCAN_TYPES.has(dir)) {
+      const entries = await readMdFilesDeep(dirPath)
+      for (const { file, subdir } of entries) {
+        const relPath = subdir ? `${subdir}/${file}` : file
+        allFiles[dir].push({ file, relPath, subdir })
+
+        // Register both flat and nested paths for backward compatibility
+        const slug = file.replace('.md', '')
+        inventory.add(`${dir}/${slug}`)
+        inventory.add(`${dir}/${file}`)
+        if (subdir) {
+          inventory.add(`${dir}/${subdir}/${slug}`)
+          inventory.add(`${dir}/${subdir}/${file}`)
+        }
+      }
+    } else {
+      const files = await readMdFiles(dirPath)
+      for (const file of files) {
+        allFiles[dir].push({ file, relPath: file, subdir: '' })
+        inventory.add(`${dir}/${file.replace('.md', '')}`)
+        inventory.add(`${dir}/${file}`)
+      }
     }
   }
 
@@ -69,12 +91,16 @@ async function run() {
   const warnings = []
   const incomingLinks = {}
   let totalLinks = 0
+  let totalPages = 0
 
   for (const dir of PAGE_DIRS) {
-    for (const file of (allFiles[dir] || [])) {
-      const filePath = join(WIKI_DIR, dir, file)
+    for (const { file, relPath, subdir } of (allFiles[dir] || [])) {
+      const filePath = subdir
+        ? join(WIKI_DIR, dir, subdir, file)
+        : join(WIKI_DIR, dir, file)
       const content = await readFile(filePath, 'utf-8')
-      const loc = `${dir}/${file}`
+      const loc = `${dir}/${relPath}`
+      totalPages++
 
       if (!content.split('\n')[0]?.startsWith('# ')) {
         warnings.push(`${loc}: Missing # title on line 1`)
@@ -100,22 +126,25 @@ async function run() {
   // Orphan detection (skip entities and comparisons)
   for (const dir of PAGE_DIRS) {
     if (dir === 'entities' || dir === 'comparisons') continue
-    for (const file of (allFiles[dir] || [])) {
-      const key = `${dir}/${file.replace('.md', '')}`
-      if (!incomingLinks[key]) {
-        warnings.push(`${key}: Orphan page (no incoming wikilinks)`)
+    for (const { file, subdir } of (allFiles[dir] || [])) {
+      const slug = file.replace('.md', '')
+      // Check both flat and nested paths
+      const flatKey = `${dir}/${slug}`
+      const nestedKey = subdir ? `${dir}/${subdir}/${slug}` : flatKey
+      if (!incomingLinks[flatKey] && !incomingLinks[nestedKey]) {
+        const loc = subdir ? `${dir}/${subdir}/${file}` : `${dir}/${file}`
+        warnings.push(`${loc}: Orphan page (no incoming wikilinks)`)
       }
     }
   }
 
   // Report
-  const total = PAGE_DIRS.reduce((sum, dir) => sum + (allFiles[dir] || []).length, 0)
   console.log('Statistics:')
   for (const dir of PAGE_DIRS) {
     const count = (allFiles[dir] || []).length
     if (count > 0) console.log(`   ${dir}: ${count}`)
   }
-  console.log(`   Total pages: ${total}`)
+  console.log(`   Total pages: ${totalPages}`)
   console.log(`   Total wikilinks: ${totalLinks}`)
   console.log(`   Broken links: ${errors.length}`)
   console.log('')

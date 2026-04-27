@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { readFile, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { WIKI_DIR, PAGE_DIRS, readMdFiles } from '../shared/index.mjs'
+import { WIKI_DIR, PAGE_DIRS, readMdFiles, readMdFilesDeep } from '../shared/index.mjs'
 
 const STOP_WORDS = new Set([
   'the', 'and', 'for', 'with', 'from', 'that', 'this', 'into',
@@ -11,6 +11,7 @@ const STOP_WORDS = new Set([
 ])
 
 const MIN_WORD_LENGTH = 3
+const DEEP_SCAN_TYPES = new Set(['concepts'])
 
 async function extractDiscipline(filePath) {
   try {
@@ -35,8 +36,20 @@ async function run() {
   const disciplines = new Set()
 
   for (const dir of PAGE_DIRS) {
-    const files = await readMdFiles(join(WIKI_DIR, dir))
-    for (const file of files) {
+    const dirPath = join(WIKI_DIR, dir)
+    let entries
+
+    if (DEEP_SCAN_TYPES.has(dir)) {
+      entries = (await readMdFilesDeep(dirPath)).map(e => ({
+        file: e.file,
+        fullPath: join(dirPath, e.subdir ? `${e.subdir}/${e.file}` : e.file)
+      }))
+    } else {
+      const files = await readMdFiles(dirPath)
+      entries = files.map(f => ({ file: f, fullPath: join(dirPath, f) }))
+    }
+
+    for (const { file, fullPath } of entries) {
       const slug = file.replace('.md', '')
       keywords.add(slug)
 
@@ -44,7 +57,7 @@ async function run() {
         keywords.add(word.toLowerCase())
       }
 
-      const disc = await extractDiscipline(join(WIKI_DIR, dir, file))
+      const disc = await extractDiscipline(fullPath)
       if (disc) disciplines.add(disc)
     }
   }

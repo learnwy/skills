@@ -74,7 +74,24 @@ Save code patterns to `raw/snippets/` → `wiki/snippets/` with platform + langu
 ```
 ~/.learnwy/llm-wiki/
 ├── raw/                    # Layer 1: articles/, books/, notes/, snippets/, ...
-├── wiki/                   # Layer 2: summaries/, concepts/, entities/, ...
+├── wiki/                   # Layer 2
+│   ├── summaries/          #   One per raw source
+│   ├── concepts/           #   Organized by domain subdirs
+│   │   ├── frontend/       #     React, TS, CSS, bundlers
+│   │   ├── ios/            #     Swift, SwiftUI, UIKit
+│   │   ├── android/        #     Kotlin, Compose
+│   │   ├── go/             #     Go, BFF, middleware
+│   │   ├── architecture/   #     Patterns, DDD
+│   │   ├── se-practices/   #     Testing, refactoring
+│   │   ├── system-design/  #     Distributed systems
+│   │   ├── philosophy/     #     Ethics, Taoism
+│   │   ├── psychology/     #     Habits, mindset
+│   │   ├── methodology/    #     Mao trilogy
+│   │   └── ...             #     21 domain dirs total
+│   ├── entities/           #   People, orgs, products
+│   ├── comparisons/        #   Side-by-side analyses
+│   ├── snippets/           #   Code patterns (tagged)
+│   ├── troubleshooting/    #   Problem → solution
 │   ├── index.md            #   Auto-generated master index
 │   └── topics.txt          #   Auto-generated keyword list
 ├── CLAUDE.md               # Layer 3: Schema
@@ -98,14 +115,16 @@ Agents: [ingestor](agents/operations/ingestor.md), [querier](agents/operations/q
 
 ## Management Scripts
 
-Four Node.js ESM scripts for wiki maintenance. Run from the skill directory:
+Four Node.js ESM scripts for wiki maintenance, plus two structural tools. Run from the skill directory:
 
 ```sh
 cd skills/llm-wiki
-node scripts/generate-index/index.mjs   # Regenerate wiki/index.md from filesystem
-node scripts/generate-topics/index.mjs  # Regenerate wiki/topics.txt
-node scripts/lint/index.mjs             # Check broken links, orphans, missing tags
-node scripts/stats/index.mjs            # Quick dashboard of raw + wiki counts
+node scripts/generate-index/index.mjs     # Regenerate wiki/index.md from filesystem
+node scripts/generate-topics/index.mjs    # Regenerate wiki/topics.txt
+node scripts/lint/index.mjs               # Check broken links, orphans, missing tags
+node scripts/stats/index.mjs              # Quick dashboard of raw + wiki counts
+node scripts/freshness-check/index.mjs    # Flag stale/unverified pages
+node scripts/reorganize/index.mjs --dry-run  # Preview concept reorganization
 ```
 
 | Script | Output | When to Run |
@@ -114,6 +133,8 @@ node scripts/stats/index.mjs            # Quick dashboard of raw + wiki counts
 | `generate-topics` | `wiki/topics.txt` — keywords for auto-query matching | After new topic areas are added |
 | `lint` | Errors (broken wikilinks) + warnings (orphans, missing tags) | Weekly maintenance or before commits |
 | `stats` | Box-drawing dashboard of Layer 1 + Layer 2 counts | Anytime — quick health snapshot |
+| `freshness-check` | Stale pages (90d tech, 180d stable), unverified, missing dates | Monthly or after major version releases |
+| `reorganize` | Move concepts/ into domain subdirs (supports `--dry-run`) | When new domain areas are added |
 
 Scripts use shared modules at `scripts/shared/` (constants, fs-utils, meta extraction, category mapping). Override wiki location with `LLM_WIKI_ROOT` env var.
 

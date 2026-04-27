@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { join } from 'node:path'
 import {
-  WIKI_DIR, RAW_DIR, PAGE_TYPES, RAW_SUBDIRS, countMdFiles
+  WIKI_DIR, RAW_DIR, PAGE_TYPES, RAW_SUBDIRS, countMdFiles, countMdFilesDeep
 } from '../shared/index.mjs'
 
 function pad(str, width) {
@@ -13,9 +13,12 @@ function num(val, width) {
 }
 
 async function run() {
+  const DEEP_TYPES = new Set(['concepts'])
   const wiki = {}
   for (const { type } of PAGE_TYPES) {
-    wiki[type] = await countMdFiles(join(WIKI_DIR, type))
+    wiki[type] = DEEP_TYPES.has(type)
+      ? await countMdFilesDeep(join(WIKI_DIR, type))
+      : await countMdFiles(join(WIKI_DIR, type))
   }
 
   const raw = {}

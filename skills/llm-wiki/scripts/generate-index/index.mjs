@@ -3,9 +3,11 @@ import { writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import {
   WIKI_DIR, RAW_DIR, PAGE_TYPES, RAW_SUBDIRS,
-  readMdFiles, countMdFilesInSubdirs, extractMeta, slugToTitle,
+  readMdFiles, readMdFilesDeep, countMdFilesInSubdirs, extractMeta, slugToTitle,
   CATEGORY_ORDER, categorize
 } from '../shared/index.mjs'
+
+const DEEP_SCAN_TYPES = new Set(['concepts'])
 
 async function scanPages() {
   const allPages = {}
@@ -13,18 +15,37 @@ async function scanPages() {
 
   for (const { type } of PAGE_TYPES) {
     const dir = join(WIKI_DIR, type)
-    const files = await readMdFiles(dir)
     const pages = []
 
-    for (const file of files) {
-      const meta = await extractMeta(join(dir, file))
-      const slug = file.replace('.md', '')
-      pages.push({
-        slug,
-        file,
-        ...meta,
-        title: meta.title || slugToTitle(slug)
-      })
+    if (DEEP_SCAN_TYPES.has(type)) {
+      const entries = await readMdFilesDeep(dir)
+      for (const { file, subdir } of entries) {
+        const relPath = subdir ? `${subdir}/${file}` : file
+        const meta = await extractMeta(join(dir, relPath))
+        const slug = file.replace('.md', '')
+        pages.push({
+          slug,
+          file,
+          relPath,
+          subdir,
+          ...meta,
+          title: meta.title || slugToTitle(slug)
+        })
+      }
+    } else {
+      const files = await readMdFiles(dir)
+      for (const file of files) {
+        const meta = await extractMeta(join(dir, file))
+        const slug = file.replace('.md', '')
+        pages.push({
+          slug,
+          file,
+          relPath: file,
+          subdir: '',
+          ...meta,
+          title: meta.title || slugToTitle(slug)
+        })
+      }
     }
 
     allPages[type] = pages
@@ -72,22 +93,22 @@ function renderSection(types) {
 
   for (const s of summaries) {
     const yearStr = s.year ? ` (${s.year})` : ''
-    lines.push(`- [${s.title}](summaries/${s.file})${yearStr}`)
+    lines.push(`- [${s.title}](summaries/${s.relPath})${yearStr}`)
   }
   for (const c of concepts) {
     const tag = c.verified === 'no' ? ' ⚠️' : ''
-    lines.push(`  - [${c.title}](concepts/${c.file})${tag}`)
+    lines.push(`  - [${c.title}](concepts/${c.relPath})${tag}`)
   }
   if (snippets.length > 0) {
     lines.push('  - **Snippets**:')
-    for (const sn of snippets) lines.push(`    - [${sn.title}](snippets/${sn.file})`)
+    for (const sn of snippets) lines.push(`    - [${sn.title}](snippets/${sn.relPath})`)
   }
   if (troubles.length > 0) {
     lines.push('  - **Troubleshooting**:')
-    for (const t of troubles) lines.push(`    - [${t.title}](troubleshooting/${t.file})`)
+    for (const t of troubles) lines.push(`    - [${t.title}](troubleshooting/${t.relPath})`)
   }
   for (const comp of comparisons) {
-    lines.push(`  - [${comp.title}](comparisons/${comp.file})`)
+    lines.push(`  - [${comp.title}](comparisons/${comp.relPath})`)
   }
 
   return lines
@@ -150,7 +171,6 @@ function renderIndex({ allPages, totalPages, rawCount, organized }) {
     lines.push('')
   }
 
-  // Handle "Other" category if it exists
   if (organized['Other']) {
     lines.push('### Other')
     lines.push('')
@@ -163,7 +183,7 @@ function renderIndex({ allPages, totalPages, rawCount, organized }) {
   lines.push('## Entities')
   lines.push('')
   for (const e of (allPages.entities || [])) {
-    lines.push(`- [${e.title}](entities/${e.file})`)
+    lines.push(`- [${e.title}](entities/${e.relPath})`)
   }
   lines.push('')
 
