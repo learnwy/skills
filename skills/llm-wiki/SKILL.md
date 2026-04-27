@@ -3,7 +3,7 @@ name: llm-wiki
 description: "If the agent's description mentions that it should be used proactively, then you should try your best to use it without the user having to ask for it first. PROACTIVE: When a wiki exists at ~/.learnwy/llm-wiki/wiki/index.md, this skill should check the wiki before answering complex questions — skip immediately if the wiki directory does not exist. Build and maintain a persistent, compounding knowledge base using LLMs. Based on Andrej Karpathy's LLM Wiki pattern (April 2026). The LLM incrementally reads raw sources, compiles structured wiki pages, maintains cross-references, and keeps everything consistent. Triggers on: 'knowledge base', 'llm wiki', 'personal wiki', 'build a wiki', 'ingest this source', 'knowledge management', 'compile knowledge', 'compounding knowledge', 'second brain'."
 metadata:
   author: "learnwy"
-  version: "2.1"
+  version: "3.0"
   source: "Andrej Karpathy, LLM Wiki (GitHub Gist, April 2026)"
   trigger: "always"
 ---
@@ -68,6 +68,8 @@ When a wiki exists at `~/.learnwy/llm-wiki/` (or project-scoped path), the agent
 [7. Offer write-back if answer adds new insight]
 ```
 
+**Fast topic matching** — to avoid reading the 700+ line index.md on every question, the auto-query first scans `wiki/topics.txt` — a flat, one-keyword-per-line file that lists all topic areas. Only if a match is found does the querier read the full index and relevant pages.
+
 **Detection heuristic** — check the wiki when the user's question:
 - Mentions a concept/entity that has a wiki page
 - Asks for synthesis, comparison, or historical context
@@ -115,6 +117,29 @@ A lightweight path for saving conversation insights to the wiki's `raw/` layer �
 - User shares a URL + asks to remember it
 - Conversation produces a significant insight the user might want to keep
 
+### Snippet-Capture Mode
+
+A specialized capture path for code patterns and reusable templates.
+
+```
+[1. User shares or discovers a reusable code pattern]
+       ↓
+[2. Classify: language + platform]
+       ↓
+[3. Write to raw/snippets/{platform}-{slug}.md]
+       ↓
+[4. Create wiki/snippets/{slug}.md with tags]
+       ↓
+[5. Cross-reference with related concepts]
+       ↓
+[6. Log in log.md as SNIPPET]
+```
+
+**Snippet-capture triggers:**
+- User shares working code and says "save this pattern"
+- User discovers a useful CLI command or config
+- A troubleshooting fix produces a reusable solution
+
 **Quick-capture does NOT:**
 - Create wiki/ pages (that's the ingestor's job)
 - Update cross-references or index
@@ -147,20 +172,29 @@ Lives under the user's personal directory, accessible from **any project, any se
 ```
 ~/.learnwy/llm-wiki/                   # Global wiki root (shared everywhere)
 ├── raw/                               # Layer 1: Raw Sources (YOU own this)
-│   ├── articles/
-│   ├── papers/
-│   ├── books/
-│   ├── podcasts/
-│   ├── notes/
-│   └── transcripts/
+│   ├── articles/                      #   Blog posts, tech articles
+│   ├── papers/                        #   Research papers, whitepapers
+│   ├── books/                         #   Book notes, chapter summaries
+│   ├── podcasts/                      #   Podcast transcripts, show notes
+│   ├── notes/                         #   Personal notes, conversation captures
+│   ├── transcripts/                   #   Meeting/video transcripts
+│   ├── snippets/                      #   Code snippets, configs, CLI patterns
+│   ├── troubleshooting/               #   Bug reports, debugging logs
+│   ├── specs/                         #   API specs, interface contracts
+│   └── decisions/                     #   ADRs, architecture records
 ├── wiki/                              # Layer 2: The Wiki (LLM owns this)
 │   ├── summaries/                     #   Summary of each raw source
 │   ├── concepts/                      #   Concept/topic pages
 │   ├── entities/                      #   Entity pages (people, orgs, products)
 │   ├── comparisons/                   #   Side-by-side analyses
+│   ├── snippets/                      #   Curated/compiled code patterns
+│   ├── troubleshooting/               #   Problem → cause → solution pages
+│   ├── decisions/                     #   Structured ADR pages
+│   ├── cheatsheets/                   #   Quick-reference guides
 │   ├── index.md                       #   Master index
-│   └── overview.md                    #   High-level synthesis
-├── outputs/                           # Query outputs (LLM writes, can be filed back)
+│   ├── overview.md                    #   High-level synthesis
+│   └── topics.txt                     #   Flat keyword list for fast auto-query
+├── outputs/                           # Query outputs
 │   ├── qa/                            #   Saved Q&A sessions
 │   └── health/                        #   Lint/health check reports
 ├── CLAUDE.md                          # Layer 3: Schema (YOU + LLM co-evolve)
@@ -248,16 +282,18 @@ For domain-specific knowledge that belongs to a single project:
 | **Source of Truth** | Raw sources are always authoritative. Wiki is a compiled representation, never the original |
 | **LLM as Maintainer** | The LLM does ALL the bookkeeping humans hate — updating indexes, fixing links, keeping summaries current |
 
-## The Six Operations
+## The Eight Operations
 
 | Operation | Agent | Trigger | Mode | Frequency |
 |-----------|-------|---------|------|-----------|
 | **Auto-Query** | [querier](agents/operations/querier.md) | User asks a question + wiki exists | Automatic | Every question |
 | **Quick-Capture** | (inline workflow) | User says "save to wiki" or shares valuable knowledge | Semi-auto | As needed |
+| **Snippet-Capture** | (inline workflow) | User shares code pattern or discovers reusable snippet | Semi-auto | As needed |
 | **Ingest** | [ingestor](agents/operations/ingestor.md) | New raw source added | Manual | Per source |
 | **Query** | [querier](agents/operations/querier.md) | User explicitly asks the wiki | Manual | Daily |
 | **Lint** | [linter](agents/operations/linter.md) | Health check requested | Manual | Weekly |
 | **Setup** | [schema-writer](agents/writing/schema-writer.md) | New wiki project | Manual | Once |
+| **Cross-Platform** | [ingestor](agents/operations/ingestor.md) | Android/iOS/Web comparison needed | Manual | Per topic |
 
 ## Agent Summary
 
@@ -421,6 +457,157 @@ For domain-specific knowledge that belongs to a single project:
 | {date} | {source} | {list of updated pages} |
 ```
 
+### Snippet Page Template (wiki/snippets/)
+
+```markdown
+# {Title}
+
+**Language**: {typescript | swift | go | kotlin | shell | css}
+**Platform**: {web | ios | android | server | cross-platform}
+**Source**: [[raw/snippets/{source}]] or [[summaries/{book}]]
+**Last verified**: {date}
+
+## Code
+
+```{language}
+{code}
+```
+
+## Usage
+
+{when and how to use this snippet}
+
+## Gotchas
+
+- {common mistakes or edge cases}
+
+## Cross-References
+
+- Related: [[concepts/...]], [[snippets/...]]
+```
+
+### Troubleshooting Page Template (wiki/troubleshooting/)
+
+```markdown
+# {Problem Title}
+
+**Platform**: {web | ios | android | server}
+**Severity**: {critical | moderate | minor}
+**First seen**: {date}
+
+## Symptoms
+
+- {observable behavior}
+
+## Root Cause
+
+{technical explanation}
+
+## Solution
+
+```{language}
+{fix code or steps}
+```
+
+## Prevention
+
+- {how to avoid this in the future}
+
+## Cross-References
+
+- Related: [[concepts/...]], [[troubleshooting/...]]
+```
+
+### Decision Record Template (wiki/decisions/)
+
+```markdown
+# {Decision Title}
+
+**Date**: {date}
+**Status**: {proposed | accepted | superseded}
+**Deciders**: {who}
+
+## Context
+
+{what prompted this decision}
+
+## Options Considered
+
+| Option | Pros | Cons |
+|--------|------|------|
+| {A} | ... | ... |
+| {B} | ... | ... |
+
+## Decision
+
+{what was chosen and why}
+
+## Consequences
+
+- {positive and negative outcomes}
+
+## Cross-References
+
+- Related: [[concepts/...]], [[decisions/...]]
+```
+
+### Cheatsheet Template (wiki/cheatsheets/)
+
+```markdown
+# {Topic} Cheatsheet
+
+**Platform**: {web | ios | android | server | all}
+**Last updated**: {date}
+
+## Quick Reference
+
+| Command/Pattern | Description |
+|----------------|-------------|
+| {item} | {what it does} |
+
+## Common Patterns
+
+### {Pattern 1}
+```{language}
+{code}
+```
+
+## Cross-References
+
+- Compiled from: [[concepts/...]]
+```
+
+### Cross-Platform Comparison Template (wiki/comparisons/)
+
+```markdown
+# {Topic}: {Platform A} vs {Platform B} [vs {Platform C}]
+
+**Last updated**: {date}
+
+## Overview
+
+{what is being compared and why}
+
+| Dimension | {Platform A} | {Platform B} | {Platform C} |
+|-----------|-------------|-------------|-------------|
+| {aspect 1} | ... | ... | ... |
+| {aspect 2} | ... | ... | ... |
+
+## Key Differences
+
+### {Difference 1}
+- **{Platform A}**: {how it works}
+- **{Platform B}**: {how it works}
+
+## Migration Notes
+
+{tips for developers moving between platforms}
+
+## Cross-References
+
+- Related: [[concepts/...]], [[comparisons/...]]
+```
+
 ## Agent Output Contract
 
 All agents follow these rules:
@@ -450,6 +637,10 @@ Every operation must:
 | Lint finds orphan pages (no inbound links) | List in health report; suggest which pages should reference them |
 | User asks question wiki can't answer | Say so clearly; suggest which raw sources might need to be added |
 | Multiple sources claim different things | Create a comparison page showing all positions with source attribution |
+| Wiki index too large for context window | Use `wiki/topics.txt` for topic scanning; read pages on demand, not index.md wholesale |
+| Android content may be unverified | Require `**Verified**: yes/no` field on Android pages; lint flags unverified pages older than 7 days |
+| Cross-reference count explosion (425+ pages) | Limit cross-refs per section to top-5 most relevant; use `## See Also` for secondary links |
+| Snippet in wrong language/framework | Tag with `platform:` and `language:`; lint validates tags match content |
 
 ## Execution Checklist
 
@@ -461,6 +652,9 @@ Before any operation, verify:
 - [ ] CLAUDE.md schema file is present and current
 - [ ] Raw sources are in the correct subdirectory of raw/
 - [ ] Agent selection follows the Routing Decision Table
+- [ ] For non-book content: route to correct raw/ subdir (snippets/, troubleshooting/, specs/, decisions/)
+- [ ] For Android content: set `Verified: no`, queue for cross-platform comparison
+- [ ] For snippets: include platform tag and language tag
 
 After any operation, verify:
 
@@ -469,6 +663,8 @@ After any operation, verify:
 - [ ] All new pages have cross-references to related existing pages
 - [ ] No contradictions were silently swallowed
 - [ ] No raw source was modified
+- [ ] Cross-references limited to top-5 per section (use "See Also" for extras)
+- [ ] topics.txt updated if new topic area was introduced
 
 ## Boundary Enforcement
 
