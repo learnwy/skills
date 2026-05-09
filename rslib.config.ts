@@ -17,6 +17,31 @@ const cjsSkillEntries: Record<string, string[]> = {
   'prompt-optimizer': [
     'hooks/user-prompt-scan',
   ],
+  'requirement-workflow': [
+    'lib/common',
+    'init',
+    'advance',
+    'status',
+    'hooks',
+  ],
+  'knowledge-consolidation': [
+    'get-knowledge-path',
+  ],
+  'project-agent-writer': [
+    'init-agent',
+  ],
+  'project-skill-writer': [
+    'init-skill',
+  ],
+  'trae-rules-writer': [
+    'init-rule',
+  ],
+};
+
+const cjsFilenameOverrides: Record<string, string> = {
+  'project-agent-writer/scripts/init-agent': 'project-agent-writer/scripts/init_agent',
+  'project-skill-writer/scripts/init-skill': 'project-skill-writer/scripts/init_skill',
+  'trae-rules-writer/scripts/init-rule': 'trae-rules-writer/scripts/init_rule',
 };
 
 const esmSkillEntries: Record<string, string[]> = {
@@ -32,12 +57,17 @@ const esmSkillEntries: Record<string, string[]> = {
 
 const SHARED_INSTALL_SOURCE = './src/shared/install-entry.ts';
 
+const SKILLS_WITH_HOOKS = new Set(['english-learner', 'llm-wiki', 'prompt-optimizer']);
+
 const cjsEntry: Record<string, string> = {};
 for (const [skill, files] of Object.entries(cjsSkillEntries)) {
   for (const file of files) {
-    cjsEntry[`${skill}/scripts/${file}`] = `./src/${skill}/${file}.ts`;
+    const entryKey = cjsFilenameOverrides[`${skill}/scripts/${file}`] || `${skill}/scripts/${file}`;
+    cjsEntry[entryKey] = `./src/${skill}/${file}.ts`;
   }
-  cjsEntry[`${skill}/scripts/hooks/install`] = SHARED_INSTALL_SOURCE;
+  if (SKILLS_WITH_HOOKS.has(skill)) {
+    cjsEntry[`${skill}/scripts/hooks/install`] = SHARED_INSTALL_SOURCE;
+  }
 }
 
 const esmEntry: Record<string, string> = {};
