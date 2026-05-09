@@ -151,3 +151,40 @@ Before responding, verify:
 - [ ] Full optimized prompt provided
 - [ ] Changes listed explicitly
 - [ ] User given choice to accept/reject/edit
+
+## Hooks
+
+This skill registers an IDE hook so the pre-flight analysis is **deterministic** — the AI doesn't have to remember to invoke it.
+
+### Scope
+
+**Global** — installs to `~/.claude/settings.json` and `~/.trae/hooks.json` (no per-project state).
+
+### Events
+
+| Event | Script | Purpose |
+|-------|--------|---------|
+| `UserPromptSubmit` | `scripts/hooks/user-prompt-scan.cjs` | Detect prompt-shaped input and inject the 7-dimension review reminder |
+
+### Detection (conservative — avoid noise)
+
+The hook fires only when one of the following is true:
+
+1. **Explicit ask** — message contains `optimize / improve / review / rewrite / check / refine my prompt`, `make this prompt more X`, or the Chinese equivalents `优化提示词 / 改进提示词 / 重写提示词`.
+2. **Structured prompt-shape** — message is ≥400 chars, ≥4 lines, AND contains ≥2 markers like `you are`, `your task is`, `act as`, `instructions:`, `constraints:`, `output format:`.
+
+It exits silently for code, file paths, shell commands, normal chat, or short questions.
+
+### Install
+
+```bash
+node scripts/hooks/install.cjs install \
+  --config ./hooks.json --scope global --target both
+```
+
+### Uninstall
+
+```bash
+node scripts/hooks/install.cjs uninstall \
+  --skill-id prompt-optimizer --scope global --target both
+```

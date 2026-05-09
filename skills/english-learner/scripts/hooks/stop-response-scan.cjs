@@ -67,25 +67,25 @@ function installHooks(config, options = {}) {
                 '.trae',
                 '.trae-cn'
             ]){
-                const traeFile = external_node_path_namespaceObject.join(homeDir, dir, 'hooks.json');
+                const traeFile = path.join(homeDir, dir, 'hooks.json');
                 mergeAndWrite(traeFile, config, 'standalone');
                 results.push(traeFile);
             }
         }
         if (target === 'claude' || target === 'both') {
-            const claudeFile = external_node_path_namespaceObject.join(homeDir, '.claude', 'settings.json');
+            const claudeFile = path.join(homeDir, '.claude', 'settings.json');
             mergeAndWrite(claudeFile, config, 'nested');
             results.push(claudeFile);
         }
     } else {
         const root = projectRoot || getProjectDir();
         if (target === 'trae' || target === 'both') {
-            const traeFile = external_node_path_namespaceObject.join(root, '.trae', 'hooks.json');
+            const traeFile = path.join(root, '.trae', 'hooks.json');
             mergeAndWrite(traeFile, config, 'standalone');
             results.push(traeFile);
         }
         if (target === 'claude' || target === 'both') {
-            const claudeFile = external_node_path_namespaceObject.join(root, '.claude', 'settings.json');
+            const claudeFile = path.join(root, '.claude', 'settings.json');
             mergeAndWrite(claudeFile, config, 'nested');
             results.push(claudeFile);
         }
@@ -93,14 +93,14 @@ function installHooks(config, options = {}) {
     return results;
 }
 function mergeAndWrite(filePath, config, mode) {
-    const dir = external_node_path_namespaceObject.dirname(filePath);
-    if (!external_node_fs_namespaceObject.existsSync(dir)) external_node_fs_namespaceObject.mkdirSync(dir, {
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, {
         recursive: true
     });
     let existing = {};
-    if (external_node_fs_namespaceObject.existsSync(filePath)) {
+    if (fs.existsSync(filePath)) {
         try {
-            existing = JSON.parse(external_node_fs_namespaceObject.readFileSync(filePath, 'utf8'));
+            existing = JSON.parse(fs.readFileSync(filePath, 'utf8'));
         } catch  {
             existing = {};
         }
@@ -116,7 +116,7 @@ function mergeAndWrite(filePath, config, mode) {
             if (!isDup) hooks[event].push(group);
         }
     }
-    external_node_fs_namespaceObject.writeFileSync(filePath, JSON.stringify(existing, null, 2) + '\n');
+    fs.writeFileSync(filePath, JSON.stringify(existing, null, 2) + '\n');
 }
 function uninstallHooks(skillId, options = {}) {
     const { target = 'both', scope = 'global', projectRoot } = options;
@@ -125,24 +125,24 @@ function uninstallHooks(skillId, options = {}) {
     const files = [];
     if (scope === 'global') {
         if (target === 'trae' || target === 'both') {
-            files.push(external_node_path_namespaceObject.join(homeDir, '.trae', 'hooks.json'));
-            files.push(external_node_path_namespaceObject.join(homeDir, '.trae-cn', 'hooks.json'));
+            files.push(path.join(homeDir, '.trae', 'hooks.json'));
+            files.push(path.join(homeDir, '.trae-cn', 'hooks.json'));
         }
         if (target === 'claude' || target === 'both') {
-            files.push(external_node_path_namespaceObject.join(homeDir, '.claude', 'settings.json'));
+            files.push(path.join(homeDir, '.claude', 'settings.json'));
         }
     } else {
         if (target === 'trae' || target === 'both') {
-            files.push(external_node_path_namespaceObject.join(root, '.trae', 'hooks.json'));
+            files.push(path.join(root, '.trae', 'hooks.json'));
         }
         if (target === 'claude' || target === 'both') {
-            files.push(external_node_path_namespaceObject.join(root, '.claude', 'settings.json'));
+            files.push(path.join(root, '.claude', 'settings.json'));
         }
     }
     for (const filePath of files){
-        if (!external_node_fs_namespaceObject.existsSync(filePath)) continue;
+        if (!fs.existsSync(filePath)) continue;
         try {
-            const content = JSON.parse(external_node_fs_namespaceObject.readFileSync(filePath, 'utf8'));
+            const content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
             const hooks = content.hooks;
             if (!hooks) continue;
             for (const [event, groups] of Object.entries(hooks)){
@@ -152,105 +152,58 @@ function uninstallHooks(skillId, options = {}) {
                 });
                 if (hooks[event].length === 0) delete hooks[event];
             }
-            external_node_fs_namespaceObject.writeFileSync(filePath, JSON.stringify(content, null, 2) + '\n');
+            fs.writeFileSync(filePath, JSON.stringify(content, null, 2) + '\n');
         } catch  {
         /* swallow */ }
     }
 }
 
-;// CONCATENATED MODULE: ./src/shared/install-entry.ts
+;// CONCATENATED MODULE: ./src/english-learner/hooks/stop-response-scan.ts
 
-
-
-function showHelp() {
-    console.log(`Usage: node install.cjs <action> [options]
-
-Install or uninstall skill hooks into IDE config files.
-
-Actions:
-  install   Install hooks from a skill's hooks config
-  uninstall Remove hooks matching a skill identifier
-
-Options:
-  --config PATH    Path to skill's hooks.json config file (for install)
-  --skill-id ID    Skill identifier string to match commands (for uninstall)
-  --target TARGET  trae|claude|both (default: both)
-  --scope SCOPE    global|project (default: global)
-  --root DIR       Project root (for scope=project, default: cwd)
-
-Examples:
-  node install.cjs install --config ../hooks.json --scope global
-  node install.cjs uninstall --skill-id english-learner --scope global`);
+const SKILL_MARKERS = [
+    "\uD83D\uDCD6 **",
+    "\u8BCD\u4E49 Definitions",
+    "\u540C\u4E49\u8BCD:",
+    "\u53CD\u4E49\u8BCD:",
+    "\u638C\u63E1\u5EA6:",
+    'english-learner hook',
+    "\u67E5\u8BE2\u6B21\u6570:"
+];
+const isEnglishLearnerOutput = (text)=>SKILL_MARKERS.some((m)=>text.includes(m));
+function extractCandidates(text) {
+    if (!text) return [];
+    const stripped = text.replace(/```[\s\S]*?```/g, ' ').replace(/`[^`]+`/g, ' ').replace(/!\[[^\]]*\]\([^)]+\)/g, ' ').replace(/\[[^\]]*\]\([^)]+\)/g, ' ').replace(/[#*_>|`~\-]+/g, ' ');
+    const tokens = stripped.match(/\b[a-zA-Z][a-zA-Z'-]{6,}\b/g) || [];
+    const seen = new Set();
+    const candidates = [];
+    for (const raw of tokens){
+        const w = raw.toLowerCase();
+        if (seen.has(w)) continue;
+        if (/^[A-Z]{2,}$/.test(raw)) continue;
+        if (/'s$|'re$|'ve$|'ll$|n't$/.test(w)) continue;
+        seen.add(w);
+        candidates.push(w);
+        if (candidates.length >= 12) break;
+    }
+    return candidates;
 }
-function main() {
-    const args = process.argv.slice(2);
-    let action = '';
-    let configPath = '';
-    let skillId = '';
-    let target = 'both';
-    let scope = 'global';
-    let root = process.cwd();
-    for(let i = 0; i < args.length; i++){
-        const arg = args[i];
-        switch(arg){
-            case '--config':
-                configPath = args[++i] || '';
-                break;
-            case '--skill-id':
-                skillId = args[++i] || '';
-                break;
-            case '--target':
-                target = args[++i] || 'both';
-                break;
-            case '--scope':
-                scope = args[++i] || 'global';
-                break;
-            case '--root':
-                root = args[++i] || process.cwd();
-                break;
-            case '-h':
-            case '--help':
-                showHelp();
-                process.exit(0);
-            default:
-                if (!action) action = arg;
-        }
-    }
-    if (!action) {
-        showHelp();
-        process.exit(1);
-    }
-    if (action === 'install') {
-        if (!configPath) {
-            console.error('Error: --config required for install');
-            process.exit(1);
-        }
-        const absPath = external_node_path_namespaceObject.resolve(configPath);
-        const config = JSON.parse(external_node_fs_namespaceObject.readFileSync(absPath, 'utf8'));
-        const results = installHooks(config, {
-            target,
-            scope,
-            projectRoot: external_node_path_namespaceObject.resolve(root)
-        });
-        results.forEach((f)=>console.log(`\u{2705} Installed to: ${f}`));
-    } else if (action === 'uninstall') {
-        if (!skillId) {
-            console.error('Error: --skill-id required for uninstall');
-            process.exit(1);
-        }
-        uninstallHooks(skillId, {
-            target,
-            scope,
-            projectRoot: external_node_path_namespaceObject.resolve(root)
-        });
-        console.log(`\u{2705} Uninstalled hooks matching: ${skillId}`);
-    } else {
-        console.error(`Unknown action: ${action}`);
-        showHelp();
-        process.exit(1);
-    }
+async function main() {
+    const payload = await readStdin();
+    const transcript = payload.assistant_message || payload.last_response || payload.transcript || '';
+    if (!transcript || transcript.length < 200) return;
+    if (isEnglishLearnerOutput(transcript)) return;
+    const candidates = extractCandidates(transcript);
+    if (candidates.length < 5) return;
+    injectContext([
+        '[english-learner stop hook]',
+        "Scan the assistant's last response for 2-4 advanced or non-obvious English words/phrases the user might want to learn",
+        `(initial candidates: ${candidates.slice(0, 8).join(', ')}).`,
+        'If anything is genuinely worth surfacing, ask the user: "Want to save these to your vocabulary store?".',
+        "Only the user can decide \u2014 do NOT auto-save.",
+        'Skip silently if everything is common (CEFR A1-B1) or domain jargon.'
+    ].join(' '));
 }
-main();
+main().catch(()=>process.exit(0));
 
 for(var __webpack_i__ in __webpack_exports__) {
   exports[__webpack_i__] = __webpack_exports__[__webpack_i__];

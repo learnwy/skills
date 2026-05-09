@@ -1,0 +1,30 @@
+{
+  "name": "learnwy-skills",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Personal skills repository with rslib-bundled CLI scripts",
+  "type": "module",
+  "scripts": {
+    "build": "rslib build",
+    "watch": "rslib build --watch",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck && npm run build",
+
+    "migrate:english-learner": "node skills/english-learner/scripts/migrate-from-json.cjs",
+    "migrate:english-learner:dry": "node skills/english-learner/scripts/migrate-from-json.cjs --dry-run",
+
+    "install:english-learner": "node skills/english-learner/scripts/hooks/install.cjs install --config skills/english-learner/hooks.json --scope global --target both",
+    "install:llm-wiki":         "node skills/llm-wiki/scripts/hooks/install.cjs install --config skills/llm-wiki/hooks.json --scope global --target both",
+    "install:prompt-optimizer": "node skills/prompt-optimizer/scripts/hooks/install.cjs install --config skills/prompt-optimizer/hooks.json --scope global --target both",
+    "install:hooks":            "npm run install:english-learner && npm run install:llm-wiki && npm run install:prompt-optimizer",
+
+    "uninstall:english-learner": "node skills/english-learner/scripts/hooks/install.cjs uninstall --skill-id english-learner --scope global --target both",
+    "uninstall:llm-wiki":        "node skills/llm-wiki/scripts/hooks/install.cjs uninstall --skill-id llm-wiki --scope global --target both",
+    "uninstall:prompt-optimizer":"node skills/prompt-optimizer/scripts/hooks/install.cjs uninstall --skill-id prompt-optimizer --scope global --target both"
+  },
+  "devDependencies": {
+    "@rslib/core": "^0.10.0",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

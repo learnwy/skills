@@ -67,9 +67,9 @@ skills/                                    # Repository root
 
 | Skill | Description | Has Scripts |
 |-------|-------------|-------------|
-| **english-learner** | Vocabulary learning with auto-intercept English coaching | Yes (CJS) |
+| **english-learner** | Vocabulary learning with auto-intercept English coaching | Yes (TS → bundled CJS) |
 | **knowledge-consolidation** | Persist conversation insights to project knowledges/ | Yes (CJS) |
-| **prompt-optimizer** | Pre-flight prompt analysis & improvement (7-dimension scoring) | No |
+| **prompt-optimizer** | Pre-flight prompt analysis & improvement (7-dimension scoring) | TS → bundled CJS (hooks only) |
 
 ## Skill Specification
 
@@ -110,9 +110,10 @@ metadata:
 
 ### Script Conventions
 
-- **CJS scripts**: `.cjs` with `#!/usr/bin/env node` and `'use strict'` (for skills requiring Node.js compatibility)
-- **ESM scripts**: `.mjs` with Node.js >= 18 (for modern skill implementations)
-- **Path convention**: All script paths are relative to `{skill_root}` (the SKILL.md directory)
+- **TypeScript source** lives at repo root in `src/<skill-name>/` and `src/shared/`
+- **Build outputs** are committed at `skills/<skill-name>/scripts/*.cjs` (do NOT edit them by hand)
+- All scripts ship as bundled CJS targeting Node.js ≥ 22 (the `english-learner` SQLite path additionally requires Node ≥ 24 for the built-in `node:sqlite` module)
+- **Path convention**: All script paths in SKILL.md are relative to `{skill_root}` (the SKILL.md directory)
 - All skill documents in English
 
 ## Development Guidelines
@@ -171,23 +172,68 @@ trae-rules-writer        → Create AI behavior rules
 project-skill-installer  → Install an existing skill into a project
 ```
 
+### Build System (rslib)
+
+The repo uses [`@rslib/core`](https://rslib.rs) to bundle TypeScript sources from `src/` into per-skill CJS scripts at `skills/<name>/scripts/`.
+
+```
+src/                          ← source of truth (TypeScript)
+├── shared/
+│   ├── hooks-lib.ts          ← single source for all hook utilities
+│   ├── db.ts                 ← SQLite helper (english-learner)
+│   └── install-entry.ts      ← shared install/uninstall CLI
+├── english-learner/
+├── llm-wiki/
+└── prompt-optimizer/
+
+skills/<name>/scripts/        ← bundled output, COMMITTED, never hand-edit
+```
+
+**Build commands**:
+```bash
+npm install                   # one-time
+npm run build                 # bundle all skills
+npm run watch                 # watch mode for development
+npm run typecheck             # type-check without emitting
+npm run check                 # typecheck + build (CI gate)
+```
+
+**Skill commands** (preferred over hand-typing the long install paths):
+```bash
+npm run install:hooks                  # install all skill hooks globally
+npm run install:english-learner        # install just english-learner hooks
+npm run uninstall:english-learner      # remove english-learner hooks
+npm run migrate:english-learner        # migrate legacy JSON → SQLite
+npm run migrate:english-learner:dry    # dry-run preview only
+```
+
+### Dependency Strategy
+
+When a skill needs runtime dependencies, pick the right tier — never default to "consumer runs `npm install`":
+
+| Dep type | Strategy |
+|---|---|
+| **Built-in Node modules** (`node:sqlite`, `node:fs`, …) | Add to `output.externals` in `rslib.config.ts`. Document the required Node version in the skill's SKILL.md `## Prerequisites`. |
+| **Pure-JS npm deps** (e.g. `yaml`, `zod`, `chalk`) | Bundle into the output (rslib's default). No install needed at consumer site. |
+| **Native npm deps** (e.g. `better-sqlite3`, `sharp`) | Ship a tiny per-skill `skills/<name>/package.json` with the runtime dep. Add a Prerequisites note in SKILL.md telling the user to run `cd skills/<name> && npm install` once. |
+
+Every skill that has a non-trivial runtime requirement MUST list it in its SKILL.md `## Prerequisites` section so the AI assistant (and human reader) sees it before running.
+
+**Build philosophy**:
+- One source per shared utility — `lib.cjs` is no longer copy-pasted across skills, it's bundled in from `src/shared/hooks-lib.ts`.
+- Bundle output is **readable** (no minify, no mangle) so AI assistants can introspect it.
+- `cleanDistPath: false` — the build never deletes `SKILL.md`, `hooks.json`, `agents/`, or `references/`. It only writes `*.cjs` files under `scripts/`.
+- Every commit that changes `src/` MUST be accompanied by the corresponding rebuilt `skills/*/scripts/`. Run `npm run build` before committing.
+
 ### IDE Hooks
 
 Skills can register deterministic hooks that fire at IDE lifecycle events (SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, Stop). Works with both Trae and Claude Code.
 
 ```
-skills/*/hooks.json              → Per-skill hook configuration
-skills/*/scripts/hooks/lib.cjs   → Hook utility library (self-contained per skill)
-skills/*/scripts/hooks/install.cjs → CLI to install/uninstall hooks into IDE config
-skills/*/scripts/hooks/*.cjs     → Per-skill hook scripts
+skills/<name>/hooks.json                       → Per-skill hook configuration (handwritten)
+skills/<name>/scripts/hooks/install.cjs        → Bundled install/uninstall CLI
+skills/<name>/scripts/hooks/<event>.cjs        → Bundled hook scripts
 ```
-
-**Self-Contained Rule**: Each skill with hooks MUST bundle its own `lib.cjs` and `install.cjs` inside `scripts/hooks/`. Hook scripts MUST use `require('./lib.cjs')` — never reference the repo-root `scripts/hooks/` via relative traversal. This ensures skills work when installed standalone (e.g. at `~/.agents/skills/<name>/`).
-
-**Sync Rule**: When the canonical `scripts/hooks/lib.cjs` is updated:
-1. Copy the updated `lib.cjs` into each skill that has hooks
-2. Skills with hooks: `english-learner`, `llm-wiki`
-3. Verify hook scripts still work: `echo '{}' | node skills/<name>/scripts/hooks/<hook>.cjs`
 
 **Scope Convention**:
 - Skills storing data globally (`~/...`) → install hooks globally (`--scope global`)

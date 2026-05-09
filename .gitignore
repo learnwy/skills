@@ -25,3 +25,9 @@ Thumbs.db
 .vscode/
 *.swp
 *.swo
+
+# Build artifacts (skills/*/scripts/ are committed build outputs and stay tracked)
+node_modules/
+dist/
+.rslib/
+*.tsbuildinfo

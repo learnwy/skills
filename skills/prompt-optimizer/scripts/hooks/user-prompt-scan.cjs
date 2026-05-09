@@ -67,25 +67,25 @@ function installHooks(config, options = {}) {
                 '.trae',
                 '.trae-cn'
             ]){
-                const traeFile = external_node_path_namespaceObject.join(homeDir, dir, 'hooks.json');
+                const traeFile = path.join(homeDir, dir, 'hooks.json');
                 mergeAndWrite(traeFile, config, 'standalone');
                 results.push(traeFile);
             }
         }
         if (target === 'claude' || target === 'both') {
-            const claudeFile = external_node_path_namespaceObject.join(homeDir, '.claude', 'settings.json');
+            const claudeFile = path.join(homeDir, '.claude', 'settings.json');
             mergeAndWrite(claudeFile, config, 'nested');
             results.push(claudeFile);
         }
     } else {
         const root = projectRoot || getProjectDir();
         if (target === 'trae' || target === 'both') {
-            const traeFile = external_node_path_namespaceObject.join(root, '.trae', 'hooks.json');
+            const traeFile = path.join(root, '.trae', 'hooks.json');
             mergeAndWrite(traeFile, config, 'standalone');
             results.push(traeFile);
         }
         if (target === 'claude' || target === 'both') {
-            const claudeFile = external_node_path_namespaceObject.join(root, '.claude', 'settings.json');
+            const claudeFile = path.join(root, '.claude', 'settings.json');
             mergeAndWrite(claudeFile, config, 'nested');
             results.push(claudeFile);
         }
@@ -93,14 +93,14 @@ function installHooks(config, options = {}) {
     return results;
 }
 function mergeAndWrite(filePath, config, mode) {
-    const dir = external_node_path_namespaceObject.dirname(filePath);
-    if (!external_node_fs_namespaceObject.existsSync(dir)) external_node_fs_namespaceObject.mkdirSync(dir, {
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, {
         recursive: true
     });
     let existing = {};
-    if (external_node_fs_namespaceObject.existsSync(filePath)) {
+    if (fs.existsSync(filePath)) {
         try {
-            existing = JSON.parse(external_node_fs_namespaceObject.readFileSync(filePath, 'utf8'));
+            existing = JSON.parse(fs.readFileSync(filePath, 'utf8'));
         } catch  {
             existing = {};
         }
@@ -116,7 +116,7 @@ function mergeAndWrite(filePath, config, mode) {
             if (!isDup) hooks[event].push(group);
         }
     }
-    external_node_fs_namespaceObject.writeFileSync(filePath, JSON.stringify(existing, null, 2) + '\n');
+    fs.writeFileSync(filePath, JSON.stringify(existing, null, 2) + '\n');
 }
 function uninstallHooks(skillId, options = {}) {
     const { target = 'both', scope = 'global', projectRoot } = options;
@@ -125,24 +125,24 @@ function uninstallHooks(skillId, options = {}) {
     const files = [];
     if (scope === 'global') {
         if (target === 'trae' || target === 'both') {
-            files.push(external_node_path_namespaceObject.join(homeDir, '.trae', 'hooks.json'));
-            files.push(external_node_path_namespaceObject.join(homeDir, '.trae-cn', 'hooks.json'));
+            files.push(path.join(homeDir, '.trae', 'hooks.json'));
+            files.push(path.join(homeDir, '.trae-cn', 'hooks.json'));
         }
         if (target === 'claude' || target === 'both') {
-            files.push(external_node_path_namespaceObject.join(homeDir, '.claude', 'settings.json'));
+            files.push(path.join(homeDir, '.claude', 'settings.json'));
         }
     } else {
         if (target === 'trae' || target === 'both') {
-            files.push(external_node_path_namespaceObject.join(root, '.trae', 'hooks.json'));
+            files.push(path.join(root, '.trae', 'hooks.json'));
         }
         if (target === 'claude' || target === 'both') {
-            files.push(external_node_path_namespaceObject.join(root, '.claude', 'settings.json'));
+            files.push(path.join(root, '.claude', 'settings.json'));
         }
     }
     for (const filePath of files){
-        if (!external_node_fs_namespaceObject.existsSync(filePath)) continue;
+        if (!fs.existsSync(filePath)) continue;
         try {
-            const content = JSON.parse(external_node_fs_namespaceObject.readFileSync(filePath, 'utf8'));
+            const content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
             const hooks = content.hooks;
             if (!hooks) continue;
             for (const [event, groups] of Object.entries(hooks)){
@@ -152,105 +152,69 @@ function uninstallHooks(skillId, options = {}) {
                 });
                 if (hooks[event].length === 0) delete hooks[event];
             }
-            external_node_fs_namespaceObject.writeFileSync(filePath, JSON.stringify(content, null, 2) + '\n');
+            fs.writeFileSync(filePath, JSON.stringify(content, null, 2) + '\n');
         } catch  {
         /* swallow */ }
     }
 }
 
-;// CONCATENATED MODULE: ./src/shared/install-entry.ts
+;// CONCATENATED MODULE: ./src/prompt-optimizer/hooks/user-prompt-scan.ts
 
-
-
-function showHelp() {
-    console.log(`Usage: node install.cjs <action> [options]
-
-Install or uninstall skill hooks into IDE config files.
-
-Actions:
-  install   Install hooks from a skill's hooks config
-  uninstall Remove hooks matching a skill identifier
-
-Options:
-  --config PATH    Path to skill's hooks.json config file (for install)
-  --skill-id ID    Skill identifier string to match commands (for uninstall)
-  --target TARGET  trae|claude|both (default: both)
-  --scope SCOPE    global|project (default: global)
-  --root DIR       Project root (for scope=project, default: cwd)
-
-Examples:
-  node install.cjs install --config ../hooks.json --scope global
-  node install.cjs uninstall --skill-id english-learner --scope global`);
+const EXPLICIT_TRIGGERS = [
+    /\boptimi[sz]e\s+(my|this|the|that)?\s*prompt\b/i,
+    /\bimprove\s+(my|this|the|that)?\s*prompt\b/i,
+    /\breview\s+(my|this|the|that)?\s*prompt\b/i,
+    /\brewrite\s+(my|this|the|that)?\s*prompt\b/i,
+    /\bcheck\s+(my|this|the|that)?\s*prompt\b/i,
+    /\brefine\s+(my|this|the|that)?\s*prompt\b/i,
+    /\bmake\s+(this|the|my)\s+prompt\s+(more|better)\b/i,
+    /\bis\s+this\s+prompt\s+good\b/i,
+    /优化\s*(我的|这段|这个)?\s*提示词/,
+    /改进\s*(我的|这段|这个)?\s*提示词/,
+    /重写\s*(我的|这段|这个)?\s*提示词/,
+    /帮我.*?(改|优化).*?prompt/i
+];
+const PROMPT_SHAPE_MARKERS = [
+    /\byou are (a|an|the)\b/i,
+    /\byour (task|job|role|goal) is\b/i,
+    /\bact as (a|an|the)\b/i,
+    /\bgenerate (a|an|the)\b/i,
+    /\b(analyze|summarize|translate|classify)\b.*\b(the|this|following)\b/i,
+    /\binstructions?\s*[:：]/i,
+    /\bconstraints?\s*[:：]/i,
+    /\brequirements?\s*[:：]/i,
+    /\boutput format\s*[:：]/i
+];
+const looksLikeExplicitAsk = (text)=>EXPLICIT_TRIGGERS.some((re)=>re.test(text));
+function looksLikeStructuredPrompt(text) {
+    if (text.length < 400) return false;
+    const lineCount = text.split('\n').length;
+    if (lineCount < 4) return false;
+    const matches = PROMPT_SHAPE_MARKERS.filter((re)=>re.test(text)).length;
+    return matches >= 2;
 }
-function main() {
-    const args = process.argv.slice(2);
-    let action = '';
-    let configPath = '';
-    let skillId = '';
-    let target = 'both';
-    let scope = 'global';
-    let root = process.cwd();
-    for(let i = 0; i < args.length; i++){
-        const arg = args[i];
-        switch(arg){
-            case '--config':
-                configPath = args[++i] || '';
-                break;
-            case '--skill-id':
-                skillId = args[++i] || '';
-                break;
-            case '--target':
-                target = args[++i] || 'both';
-                break;
-            case '--scope':
-                scope = args[++i] || 'global';
-                break;
-            case '--root':
-                root = args[++i] || process.cwd();
-                break;
-            case '-h':
-            case '--help':
-                showHelp();
-                process.exit(0);
-            default:
-                if (!action) action = arg;
-        }
-    }
-    if (!action) {
-        showHelp();
-        process.exit(1);
-    }
-    if (action === 'install') {
-        if (!configPath) {
-            console.error('Error: --config required for install');
-            process.exit(1);
-        }
-        const absPath = external_node_path_namespaceObject.resolve(configPath);
-        const config = JSON.parse(external_node_fs_namespaceObject.readFileSync(absPath, 'utf8'));
-        const results = installHooks(config, {
-            target,
-            scope,
-            projectRoot: external_node_path_namespaceObject.resolve(root)
-        });
-        results.forEach((f)=>console.log(`\u{2705} Installed to: ${f}`));
-    } else if (action === 'uninstall') {
-        if (!skillId) {
-            console.error('Error: --skill-id required for uninstall');
-            process.exit(1);
-        }
-        uninstallHooks(skillId, {
-            target,
-            scope,
-            projectRoot: external_node_path_namespaceObject.resolve(root)
-        });
-        console.log(`\u{2705} Uninstalled hooks matching: ${skillId}`);
-    } else {
-        console.error(`Unknown action: ${action}`);
-        showHelp();
-        process.exit(1);
-    }
+async function main() {
+    const payload = await readStdin();
+    const userMessage = payload.user_message || payload.prompt || '';
+    if (!userMessage) return;
+    const trimmed = userMessage.trim();
+    const isLikelyCode = /^(import |const |let |var |function |class |\/\/|#!|{|}|\[|\])/.test(trimmed);
+    const isLikelyPath = /^[\/~.].*\.[a-z]{1,4}$/i.test(trimmed);
+    const isLikelyCommand = /^(git |npm |node |cd |ls |cat |mkdir |rm )/.test(trimmed);
+    if (isLikelyCode || isLikelyPath || isLikelyCommand) return;
+    const explicit = looksLikeExplicitAsk(trimmed);
+    const structured = looksLikeStructuredPrompt(trimmed);
+    if (!explicit && !structured) return;
+    const reason = explicit ? 'The user explicitly asked to optimize/improve a prompt.' : 'The user submitted a long, structured prompt-shaped instruction.';
+    injectContext([
+        '[prompt-optimizer hook]',
+        reason,
+        'Before executing, run a 7-dimension pre-flight analysis (Clarity, Specificity, Context, Structure, Examples, Constraints, Completeness),',
+        'show the critique table + an Optimized Prompt block, then ask: "Use original / Use optimized / Edit manually?".',
+        'Skip silently if the user is in mid-conversation and clearly does NOT want a review.'
+    ].join(' '));
 }
-main();
+main().catch(()=>process.exit(0));
 
 for(var __webpack_i__ in __webpack_exports__) {
   exports[__webpack_i__] = __webpack_exports__[__webpack_i__];

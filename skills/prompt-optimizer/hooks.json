@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ~/.agents/skills/prompt-optimizer/scripts/hooks/user-prompt-scan.cjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
