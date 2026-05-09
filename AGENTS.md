@@ -207,6 +207,13 @@ npm run migrate:english-learner        # migrate legacy JSON → SQLite
 npm run migrate:english-learner:dry    # dry-run preview only
 ```
 
+**Release commands**:
+```bash
+npm run release                        # git push + pnpx skills install -g -y learnwy/skills
+```
+
+**Pre-commit guard**: `.githooks/pre-commit` runs `npm run check` whenever `src/`, `rslib.config.ts`, `tsconfig.json`, or `package.json` is staged, then refuses the commit if `skills/*/scripts/` is out of sync. `npm install` wires this in via the `prepare` script (`git config core.hooksPath .githooks`).
+
 ### Dependency Strategy
 
 When a skill needs runtime dependencies, pick the right tier — never default to "consumer runs `npm install`":

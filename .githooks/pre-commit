@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Skip if no src/ changes are staged — only build-relevant edits trigger the guard.
+if ! git diff --cached --name-only | grep -qE '^(src/|rslib\.config\.ts|tsconfig\.json|package\.json)'; then
+  exit 0
+fi
+
+echo "[pre-commit] src/ changed — running npm run check"
+npm run --silent check >/dev/null
+
+# Fail if the build produced uncommitted changes under skills/*/scripts/
+# Note: ':(glob)' is required — bare 'skills/*/scripts/' does not match across directories.
+if ! git diff --quiet -- ':(glob)skills/*/scripts/**'; then
+  echo
+  echo "❌  skills/*/scripts/ is out of sync with src/. Stage the rebuilt outputs:"
+  echo
+  git diff --name-only -- ':(glob)skills/*/scripts/**' | sed 's/^/    /'
+  echo
+  echo "    git add skills && git commit --amend --no-edit"
+  exit 1
+fi
+
+echo "[pre-commit] OK — typecheck + build clean, skills/*/scripts/ in sync"
