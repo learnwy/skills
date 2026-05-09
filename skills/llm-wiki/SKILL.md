@@ -165,3 +165,40 @@ Does NOT handle: single insights (→ `knowledge-consolidation`), contradiction 
 
 - [Page templates](references/templates.md) — 9 templates: summary, concept, entity, index, snippet, troubleshooting, decision, cheatsheet, comparison
 - [Workflows & reference](references/workflows.md) — Composition workflows, error handling, key concepts, expansion roadmap
+
+## Hooks
+
+This skill registers IDE hooks to enable **deterministic auto-query** — the wiki is consulted automatically when relevant, without relying on the AI remembering.
+
+### Scope
+
+**Global** — installs to `~/.claude/settings.json` and `~/.trae/hooks.json` since wiki lives at `~/.learnwy/llm-wiki/`.
+
+### Events
+
+| Event | Script | Purpose |
+|-------|--------|---------|
+| `SessionStart` | `scripts/hooks/session-context.cjs` | Load wiki topics into session context (max 30 topics) |
+| `UserPromptSubmit` | `scripts/hooks/auto-query.cjs` | Match user question against wiki topics, inject reading hints |
+
+### Install
+
+```bash
+# Install hooks globally (supports both Trae and Claude Code)
+node scripts/hooks/../../../../scripts/hooks/install.cjs install \
+  --config ./hooks.json --scope global --target both
+```
+
+### Uninstall
+
+```bash
+node scripts/hooks/../../../../scripts/hooks/install.cjs uninstall \
+  --skill-id llm-wiki --scope global --target both
+```
+
+### How It Works
+
+1. **SessionStart**: loads `wiki/topics.txt` and injects up to 30 topic keywords into session context
+2. **UserPromptSubmit**: for each user message >15 chars, checks keyword overlap with wiki topics
+3. If matches found → injects topic names + wiki path for the AI to read relevant pages
+4. If no matches or wiki doesn't exist → exits silently

@@ -184,6 +184,58 @@ template-skill/
 | Test      | [test.tsx](assets/test.tsx.template) | src/components/{name}/__tests__/ |
 ```
 
+## Pattern 6: IDE Hooks Integration
+
+**When to use:** Skill needs deterministic automation at IDE lifecycle events (auto-format, quality gates, context injection). Works across both Trae and Claude Code.
+
+**Structure:**
+
+```
+hooks-skill/
+├── SKILL.md (skill logic + hook registration)
+├── scripts/
+│   ├── session-init.cjs    (SessionStart handler)
+│   ├── quality-gate.cjs    (Stop handler)
+│   └── post-edit.cjs       (PostToolUse handler)
+└── references/
+    └── hooks-standard.md   (spec reference)
+```
+
+**Config format** (generates to `.trae/hooks.json` AND `.claude/settings.json`):
+
+```json
+{
+  "version": 1,
+  "hooks": {
+    "SessionStart": [{
+      "hooks": [{ "type": "command", "command": "node .hooks/init.cjs", "timeout": 10 }]
+    }],
+    "PostToolUse": [{
+      "matcher": "Edit|Write",
+      "hooks": [{ "type": "command", "command": "node .hooks/format.cjs", "timeout": 10 }]
+    }],
+    "Stop": [{
+      "loop_limit": 3,
+      "hooks": [{ "type": "command", "command": "node .hooks/verify.cjs", "timeout": 30 }]
+    }]
+  }
+}
+```
+
+**Key events:**
+
+| Event | Matcher | Use Case |
+|-------|---------|----------|
+| `SessionStart` | — | Inject context, load project state |
+| `UserPromptSubmit` | — | Enrich/block user prompts |
+| `PreToolUse` | tool regex | Block/modify tool calls |
+| `PostToolUse` | tool regex | Auto-format, log changes |
+| `Stop` | — | Quality gate before stop (loop_limit prevents infinite) |
+
+**I/O contract:** Scripts receive JSON on stdin, output JSON on stdout. Exit 0 = allow, exit 2 = block.
+
+**Portability:** Use `command` type only. Check `$TRAE_PROJECT_DIR` or `$CLAUDE_PROJECT_DIR`.
+
 ## Project Analysis Checklist
 
 Before creating any skill, analyze:
@@ -194,3 +246,4 @@ Before creating any skill, analyze:
 - [ ] What conventions exist?
 - [ ] What templates would help?
 - [ ] What patterns exist in existing `.trae/skills/`?
+- [ ] Should the skill register IDE hooks for deterministic automation?

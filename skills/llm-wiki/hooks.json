@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ~/.learnwy/skills/skills/llm-wiki/scripts/hooks/session-context.cjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ~/.learnwy/skills/skills/llm-wiki/scripts/hooks/auto-query.cjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -170,3 +170,25 @@ project-agent-writer     → Create a specialized agent
 trae-rules-writer        → Create AI behavior rules
 project-skill-installer  → Install an existing skill into a project
 ```
+
+### IDE Hooks
+
+Skills can register deterministic hooks that fire at IDE lifecycle events (SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, Stop). Works with both Trae and Claude Code.
+
+```
+scripts/hooks/lib.cjs    → Shared hook library (stdin parsing, response helpers, install/uninstall)
+scripts/hooks/install.cjs → CLI to install/uninstall skill hooks into IDE config
+skills/*/hooks.json       → Per-skill hook configuration
+skills/*/scripts/hooks/   → Per-skill hook scripts
+```
+
+**Sync Rule**: All hook scripts MUST import from `scripts/hooks/lib.cjs`. When `lib.cjs` is updated:
+1. Check all skills with `hooks.json` for compatibility
+2. Skills with hooks: `english-learner`, `llm-wiki`, `requirement-workflow`
+3. Update any skill hook scripts that use changed APIs
+
+**Scope Convention**:
+- Skills storing data globally (`~/...`) → install hooks globally (`--scope global`)
+- Skills operating per-project → install hooks per-project (`--scope project`)
+
+**Hook Installation**: When a skill is activated (manually or auto-triggered), it should check if its hooks are installed and offer to install them if missing.

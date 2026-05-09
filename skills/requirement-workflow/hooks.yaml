@@ -1,5 +1,15 @@
-# Global Hooks Configuration
-# Managed by hooks.cjs
+# Workflow Hooks Configuration
+# Defines which agents/skills fire at workflow lifecycle points.
+# 
+# These are INTERNAL workflow hooks (not IDE hooks).
+# Use `hooks.cjs generate` to produce a standard hooks.json 
+# compatible with both Trae (.trae/hooks.json) and Claude Code (.claude/settings.json).
+#
+# IDE Event Mapping:
+#   SessionStart       → load workflow context
+#   UserPromptSubmit   → inject stage awareness
+#   PostToolUse        → post-stage validation
+#   Stop               → quality gate (on_blocked, post_stage checks)
 
 hooks:
   pre_stage_ANALYZING:
@@ -32,33 +42,17 @@ hooks:
     - skill: "error-analyzer"
       required: false
 
-agents:
-  pre_stage_ANALYZING:
-    - agent: "risk-auditor"
-      required: false
-
-  post_stage_ANALYZING:
-    - agent: "iron-audit-pm"
-      required: false
-    - agent: "mvp-freeze-architect"
-      required: false
-
-  post_stage_DESIGNING:
-    - agent: "tech-design-reviewer"
-      required: false
-
-  post_stage_IMPLEMENTING:
-    - agent: "code-reviewer"
-      required: false
-
-  pre_stage_TESTING:
-    - agent: "test-strategy-advisor"
-      required: false
-
-  on_blocked:
-    - agent: "blocker-resolver"
-      required: false
-
-  on_error:
-    - agent: "error-analyzer"
-      required: false
+# Standard IDE hooks generation config.
+# `hooks.cjs generate` uses this to create hooks.json.
+ide_hooks:
+  SessionStart:
+    - command: "node .trae/workflow/hooks/session-init.cjs"
+      timeout: 10
+  Stop:
+    - command: "node .trae/workflow/hooks/quality-gate.cjs"
+      loop_limit: 3
+      timeout: 30
+  PostToolUse:
+    - matcher: "Edit|Write"
+      command: "node .trae/workflow/hooks/post-edit.cjs"
+      timeout: 10

@@ -355,3 +355,39 @@ Before responding to user, verify:
 - [ ] New words SAVED via `batch_save` (MANDATORY — not optional)
 - [ ] Query logged via `log_query`
 - [ ] Response uses unified format above
+
+## Hooks
+
+This skill registers IDE hooks to enable **deterministic auto-intercept** — no reliance on the AI "remembering" to check English.
+
+### Scope
+
+**Global** — installs to `~/.claude/settings.json` and `~/.trae/hooks.json` since vocabulary data lives at `~/.english-learner/`.
+
+### Events
+
+| Event | Script | Purpose |
+|-------|--------|---------|
+| `UserPromptSubmit` | `scripts/hooks/user-prompt-scan.cjs` | Scan user English input, inject skill activation reminder |
+
+### Install
+
+```bash
+# Install hooks globally (supports both Trae and Claude Code)
+node scripts/hooks/../../../scripts/hooks/install.cjs install \
+  --config ./hooks.json --scope global --target both
+```
+
+### Uninstall
+
+```bash
+node scripts/hooks/../../../scripts/hooks/install.cjs uninstall \
+  --skill-id english-learner --scope global --target both
+```
+
+### How It Works
+
+1. **UserPromptSubmit** fires on every user message
+2. `user-prompt-scan.cjs` checks if message is English (>60% ASCII alpha, not code/path/command)
+3. If English detected → injects reminder context for the AI to activate the skill
+4. If not English or too short → exits silently (exit 0, no output)

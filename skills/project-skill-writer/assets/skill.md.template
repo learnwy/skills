@@ -45,6 +45,34 @@ description: "{{DESCRIPTION}}. Use when {{USE_CASES}}. Triggers on '{{TRIGGER1}}
 | {{ISSUE1}} | {{SOLUTION1}}   |
 | {{ISSUE2}} | {{SOLUTION2}}   |
 
+## Hooks
+
+<!-- Remove this section if the skill does not need deterministic IDE automation -->
+
+### Scope
+
+**{{global|project}}** — {{reason for scope choice}}
+
+### Events
+
+| Event | Script | Purpose |
+|-------|--------|---------|
+| `{{EVENT_NAME}}` | `scripts/hooks/{{SCRIPT}}` | {{PURPOSE}} |
+
+### Install
+
+```bash
+node {{PATH_TO_SHARED}}/scripts/hooks/install.cjs install \
+  --config ./hooks.json --scope {{global|project}} --target both
+```
+
+### Uninstall
+
+```bash
+node {{PATH_TO_SHARED}}/scripts/hooks/install.cjs uninstall \
+  --skill-id {{SKILL_NAME}} --scope {{global|project}} --target both
+```
+
 ## References
 
 - [{{REF_1}}](references/{{REF_1_FILE}}) - {{REF_1_DESC}}

@@ -97,6 +97,11 @@ Based on Problem + Project Analysis, produce a design spec:
 
 ### Quality Criteria
 - {measurable success criteria}
+
+### Hooks (Optional)
+- Scope: {global|project}
+- Events: {which IDE lifecycle events to hook into}
+- Purpose: {what deterministic automation the hooks provide}
 ```
 
 Design Principles:
@@ -145,6 +150,8 @@ Minimum checks before delivery:
 - [ ] Workflow is executable (not just abstract steps)
 - [ ] Dependencies are declared
 - [ ] Examples show real usage
+- [ ] If skill has auto-mode → hooks.json exists with correct scope (global vs project)
+- [ ] Hook scripts use shared lib (`scripts/hooks/lib.cjs`), not custom stdin parsing
 
 ## Error Handling
 
