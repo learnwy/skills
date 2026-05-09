@@ -4,10 +4,6 @@
 const fs = require('fs');
 const path = require('path');
 
-/**
- * Read JSON input from stdin (hook payload).
- * @returns {Promise<object>} Parsed JSON from stdin
- */
 function readStdin() {
   return new Promise((resolve, reject) => {
     let data = '';
@@ -24,42 +20,22 @@ function readStdin() {
   });
 }
 
-/**
- * Get the project root from env vars (works in both Trae and Claude Code).
- * @returns {string} Project root path
- */
 function getProjectDir() {
   return process.env.TRAE_PROJECT_DIR || process.env.CLAUDE_PROJECT_DIR || process.cwd();
 }
 
-/**
- * Output a structured JSON response to stdout.
- * @param {object} output - The hook output object
- */
 function respond(output) {
   process.stdout.write(JSON.stringify(output));
 }
 
-/**
- * Output plain text to stdout (for SessionStart/UserPromptSubmit context injection).
- * @param {string} text - Context text to inject
- */
 function injectContext(text) {
   process.stdout.write(text);
 }
 
-/**
- * Block the action with a reason (exit code 0 + JSON decision).
- * @param {string} reason - Why the action is blocked
- */
 function block(reason) {
   respond({ decision: 'block', reason });
 }
 
-/**
- * Deny a PreToolUse with a reason.
- * @param {string} reason - Why the tool call is denied
- */
 function deny(reason) {
   respond({
     hookSpecificOutput: {
@@ -70,10 +46,6 @@ function deny(reason) {
   });
 }
 
-/**
- * Allow with additional context.
- * @param {string} context - Additional context for the model
- */
 function allowWithContext(context) {
   respond({
     hookSpecificOutput: {
@@ -83,20 +55,10 @@ function allowWithContext(context) {
   });
 }
 
-/**
- * Generate a hooks.json config object.
- * @param {object} hooks - Map of event names to hook group arrays
- * @returns {object} Standard hooks.json structure
- */
 function buildHooksConfig(hooks) {
   return { version: 1, hooks };
 }
 
-/**
- * Install hooks config to the appropriate location.
- * @param {object} config - The hooks config object
- * @param {object} options - { target: 'trae'|'claude'|'both', scope: 'global'|'project', projectRoot?: string }
- */
 function installHooks(config, options = {}) {
   const { target = 'both', scope = 'global', projectRoot } = options;
   const results = [];
@@ -105,9 +67,12 @@ function installHooks(config, options = {}) {
     const homeDir = process.env.HOME || process.env.USERPROFILE;
 
     if (target === 'trae' || target === 'both') {
-      const traeFile = path.join(homeDir, '.trae', 'hooks.json');
-      mergeAndWrite(traeFile, config, 'standalone');
-      results.push(traeFile);
+      // Install to both Trae and Trae CN global config dirs
+      for (const dir of ['.trae', '.trae-cn']) {
+        const traeFile = path.join(homeDir, dir, 'hooks.json');
+        mergeAndWrite(traeFile, config, 'standalone');
+        results.push(traeFile);
+      }
     }
     if (target === 'claude' || target === 'both') {
       const claudeFile = path.join(homeDir, '.claude', 'settings.json');
@@ -132,12 +97,6 @@ function installHooks(config, options = {}) {
   return results;
 }
 
-/**
- * Merge hooks config into an existing file (or create it).
- * @param {string} filePath - Target file path
- * @param {object} config - Hooks config to merge
- * @param {string} mode - 'standalone' (write as-is) or 'nested' (merge into settings.hooks)
- */
 function mergeAndWrite(filePath, config, mode) {
   const dir = path.dirname(filePath);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -147,12 +106,10 @@ function mergeAndWrite(filePath, config, mode) {
     if (fs.existsSync(filePath)) {
       try { existing = JSON.parse(fs.readFileSync(filePath, 'utf8')); } catch (e) {}
     }
-    // Merge hook events (don't overwrite other events)
     existing.version = config.version || 1;
     existing.hooks = existing.hooks || {};
     for (const [event, groups] of Object.entries(config.hooks || {})) {
       existing.hooks[event] = existing.hooks[event] || [];
-      // Avoid duplicates by checking command strings
       for (const group of groups) {
         const isDup = existing.hooks[event].some(g => 
           JSON.stringify(g) === JSON.stringify(group)
@@ -162,7 +119,6 @@ function mergeAndWrite(filePath, config, mode) {
     }
     fs.writeFileSync(filePath, JSON.stringify(existing, null, 2) + '\n');
   } else {
-    // nested mode: merge into settings.json { hooks: {...} }
     let settings = {};
     if (fs.existsSync(filePath)) {
       try { settings = JSON.parse(fs.readFileSync(filePath, 'utf8')); } catch (e) {}
@@ -181,11 +137,6 @@ function mergeAndWrite(filePath, config, mode) {
   }
 }
 
-/**
- * Uninstall hooks that match a given skill identifier.
- * @param {string} skillId - Command substring to match for removal
- * @param {object} options - { target, scope, projectRoot }
- */
 function uninstallHooks(skillId, options = {}) {
   const { target = 'both', scope = 'global', projectRoot } = options;
   const homeDir = process.env.HOME || process.env.USERPROFILE;
@@ -193,7 +144,10 @@ function uninstallHooks(skillId, options = {}) {
 
   const files = [];
   if (scope === 'global') {
-    if (target === 'trae' || target === 'both') files.push(path.join(homeDir, '.trae', 'hooks.json'));
+    if (target === 'trae' || target === 'both') {
+      files.push(path.join(homeDir, '.trae', 'hooks.json'));
+      files.push(path.join(homeDir, '.trae-cn', 'hooks.json'));
+    }
     if (target === 'claude' || target === 'both') files.push(path.join(homeDir, '.claude', 'settings.json'));
   } else {
     if (target === 'trae' || target === 'both') files.push(path.join(root, '.trae', 'hooks.json'));

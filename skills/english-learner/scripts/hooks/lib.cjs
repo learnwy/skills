@@ -67,9 +67,12 @@ function installHooks(config, options = {}) {
     const homeDir = process.env.HOME || process.env.USERPROFILE;
 
     if (target === 'trae' || target === 'both') {
-      const traeFile = path.join(homeDir, '.trae', 'hooks.json');
-      mergeAndWrite(traeFile, config, 'standalone');
-      results.push(traeFile);
+      // Install to both Trae and Trae CN global config dirs
+      for (const dir of ['.trae', '.trae-cn']) {
+        const traeFile = path.join(homeDir, dir, 'hooks.json');
+        mergeAndWrite(traeFile, config, 'standalone');
+        results.push(traeFile);
+      }
     }
     if (target === 'claude' || target === 'both') {
       const claudeFile = path.join(homeDir, '.claude', 'settings.json');
@@ -141,7 +144,10 @@ function uninstallHooks(skillId, options = {}) {
 
   const files = [];
   if (scope === 'global') {
-    if (target === 'trae' || target === 'both') files.push(path.join(homeDir, '.trae', 'hooks.json'));
+    if (target === 'trae' || target === 'both') {
+      files.push(path.join(homeDir, '.trae', 'hooks.json'));
+      files.push(path.join(homeDir, '.trae-cn', 'hooks.json'));
+    }
     if (target === 'claude' || target === 'both') files.push(path.join(homeDir, '.claude', 'settings.json'));
   } else {
     if (target === 'trae' || target === 'both') files.push(path.join(root, '.trae', 'hooks.json'));
