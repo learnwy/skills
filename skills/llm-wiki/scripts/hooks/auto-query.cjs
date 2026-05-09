@@ -3,8 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const hooksLib = path.join(__dirname, '..', '..', '..', '..', 'scripts', 'hooks', 'lib.cjs');
-const { readStdin, injectContext } = require(hooksLib);
+const { readStdin, injectContext } = require('./lib.cjs');
 
 const WIKI_ROOT = path.join(process.env.HOME || '', '.learnwy', 'llm-wiki');
 

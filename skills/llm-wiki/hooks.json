@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ~/.learnwy/skills/skills/llm-wiki/scripts/hooks/session-context.cjs",
+            "command": "node ~/.agents/skills/llm-wiki/scripts/hooks/session-context.cjs",
             "timeout": 5
           }
         ]
@@ -17,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ~/.learnwy/skills/skills/llm-wiki/scripts/hooks/auto-query.cjs",
+            "command": "node ~/.agents/skills/llm-wiki/scripts/hooks/auto-query.cjs",
             "timeout": 5
           }
         ]

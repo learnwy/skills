@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node ~/.learnwy/skills/skills/english-learner/scripts/hooks/user-prompt-scan.cjs",
+            "command": "node ~/.agents/skills/english-learner/scripts/hooks/user-prompt-scan.cjs",
             "timeout": 5
           }
         ]

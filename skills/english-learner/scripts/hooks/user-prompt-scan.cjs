@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-const path = require('path');
-const { readStdin, injectContext } = require(path.join(__dirname, '..', '..', '..', '..', 'scripts', 'hooks', 'lib.cjs'));
+const { readStdin, injectContext } = require('./lib.cjs');
 
 async function main() {
   const payload = await readStdin();

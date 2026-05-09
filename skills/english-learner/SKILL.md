@@ -374,14 +374,14 @@ This skill registers IDE hooks to enable **deterministic auto-intercept** — no
 
 ```bash
 # Install hooks globally (supports both Trae and Claude Code)
-node scripts/hooks/../../../scripts/hooks/install.cjs install \
+node scripts/hooks/install.cjs install \
   --config ./hooks.json --scope global --target both
 ```
 
 ### Uninstall
 
 ```bash
-node scripts/hooks/../../../scripts/hooks/install.cjs uninstall \
+node scripts/hooks/install.cjs uninstall \
   --skill-id english-learner --scope global --target both
 ```
 

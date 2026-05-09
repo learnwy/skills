@@ -176,19 +176,32 @@ project-skill-installer  → Install an existing skill into a project
 Skills can register deterministic hooks that fire at IDE lifecycle events (SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, Stop). Works with both Trae and Claude Code.
 
 ```
-scripts/hooks/lib.cjs    → Shared hook library (stdin parsing, response helpers, install/uninstall)
-scripts/hooks/install.cjs → CLI to install/uninstall skill hooks into IDE config
-skills/*/hooks.json       → Per-skill hook configuration
-skills/*/scripts/hooks/   → Per-skill hook scripts
+skills/*/hooks.json              → Per-skill hook configuration
+skills/*/scripts/hooks/lib.cjs   → Hook utility library (self-contained per skill)
+skills/*/scripts/hooks/install.cjs → CLI to install/uninstall hooks into IDE config
+skills/*/scripts/hooks/*.cjs     → Per-skill hook scripts
 ```
 
-**Sync Rule**: All hook scripts MUST import from `scripts/hooks/lib.cjs`. When `lib.cjs` is updated:
-1. Check all skills with `hooks.json` for compatibility
-2. Skills with hooks: `english-learner`, `llm-wiki`, `requirement-workflow`
-3. Update any skill hook scripts that use changed APIs
+**Self-Contained Rule**: Each skill with hooks MUST bundle its own `lib.cjs` and `install.cjs` inside `scripts/hooks/`. Hook scripts MUST use `require('./lib.cjs')` — never reference the repo-root `scripts/hooks/` via relative traversal. This ensures skills work when installed standalone (e.g. at `~/.agents/skills/<name>/`).
+
+**Sync Rule**: When the canonical `scripts/hooks/lib.cjs` is updated:
+1. Copy the updated `lib.cjs` into each skill that has hooks
+2. Skills with hooks: `english-learner`, `llm-wiki`
+3. Verify hook scripts still work: `echo '{}' | node skills/<name>/scripts/hooks/<hook>.cjs`
 
 **Scope Convention**:
 - Skills storing data globally (`~/...`) → install hooks globally (`--scope global`)
 - Skills operating per-project → install hooks per-project (`--scope project`)
 
-**Hook Installation**: When a skill is activated (manually or auto-triggered), it should check if its hooks are installed and offer to install them if missing.
+**Hook Installation**:
+```bash
+# Install (from skill directory)
+node scripts/hooks/install.cjs install --config ./hooks.json --scope global --target both
+
+# Uninstall
+node scripts/hooks/install.cjs uninstall --skill-id <name> --scope global --target both
+```
+
+**Installed locations**:
+- Trae: `~/.trae/hooks.json` (standalone hooks file)
+- Claude Code: `~/.claude/settings.json` (merged into `hooks` key)

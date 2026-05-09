@@ -185,14 +185,14 @@ This skill registers IDE hooks to enable **deterministic auto-query** — the wi
 
 ```bash
 # Install hooks globally (supports both Trae and Claude Code)
-node scripts/hooks/../../../../scripts/hooks/install.cjs install \
+node scripts/hooks/install.cjs install \
   --config ./hooks.json --scope global --target both
 ```
 
 ### Uninstall
 
 ```bash
-node scripts/hooks/../../../../scripts/hooks/install.cjs uninstall \
+node scripts/hooks/install.cjs uninstall \
   --skill-id llm-wiki --scope global --target both
 ```
 
