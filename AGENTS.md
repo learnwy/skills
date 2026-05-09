@@ -209,8 +209,13 @@ npm run migrate:english-learner:dry    # dry-run preview only
 
 **Release commands**:
 ```bash
-npm run release                        # git push + pnpx skills install -g -y learnwy/skills
+npm run release                        # git push + pnpx skills install + register IDE hooks (3 skills)
 ```
+
+The release runs three steps in order:
+1. `git push origin main` — publish the new bundles to GitHub
+2. `pnpx skills install -g -y learnwy/skills` — pull the latest into `~/.agents/skills/<name>/` and register every skill with all 15 supported AI agents
+3. `npm run install:hooks` — register `UserPromptSubmit`, `Stop`, and `SessionStart` entries in `~/.claude/settings.json` and `~/.trae/hooks.json` (and `~/.trae-cn/hooks.json`). Idempotent — re-running just re-asserts the same entries.
 
 **Pre-commit guard**: `.githooks/pre-commit` runs `npm run check` whenever `src/`, `rslib.config.ts`, `tsconfig.json`, or `package.json` is staged, then refuses the commit if `skills/*/scripts/` is out of sync. `npm install` wires this in via the `prepare` script (`git config core.hooksPath .githooks`).
 

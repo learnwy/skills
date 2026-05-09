@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm run build",
     "prepare": "git config core.hooksPath .githooks",
-    "release": "git push origin main && pnpx skills install -g -y learnwy/skills",
+    "release": "git push origin main && pnpx skills install -g -y learnwy/skills && npm run install:hooks",
 
     "migrate:english-learner": "node skills/english-learner/scripts/migrate-from-json.cjs",
     "migrate:english-learner:dry": "node skills/english-learner/scripts/migrate-from-json.cjs --dry-run",
