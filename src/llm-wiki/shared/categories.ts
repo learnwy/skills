@@ -1,9 +1,9 @@
-// Category definitions ordered from most specific to least specific.
-// IMPORTANT: More specific categories (e.g. "Natural Sciences") must appear
-// BEFORE generic ones (e.g. "Methodology") to avoid false matches on
-// multi-discipline strings like "Mathematics / Problem-Solving Methodology".
+export interface CategoryDef {
+  category: string;
+  match: string[];
+}
 
-export const CATEGORY_ORDER = [
+export const CATEGORY_ORDER: CategoryDef[] = [
   { category: 'Software Engineering', match: ['Software Engineering'] },
   { category: 'Frontend Engineering', match: ['Frontend Engineering', 'web'] },
   { category: 'iOS Development', match: ['iOS Development', 'iOS', 'ios'] },
@@ -22,14 +22,13 @@ export const CATEGORY_ORDER = [
   { category: 'Interdisciplinary', match: ['Big Data', 'Bioinformatics', 'Food Science', 'Pharmacy', 'Kinesiology'] },
   { category: 'Practical Skills', match: ['English', 'Database', 'Operating System', 'UI/UX', 'Software Testing', 'Programming', 'Design'] },
   { category: 'Cross-Platform', match: ['cross-platform'] },
-  // Methodology is last — avoids matching "Problem-Solving Methodology" before "Mathematics"
   { category: 'Methodology', match: ['Methodology'] },
-]
+];
 
-export function categorize(discipline) {
-  const d = discipline.toLowerCase()
+export function categorize(discipline: string): string {
+  const d = discipline.toLowerCase();
   for (const { category, match } of CATEGORY_ORDER) {
-    if (match.some(m => d.includes(m.toLowerCase()))) return category
+    if (match.some((m) => d.includes(m.toLowerCase()))) return category;
   }
-  return 'Other'
+  return 'Other';
 }
