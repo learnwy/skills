@@ -399,44 +399,89 @@ function migrateLegacyRoot() {
         });
     }
 }
-const SCHEMA = `
-CREATE TABLE IF NOT EXISTS words (
-  word TEXT PRIMARY KEY,
-  data TEXT NOT NULL,
-  mastery INTEGER NOT NULL DEFAULT 0,
-  lookup_count INTEGER NOT NULL DEFAULT 0,
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL,
-  last_lookup TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_words_mastery ON words(mastery);
-CREATE INDEX IF NOT EXISTS idx_words_lookup ON words(lookup_count);
+const MIGRATIONS = [
+    {
+        version: 1,
+        up: `
+      CREATE TABLE IF NOT EXISTS words (
+        word TEXT PRIMARY KEY,
+        data TEXT NOT NULL,
+        mastery INTEGER NOT NULL DEFAULT 0,
+        lookup_count INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        last_lookup TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_words_mastery ON words(mastery);
+      CREATE INDEX IF NOT EXISTS idx_words_lookup ON words(lookup_count);
 
-CREATE TABLE IF NOT EXISTS phrases (
-  phrase TEXT PRIMARY KEY,
-  data TEXT NOT NULL,
-  mastery INTEGER NOT NULL DEFAULT 0,
-  lookup_count INTEGER NOT NULL DEFAULT 0,
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL,
-  last_lookup TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_phrases_mastery ON phrases(mastery);
-CREATE INDEX IF NOT EXISTS idx_phrases_lookup ON phrases(lookup_count);
+      CREATE TABLE IF NOT EXISTS phrases (
+        phrase TEXT PRIMARY KEY,
+        data TEXT NOT NULL,
+        mastery INTEGER NOT NULL DEFAULT 0,
+        lookup_count INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        last_lookup TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_phrases_mastery ON phrases(mastery);
+      CREATE INDEX IF NOT EXISTS idx_phrases_lookup ON phrases(lookup_count);
 
-CREATE TABLE IF NOT EXISTS history (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  ts TEXT NOT NULL,
-  query TEXT NOT NULL,
-  query_type TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_history_ts ON history(ts);
+      CREATE TABLE IF NOT EXISTS history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ts TEXT NOT NULL,
+        query TEXT NOT NULL,
+        query_type TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_history_ts ON history(ts);
 
-CREATE TABLE IF NOT EXISTS meta (
-  key TEXT PRIMARY KEY,
-  value TEXT NOT NULL
-);
-`;
+      CREATE TABLE IF NOT EXISTS meta (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      );
+    `
+    },
+    {
+        version: 2,
+        up: `
+      ALTER TABLE words ADD COLUMN next_review_at TEXT;
+      ALTER TABLE phrases ADD COLUMN next_review_at TEXT;
+      CREATE INDEX IF NOT EXISTS idx_words_next_review ON words(next_review_at);
+      CREATE INDEX IF NOT EXISTS idx_phrases_next_review ON phrases(next_review_at);
+    `
+    }
+];
+function intervalDaysForMastery(mastery) {
+    if (mastery >= 90) return 90;
+    if (mastery >= 70) return 30;
+    if (mastery >= 50) return 14;
+    if (mastery >= 30) return 7;
+    if (mastery >= 10) return 3;
+    return 1;
+}
+function nextReviewAt(mastery, fromDate = new Date()) {
+    const next = new Date(fromDate);
+    next.setUTCDate(next.getUTCDate() + intervalDaysForMastery(mastery));
+    return next.toISOString();
+}
+function applyMigrations(db) {
+    db.exec('CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);');
+    const row = db.prepare('SELECT value FROM meta WHERE key = ?').get('schema_version');
+    let current = row?.value ? parseInt(row.value, 10) : 0;
+    for (const m of MIGRATIONS){
+        if (m.version <= current) continue;
+        db.exec('BEGIN');
+        try {
+            db.exec(m.up);
+            db.prepare('INSERT INTO meta(key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').run('schema_version', String(m.version));
+            db.exec('COMMIT');
+        } catch (err) {
+            db.exec('ROLLBACK');
+            throw err;
+        }
+        current = m.version;
+    }
+}
 let _db = null;
 function db_getDb() {
     if (_db) return _db;
@@ -447,9 +492,13 @@ function db_getDb() {
     _db = new external_node_sqlite_namespaceObject.DatabaseSync(DB_PATH);
     _db.exec('PRAGMA journal_mode = WAL;');
     _db.exec('PRAGMA foreign_keys = ON;');
-    _db.exec(SCHEMA);
+    applyMigrations(_db);
     return _db;
 }
+function _resetDbForTesting() {
+    _db = null;
+}
+const SCHEMA_VERSION = MIGRATIONS[MIGRATIONS.length - 1].version;
 function db_rowToWord(row) {
     if (!row) return null;
     const inner = JSON.parse(row.data);
@@ -547,13 +596,14 @@ function saveWord(word, opts = {}) {
         synonyms: opts.synonyms || existing?.synonyms || [],
         antonyms: opts.antonyms || existing?.antonyms || []
     };
+    const initialMastery = existing?.mastery || 0;
     db.prepare(`
-    INSERT INTO words (word, data, mastery, lookup_count, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO words (word, data, mastery, lookup_count, created_at, updated_at, next_review_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(word) DO UPDATE SET
       data = excluded.data,
       updated_at = excluded.updated_at
-  `).run(key, packWordData(merged), existing?.mastery || 0, existing?.lookup_count || 0, existing?.created_at || now, now);
+  `).run(key, packWordData(merged), initialMastery, existing?.lookup_count || 0, existing?.created_at || now, now, existing ? null : nextReviewAt(initialMastery));
     return getWord(key);
 }
 function incrementLookup(word) {
@@ -582,13 +632,14 @@ function savePhrase(phrase, opts = {}) {
         literal: opts.literal || existing?.literal || '',
         examples: opts.examples || existing?.examples || []
     };
+    const initialMastery = existing?.mastery || 0;
     db.prepare(`
-    INSERT INTO phrases (phrase, data, mastery, lookup_count, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO phrases (phrase, data, mastery, lookup_count, created_at, updated_at, next_review_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(phrase) DO UPDATE SET
       data = excluded.data,
       updated_at = excluded.updated_at
-  `).run(key, packPhraseData(merged), existing?.mastery || 0, existing?.lookup_count || 0, existing?.created_at || now, now);
+  `).run(key, packPhraseData(merged), initialMastery, existing?.lookup_count || 0, existing?.created_at || now, now, existing ? null : nextReviewAt(initialMastery));
     return getPhrase(key);
 }
 function logQuery(query, queryType) {
@@ -604,7 +655,7 @@ function updateMastery(item, isWord, correct) {
     if (!row) return 0;
     const current = row.mastery || 0;
     const next = correct ? Math.min(100, current + 10) : Math.max(0, current - 5);
-    db.prepare(`UPDATE ${table} SET mastery = ?, updated_at = ? WHERE ${col} = ?`).run(next, nowIso(), key);
+    db.prepare(`UPDATE ${table} SET mastery = ?, updated_at = ?, next_review_at = ? WHERE ${col} = ?`).run(next, nowIso(), nextReviewAt(next), key);
     return next;
 }
 function getStats() {
@@ -666,8 +717,8 @@ function batchSaveWords(wordsData) {
     const saved = [];
     const now = nowIso();
     const upsert = db.prepare(`
-    INSERT INTO words (word, data, mastery, lookup_count, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO words (word, data, mastery, lookup_count, created_at, updated_at, next_review_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(word) DO UPDATE SET
       data = excluded.data,
       updated_at = excluded.updated_at
@@ -697,7 +748,8 @@ function batchSaveWords(wordsData) {
                 synonyms: item.synonyms || existing?.synonyms || [],
                 antonyms: item.antonyms || existing?.antonyms || []
             };
-            upsert.run(word, packWordData(merged), existing?.mastery || 0, existing?.lookup_count || 0, existing?.created_at || now, now);
+            const initialMastery = existing?.mastery || 0;
+            upsert.run(word, packWordData(merged), initialMastery, existing?.lookup_count || 0, existing?.created_at || now, now, existing ? null : nextReviewAt(initialMastery));
             saved.push(word);
         }
     });
@@ -898,14 +950,22 @@ function getReviewCandidates(limit = 20) {
     const db = db_getDb();
     const wordRows = db.prepare(`
     SELECT word AS item, mastery, lookup_count, data,
-           (100 - mastery) + lookup_count * 5 AS score
+           CASE
+             WHEN next_review_at IS NULL THEN 1000 + (100 - mastery) + lookup_count * 5
+             WHEN next_review_at <= datetime('now') THEN 500 + (100 - mastery) + lookup_count * 5
+             ELSE (100 - mastery) + lookup_count * 5
+           END AS score
     FROM words
     ORDER BY score DESC
     LIMIT ?
   `).all(limit);
     const phraseRows = db.prepare(`
     SELECT phrase AS item, mastery, lookup_count, data,
-           (100 - mastery) + lookup_count * 5 AS score
+           CASE
+             WHEN next_review_at IS NULL THEN 1000 + (100 - mastery) + lookup_count * 5
+             WHEN next_review_at <= datetime('now') THEN 500 + (100 - mastery) + lookup_count * 5
+             ELSE (100 - mastery) + lookup_count * 5
+           END AS score
     FROM phrases
     ORDER BY score DESC
     LIMIT ?

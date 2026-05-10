@@ -19,44 +19,102 @@ function migrateLegacyRoot(): void {
   }
 }
 
-const SCHEMA = `
-CREATE TABLE IF NOT EXISTS words (
-  word TEXT PRIMARY KEY,
-  data TEXT NOT NULL,
-  mastery INTEGER NOT NULL DEFAULT 0,
-  lookup_count INTEGER NOT NULL DEFAULT 0,
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL,
-  last_lookup TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_words_mastery ON words(mastery);
-CREATE INDEX IF NOT EXISTS idx_words_lookup ON words(lookup_count);
+interface Migration {
+  version: number;
+  up: string;
+}
 
-CREATE TABLE IF NOT EXISTS phrases (
-  phrase TEXT PRIMARY KEY,
-  data TEXT NOT NULL,
-  mastery INTEGER NOT NULL DEFAULT 0,
-  lookup_count INTEGER NOT NULL DEFAULT 0,
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL,
-  last_lookup TEXT
-);
-CREATE INDEX IF NOT EXISTS idx_phrases_mastery ON phrases(mastery);
-CREATE INDEX IF NOT EXISTS idx_phrases_lookup ON phrases(lookup_count);
+const MIGRATIONS: Migration[] = [
+  {
+    version: 1,
+    up: `
+      CREATE TABLE IF NOT EXISTS words (
+        word TEXT PRIMARY KEY,
+        data TEXT NOT NULL,
+        mastery INTEGER NOT NULL DEFAULT 0,
+        lookup_count INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        last_lookup TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_words_mastery ON words(mastery);
+      CREATE INDEX IF NOT EXISTS idx_words_lookup ON words(lookup_count);
 
-CREATE TABLE IF NOT EXISTS history (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  ts TEXT NOT NULL,
-  query TEXT NOT NULL,
-  query_type TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_history_ts ON history(ts);
+      CREATE TABLE IF NOT EXISTS phrases (
+        phrase TEXT PRIMARY KEY,
+        data TEXT NOT NULL,
+        mastery INTEGER NOT NULL DEFAULT 0,
+        lookup_count INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        last_lookup TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_phrases_mastery ON phrases(mastery);
+      CREATE INDEX IF NOT EXISTS idx_phrases_lookup ON phrases(lookup_count);
 
-CREATE TABLE IF NOT EXISTS meta (
-  key TEXT PRIMARY KEY,
-  value TEXT NOT NULL
-);
-`;
+      CREATE TABLE IF NOT EXISTS history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ts TEXT NOT NULL,
+        query TEXT NOT NULL,
+        query_type TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_history_ts ON history(ts);
+
+      CREATE TABLE IF NOT EXISTS meta (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      );
+    `,
+  },
+  {
+    version: 2,
+    up: `
+      ALTER TABLE words ADD COLUMN next_review_at TEXT;
+      ALTER TABLE phrases ADD COLUMN next_review_at TEXT;
+      CREATE INDEX IF NOT EXISTS idx_words_next_review ON words(next_review_at);
+      CREATE INDEX IF NOT EXISTS idx_phrases_next_review ON phrases(next_review_at);
+    `,
+  },
+];
+
+export function intervalDaysForMastery(mastery: number): number {
+  if (mastery >= 90) return 90;
+  if (mastery >= 70) return 30;
+  if (mastery >= 50) return 14;
+  if (mastery >= 30) return 7;
+  if (mastery >= 10) return 3;
+  return 1;
+}
+
+export function nextReviewAt(mastery: number, fromDate: Date = new Date()): string {
+  const next = new Date(fromDate);
+  next.setUTCDate(next.getUTCDate() + intervalDaysForMastery(mastery));
+  return next.toISOString();
+}
+
+function applyMigrations(db: DatabaseSync): void {
+  db.exec('CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);');
+  const row = db
+    .prepare('SELECT value FROM meta WHERE key = ?')
+    .get('schema_version') as { value?: string } | undefined;
+  let current = row?.value ? parseInt(row.value, 10) : 0;
+
+  for (const m of MIGRATIONS) {
+    if (m.version <= current) continue;
+    db.exec('BEGIN');
+    try {
+      db.exec(m.up);
+      db.prepare(
+        'INSERT INTO meta(key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value',
+      ).run('schema_version', String(m.version));
+      db.exec('COMMIT');
+    } catch (err) {
+      db.exec('ROLLBACK');
+      throw err;
+    }
+    current = m.version;
+  }
+}
 
 let _db: DatabaseSync | null = null;
 
@@ -67,9 +125,15 @@ export function getDb(): DatabaseSync {
   _db = new DatabaseSync(DB_PATH);
   _db.exec('PRAGMA journal_mode = WAL;');
   _db.exec('PRAGMA foreign_keys = ON;');
-  _db.exec(SCHEMA);
+  applyMigrations(_db);
   return _db;
 }
+
+export function _resetDbForTesting(): void {
+  _db = null;
+}
+
+export const SCHEMA_VERSION = MIGRATIONS[MIGRATIONS.length - 1].version;
 
 export interface WordDefinition {
   pos: string;
@@ -111,6 +175,7 @@ interface WordRow {
   created_at: string;
   updated_at: string;
   last_lookup: string | null;
+  next_review_at: string | null;
 }
 
 interface PhraseRow {
@@ -121,6 +186,7 @@ interface PhraseRow {
   created_at: string;
   updated_at: string;
   last_lookup: string | null;
+  next_review_at: string | null;
 }
 
 export function rowToWord(row: WordRow | undefined): WordRecord | null {

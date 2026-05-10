@@ -158,23 +158,86 @@ function uninstallHooks(skillId, options = {}) {
     }
 }
 
-;// CONCATENATED MODULE: ./src/llm-wiki/hooks/session-context.ts
+;// CONCATENATED MODULE: external "node:os"
+const external_node_os_namespaceObject = require("node:os");
+;// CONCATENATED MODULE: ./src/llm-wiki/lib/constants.ts
+
+
+const WIKI_ROOT = process.env.LLM_WIKI_ROOT || (0,external_node_path_namespaceObject.join)((0,external_node_os_namespaceObject.homedir)(), '.learnwy', 'llm-wiki');
+const WIKI_DIR = (0,external_node_path_namespaceObject.join)(WIKI_ROOT, 'wiki');
+const RAW_DIR = (0,external_node_path_namespaceObject.join)(WIKI_ROOT, 'raw');
+const PAGE_TYPES = [
+    {
+        type: 'summaries',
+        label: 'Summaries'
+    },
+    {
+        type: 'concepts',
+        label: 'Concepts'
+    },
+    {
+        type: 'entities',
+        label: 'Entities'
+    },
+    {
+        type: 'comparisons',
+        label: 'Comparisons'
+    },
+    {
+        type: 'snippets',
+        label: 'Snippets'
+    },
+    {
+        type: 'troubleshooting',
+        label: 'Troubleshooting'
+    },
+    {
+        type: 'decisions',
+        label: 'Decisions'
+    },
+    {
+        type: 'cheatsheets',
+        label: 'Cheatsheets'
+    }
+];
+const PAGE_DIRS = PAGE_TYPES.map((p)=>p.type);
+const RAW_SUBDIRS = (/* unused pure expression or super */ null && ([
+    'books',
+    'articles',
+    'papers',
+    'notes',
+    'podcasts',
+    'transcripts',
+    'snippets',
+    'troubleshooting',
+    'specs',
+    'decisions'
+]));
+
+;// CONCATENATED MODULE: ./src/llm-wiki/lib/session-scan.ts
 
 
 
-const WIKI_ROOT = external_node_path_namespaceObject.join(process.env.HOME || '', '.learnwy', 'llm-wiki');
-async function main() {
-    await readStdin();
+function scanSession() {
     const topicsFile = external_node_path_namespaceObject.join(WIKI_ROOT, 'wiki', 'topics.txt');
-    if (!external_node_fs_namespaceObject.existsSync(topicsFile)) return;
+    if (!external_node_fs_namespaceObject.existsSync(topicsFile)) return null;
     const topics = external_node_fs_namespaceObject.readFileSync(topicsFile, 'utf8').trim();
-    if (!topics) return;
+    if (!topics) return null;
     const topicLines = topics.split('\n').slice(0, 30);
-    injectContext([
+    return [
         '[llm-wiki] Personal wiki available at ~/.learnwy/llm-wiki/.',
         `Known topics (${topicLines.length}): ${topicLines.join(', ')}`,
         'For complex knowledge questions, check wiki pages before answering.'
-    ].join('\n'));
+    ].join('\n');
+}
+
+;// CONCATENATED MODULE: ./src/llm-wiki/hooks/session-context.ts
+
+
+async function main() {
+    await readStdin();
+    const out = scanSession();
+    if (out) injectContext(out);
 }
 main().catch(()=>process.exit(0));
 

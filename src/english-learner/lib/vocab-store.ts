@@ -1,5 +1,5 @@
 import {
-  getDb, rowToWord, rowToPhrase, withTransaction,
+  getDb, rowToWord, rowToPhrase, withTransaction, nextReviewAt,
   type WordDefinition, type WordRecord, type PhraseRecord,
   type WordRow, type PhraseRow,
 } from '../../shared/db.js';
@@ -81,19 +81,21 @@ export function saveWord(word: string, opts: SaveWordOpts = {}): WordRecord | nu
     antonyms: opts.antonyms || existing?.antonyms || [],
   };
 
+  const initialMastery = existing?.mastery || 0;
   db.prepare(`
-    INSERT INTO words (word, data, mastery, lookup_count, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO words (word, data, mastery, lookup_count, created_at, updated_at, next_review_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(word) DO UPDATE SET
       data = excluded.data,
       updated_at = excluded.updated_at
   `).run(
     key,
     packWordData(merged),
-    existing?.mastery || 0,
+    initialMastery,
     existing?.lookup_count || 0,
     existing?.created_at || now,
     now,
+    existing ? null : nextReviewAt(initialMastery),
   );
 
   return getWord(key);
@@ -133,19 +135,21 @@ export function savePhrase(phrase: string, opts: SavePhraseOpts = {}): PhraseRec
     examples: opts.examples || existing?.examples || [],
   };
 
+  const initialMastery = existing?.mastery || 0;
   db.prepare(`
-    INSERT INTO phrases (phrase, data, mastery, lookup_count, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO phrases (phrase, data, mastery, lookup_count, created_at, updated_at, next_review_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(phrase) DO UPDATE SET
       data = excluded.data,
       updated_at = excluded.updated_at
   `).run(
     key,
     packPhraseData(merged),
-    existing?.mastery || 0,
+    initialMastery,
     existing?.lookup_count || 0,
     existing?.created_at || now,
     now,
+    existing ? null : nextReviewAt(initialMastery),
   );
 
   return getPhrase(key);
@@ -170,8 +174,8 @@ export function updateMastery(item: string, isWord: boolean, correct: boolean): 
 
   const current = row.mastery || 0;
   const next = correct ? Math.min(100, current + 10) : Math.max(0, current - 5);
-  db.prepare(`UPDATE ${table} SET mastery = ?, updated_at = ? WHERE ${col} = ?`)
-    .run(next, nowIso(), key);
+  db.prepare(`UPDATE ${table} SET mastery = ?, updated_at = ?, next_review_at = ? WHERE ${col} = ?`)
+    .run(next, nowIso(), nextReviewAt(next), key);
   return next;
 }
 
@@ -249,8 +253,8 @@ export function batchSaveWords(wordsData: BatchWordItem[]): { saved: string[]; c
   const now = nowIso();
 
   const upsert = db.prepare(`
-    INSERT INTO words (word, data, mastery, lookup_count, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO words (word, data, mastery, lookup_count, created_at, updated_at, next_review_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(word) DO UPDATE SET
       data = excluded.data,
       updated_at = excluded.updated_at
@@ -280,13 +284,15 @@ export function batchSaveWords(wordsData: BatchWordItem[]): { saved: string[]; c
         antonyms: item.antonyms || existing?.antonyms || [],
       };
 
+      const initialMastery = existing?.mastery || 0;
       upsert.run(
         word,
         packWordData(merged),
-        existing?.mastery || 0,
+        initialMastery,
         existing?.lookup_count || 0,
         existing?.created_at || now,
         now,
+        existing ? null : nextReviewAt(initialMastery),
       );
       saved.push(word);
     }

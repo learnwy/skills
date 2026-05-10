@@ -114,7 +114,11 @@ export function getReviewCandidates(limit = 20): ReviewCandidate[] {
 
   const wordRows = db.prepare(`
     SELECT word AS item, mastery, lookup_count, data,
-           (100 - mastery) + lookup_count * 5 AS score
+           CASE
+             WHEN next_review_at IS NULL THEN 1000 + (100 - mastery) + lookup_count * 5
+             WHEN next_review_at <= datetime('now') THEN 500 + (100 - mastery) + lookup_count * 5
+             ELSE (100 - mastery) + lookup_count * 5
+           END AS score
     FROM words
     ORDER BY score DESC
     LIMIT ?
@@ -122,7 +126,11 @@ export function getReviewCandidates(limit = 20): ReviewCandidate[] {
 
   const phraseRows = db.prepare(`
     SELECT phrase AS item, mastery, lookup_count, data,
-           (100 - mastery) + lookup_count * 5 AS score
+           CASE
+             WHEN next_review_at IS NULL THEN 1000 + (100 - mastery) + lookup_count * 5
+             WHEN next_review_at <= datetime('now') THEN 500 + (100 - mastery) + lookup_count * 5
+             ELSE (100 - mastery) + lookup_count * 5
+           END AS score
     FROM phrases
     ORDER BY score DESC
     LIMIT ?
