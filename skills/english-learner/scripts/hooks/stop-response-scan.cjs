@@ -158,8 +158,7 @@ function uninstallHooks(skillId, options = {}) {
     }
 }
 
-;// CONCATENATED MODULE: ./src/english-learner/hooks/stop-response-scan.ts
-
+;// CONCATENATED MODULE: ./src/english-learner/lib/stop-scan.ts
 const SKILL_MARKERS = [
     "\uD83D\uDCD6 **",
     "\u8BCD\u4E49 Definitions",
@@ -187,21 +186,29 @@ function extractCandidates(text) {
     }
     return candidates;
 }
-async function main() {
-    const payload = await readStdin();
-    const transcript = payload.assistant_message || payload.last_response || payload.transcript || '';
-    if (!transcript || transcript.length < 200) return;
-    if (isEnglishLearnerOutput(transcript)) return;
+function scanStop(transcript) {
+    if (!transcript || transcript.length < 200) return null;
+    if (isEnglishLearnerOutput(transcript)) return null;
     const candidates = extractCandidates(transcript);
-    if (candidates.length < 5) return;
-    injectContext([
+    if (candidates.length < 5) return null;
+    return [
         '[english-learner stop hook]',
         "Scan the assistant's last response for 2-4 advanced or non-obvious English words/phrases the user might want to learn",
         `(initial candidates: ${candidates.slice(0, 8).join(', ')}).`,
         'If anything is genuinely worth surfacing, ask the user: "Want to save these to your vocabulary store?".',
         "Only the user can decide \u2014 do NOT auto-save.",
         'Skip silently if everything is common (CEFR A1-B1) or domain jargon.'
-    ].join(' '));
+    ].join(' ');
+}
+
+;// CONCATENATED MODULE: ./src/english-learner/hooks/stop-response-scan.ts
+
+
+async function main() {
+    const payload = await readStdin();
+    const transcript = payload.assistant_message || payload.last_response || payload.transcript || '';
+    const out = scanStop(transcript);
+    if (out) injectContext(out);
 }
 main().catch(()=>process.exit(0));
 

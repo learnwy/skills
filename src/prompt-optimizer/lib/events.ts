@@ -2,8 +2,16 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
 
-export const DATA_ROOT = path.join(os.homedir(), '.learnwy', 'prompt-optimizer');
-export const EVENTS_FILE = path.join(DATA_ROOT, 'events.jsonl');
+export function dataRoot(): string {
+  return process.env.LEARNWY_PROMPT_OPTIMIZER_ROOT || path.join(os.homedir(), '.learnwy', 'prompt-optimizer');
+}
+
+export function eventsFile(): string {
+  return path.join(dataRoot(), 'events.jsonl');
+}
+
+export const DATA_ROOT = dataRoot();
+export const EVENTS_FILE = eventsFile();
 
 export type TriggerKind = 'explicit' | 'structured';
 
@@ -20,31 +28,34 @@ const MAX_EVENTS_BYTES = 5 * 1024 * 1024;
 
 export function appendEvent(event: PromptEvent): void {
   try {
-    if (!fs.existsSync(DATA_ROOT)) fs.mkdirSync(DATA_ROOT, { recursive: true });
+    const root = dataRoot();
+    const file = eventsFile();
+    if (!fs.existsSync(root)) fs.mkdirSync(root, { recursive: true });
     let size = 0;
     try {
-      size = fs.statSync(EVENTS_FILE).size;
+      size = fs.statSync(file).size;
     } catch {
       /* missing file — fine */
     }
     if (size > MAX_EVENTS_BYTES) {
       try {
-        fs.renameSync(EVENTS_FILE, `${EVENTS_FILE}.1`);
+        fs.renameSync(file, `${file}.1`);
       } catch {
         /* swallow */
       }
     }
-    fs.appendFileSync(EVENTS_FILE, `${JSON.stringify(event)}\n`);
+    fs.appendFileSync(file, `${JSON.stringify(event)}\n`);
   } catch {
     /* never break the caller */
   }
 }
 
 export function readEvents(sinceMs: number): PromptEvent[] {
-  if (!fs.existsSync(EVENTS_FILE)) return [];
+  const file = eventsFile();
+  if (!fs.existsSync(file)) return [];
   const out: PromptEvent[] = [];
   const cutoff = Date.now() - sinceMs;
-  const raw = fs.readFileSync(EVENTS_FILE, 'utf8');
+  const raw = fs.readFileSync(file, 'utf8');
   for (const line of raw.split('\n')) {
     if (!line) continue;
     try {

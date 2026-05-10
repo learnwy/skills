@@ -11,17 +11,6 @@
           }
         ]
       }
-    ],
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ~/.agents/skills/english-learner/scripts/hooks/stop-response-scan.cjs",
-            "timeout": 5
-          }
-        ]
-      }
     ]
   }
 }

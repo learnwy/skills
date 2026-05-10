@@ -15,6 +15,8 @@ const external_node_fs_namespaceObject = require("node:fs");
 const external_node_path_namespaceObject = require("node:path");
 ;// CONCATENATED MODULE: external "node:os"
 const external_node_os_namespaceObject = require("node:os");
+;// CONCATENATED MODULE: external "node:child_process"
+const external_node_child_process_namespaceObject = require("node:child_process");
 ;// CONCATENATED MODULE: ./src/shared/hooks-lib.ts
 
 
@@ -507,7 +509,64 @@ function formatCompact(d) {
 
 
 
+
 const STATE_FILE = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'learnwy-status', 'state.json');
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+const session_context_HOME = external_node_os_namespaceObject.homedir();
+const AGENTS_ROOT = external_node_path_namespaceObject.join(session_context_HOME, '.agents', 'skills');
+const REFRESH_TARGETS = [
+    {
+        artifact: external_node_path_namespaceObject.join(session_context_HOME, '.learnwy', 'llm-wiki', 'health.json'),
+        precondition: ()=>external_node_fs_namespaceObject.existsSync(external_node_path_namespaceObject.join(session_context_HOME, '.learnwy', 'llm-wiki', 'wiki', 'topics.txt')),
+        cli: external_node_path_namespaceObject.join(AGENTS_ROOT, 'llm-wiki', 'scripts', 'cli.cjs'),
+        args: [
+            'health-check'
+        ]
+    },
+    {
+        artifact: external_node_path_namespaceObject.join(session_context_HOME, '.learnwy', 'english-learner', 'wiki-links.json'),
+        precondition: ()=>external_node_fs_namespaceObject.existsSync(external_node_path_namespaceObject.join(session_context_HOME, '.learnwy', 'english-learner', 'data.db')),
+        cli: external_node_path_namespaceObject.join(AGENTS_ROOT, 'english-learner', 'scripts', 'cli.cjs'),
+        args: [
+            'link-wiki'
+        ]
+    }
+];
+function isStale(p, maxAgeMs) {
+    try {
+        const s = external_node_fs_namespaceObject.statSync(p);
+        return Date.now() - s.mtimeMs > maxAgeMs;
+    } catch  {
+        return true;
+    }
+}
+function spawnDetached(cli, args) {
+    if (!external_node_fs_namespaceObject.existsSync(cli)) return false;
+    try {
+        const child = (0,external_node_child_process_namespaceObject.spawn)('node', [
+            cli,
+            ...args
+        ], {
+            detached: true,
+            stdio: 'ignore'
+        });
+        child.unref();
+        return true;
+    } catch  {
+        return false;
+    }
+}
+function autoRefresh() {
+    const refreshed = [];
+    for (const t of REFRESH_TARGETS){
+        if (!t.precondition()) continue;
+        if (!isStale(t.artifact, SEVEN_DAYS_MS)) continue;
+        if (spawnDetached(t.cli, t.args)) {
+            refreshed.push(external_node_path_namespaceObject.basename(t.artifact));
+        }
+    }
+    return refreshed;
+}
 function isoWeek(d) {
     const t = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
     const dayNum = (t.getUTCDay() + 6) % 7;
@@ -535,16 +594,24 @@ function writeState(state) {
 }
 async function main() {
     await readStdin();
+    const refreshed = autoRefresh();
     const week = isoWeek(new Date());
     const state = readState();
-    if (state.last_status_week === week) return;
+    if (state.last_status_week === week) {
+        if (refreshed.length) {
+            injectContext(`[learnwy-status] Auto-refreshing stale data: ${refreshed.join(', ')} (background).`);
+        }
+        return;
+    }
     const digest = buildDigest();
     if (!digest.vocab && !digest.wiki && !digest.optimizer && !digest.consolidation) return;
     const compact = formatCompact(digest);
     const wikiAlert = digest.wiki && digest.wiki.broken_links > 0 ? `  \u{26A0} wiki: ${digest.wiki.broken_links} broken link(s) \u{2014} run "llm-wiki health-check"` : null;
+    const refreshLine = refreshed.length ? `  \u{21BB} auto-refreshing in background: ${refreshed.join(', ')}` : null;
     const lines = [
         `[learnwy-status] Weekly digest (${week}): ${compact}`,
         wikiAlert,
+        refreshLine,
         '  Run `learnwy-status status` for the full report.'
     ].filter((l)=>l !== null);
     injectContext(lines.join('\n'));

@@ -158,69 +158,143 @@ function uninstallHooks(skillId, options = {}) {
     }
 }
 
-;// CONCATENATED MODULE: ./src/shared/text-classifiers.ts
-const CODE_PREFIX_RE = /^(import |const |let |var |function |class |\/\/|#!|{|}|\[|\])/;
-const PATH_RE = /^[\/~.].*\.[a-z]{1,4}$/i;
-const COMMAND_PREFIX_RE = /^(git |npm |pnpm |yarn |node |cd |ls |cat |mkdir |rm |touch |cp |mv |grep |find |echo |sed |awk |curl |wget |ssh |docker |kubectl )/;
-function looksLikeCode(text) {
-    return CODE_PREFIX_RE.test(text.trim());
+;// CONCATENATED MODULE: ./src/english-learner/lib/stop-scan.ts
+const SKILL_MARKERS = [
+    "\uD83D\uDCD6 **",
+    "\u8BCD\u4E49 Definitions",
+    "\u540C\u4E49\u8BCD:",
+    "\u53CD\u4E49\u8BCD:",
+    "\u638C\u63E1\u5EA6:",
+    'english-learner hook',
+    "\u67E5\u8BE2\u6B21\u6570:"
+];
+const isEnglishLearnerOutput = (text)=>SKILL_MARKERS.some((m)=>text.includes(m));
+function extractCandidates(text) {
+    if (!text) return [];
+    const stripped = text.replace(/```[\s\S]*?```/g, ' ').replace(/`[^`]+`/g, ' ').replace(/!\[[^\]]*\]\([^)]+\)/g, ' ').replace(/\[[^\]]*\]\([^)]+\)/g, ' ').replace(/[#*_>|`~\-]+/g, ' ');
+    const tokens = stripped.match(/\b[a-zA-Z][a-zA-Z'-]{6,}\b/g) || [];
+    const seen = new Set();
+    const candidates = [];
+    for (const raw of tokens){
+        const w = raw.toLowerCase();
+        if (seen.has(w)) continue;
+        if (/^[A-Z]{2,}$/.test(raw)) continue;
+        if (/'s$|'re$|'ve$|'ll$|n't$/.test(w)) continue;
+        seen.add(w);
+        candidates.push(w);
+        if (candidates.length >= 12) break;
+    }
+    return candidates;
 }
-function looksLikePath(text) {
-    return PATH_RE.test(text.trim());
-}
-function looksLikeCommand(text) {
-    return COMMAND_PREFIX_RE.test(text.trim());
-}
-function looksLikeNonProse(text) {
-    const t = text.trim();
-    return CODE_PREFIX_RE.test(t) || PATH_RE.test(t) || COMMAND_PREFIX_RE.test(t);
-}
-function englishRatio(text) {
-    const alpha = (text.match(/[a-zA-Z]/g) || []).length;
-    const total = text.replace(/\s/g, '').length;
-    return total > 0 ? alpha / total : 0;
-}
-function chineseRatio(text) {
-    const cjk = (text.match(/[\u4e00-\u9fff]/g) || []).length;
-    const total = text.replace(/\s/g, '').length;
-    return total > 0 ? cjk / total : 0;
-}
-const CHINESE_LEARN_RE = /翻译|怎么说|用英[语文]|英文怎么|translate|how.*say|in english/i;
-function looksLikeChineseLearnIntent(text) {
-    return chineseRatio(text) > 0.3 || CHINESE_LEARN_RE.test(text);
-}
-
-;// CONCATENATED MODULE: ./src/llm-wiki/lib/prompt-scan.ts
-
-
-
-const DEFAULT_WIKI_ROOT = external_node_path_namespaceObject.join(process.env.HOME || '', '.learnwy', 'llm-wiki');
-function scanPrompt(message, wikiRoot = DEFAULT_WIKI_ROOT) {
-    const lower = (message || '').toLowerCase();
-    if (lower.length < 15) return null;
-    if (looksLikeNonProse(message)) return null;
-    const topicsFile = external_node_path_namespaceObject.join(wikiRoot, 'wiki', 'topics.txt');
-    if (!external_node_fs_namespaceObject.existsSync(topicsFile)) return null;
-    const topics = external_node_fs_namespaceObject.readFileSync(topicsFile, 'utf8').split('\n').map((t)=>t.trim().toLowerCase()).filter(Boolean);
-    const words = lower.split(/\s+/).filter((w)=>w.length > 3);
-    const matches = topics.filter((topic)=>words.some((word)=>topic.includes(word)));
-    if (matches.length === 0) return null;
-    const topMatches = matches.slice(0, 5);
+function scanStop(transcript) {
+    if (!transcript || transcript.length < 200) return null;
+    if (isEnglishLearnerOutput(transcript)) return null;
+    const candidates = extractCandidates(transcript);
+    if (candidates.length < 5) return null;
     return [
-        `[llm-wiki] Relevant wiki topics found: ${topMatches.join(', ')}`,
-        'Consider reading these wiki pages before answering.',
-        `Wiki path: ${wikiRoot}/wiki/`
-    ].join('\n');
+        '[english-learner stop hook]',
+        "Scan the assistant's last response for 2-4 advanced or non-obvious English words/phrases the user might want to learn",
+        `(initial candidates: ${candidates.slice(0, 8).join(', ')}).`,
+        'If anything is genuinely worth surfacing, ask the user: "Want to save these to your vocabulary store?".',
+        "Only the user can decide \u2014 do NOT auto-save.",
+        'Skip silently if everything is common (CEFR A1-B1) or domain jargon.'
+    ].join(' ');
 }
 
-;// CONCATENATED MODULE: ./src/llm-wiki/hooks/auto-query.ts
+;// CONCATENATED MODULE: external "node:os"
+const external_node_os_namespaceObject = require("node:os");
+;// CONCATENATED MODULE: ./src/knowledge-consolidation/lib/stop-scan.ts
+
+
+
+const STATE_FILE = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'knowledge-consolidation', 'last-nudge.json');
+const DEBOUNCE_MS = 60 * 60 * 1000;
+const MIN_RESPONSE_LEN = 800;
+const RESOLUTION_SIGNALS = [
+    /\bthe (?:root[- ]cause|bug|issue|problem)\s+(?:was|is|turned out)\b/i,
+    /\bfixed it\b/i,
+    /\bgot it (?:working|to work)\b/i,
+    /\bnow (?:it|the .{1,30})\s+works?\b/i,
+    /\b(?:resolved|solved)[—:.]\s/i,
+    /^##\s+(?:solution|resolution|root[- ]cause|fix|takeaway)s?\b/im
+];
+const SKILL_OUTPUT_MARKERS = [
+    '[english-learner',
+    '[llm-wiki]',
+    '[prompt-optimizer',
+    '[knowledge-consolidation]',
+    "\u8BCD\u4E49 Definitions",
+    "\u638C\u63E1\u5EA6:"
+];
+function readState() {
+    if (!external_node_fs_namespaceObject.existsSync(STATE_FILE)) return null;
+    try {
+        return JSON.parse(external_node_fs_namespaceObject.readFileSync(STATE_FILE, 'utf8'));
+    } catch  {
+        return null;
+    }
+}
+function writeState(state) {
+    try {
+        external_node_fs_namespaceObject.mkdirSync(external_node_path_namespaceObject.dirname(STATE_FILE), {
+            recursive: true
+        });
+        external_node_fs_namespaceObject.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+    } catch  {
+    /* swallow */ }
+}
+function isSkillOutput(text) {
+    return SKILL_OUTPUT_MARKERS.some((m)=>text.includes(m));
+}
+function countSignals(text) {
+    return RESOLUTION_SIGNALS.filter((re)=>re.test(text)).length;
+}
+function stop_scan_scanStop(transcript, payload = {}) {
+    if (transcript.length < MIN_RESPONSE_LEN) return null;
+    if (isSkillOutput(transcript)) return null;
+    const signals = countSignals(transcript);
+    if (signals === 0) return null;
+    const sessionId = payload.session_id || payload.sessionId;
+    const prev = readState();
+    const now = Date.now();
+    if (prev) {
+        const prevTs = Date.parse(prev.ts);
+        if (sessionId && prev.session_id === sessionId) return null;
+        if (!sessionId && Number.isFinite(prevTs) && now - prevTs < DEBOUNCE_MS) return null;
+    }
+    writeState({
+        session_id: sessionId,
+        ts: new Date(now).toISOString()
+    });
+    return [
+        '[knowledge-consolidation] This turn looks like it resolved a non-trivial problem',
+        `(${signals} resolution signal${signals > 1 ? 's' : ''} matched).`,
+        "If the insight is reusable across future sessions, suggest invoking knowledge-consolidation to persist it \u2014",
+        'do NOT auto-write; only nudge once per session.'
+    ].join(' ');
+}
+
+;// CONCATENATED MODULE: ./src/learnwy-dispatch/hooks/stop.ts
+
 
 
 async function main() {
     const payload = await readStdin();
-    const message = payload.user_message || payload.prompt || '';
-    const out = scanPrompt(message);
-    if (out) injectContext(out);
+    const transcript = payload.assistant_message || payload.last_response || payload.transcript || '';
+    if (!transcript) return;
+    const blocks = [];
+    try {
+        const a = scanStop(transcript);
+        if (a) blocks.push(a);
+    } catch  {
+    /* swallow */ }
+    try {
+        const b = stop_scan_scanStop(transcript, payload);
+        if (b) blocks.push(b);
+    } catch  {
+    /* swallow */ }
+    if (blocks.length === 0) return;
+    injectContext(blocks.join('\n\n'));
 }
 main().catch(()=>process.exit(0));
 

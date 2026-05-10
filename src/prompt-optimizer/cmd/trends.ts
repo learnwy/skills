@@ -1,6 +1,6 @@
 import type { Command } from '../../shared/cli.js';
 import { parseArgs } from '../../shared/cli.js';
-import { readEvents, EVENTS_FILE, type PromptEvent } from '../lib/events.js';
+import { readEvents, eventsFile, type PromptEvent } from '../lib/events.js';
 
 interface Aggregate {
   total: number;
@@ -47,7 +47,7 @@ function aggregate(events: PromptEvent[]): Aggregate {
 
 function formatHuman(days: number, agg: Aggregate): string {
   if (agg.total === 0) {
-    return `No prompt-optimizer events recorded in the last ${days} day(s).\nFile: ${EVENTS_FILE}`;
+    return `No prompt-optimizer events recorded in the last ${days} day(s).\nFile: ${eventsFile()}`;
   }
   const lines: string[] = [];
   lines.push(`prompt-optimizer trends — last ${days} day(s)`);

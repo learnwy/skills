@@ -227,12 +227,12 @@ function scanPrompt(message) {
 
 
 
-const WIKI_ROOT = external_node_path_namespaceObject.join(process.env.HOME || '', '.learnwy', 'llm-wiki');
-function prompt_scan_scanPrompt(message) {
+const DEFAULT_WIKI_ROOT = external_node_path_namespaceObject.join(process.env.HOME || '', '.learnwy', 'llm-wiki');
+function prompt_scan_scanPrompt(message, wikiRoot = DEFAULT_WIKI_ROOT) {
     const lower = (message || '').toLowerCase();
     if (lower.length < 15) return null;
     if (looksLikeNonProse(message)) return null;
-    const topicsFile = external_node_path_namespaceObject.join(WIKI_ROOT, 'wiki', 'topics.txt');
+    const topicsFile = external_node_path_namespaceObject.join(wikiRoot, 'wiki', 'topics.txt');
     if (!external_node_fs_namespaceObject.existsSync(topicsFile)) return null;
     const topics = external_node_fs_namespaceObject.readFileSync(topicsFile, 'utf8').split('\n').map((t)=>t.trim().toLowerCase()).filter(Boolean);
     const words = lower.split(/\s+/).filter((w)=>w.length > 3);
@@ -242,7 +242,7 @@ function prompt_scan_scanPrompt(message) {
     return [
         `[llm-wiki] Relevant wiki topics found: ${topMatches.join(', ')}`,
         'Consider reading these wiki pages before answering.',
-        `Wiki path: ${WIKI_ROOT}/wiki/`
+        `Wiki path: ${wikiRoot}/wiki/`
     ].join('\n');
 }
 
@@ -252,34 +252,43 @@ const external_node_os_namespaceObject = require("node:os");
 
 
 
-const DATA_ROOT = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'prompt-optimizer');
-const EVENTS_FILE = external_node_path_namespaceObject.join(DATA_ROOT, 'events.jsonl');
+function dataRoot() {
+    return process.env.LEARNWY_PROMPT_OPTIMIZER_ROOT || external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'prompt-optimizer');
+}
+function eventsFile() {
+    return external_node_path_namespaceObject.join(dataRoot(), 'events.jsonl');
+}
+const DATA_ROOT = dataRoot();
+const EVENTS_FILE = eventsFile();
 const MAX_EVENTS_BYTES = 5 * 1024 * 1024;
 function appendEvent(event) {
     try {
-        if (!external_node_fs_namespaceObject.existsSync(DATA_ROOT)) external_node_fs_namespaceObject.mkdirSync(DATA_ROOT, {
+        const root = dataRoot();
+        const file = eventsFile();
+        if (!external_node_fs_namespaceObject.existsSync(root)) external_node_fs_namespaceObject.mkdirSync(root, {
             recursive: true
         });
         let size = 0;
         try {
-            size = external_node_fs_namespaceObject.statSync(EVENTS_FILE).size;
+            size = external_node_fs_namespaceObject.statSync(file).size;
         } catch  {
         /* missing file — fine */ }
         if (size > MAX_EVENTS_BYTES) {
             try {
-                external_node_fs_namespaceObject.renameSync(EVENTS_FILE, `${EVENTS_FILE}.1`);
+                external_node_fs_namespaceObject.renameSync(file, `${file}.1`);
             } catch  {
             /* swallow */ }
         }
-        external_node_fs_namespaceObject.appendFileSync(EVENTS_FILE, `${JSON.stringify(event)}\n`);
+        external_node_fs_namespaceObject.appendFileSync(file, `${JSON.stringify(event)}\n`);
     } catch  {
     /* never break the caller */ }
 }
 function readEvents(sinceMs) {
-    if (!fs.existsSync(EVENTS_FILE)) return [];
+    const file = eventsFile();
+    if (!fs.existsSync(file)) return [];
     const out = [];
     const cutoff = Date.now() - sinceMs;
-    const raw = fs.readFileSync(EVENTS_FILE, 'utf8');
+    const raw = fs.readFileSync(file, 'utf8');
     for (const line of raw.split('\n')){
         if (!line) continue;
         try {

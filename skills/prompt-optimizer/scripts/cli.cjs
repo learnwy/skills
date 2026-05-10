@@ -375,34 +375,43 @@ const uninstallCommand = {
 
 
 
-const DATA_ROOT = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'prompt-optimizer');
-const EVENTS_FILE = external_node_path_namespaceObject.join(DATA_ROOT, 'events.jsonl');
+function dataRoot() {
+    return process.env.LEARNWY_PROMPT_OPTIMIZER_ROOT || external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'prompt-optimizer');
+}
+function eventsFile() {
+    return external_node_path_namespaceObject.join(dataRoot(), 'events.jsonl');
+}
+const DATA_ROOT = dataRoot();
+const EVENTS_FILE = eventsFile();
 const MAX_EVENTS_BYTES = (/* unused pure expression or super */ null && (5 * 1024 * 1024));
 function appendEvent(event) {
     try {
-        if (!fs.existsSync(DATA_ROOT)) fs.mkdirSync(DATA_ROOT, {
+        const root = dataRoot();
+        const file = eventsFile();
+        if (!fs.existsSync(root)) fs.mkdirSync(root, {
             recursive: true
         });
         let size = 0;
         try {
-            size = fs.statSync(EVENTS_FILE).size;
+            size = fs.statSync(file).size;
         } catch  {
         /* missing file — fine */ }
         if (size > MAX_EVENTS_BYTES) {
             try {
-                fs.renameSync(EVENTS_FILE, `${EVENTS_FILE}.1`);
+                fs.renameSync(file, `${file}.1`);
             } catch  {
             /* swallow */ }
         }
-        fs.appendFileSync(EVENTS_FILE, `${JSON.stringify(event)}\n`);
+        fs.appendFileSync(file, `${JSON.stringify(event)}\n`);
     } catch  {
     /* never break the caller */ }
 }
 function readEvents(sinceMs) {
-    if (!external_node_fs_namespaceObject.existsSync(EVENTS_FILE)) return [];
+    const file = eventsFile();
+    if (!external_node_fs_namespaceObject.existsSync(file)) return [];
     const out = [];
     const cutoff = Date.now() - sinceMs;
-    const raw = external_node_fs_namespaceObject.readFileSync(EVENTS_FILE, 'utf8');
+    const raw = external_node_fs_namespaceObject.readFileSync(file, 'utf8');
     for (const line of raw.split('\n')){
         if (!line) continue;
         try {
@@ -458,7 +467,7 @@ function aggregate(events) {
 }
 function formatHuman(days, agg) {
     if (agg.total === 0) {
-        return `No prompt-optimizer events recorded in the last ${days} day(s).\nFile: ${EVENTS_FILE}`;
+        return `No prompt-optimizer events recorded in the last ${days} day(s).\nFile: ${eventsFile()}`;
     }
     const lines = [];
     lines.push(`prompt-optimizer trends \u{2014} last ${days} day(s)`);

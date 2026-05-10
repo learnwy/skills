@@ -2,10 +2,71 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
+import { spawn } from 'node:child_process';
 import { readStdin, injectContext } from '../../shared/hooks-lib.js';
 import { buildDigest, formatCompact } from '../lib/digest.js';
 
 const STATE_FILE = path.join(os.homedir(), '.learnwy', 'learnwy-status', 'state.json');
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+const HOME = os.homedir();
+const AGENTS_ROOT = path.join(HOME, '.agents', 'skills');
+
+interface RefreshTarget {
+  artifact: string;
+  precondition: () => boolean;
+  cli: string;
+  args: string[];
+}
+
+const REFRESH_TARGETS: RefreshTarget[] = [
+  {
+    artifact: path.join(HOME, '.learnwy', 'llm-wiki', 'health.json'),
+    precondition: () => fs.existsSync(path.join(HOME, '.learnwy', 'llm-wiki', 'wiki', 'topics.txt')),
+    cli: path.join(AGENTS_ROOT, 'llm-wiki', 'scripts', 'cli.cjs'),
+    args: ['health-check'],
+  },
+  {
+    artifact: path.join(HOME, '.learnwy', 'english-learner', 'wiki-links.json'),
+    precondition: () => fs.existsSync(path.join(HOME, '.learnwy', 'english-learner', 'data.db')),
+    cli: path.join(AGENTS_ROOT, 'english-learner', 'scripts', 'cli.cjs'),
+    args: ['link-wiki'],
+  },
+];
+
+function isStale(p: string, maxAgeMs: number): boolean {
+  try {
+    const s = fs.statSync(p);
+    return Date.now() - s.mtimeMs > maxAgeMs;
+  } catch {
+    return true;
+  }
+}
+
+function spawnDetached(cli: string, args: string[]): boolean {
+  if (!fs.existsSync(cli)) return false;
+  try {
+    const child = spawn('node', [cli, ...args], {
+      detached: true,
+      stdio: 'ignore',
+    });
+    child.unref();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function autoRefresh(): string[] {
+  const refreshed: string[] = [];
+  for (const t of REFRESH_TARGETS) {
+    if (!t.precondition()) continue;
+    if (!isStale(t.artifact, SEVEN_DAYS_MS)) continue;
+    if (spawnDetached(t.cli, t.args)) {
+      refreshed.push(path.basename(t.artifact));
+    }
+  }
+  return refreshed;
+}
 
 interface State {
   last_status_week?: string;
@@ -40,9 +101,17 @@ function writeState(state: State): void {
 
 async function main(): Promise<void> {
   await readStdin();
+
+  const refreshed = autoRefresh();
+
   const week = isoWeek(new Date());
   const state = readState();
-  if (state.last_status_week === week) return;
+  if (state.last_status_week === week) {
+    if (refreshed.length) {
+      injectContext(`[learnwy-status] Auto-refreshing stale data: ${refreshed.join(', ')} (background).`);
+    }
+    return;
+  }
 
   const digest = buildDigest();
   if (!digest.vocab && !digest.wiki && !digest.optimizer && !digest.consolidation) return;
@@ -51,9 +120,13 @@ async function main(): Promise<void> {
   const wikiAlert = digest.wiki && digest.wiki.broken_links > 0
     ? `  ⚠ wiki: ${digest.wiki.broken_links} broken link(s) — run "llm-wiki health-check"`
     : null;
+  const refreshLine = refreshed.length
+    ? `  ↻ auto-refreshing in background: ${refreshed.join(', ')}`
+    : null;
   const lines = [
     `[learnwy-status] Weekly digest (${week}): ${compact}`,
     wikiAlert,
+    refreshLine,
     '  Run `learnwy-status status` for the full report.',
   ].filter((l): l is string => l !== null);
   injectContext(lines.join('\n'));

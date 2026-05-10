@@ -196,34 +196,43 @@ const external_node_os_namespaceObject = require("node:os");
 
 
 
-const DATA_ROOT = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'prompt-optimizer');
-const EVENTS_FILE = external_node_path_namespaceObject.join(DATA_ROOT, 'events.jsonl');
+function dataRoot() {
+    return process.env.LEARNWY_PROMPT_OPTIMIZER_ROOT || external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'prompt-optimizer');
+}
+function eventsFile() {
+    return external_node_path_namespaceObject.join(dataRoot(), 'events.jsonl');
+}
+const DATA_ROOT = dataRoot();
+const EVENTS_FILE = eventsFile();
 const MAX_EVENTS_BYTES = 5 * 1024 * 1024;
 function appendEvent(event) {
     try {
-        if (!external_node_fs_namespaceObject.existsSync(DATA_ROOT)) external_node_fs_namespaceObject.mkdirSync(DATA_ROOT, {
+        const root = dataRoot();
+        const file = eventsFile();
+        if (!external_node_fs_namespaceObject.existsSync(root)) external_node_fs_namespaceObject.mkdirSync(root, {
             recursive: true
         });
         let size = 0;
         try {
-            size = external_node_fs_namespaceObject.statSync(EVENTS_FILE).size;
+            size = external_node_fs_namespaceObject.statSync(file).size;
         } catch  {
         /* missing file — fine */ }
         if (size > MAX_EVENTS_BYTES) {
             try {
-                external_node_fs_namespaceObject.renameSync(EVENTS_FILE, `${EVENTS_FILE}.1`);
+                external_node_fs_namespaceObject.renameSync(file, `${file}.1`);
             } catch  {
             /* swallow */ }
         }
-        external_node_fs_namespaceObject.appendFileSync(EVENTS_FILE, `${JSON.stringify(event)}\n`);
+        external_node_fs_namespaceObject.appendFileSync(file, `${JSON.stringify(event)}\n`);
     } catch  {
     /* never break the caller */ }
 }
 function readEvents(sinceMs) {
-    if (!fs.existsSync(EVENTS_FILE)) return [];
+    const file = eventsFile();
+    if (!fs.existsSync(file)) return [];
     const out = [];
     const cutoff = Date.now() - sinceMs;
-    const raw = fs.readFileSync(EVENTS_FILE, 'utf8');
+    const raw = fs.readFileSync(file, 'utf8');
     for (const line of raw.split('\n')){
         if (!line) continue;
         try {

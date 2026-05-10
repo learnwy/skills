@@ -13,8 +13,6 @@ var __webpack_exports__ = {};
 const external_node_fs_namespaceObject = require("node:fs");
 ;// CONCATENATED MODULE: external "node:path"
 const external_node_path_namespaceObject = require("node:path");
-;// CONCATENATED MODULE: external "node:os"
-const external_node_os_namespaceObject = require("node:os");
 ;// CONCATENATED MODULE: ./src/shared/hooks-lib.ts
 
 
@@ -160,8 +158,9 @@ function uninstallHooks(skillId, options = {}) {
     }
 }
 
-;// CONCATENATED MODULE: ./src/knowledge-consolidation/hooks/post-resolution-nudge.ts
-
+;// CONCATENATED MODULE: external "node:os"
+const external_node_os_namespaceObject = require("node:os");
+;// CONCATENATED MODULE: ./src/knowledge-consolidation/lib/stop-scan.ts
 
 
 
@@ -207,31 +206,39 @@ function isSkillOutput(text) {
 function countSignals(text) {
     return RESOLUTION_SIGNALS.filter((re)=>re.test(text)).length;
 }
-async function main() {
-    const payload = await readStdin();
-    const transcript = payload.assistant_message || payload.last_response || payload.transcript || '';
-    if (transcript.length < MIN_RESPONSE_LEN) return;
-    if (isSkillOutput(transcript)) return;
+function scanStop(transcript, payload = {}) {
+    if (transcript.length < MIN_RESPONSE_LEN) return null;
+    if (isSkillOutput(transcript)) return null;
     const signals = countSignals(transcript);
-    if (signals === 0) return;
+    if (signals === 0) return null;
     const sessionId = payload.session_id || payload.sessionId;
     const prev = readState();
     const now = Date.now();
     if (prev) {
         const prevTs = Date.parse(prev.ts);
-        if (sessionId && prev.session_id === sessionId) return;
-        if (!sessionId && Number.isFinite(prevTs) && now - prevTs < DEBOUNCE_MS) return;
+        if (sessionId && prev.session_id === sessionId) return null;
+        if (!sessionId && Number.isFinite(prevTs) && now - prevTs < DEBOUNCE_MS) return null;
     }
-    injectContext([
-        '[knowledge-consolidation] This turn looks like it resolved a non-trivial problem',
-        `(${signals} resolution signal${signals > 1 ? 's' : ''} matched).`,
-        "If the insight is reusable across future sessions, suggest invoking knowledge-consolidation to persist it \u2014",
-        'do NOT auto-write; only nudge once per session.'
-    ].join(' '));
     writeState({
         session_id: sessionId,
         ts: new Date(now).toISOString()
     });
+    return [
+        '[knowledge-consolidation] This turn looks like it resolved a non-trivial problem',
+        `(${signals} resolution signal${signals > 1 ? 's' : ''} matched).`,
+        "If the insight is reusable across future sessions, suggest invoking knowledge-consolidation to persist it \u2014",
+        'do NOT auto-write; only nudge once per session.'
+    ].join(' ');
+}
+
+;// CONCATENATED MODULE: ./src/knowledge-consolidation/hooks/post-resolution-nudge.ts
+
+
+async function main() {
+    const payload = await readStdin();
+    const transcript = payload.assistant_message || payload.last_response || payload.transcript || '';
+    const out = scanStop(transcript, payload);
+    if (out) injectContext(out);
 }
 main().catch(()=>process.exit(0));
 

@@ -1,16 +1,4 @@
 {
   "version": 1,
-  "hooks": {
-    "Stop": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ~/.agents/skills/knowledge-consolidation/scripts/hooks/post-resolution-nudge.cjs",
-            "timeout": 5
-          }
-        ]
-      }
-    ]
-  }
+  "hooks": {}
 }

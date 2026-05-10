@@ -2,14 +2,14 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { looksLikeNonProse } from '../../shared/text-classifiers.js';
 
-const WIKI_ROOT = path.join(process.env.HOME || '', '.learnwy', 'llm-wiki');
+const DEFAULT_WIKI_ROOT = path.join(process.env.HOME || '', '.learnwy', 'llm-wiki');
 
-export function scanPrompt(message: string): string | null {
+export function scanPrompt(message: string, wikiRoot: string = DEFAULT_WIKI_ROOT): string | null {
   const lower = (message || '').toLowerCase();
   if (lower.length < 15) return null;
   if (looksLikeNonProse(message)) return null;
 
-  const topicsFile = path.join(WIKI_ROOT, 'wiki', 'topics.txt');
+  const topicsFile = path.join(wikiRoot, 'wiki', 'topics.txt');
   if (!fs.existsSync(topicsFile)) return null;
 
   const topics = fs
@@ -26,6 +26,6 @@ export function scanPrompt(message: string): string | null {
   return [
     `[llm-wiki] Relevant wiki topics found: ${topMatches.join(', ')}`,
     'Consider reading these wiki pages before answering.',
-    `Wiki path: ${WIKI_ROOT}/wiki/`,
+    `Wiki path: ${wikiRoot}/wiki/`,
   ].join('\n');
 }

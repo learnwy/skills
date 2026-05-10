@@ -4,7 +4,14 @@ import { join, resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = resolve(HERE, '..');
+
+function parseRepoRootArg() {
+  const idx = process.argv.indexOf('--repo-root');
+  if (idx >= 0 && process.argv[idx + 1]) return resolve(process.argv[idx + 1]);
+  return resolve(HERE, '..');
+}
+
+const REPO_ROOT = parseRepoRootArg();
 const SKILLS_DIR = join(REPO_ROOT, 'skills');
 const SRC_DIR = join(REPO_ROOT, 'src');
 

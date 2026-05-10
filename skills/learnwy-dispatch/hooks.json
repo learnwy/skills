@@ -11,6 +11,17 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ~/.agents/skills/learnwy-dispatch/scripts/hooks/stop.cjs",
+            "timeout": 5
+          }
+        ]
+      }
     ]
   }
 }
