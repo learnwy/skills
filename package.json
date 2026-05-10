@@ -12,7 +12,7 @@
     "test": "rstest run",
     "check": "pnpm run typecheck && pnpm run build && pnpm run test",
     "prepare": "git config core.hooksPath .githooks",
-    "release": "git push origin main && pnpm dlx skills install -g -y learnwy/skills && pnpm run install:hooks",
+    "release": "node scripts/release.mjs",
     "install:hooks": "node scripts/manage-hooks.mjs install",
     "uninstall:hooks": "node scripts/manage-hooks.mjs uninstall"
   },

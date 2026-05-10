@@ -26,8 +26,10 @@ skills/                                    # 仓库根目录
 │   ├── legacy-surgeon/
 │   └── test-strategist/
 └── skills/                                # 可运行的技能模块
-    ├── english-learner/                   # 词汇学习助手
-    ├── knowledge-consolidation/           # 对话洞察持久化
+    ├── english-learner/                   # 词汇学习助手 + 间隔复习
+    ├── knowledge-consolidation/           # 对话洞察持久化（含 Stop 自动 nudge）
+    ├── learnwy-dispatch/                  # UserPromptSubmit/Stop/SessionStart 单进程调度器
+    ├── learnwy-status/                    # 跨子系统数据综合视图 + doctor 健康体检
     ├── llm-wiki/                          # Karpathy 式知识库
     ├── on-contradiction/                  # 矛盾论方法论
     ├── on-practice/                       # 实践论方法论
@@ -67,9 +69,24 @@ skills/                                    # 仓库根目录
 
 | 技能 | 说明 | 包含脚本 |
 |------|------|----------|
-| **english-learner** | 词汇学习，自动拦截式英语辅导 | 是 (TS → bundled CJS) |
-| **knowledge-consolidation** | 将对话洞察持久化到项目 knowledges/ | 是 (CJS) |
-| **prompt-optimizer** | 提示词预检分析与优化（7 维度评分） | TS → bundled CJS（仅 hooks） |
+| **english-learner** | 词汇学习，自动拦截式英语辅导；间隔复习（1/3/7/14/30/90d）；与 llm-wiki 自动建索引 | 是 (TS → bundled CJS)；子命令 `vocab`、`quiz`、`sentence`、`migrate`、`link-wiki` |
+| **knowledge-consolidation** | 将对话洞察持久化到项目 knowledges/；Stop 钩子自动 nudge | 是 (CJS) |
+| **prompt-optimizer** | 提示词预检分析与优化（7 维度评分）；事件落盘 + `trends` 聚合 | 是；子命令 `trends` |
+| **llm-wiki** | Karpathy 式知识库；`health-check` 一键体检 + JSON 快照 | 是；子命令 `lint`、`generate-index`、`generate-topics`、`reorganize`、`freshness-check`、`health-check`、`stats` |
+| **learnwy-status** | 跨子系统综合视图（vocab/wiki/optimizer/kc/logs）；周度自动摘要；自动刷新过期 health.json / wiki-links.json；`doctor` 系统体检 | 是；子命令 `status`、`doctor` |
+| **learnwy-dispatch** | 内部协调器：UserPromptSubmit + Stop + SessionStart 三类钩子合并到单 Node 进程 | 是（仅 install/uninstall）|
+
+### 钩子调度器（Dispatcher Trio）
+
+每个事件都由 **`learnwy-dispatch`** 集中触发，避免每个技能单独 spawn 进程：
+
+| 事件 | 调度器入口 | 调度的子扫描函数 |
+|------|------------|------------------|
+| `UserPromptSubmit` | `skills/learnwy-dispatch/scripts/hooks/user-prompt-submit.cjs` | `english-learner/lib/prompt-scan` + `llm-wiki/lib/prompt-scan` + `prompt-optimizer/lib/prompt-scan` |
+| `Stop` | `skills/learnwy-dispatch/scripts/hooks/stop.cjs` | `english-learner/lib/stop-scan` + `knowledge-consolidation/lib/stop-scan` |
+| `SessionStart` | `skills/learnwy-dispatch/scripts/hooks/session-start.cjs` | `llm-wiki/lib/session-scan` + `english-learner/lib/session-scan` + `learnwy-status/lib/session-scan` |
+
+每个子扫描函数都是纯 `(payload | message) => string | null`，副作用（DB 写、状态持久化）封装在自己的 lib 里。一个扫描器抛错不会影响其它扫描器。原本各技能下的同名 hooks/`<event>`.cjs 入口被保留作为备用入口，但生产路径上只走 dispatcher。
 
 ## 技能规范
 
@@ -234,7 +251,43 @@ pnpm run release              # git push + pnpm dlx skills install + 注册 IDE 
 2. `pnpm dlx skills install -g -y learnwy/skills` — 拉取最新版到 `~/.agents/skills/<name>/`，并向所有 15 个支持的 AI 代理注册每个技能
 3. `pnpm run install:hooks` — `scripts/manage-hooks.mjs` 遍历每个包含 `hooks.json` 的技能，运行其 `cli.cjs install --scope global --target both`，在 `~/.claude/settings.json`、`~/.trae/hooks.json` 和 `~/.trae-cn/hooks.json` 中注册条目。幂等操作。
 
-**Pre-commit 守卫**：`.githooks/pre-commit` 在 `src/`、`scripts/`、`rslib.config.ts`、`tsconfig.json` 或 `package.json` 被暂存时运行 `pnpm run check`，如果 `skills/*/scripts/` 不同步则拒绝提交。`pnpm install` 通过 `prepare` 脚本（`git config core.hooksPath .githooks`）将其接入。
+**Pre-commit 守卫**：`.githooks/pre-commit` 在 `src/`、`scripts/`、`rslib.config.ts`、`tsconfig.json` 或 `package.json` 被暂存时运行 `pnpm run check`，如果 `skills/*/scripts/` 不同步则拒绝提交。然后运行 `node scripts/lint-skill-docs.mjs` 检查 `SKILL.md` 中提到的 `cli.cjs <subcommand>` 是否都能在 `src/<skill>/cli.ts` 的 `commands` map 里解析到，未对齐就拒绝提交。`pnpm install` 通过 `prepare` 脚本（`git config core.hooksPath .githooks`）将这两个守卫接入。
+
+**Hook 安装幂等性**：`scripts/manage-hooks.mjs install` 现在先做一次 uninstall 扫描再 install，因此重复运行 `pnpm run install:hooks` 不会留下旧拓扑（例如旧版本曾在每个技能下注册 UserPromptSubmit，新版本统一走 dispatcher 后多次执行 install 会自然清理）。`pnpm run release --dry-run` 展示每一步将要执行的命令，但不实际推送或安装。
+
+### SQLite Schema 迁移
+
+`src/shared/db.ts` 通过有序的 `MIGRATIONS` 数组管理 schema 演进：
+
+```ts
+const MIGRATIONS: Migration[] = [
+  { version: 1, up: '/* CREATE TABLE … 当前所有表与索引 */' },
+  { version: 2, up: 'ALTER TABLE words ADD COLUMN next_review_at TEXT; …' },
+];
+```
+
+`getDb()` 在每次首次打开时读取 `meta.schema_version`，按版本号顺序应用所有未执行的迁移（事务包裹）。新增列、索引或表请追加 `{ version: N+1, up: '...' }`，**不要**修改已发布的迁移。`SCHEMA_VERSION` 常量供 `learnwy-status doctor` 等检查器与运行时实际版本比对。
+
+### 自动数据演进 (Auto-Evolution)
+
+围绕 `~/.learnwy/` 的数据流由四类钩子驱动，逐步把"沉淀的数据"转换成"主动作用于用户的反馈"：
+
+1. **数据采集**（`UserPromptSubmit` 经 dispatcher）：
+   - english-learner 截获英文/中文消息，自动保存关键词汇
+   - prompt-optimizer 把每次触发记录到 `~/.learnwy/prompt-optimizer/events.jsonl`
+2. **数据回流**（`Stop` 经 dispatcher）：
+   - english-learner 从助手回复抽取候选生词（用户决定是否保存）
+   - knowledge-consolidation 在检测到 "解决问题" 信号时一次性 nudge `/save`
+3. **数据呈现**（`SessionStart` 经 dispatcher）：
+   - llm-wiki 注入相关主题
+   - english-learner 每天首次会话推送 3 个到期复习（间隔复习算法）
+   - learnwy-status 每 ISO 周首次会话推送综合摘要 + 自动后台刷新过期的 health.json / wiki-links.json
+4. **手动检视**：
+   - `learnwy-status status` — 全局综合面板
+   - `learnwy-status doctor` — 系统体检（schema 版本、hook 注册、目录结构、Node 版本）
+   - `llm-wiki health-check` / `english-learner link-wiki` / `prompt-optimizer trends` — 子系统快照
+
+新加子系统应遵循同一模式：lib 函数纯化、副作用包裹在 lib、入口仅 readStdin + 调用 lib + injectContext。
 
 ### 依赖策略
 

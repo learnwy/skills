@@ -35,6 +35,8 @@ If a subsystem has no data, that section degrades to "(empty)" rather than faili
 | `cli.cjs status` | Human-readable report (default) |
 | `cli.cjs status --compact` | One-line summary used by the SessionStart hook |
 | `cli.cjs status --json` | Machine-readable digest for downstream tooling |
+| `cli.cjs doctor` | System health check — Node version, schema version, hook registration in `~/.claude/settings.json` and `~/.trae/hooks.json`, ~/.learnwy/ subdir layout, dispatcher bundle presence under `~/.agents/skills/`. Exits non-zero on any error. |
+| `cli.cjs doctor --json` | Same as above, machine-readable. |
 
 ## Hooks
 
