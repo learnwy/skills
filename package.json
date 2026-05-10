@@ -4,28 +4,22 @@
   "private": true,
   "description": "Personal skills repository with rslib-bundled CLI scripts",
   "type": "module",
+  "packageManager": "pnpm@11.0.8",
   "scripts": {
     "build": "rslib build",
     "watch": "rslib build --watch",
     "typecheck": "tsc --noEmit",
-    "check": "npm run typecheck && npm run build",
+    "test": "rstest run",
+    "check": "pnpm run typecheck && pnpm run build && pnpm run test",
     "prepare": "git config core.hooksPath .githooks",
-    "release": "git push origin main && pnpx skills install -g -y learnwy/skills && npm run install:hooks",
-
-    "migrate:english-learner": "node skills/english-learner/scripts/migrate-from-json.cjs",
-    "migrate:english-learner:dry": "node skills/english-learner/scripts/migrate-from-json.cjs --dry-run",
-
-    "install:english-learner": "node skills/english-learner/scripts/hooks/install.cjs install --config skills/english-learner/hooks.json --scope global --target both",
-    "install:llm-wiki":         "node skills/llm-wiki/scripts/hooks/install.cjs install --config skills/llm-wiki/hooks.json --scope global --target both",
-    "install:prompt-optimizer": "node skills/prompt-optimizer/scripts/hooks/install.cjs install --config skills/prompt-optimizer/hooks.json --scope global --target both",
-    "install:hooks":            "npm run install:english-learner && npm run install:llm-wiki && npm run install:prompt-optimizer",
-
-    "uninstall:english-learner": "node skills/english-learner/scripts/hooks/install.cjs uninstall --skill-id english-learner --scope global --target both",
-    "uninstall:llm-wiki":        "node skills/llm-wiki/scripts/hooks/install.cjs uninstall --skill-id llm-wiki --scope global --target both",
-    "uninstall:prompt-optimizer":"node skills/prompt-optimizer/scripts/hooks/install.cjs uninstall --skill-id prompt-optimizer --scope global --target both"
+    "release": "git push origin main && pnpm dlx skills install -g -y learnwy/skills && pnpm run install:hooks",
+    "install:hooks": "node scripts/manage-hooks.mjs install",
+    "uninstall:hooks": "node scripts/manage-hooks.mjs uninstall"
   },
   "devDependencies": {
     "@rslib/core": "^0.10.0",
+    "@rstest/adapter-rslib": "^0.2.2",
+    "@rstest/core": "^0.9.10",
     "@types/node": "^22.0.0",
     "typescript": "^5.6.0"
   }

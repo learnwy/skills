@@ -15,4 +15,5 @@ All project conventions, skill inventory, and development guidelines are maintai
 - **10 universal agents** in `agents/` directory
 - **No comments** in code unless explicitly requested
 - **English** for all skill documents
-- **Scripts**: CJS (`.cjs`) or ESM (`.mjs` with Node >= 18)
+- **Package manager**: pnpm (`pnpm install`, `pnpm run check`, `pnpm run release`)
+- **Scripts**: TypeScript in `src/<skill>/{cli,cmd/,lib/,hooks/}`, bundled to CJS in `skills/<skill>/scripts/{cli.cjs, hooks/<event>.cjs}` via rslib's auto-scanner

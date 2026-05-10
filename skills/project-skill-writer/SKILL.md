@@ -131,12 +131,12 @@ WAIT for user confirmation before generating.
 
 After user confirmation:
 
-1. **Scaffold**: Run `scripts/init_skill.cjs` with `--problem` flag, or create files manually using [skill.md.template](assets/skill.md.template)
+1. **Scaffold**: Run `scripts/cli.cjs init` with `--problem` flag, or create files manually using [skill.md.template](assets/skill.md.template)
 2. **Populate**: Inject project-specific conventions from L2 analysis into SKILL.md sections
 3. **Reference files**: Create `references/`, `assets/`, `scripts/` only when the skill needs them
 4. **Path**: Determine output path using [Path Discovery](references/path-discovery.md) — always project-relative
 
-Fallback: If `init_skill.cjs` fails or the template doesn't fit, write SKILL.md directly following the template structure.
+Fallback: If `cli.cjs init` fails or the template doesn't fit, write SKILL.md directly following the template structure.
 
 ## L6: Quality Gates
 
@@ -151,7 +151,7 @@ Minimum checks before delivery:
 - [ ] Dependencies are declared
 - [ ] Examples show real usage
 - [ ] If skill has auto-mode → hooks.json exists with correct scope (global vs project)
-- [ ] Hook scripts use shared lib (`scripts/hooks/lib.cjs`), not custom stdin parsing
+- [ ] Hook scripts use shared lib (`src/shared/hooks-lib.ts`), not custom stdin parsing
 
 ## Error Handling
 

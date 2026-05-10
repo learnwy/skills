@@ -224,7 +224,7 @@ After user confirms:
 ### Generation
 
 1. Determine output path: `.trae/rules/` in the target project root
-2. Create rule file using `scripts/init_rule.cjs` or [rule.md.template](assets/rule.md.template)
+2. Create rule file using `scripts/cli.cjs init` or [rule.md.template](assets/rule.md.template)
 3. Fill in frontmatter (`description`, `globs`, `alwaysApply`) from L3 design
 4. Write rule content — actionable constraints, not vague guidelines
 5. Ensure all paths in rule content are project-relative, never absolute
@@ -232,14 +232,14 @@ After user confirms:
 ### Generation Command
 
 ```bash
-node scripts/init_rule.cjs \
+node scripts/cli.cjs init \
   --skill-dir <this-skill-dir> \
   --name <rule-name> \
   --description "<when-this-rule-applies>" \
   --output-dir <project>/.trae/rules/
 ```
 
-Fallback: If `init_rule.cjs` fails or the template doesn't fit, write the `.md` file directly following the template structure.
+Fallback: If `cli.cjs init` fails or the template doesn't fit, write the `.md` file directly following the template structure.
 
 ### Verification
 

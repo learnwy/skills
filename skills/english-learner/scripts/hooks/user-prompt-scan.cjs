@@ -158,21 +158,38 @@ function uninstallHooks(skillId, options = {}) {
     }
 }
 
+;// CONCATENATED MODULE: ./src/shared/text-classifiers.ts
+const CODE_PREFIX_RE = /^(import |const |let |var |function |class |\/\/|#!|{|}|\[|\])/;
+const PATH_RE = /^[\/~.].*\.[a-z]{1,4}$/i;
+const COMMAND_PREFIX_RE = /^(git |npm |pnpm |yarn |node |cd |ls |cat |mkdir |rm |touch |cp |mv |grep |find |echo |sed |awk |curl |wget |ssh |docker |kubectl )/;
+function looksLikeCode(text) {
+    return CODE_PREFIX_RE.test(text.trim());
+}
+function looksLikePath(text) {
+    return PATH_RE.test(text.trim());
+}
+function looksLikeCommand(text) {
+    return COMMAND_PREFIX_RE.test(text.trim());
+}
+function looksLikeNonProse(text) {
+    const t = text.trim();
+    return CODE_PREFIX_RE.test(t) || PATH_RE.test(t) || COMMAND_PREFIX_RE.test(t);
+}
+function englishRatio(text) {
+    const alpha = (text.match(/[a-zA-Z]/g) || []).length;
+    const total = text.replace(/\s/g, '').length;
+    return total > 0 ? alpha / total : 0;
+}
+
 ;// CONCATENATED MODULE: ./src/english-learner/hooks/user-prompt-scan.ts
+
 
 async function main() {
     const payload = await readStdin();
     const userMessage = payload.user_message || payload.prompt || '';
     if (!userMessage || userMessage.length < 10) return;
-    const trimmed = userMessage.trim();
-    const isLikelyCode = /^(import |const |let |var |function |class |\/\/|#!|{|}|\[|\])/.test(trimmed);
-    const isLikelyPath = /^[\/~.].*\.[a-z]{1,4}$/i.test(trimmed);
-    const isLikelyCommand = /^(git |npm |node |cd |ls |cat |mkdir |rm )/.test(trimmed);
-    if (isLikelyCode || isLikelyPath || isLikelyCommand) return;
-    const alphaChars = (userMessage.match(/[a-zA-Z]/g) || []).length;
-    const totalChars = userMessage.replace(/\s/g, '').length;
-    const englishRatio = totalChars > 0 ? alphaChars / totalChars : 0;
-    if (englishRatio < 0.6) return;
+    if (looksLikeNonProse(userMessage)) return;
+    if (englishRatio(userMessage) < 0.6) return;
     injectContext([
         '[english-learner hook] The user wrote in English.',
         'Before responding, scan for grammar/word-choice/expression issues (max 3).',

@@ -187,7 +187,7 @@ Use `AskUserQuestion` with:
 After user confirms:
 
 1. Determine output path using [Path Discovery](references/path-discovery.md)
-2. Create agent scaffold using `scripts/init_agent.cjs`
+2. Create agent scaffold using `scripts/cli.cjs init`
 3. Fill in role, inputs, process, outputs from L3 design
 4. Set correct project-relative output path
 5. Include quality gates and constraints
@@ -195,7 +195,7 @@ After user confirms:
 ### Generation Command
 
 ```bash
-node scripts/init_agent.cjs \
+node scripts/cli.cjs init \
   --skill-dir <this-skill-dir> \
   --name <agent-name> \
   --role "<one-sentence-role>" \

@@ -98,8 +98,8 @@ When issues are found, prepend this to your response BEFORE doing the user's act
 If you have legacy JSON data under `~/.english-learner/{words,phrases,history}/`, run the importer once:
 
 ```bash
-node scripts/migrate-from-json.cjs           # import into data.db
-node scripts/migrate-from-json.cjs --dry-run # preview row counts only
+node scripts/cli.cjs migrate              # import into data.db
+node scripts/cli.cjs migrate --dry-run    # preview row counts only
 ```
 
 The import is idempotent — safe to re-run. Original JSON files are not touched; you can archive them after verifying the import.
@@ -134,7 +134,7 @@ The import is idempotent — safe to re-run. Original JSON files are not touched
 
 ### Input Classification
 
-Use `sentence-parser.cjs classify <text>` to determine type:
+Use `cli.cjs sentence classify <text>` to determine type:
 
 | Type | Rule | Example |
 |------|------|---------|
@@ -163,31 +163,35 @@ If input contains multiple items or intent is unclear, use `AskUserQuestion`:
 
 ## Scripts
 
-All scripts in `{skill_root}/scripts/`. Data stored in `~/.english-learner/`.
+Single entry point at `{skill_root}/scripts/cli.cjs`. Data stored in `~/.english-learner/`.
 
 ```bash
-# vocab-manager.cjs — Word/Phrase CRUD + batch operations
-node vocab-manager.cjs get_word <word>
-node vocab-manager.cjs save_word <word> <definition> [phonetic] [examples_json]
-node vocab-manager.cjs get_phrase "<phrase>"
-node vocab-manager.cjs save_phrase "<phrase>" <definition> [phonetic] [examples_json]
-node vocab-manager.cjs log_query <query> <type>
-node vocab-manager.cjs stats
-node vocab-manager.cjs update_mastery <item> <is_word:true/false> <correct:true/false>
+# vocab — Word/Phrase CRUD + batch operations
+node cli.cjs vocab get_word <word>
+node cli.cjs vocab save_word <word> <definition> [phonetic] [examples_json]
+node cli.cjs vocab get_phrase "<phrase>"
+node cli.cjs vocab save_phrase "<phrase>" <definition> [phonetic] [examples_json]
+node cli.cjs vocab log_query <query> <type>
+node cli.cjs vocab stats
+node cli.cjs vocab update_mastery <item> <is_word:true/false> <correct:true/false>
 
 # Batch operations (PREFERRED for multiple words)
-node vocab-manager.cjs batch_get '["word1", "word2"]'
-node vocab-manager.cjs batch_save '[{"word":"...","definition":"...","phonetic":"...","examples":[]}]'
+node cli.cjs vocab batch_get '["word1", "word2"]'
+node cli.cjs vocab batch_save '[{"word":"...","definition":"...","phonetic":"...","examples":[]}]'
 
-# sentence-parser.cjs — Input classification + word extraction
-node sentence-parser.cjs classify <text>
-node sentence-parser.cjs parse <sentence>
-node sentence-parser.cjs batch_check <words>
+# sentence — Input classification + word extraction
+node cli.cjs sentence classify <text>
+node cli.cjs sentence parse <sentence>
+node cli.cjs sentence batch_check <words>
 
-# quiz-manager.cjs — Learning sessions
-node quiz-manager.cjs generate [count] [type] [focus]
-node quiz-manager.cjs review [limit]
-node quiz-manager.cjs summary
+# quiz — Learning sessions
+node cli.cjs quiz generate [count] [type] [focus]
+node cli.cjs quiz review [limit]
+node cli.cjs quiz summary
+
+# Hook registration
+node cli.cjs install      # register hooks into ~/.claude/ and ~/.trae/
+node cli.cjs uninstall    # remove this skill's hook entries
 ```
 
 ## Response Formats
@@ -254,7 +258,7 @@ node quiz-manager.cjs summary
 When user says `学习` / `review` / `quiz`:
 
 ```
-1. Generate quiz:  node quiz-manager.cjs generate 5 all low_mastery
+1. Generate quiz:  node cli.cjs quiz generate 5 all low_mastery
 2. If empty → show "词库为空" message with usage hints
 3. For EACH quiz item:
 
@@ -276,7 +280,7 @@ When user says `学习` / `review` / `quiz`:
        - "基本掌握" — "+5 mastery"
        - "需要加强" — "-5 mastery"
 
-6. Update mastery:  node vocab-manager.cjs update_mastery <item> true <result>
+6. Update mastery:  node cli.cjs vocab update_mastery <item> true <result>
 7. Continue or show summary
 ```
 
@@ -389,9 +393,9 @@ The `data` column carries the JSON shape; indexed columns (`mastery`, `lookup_co
 | `node:sqlite` not available | Upgrade Node.js to ≥ 24 |
 | `batch_get` returns all `not_found` | AI generates all definitions, then `batch_save` |
 | Quiz returns empty list | Show "词库为空" message with usage hints |
-| Input language ambiguous | Use `sentence-parser.cjs classify` first, then confirm with user if still unclear |
+| Input language ambiguous | Use `cli.cjs sentence classify` first, then confirm with user if still unclear |
 | `batch_save` fails | Retry once, then report error with raw data so user can save manually |
-| Legacy JSON data still on disk | Run `node scripts/migrate-from-json.cjs` to import into SQLite (idempotent) |
+| Legacy JSON data still on disk | Run `node scripts/cli.cjs migrate` to import into SQLite (idempotent) |
 
 ## Execution Checklist
 
@@ -425,15 +429,13 @@ This skill registers IDE hooks to enable **deterministic auto-intercept** — no
 
 ```bash
 # Install hooks globally (supports both Trae and Claude Code)
-node scripts/hooks/install.cjs install \
-  --config ./hooks.json --scope global --target both
+node scripts/cli.cjs install --scope global --target both
 ```
 
 ### Uninstall
 
 ```bash
-node scripts/hooks/install.cjs uninstall \
-  --skill-id english-learner --scope global --target both
+node scripts/cli.cjs uninstall --scope global --target both
 ```
 
 ### How It Works

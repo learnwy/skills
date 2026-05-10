@@ -17,6 +17,6 @@
     "allowSyntheticDefaultImports": true,
     "verbatimModuleSyntax": false
   },
-  "include": ["src/**/*.ts", "rslib.config.ts"],
+  "include": ["src/**/*.ts", "tests/**/*.ts", "rslib.config.ts", "rstest.config.ts"],
   "exclude": ["node_modules", "skills/**/scripts/**"]
 }

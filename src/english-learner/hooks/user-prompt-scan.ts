@@ -1,21 +1,13 @@
 #!/usr/bin/env node
 import { readStdin, injectContext } from '../../shared/hooks-lib.js';
+import { looksLikeNonProse, englishRatio } from '../../shared/text-classifiers.js';
 
 async function main(): Promise<void> {
   const payload = await readStdin();
   const userMessage = payload.user_message || payload.prompt || '';
   if (!userMessage || userMessage.length < 10) return;
-
-  const trimmed = userMessage.trim();
-  const isLikelyCode = /^(import |const |let |var |function |class |\/\/|#!|{|}|\[|\])/.test(trimmed);
-  const isLikelyPath = /^[\/~.].*\.[a-z]{1,4}$/i.test(trimmed);
-  const isLikelyCommand = /^(git |npm |node |cd |ls |cat |mkdir |rm )/.test(trimmed);
-  if (isLikelyCode || isLikelyPath || isLikelyCommand) return;
-
-  const alphaChars = (userMessage.match(/[a-zA-Z]/g) || []).length;
-  const totalChars = userMessage.replace(/\s/g, '').length;
-  const englishRatio = totalChars > 0 ? alphaChars / totalChars : 0;
-  if (englishRatio < 0.6) return;
+  if (looksLikeNonProse(userMessage)) return;
+  if (englishRatio(userMessage) < 0.6) return;
 
   injectContext(
     [

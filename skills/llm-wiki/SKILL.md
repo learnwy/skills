@@ -115,20 +115,21 @@ Agents: [ingestor](agents/operations/ingestor.md), [querier](agents/operations/q
 
 ## Management Scripts
 
-Four Node.js ESM scripts for wiki maintenance, plus two structural tools. Run from the skill directory:
+Single CLI entry at `{skill_root}/scripts/cli.cjs` dispatches all maintenance subcommands:
 
 ```sh
 cd skills/llm-wiki
-node scripts/generate-index/index.mjs     # Regenerate wiki/index.md from filesystem
-node scripts/generate-topics/index.mjs    # Regenerate wiki/topics.txt
-node scripts/lint/index.mjs               # Check broken links, orphans, missing tags
-node scripts/stats/index.mjs              # Quick dashboard of raw + wiki counts
-node scripts/freshness-check/index.mjs    # Flag stale/unverified pages
-node scripts/reorganize/index.mjs --dry-run  # Preview concept reorganization
+node scripts/cli.cjs generate-index            # Regenerate wiki/index.md from filesystem
+node scripts/cli.cjs generate-topics           # Regenerate wiki/topics.txt
+node scripts/cli.cjs lint                      # Check broken links, orphans, missing tags
+node scripts/cli.cjs stats                     # Quick dashboard of raw + wiki counts
+node scripts/cli.cjs freshness-check           # Flag stale/unverified pages
+node scripts/cli.cjs reorganize --dry-run      # Preview concept reorganization
+node scripts/cli.cjs install / uninstall       # Register/remove IDE hooks
 ```
 
-| Script | Output | When to Run |
-|--------|--------|-------------|
+| Subcommand | Output | When to Run |
+|------------|--------|-------------|
 | `generate-index` | `wiki/index.md` — categorized, accurate page counts | After batch ingestion or when index drifts |
 | `generate-topics` | `wiki/topics.txt` — keywords for auto-query matching | After new topic areas are added |
 | `lint` | Errors (broken wikilinks) + warnings (orphans, missing tags) | Weekly maintenance or before commits |
@@ -136,7 +137,7 @@ node scripts/reorganize/index.mjs --dry-run  # Preview concept reorganization
 | `freshness-check` | Stale pages (90d tech, 180d stable), unverified, missing dates | Monthly or after major version releases |
 | `reorganize` | Move concepts/ into domain subdirs (supports `--dry-run`) | When new domain areas are added |
 
-Scripts use shared modules at `scripts/shared/` (constants, fs-utils, meta extraction, category mapping). Override wiki location with `LLM_WIKI_ROOT` env var.
+Override wiki location with `LLM_WIKI_ROOT` env var.
 
 ## Agent Output Contract
 
@@ -185,15 +186,13 @@ This skill registers IDE hooks to enable **deterministic auto-query** — the wi
 
 ```bash
 # Install hooks globally (supports both Trae and Claude Code)
-node scripts/hooks/install.cjs install \
-  --config ./hooks.json --scope global --target both
+node scripts/cli.cjs install --scope global --target both
 ```
 
 ### Uninstall
 
 ```bash
-node scripts/hooks/install.cjs uninstall \
-  --skill-id llm-wiki --scope global --target both
+node scripts/cli.cjs uninstall --scope global --target both
 ```
 
 ### How It Works

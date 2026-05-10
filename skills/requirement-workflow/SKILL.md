@@ -23,7 +23,7 @@ Structured development orchestrator based on **Spec-Driven Development**: define
 ```
 User says anything about building/implementing/fixing →
   1. AI classifies the request (type + size + risk)
-  2. AI runs: node init.cjs -r <root> -n <name> -t <type> -s <size> -k <risk>
+  2. AI runs: node scripts/cli.cjs init -r <root> -n <name> -t <type> -s <size> -k <risk>
   3. AI fills spec.md with structured requirements (EARS format)
   4. AI decomposes spec.md into tasks.md
   5. AI implements task by task, advancing stages
@@ -77,7 +77,7 @@ INIT → DEFINING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → DE
 Classify request, initialize workflow, create artifact directory.
 
 ```bash
-node init.cjs -r <project_root> -n "<name>" -t <type> -s <size> -k <risk>
+node scripts/cli.cjs init -r <project_root> -n "<name>" -t <type> -s <size> -k <risk>
 ```
 
 **Output**: `workflow.yaml`, empty `spec.md`, `tasks.md`, `checklist.md`
@@ -208,13 +208,13 @@ Workflow complete. Summary output:
 
 ```bash
 # Check current status
-node status.cjs -r <project_root>
+node scripts/cli.cjs status -r <project_root>
 
 # Advance to next stage
-node advance.cjs -r <project_root>
+node scripts/cli.cjs advance -r <project_root>
 
 # Force advance (skip checkpoint)
-node advance.cjs -r <project_root> --force
+node scripts/cli.cjs advance -r <project_root> --force
 ```
 
 ## Hooks System
@@ -240,10 +240,10 @@ Hooks are agents/skills that run at stage transitions. Three scopes:
 
 ```bash
 # List hooks
-node hooks.cjs -r <project_root> list
+node scripts/cli.cjs hooks -r <project_root> list
 
 # Add a hook
-node hooks.cjs -r <project_root> add pre_stage_TESTING -n my-validator --type skill
+node scripts/cli.cjs hooks -r <project_root> add pre_stage_TESTING -n my-validator --type skill
 ```
 
 ## Quality Gates
@@ -280,13 +280,14 @@ If you find yourself writing code not covered by any task — **stop and update 
 
 ## Scripts
 
-| Script | Purpose |
-|--------|---------|
-| [init.cjs](scripts/init.cjs) | Initialize workflow with classification |
-| [advance.cjs](scripts/advance.cjs) | Advance to next stage |
-| [status.cjs](scripts/status.cjs) | Show current workflow status |
-| [hooks.cjs](scripts/hooks.cjs) | Manage hook registrations |
-| [lib/common.cjs](scripts/lib/common.cjs) | Shared YAML utilities |
+Single CLI entry at `scripts/cli.cjs` dispatches all workflow commands.
+
+| Subcommand | Purpose |
+|------------|---------|
+| `init` | Initialize workflow with classification |
+| `advance` | Advance to next stage |
+| `status` | Show current workflow status |
+| `hooks` | List/add internal workflow hooks; generate/install IDE hooks.json |
 
 ## Agents
 

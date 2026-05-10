@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { readStdin, injectContext } from '../../shared/hooks-lib.js';
+import { looksLikeNonProse } from '../../shared/text-classifiers.js';
 
 const EXPLICIT_TRIGGERS: RegExp[] = [
   /\boptimi[sz]e\s+(my|this|the|that)?\s*prompt\b/i,
@@ -45,10 +46,7 @@ async function main(): Promise<void> {
   if (!userMessage) return;
 
   const trimmed = userMessage.trim();
-  const isLikelyCode = /^(import |const |let |var |function |class |\/\/|#!|{|}|\[|\])/.test(trimmed);
-  const isLikelyPath = /^[\/~.].*\.[a-z]{1,4}$/i.test(trimmed);
-  const isLikelyCommand = /^(git |npm |node |cd |ls |cat |mkdir |rm )/.test(trimmed);
-  if (isLikelyCode || isLikelyPath || isLikelyCommand) return;
+  if (looksLikeNonProse(userMessage)) return;
 
   const explicit = looksLikeExplicitAsk(trimmed);
   const structured = looksLikeStructuredPrompt(trimmed);

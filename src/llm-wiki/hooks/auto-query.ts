@@ -2,6 +2,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { readStdin, injectContext } from '../../shared/hooks-lib.js';
+import { looksLikeNonProse } from '../../shared/text-classifiers.js';
 
 const WIKI_ROOT = path.join(process.env.HOME || '', '.learnwy', 'llm-wiki');
 
@@ -9,7 +10,7 @@ async function main(): Promise<void> {
   const payload = await readStdin();
   const userMessage = (payload.user_message || payload.prompt || '').toLowerCase();
   if (!userMessage || userMessage.length < 15) return;
-  if (/^(import |const |let |var |function |git |npm |node )/.test(userMessage.trim())) return;
+  if (looksLikeNonProse(userMessage)) return;
 
   const topicsFile = path.join(WIKI_ROOT, 'wiki', 'topics.txt');
   if (!fs.existsSync(topicsFile)) return;

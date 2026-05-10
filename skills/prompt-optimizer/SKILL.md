@@ -178,13 +178,11 @@ It exits silently for code, file paths, shell commands, normal chat, or short qu
 ### Install
 
 ```bash
-node scripts/hooks/install.cjs install \
-  --config ./hooks.json --scope global --target both
+node scripts/cli.cjs install --scope global --target both
 ```
 
 ### Uninstall
 
 ```bash
-node scripts/hooks/install.cjs uninstall \
-  --skill-id prompt-optimizer --scope global --target both
+node scripts/cli.cjs uninstall --scope global --target both
 ```

@@ -25,7 +25,7 @@ skills/trae-rules-writer/
 ├── examples/
 ├── references/
 ├── scripts/
-│   └── init_rule.cjs
+│   └── cli.cjs    # subcommand: init
 └── SKILL.md
 ```
 

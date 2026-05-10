@@ -66,10 +66,10 @@ Where <constraint>, the system shall <limit>
 ## Script Commands
 
 ```bash
-node init.cjs -r . -n "name" -t feature -s medium -k normal
-node advance.cjs -r .
-node status.cjs -r .
-node hooks.cjs -r . list
+node scripts/cli.cjs init -r . -n "name" -t feature -s medium -k normal
+node scripts/cli.cjs advance -r .
+node scripts/cli.cjs status -r .
+node scripts/cli.cjs hooks -r . list
 ```
 
 ## Agent Quick Lookup

@@ -158,7 +158,31 @@ function uninstallHooks(skillId, options = {}) {
     }
 }
 
+;// CONCATENATED MODULE: ./src/shared/text-classifiers.ts
+const CODE_PREFIX_RE = /^(import |const |let |var |function |class |\/\/|#!|{|}|\[|\])/;
+const PATH_RE = /^[\/~.].*\.[a-z]{1,4}$/i;
+const COMMAND_PREFIX_RE = /^(git |npm |pnpm |yarn |node |cd |ls |cat |mkdir |rm |touch |cp |mv |grep |find |echo |sed |awk |curl |wget |ssh |docker |kubectl )/;
+function looksLikeCode(text) {
+    return CODE_PREFIX_RE.test(text.trim());
+}
+function looksLikePath(text) {
+    return PATH_RE.test(text.trim());
+}
+function looksLikeCommand(text) {
+    return COMMAND_PREFIX_RE.test(text.trim());
+}
+function looksLikeNonProse(text) {
+    const t = text.trim();
+    return CODE_PREFIX_RE.test(t) || PATH_RE.test(t) || COMMAND_PREFIX_RE.test(t);
+}
+function englishRatio(text) {
+    const alpha = (text.match(/[a-zA-Z]/g) || []).length;
+    const total = text.replace(/\s/g, '').length;
+    return total > 0 ? alpha / total : 0;
+}
+
 ;// CONCATENATED MODULE: ./src/llm-wiki/hooks/auto-query.ts
+
 
 
 
@@ -167,7 +191,7 @@ async function main() {
     const payload = await readStdin();
     const userMessage = (payload.user_message || payload.prompt || '').toLowerCase();
     if (!userMessage || userMessage.length < 15) return;
-    if (/^(import |const |let |var |function |git |npm |node )/.test(userMessage.trim())) return;
+    if (looksLikeNonProse(userMessage)) return;
     const topicsFile = external_node_path_namespaceObject.join(WIKI_ROOT, 'wiki', 'topics.txt');
     if (!external_node_fs_namespaceObject.existsSync(topicsFile)) return;
     const topics = external_node_fs_namespaceObject.readFileSync(topicsFile, 'utf8').split('\n').map((t)=>t.trim().toLowerCase()).filter(Boolean);

@@ -1,14 +1,11 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { ensureDir, nowIso } from '../../shared/fs-utils.js';
+
+export { ensureDir };
 
 export function getTimestamp(): string {
-  return new Date().toISOString();
-}
-
-export function ensureDir(dir: string): void {
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
+  return nowIso();
 }
 
 export function sanitizeName(name: string): string {

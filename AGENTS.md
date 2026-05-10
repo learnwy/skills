@@ -112,8 +112,17 @@ metadata:
 
 - **TypeScript source** lives at repo root in `src/<skill-name>/` and `src/shared/`
 - **Build outputs** are committed at `skills/<skill-name>/scripts/*.cjs` (do NOT edit them by hand)
+- Each skill follows a 1:1 layout that the `rslib.config.ts` scanner picks up automatically:
+  ```
+  src/<skill>/
+  ├── cli.ts              ← optional; bundled as scripts/cli.cjs (single entry, subcommand dispatcher)
+  ├── cmd/<verb>.ts       ← exports `command: Command` consumed by cli.ts
+  ├── lib/*.ts            ← internal helpers (bundled into above; never an entry)
+  └── hooks/<event>.ts    ← optional; one bundled scripts/hooks/<event>.cjs per file
+  ```
+  `src/shared/cli.ts` provides `dispatch({ name, commands })` and `parseArgs`. Skills with hooks add `install` / `uninstall` subcommands by importing from `src/shared/install-entry.ts`.
 - All scripts ship as bundled CJS targeting Node.js ≥ 22 (the `english-learner` SQLite path additionally requires Node ≥ 24 for the built-in `node:sqlite` module)
-- **Path convention**: All script paths in SKILL.md are relative to `{skill_root}` (the SKILL.md directory)
+- **Path convention**: All script paths in SKILL.md are relative to `{skill_root}` (the SKILL.md directory). The standard invocation form is `node scripts/cli.cjs <subcommand> [args]` for command skills and `node scripts/hooks/<event>.cjs` for hook entry points.
 - All skill documents in English
 
 ## Development Guidelines
@@ -172,70 +181,78 @@ trae-rules-writer        → Create AI behavior rules
 project-skill-installer  → Install an existing skill into a project
 ```
 
-### Build System (rslib)
+### Build System (rslib + pnpm)
 
-The repo uses [`@rslib/core`](https://rslib.rs) to bundle TypeScript sources from `src/` into per-skill CJS scripts at `skills/<name>/scripts/`.
+The repo uses [`@rslib/core`](https://rslib.rs) and [pnpm](https://pnpm.io). `rslib.config.ts` auto-scans `src/<skill>/` directories and emits one bundled CJS entry per `cli.ts` plus one per `hooks/<event>.ts` — there is no per-skill entry list to maintain.
 
 ```
 src/                          ← source of truth (TypeScript)
 ├── shared/
-│   ├── hooks-lib.ts          ← single source for all hook utilities
-│   ├── db.ts                 ← SQLite helper (english-learner)
-│   └── install-entry.ts      ← shared install/uninstall CLI
-├── english-learner/
-├── llm-wiki/
-└── prompt-optimizer/
+│   ├── cli.ts                ← Command dispatcher + parseArgs helper
+│   ├── hooks-lib.ts          ← Hook utilities (stdin, injectContext, install/uninstall primitives)
+│   ├── install-entry.ts      ← `installCommand` / `uninstallCommand` exposed as subcommands
+│   └── db.ts                 ← SQLite helper (english-learner)
+├── english-learner/{cli,cmd/,hooks/}
+├── llm-wiki/{cli,cmd/,lib/,hooks/}
+├── prompt-optimizer/{cli,hooks/}
+├── requirement-workflow/{cli,cmd/,lib/}
+├── knowledge-consolidation/{cli,cmd/}
+├── project-{agent,skill}-writer/{cli,cmd/}
+└── trae-rules-writer/{cli,cmd/}
 
 skills/<name>/scripts/        ← bundled output, COMMITTED, never hand-edit
+├── cli.cjs                   ← single entry per skill
+└── hooks/<event>.cjs         ← one per src/<skill>/hooks/*.ts
+
+scripts/manage-hooks.mjs      ← orchestrator that runs `cli.cjs install` for every skill with hooks.json
 ```
 
 **Build commands**:
 ```bash
-npm install                   # one-time
-npm run build                 # bundle all skills
-npm run watch                 # watch mode for development
-npm run typecheck             # type-check without emitting
-npm run check                 # typecheck + build (CI gate)
+pnpm install                  # one-time
+pnpm run build                # bundle all skills
+pnpm run watch                # watch mode for development
+pnpm run typecheck            # type-check without emitting
+pnpm run check                # typecheck + build (CI gate)
 ```
 
-**Skill commands** (preferred over hand-typing the long install paths):
+**Skill commands** (uniform per-skill CLI):
 ```bash
-npm run install:hooks                  # install all skill hooks globally
-npm run install:english-learner        # install just english-learner hooks
-npm run uninstall:english-learner      # remove english-learner hooks
-npm run migrate:english-learner        # migrate legacy JSON → SQLite
-npm run migrate:english-learner:dry    # dry-run preview only
+pnpm run install:hooks                                     # register all skill hooks globally
+pnpm run uninstall:hooks                                   # remove all skill hooks
+node skills/english-learner/scripts/cli.cjs migrate        # legacy JSON → SQLite (any subcommand --help for usage)
+node skills/english-learner/scripts/cli.cjs install        # per-skill install (called by manage-hooks)
 ```
 
 **Release commands**:
 ```bash
-npm run release                        # git push + pnpx skills install + register IDE hooks (3 skills)
+pnpm run release              # git push + pnpm dlx skills install + register IDE hooks
 ```
 
 The release runs three steps in order:
 1. `git push origin main` — publish the new bundles to GitHub
-2. `pnpx skills install -g -y learnwy/skills` — pull the latest into `~/.agents/skills/<name>/` and register every skill with all 15 supported AI agents
-3. `npm run install:hooks` — register `UserPromptSubmit`, `Stop`, and `SessionStart` entries in `~/.claude/settings.json` and `~/.trae/hooks.json` (and `~/.trae-cn/hooks.json`). Idempotent — re-running just re-asserts the same entries.
+2. `pnpm dlx skills install -g -y learnwy/skills` — pull the latest into `~/.agents/skills/<name>/` and register every skill with all 15 supported AI agents
+3. `pnpm run install:hooks` — `scripts/manage-hooks.mjs` walks each skill that ships a `hooks.json`, runs its `cli.cjs install --scope global --target both`, and registers entries in `~/.claude/settings.json`, `~/.trae/hooks.json`, and `~/.trae-cn/hooks.json`. Idempotent.
 
-**Pre-commit guard**: `.githooks/pre-commit` runs `npm run check` whenever `src/`, `rslib.config.ts`, `tsconfig.json`, or `package.json` is staged, then refuses the commit if `skills/*/scripts/` is out of sync. `npm install` wires this in via the `prepare` script (`git config core.hooksPath .githooks`).
+**Pre-commit guard**: `.githooks/pre-commit` runs `pnpm run check` whenever `src/`, `scripts/`, `rslib.config.ts`, `tsconfig.json`, or `package.json` is staged, then refuses the commit if `skills/*/scripts/` is out of sync. `pnpm install` wires this in via the `prepare` script (`git config core.hooksPath .githooks`).
 
 ### Dependency Strategy
 
-When a skill needs runtime dependencies, pick the right tier — never default to "consumer runs `npm install`":
+When a skill needs runtime dependencies, pick the right tier — never default to "consumer runs `pnpm install`":
 
 | Dep type | Strategy |
 |---|---|
 | **Built-in Node modules** (`node:sqlite`, `node:fs`, …) | Add to `output.externals` in `rslib.config.ts`. Document the required Node version in the skill's SKILL.md `## Prerequisites`. |
-| **Pure-JS npm deps** (e.g. `yaml`, `zod`, `chalk`) | Bundle into the output (rslib's default). No install needed at consumer site. |
-| **Native npm deps** (e.g. `better-sqlite3`, `sharp`) | Ship a tiny per-skill `skills/<name>/package.json` with the runtime dep. Add a Prerequisites note in SKILL.md telling the user to run `cd skills/<name> && npm install` once. |
+| **Pure-JS deps** (e.g. `yaml`, `zod`, `chalk`) | Bundle into the output (rslib's default). No install needed at consumer site. |
+| **Native deps** (e.g. `better-sqlite3`, `sharp`) | Ship a tiny per-skill `skills/<name>/package.json` with the runtime dep. Add a Prerequisites note in SKILL.md telling the user to run `cd skills/<name> && pnpm install` once. |
 
 Every skill that has a non-trivial runtime requirement MUST list it in its SKILL.md `## Prerequisites` section so the AI assistant (and human reader) sees it before running.
 
 **Build philosophy**:
-- One source per shared utility — `lib.cjs` is no longer copy-pasted across skills, it's bundled in from `src/shared/hooks-lib.ts`.
+- One source per shared utility — hook helpers, the CLI dispatcher, and the install entry are bundled in from `src/shared/`, never copy-pasted.
 - Bundle output is **readable** (no minify, no mangle) so AI assistants can introspect it.
 - `cleanDistPath: false` — the build never deletes `SKILL.md`, `hooks.json`, `agents/`, or `references/`. It only writes `*.cjs` files under `scripts/`.
-- Every commit that changes `src/` MUST be accompanied by the corresponding rebuilt `skills/*/scripts/`. Run `npm run build` before committing.
+- Every commit that changes `src/` MUST be accompanied by the corresponding rebuilt `skills/*/scripts/`. Run `pnpm run build` before committing — the `pre-commit` hook also enforces this.
 
 ### IDE Hooks
 
@@ -243,8 +260,8 @@ Skills can register deterministic hooks that fire at IDE lifecycle events (Sessi
 
 ```
 skills/<name>/hooks.json                       → Per-skill hook configuration (handwritten)
-skills/<name>/scripts/hooks/install.cjs        → Bundled install/uninstall CLI
-skills/<name>/scripts/hooks/<event>.cjs        → Bundled hook scripts
+skills/<name>/scripts/cli.cjs                  → install/uninstall subcommands (via shared install-entry)
+skills/<name>/scripts/hooks/<event>.cjs        → Bundled hook event handlers
 ```
 
 **Scope Convention**:
@@ -254,10 +271,10 @@ skills/<name>/scripts/hooks/<event>.cjs        → Bundled hook scripts
 **Hook Installation**:
 ```bash
 # Install (from skill directory)
-node scripts/hooks/install.cjs install --config ./hooks.json --scope global --target both
+node scripts/cli.cjs install --scope global --target both
 
 # Uninstall
-node scripts/hooks/install.cjs uninstall --skill-id <name> --scope global --target both
+node scripts/cli.cjs uninstall --scope global --target both
 ```
 
 **Installed locations**:

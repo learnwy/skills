@@ -46,7 +46,7 @@ Persist valuable knowledge from AI conversations into structured, reusable docum
          ↓
 [L3: Classify Knowledge Type]
          ↓
-[L4: Generate Output Path]  ← get-knowledge-path.cjs
+[L4: Generate Output Path]  ← cli.cjs path
          ↓
 [L5: Write Document]        ← knowledge.md.template
          ↓
@@ -115,7 +115,7 @@ See [knowledge-types.md](references/knowledge-types.md) for detailed description
 Run the path generator to get a unique, date-sequenced filename:
 
 ```bash
-node {skill_root}/scripts/get-knowledge-path.cjs \
+node {skill_root}/scripts/cli.cjs path \
   -r <project_root> \
   -a <ai_type> \
   -t <type> \
@@ -196,7 +196,7 @@ Before responding to the user, run through the execution checklist.
 
 - [ ] AI IDE detected and storage path is correct
 - [ ] Knowledge type matches the content (not a generic fallback)
-- [ ] `get-knowledge-path.cjs` ran successfully and returned a valid path
+- [ ] `cli.cjs path` ran successfully and returned a valid path
 - [ ] Document follows the template structure with all sections filled
 - [ ] Title is descriptive and specific (not generic like "Bug Fix")
 - [ ] Summary is self-contained (understandable without reading the rest)
@@ -225,7 +225,7 @@ Key takeaways:
 |-------|----------|
 | No AI IDE marker directory found | Inform user, ask which IDE they use, create the marker directory |
 | Multiple AI IDE markers detected | Prefer the one matching current environment; if ambiguous, ask user |
-| `get-knowledge-path.cjs` fails | Check args are correct; verify project root exists and is writable |
+| `cli.cjs path` fails | Check args are correct; verify project root exists and is writable |
 | Knowledge type is ambiguous | Pick the primary type, mention secondary aspects in Key Takeaways |
 | Conversation has no clear knowledge to extract | Tell user honestly — don't generate filler content |
 | Filename collision (same day, same name) | Script auto-increments daily sequence; no manual intervention needed |
@@ -239,7 +239,7 @@ This skill ONLY handles:
 - Detecting the AI IDE and determining the storage path
 - Identifying knowledge worth preserving from conversations
 - Classifying knowledge into the defined type system
-- Generating unique file paths via `get-knowledge-path.cjs`
+- Generating unique file paths via `cli.cjs path`
 - Writing structured knowledge documents using the template
 - Verifying document quality before delivery
 
@@ -255,14 +255,14 @@ This skill does NOT handle:
 
 ## Scripts
 
-| Script | Purpose | Invocation |
-|--------|---------|------------|
-| [get-knowledge-path.cjs](scripts/get-knowledge-path.cjs) | Generate unique date-sequenced file path | `node get-knowledge-path.cjs -r <root> -a <ai_type> -t <type> -n <name>` |
+| Subcommand | Purpose | Invocation |
+|------------|---------|------------|
+| `path` | Generate unique date-sequenced file path | `node scripts/cli.cjs path -r <root> -a <ai_type> -t <type> -n <name>` |
 
 ## Resources
 
 | Resource | Purpose |
 |----------|---------|
-| [get-knowledge-path.cjs](scripts/get-knowledge-path.cjs) | Path generation script with auto-sequencing and directory creation |
+| [cli.cjs](scripts/cli.cjs) | Path generation CLI with auto-sequencing and directory creation |
 | [knowledge-types.md](references/knowledge-types.md) | Detailed type selection guide with key elements per type |
 | [knowledge.md.template](assets/knowledge.md.template) | Document template with all required sections |
