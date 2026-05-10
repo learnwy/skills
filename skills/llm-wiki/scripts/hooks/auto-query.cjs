@@ -180,6 +180,15 @@ function englishRatio(text) {
     const total = text.replace(/\s/g, '').length;
     return total > 0 ? alpha / total : 0;
 }
+function chineseRatio(text) {
+    const cjk = (text.match(/[\u4e00-\u9fff]/g) || []).length;
+    const total = text.replace(/\s/g, '').length;
+    return total > 0 ? cjk / total : 0;
+}
+const CHINESE_LEARN_RE = /翻译|怎么说|用英[语文]|英文怎么|translate|how.*say|in english/i;
+function looksLikeChineseLearnIntent(text) {
+    return chineseRatio(text) > 0.3 || CHINESE_LEARN_RE.test(text);
+}
 
 ;// CONCATENATED MODULE: ./src/llm-wiki/hooks/auto-query.ts
 

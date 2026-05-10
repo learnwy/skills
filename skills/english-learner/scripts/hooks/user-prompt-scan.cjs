@@ -180,6 +180,15 @@ function englishRatio(text) {
     const total = text.replace(/\s/g, '').length;
     return total > 0 ? alpha / total : 0;
 }
+function chineseRatio(text) {
+    const cjk = (text.match(/[\u4e00-\u9fff]/g) || []).length;
+    const total = text.replace(/\s/g, '').length;
+    return total > 0 ? cjk / total : 0;
+}
+const CHINESE_LEARN_RE = /翻译|怎么说|用英[语文]|英文怎么|translate|how.*say|in english/i;
+function looksLikeChineseLearnIntent(text) {
+    return chineseRatio(text) > 0.3 || CHINESE_LEARN_RE.test(text);
+}
 
 ;// CONCATENATED MODULE: ./src/english-learner/hooks/user-prompt-scan.ts
 
@@ -187,15 +196,39 @@ function englishRatio(text) {
 async function main() {
     const payload = await readStdin();
     const userMessage = payload.user_message || payload.prompt || '';
-    if (!userMessage || userMessage.length < 10) return;
+    if (!userMessage || userMessage.length < 4) return;
     if (looksLikeNonProse(userMessage)) return;
-    if (englishRatio(userMessage) < 0.6) return;
-    injectContext([
-        '[english-learner hook] The user wrote in English.',
-        'Before responding, scan for grammar/word-choice/expression issues (max 3).',
-        'If found, prepend a brief "\uD83D\uDCA1 English Tip" table, then proceed with the task.',
-        'Save any corrected words via batch_save. Skip if English is fluent/natural.'
-    ].join(' '));
+    // Skip skill invocation commands early (before ratio checks)
+    if (/^Use Skill:/i.test(userMessage.trim())) return;
+    const enRatio = englishRatio(userMessage);
+    const cnRatio = chineseRatio(userMessage);
+    // Case 1: English input — original grammar-check interception
+    if (enRatio >= 0.6) {
+        injectContext([
+            '[english-learner hook] The user wrote in English.',
+            'Before responding, scan for grammar/word-choice/expression issues (max 3).',
+            'If found, prepend a brief "\uD83D\uDCA1 English Tip" table, then proceed with the task.',
+            'Save any corrected words via batch_save. Skip if English is fluent/natural.'
+        ].join(' '));
+        return;
+    }
+    // Case 2: Chinese input — translate to English + correct Chinese errors
+    if (cnRatio >= 0.3 || looksLikeChineseLearnIntent(userMessage)) {
+        // Skip if clearly a coding/technical task context
+        if (/代码|编程|bug|修复|重构|编译|部署|配置文件/.test(userMessage)) return;
+        // Skip very long messages (likely task descriptions, not learning requests)
+        if (userMessage.length > 500) return;
+        injectContext([
+            '[english-learner hook] The user wrote in Chinese.',
+            'Before responding to the task, prepend a "\uD83C\uDF10 \u4E2D\u8BD1\u82F1" section:',
+            "1. Check the Chinese for grammar errors, typos, or awkward phrasing \u2014 if found, show corrections in a table.",
+            '2. Translate the user\'s Chinese into natural English (provide 2-3 alternative expressions).',
+            '3. Extract 2-3 key vocabulary/phrases from the translation, show phonetic + brief usage note.',
+            "4. Auto-save all new words/phrases via batch_save (no need to ask \u2014 just save them).",
+            '5. Then proceed with the user\'s actual task.',
+            'Format: "\uD83C\uDF10 \u4E2D\u8BD1\u82F1" header, corrections table (if any), English translations, vocab table, then separator and task response.'
+        ].join(' '));
+    }
 }
 main().catch(()=>process.exit(0));
 
