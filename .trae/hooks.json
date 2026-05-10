@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ~/.agents/skills/english-learner/scripts/hooks/user-prompt-scan.cjs",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ~/.agents/skills/llm-wiki/scripts/hooks/auto-query.cjs",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ~/.agents/skills/prompt-optimizer/scripts/hooks/user-prompt-scan.cjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ~/.agents/skills/llm-wiki/scripts/hooks/session-context.cjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ~/.agents/skills/english-learner/scripts/hooks/stop-response-scan.cjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
