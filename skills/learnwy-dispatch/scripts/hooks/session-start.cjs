@@ -240,25 +240,6 @@ const external_node_sqlite_namespaceObject = require("node:sqlite");
 
 const db_DATA_ROOT = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'english-learner');
 const DB_PATH = external_node_path_namespaceObject.join(db_DATA_ROOT, 'data.db');
-const LEGACY_DATA_ROOT = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.english-learner');
-function migrateLegacyRoot() {
-    if (external_node_fs_namespaceObject.existsSync(db_DATA_ROOT)) return;
-    if (!external_node_fs_namespaceObject.existsSync(LEGACY_DATA_ROOT)) return;
-    external_node_fs_namespaceObject.mkdirSync(external_node_path_namespaceObject.dirname(db_DATA_ROOT), {
-        recursive: true
-    });
-    try {
-        external_node_fs_namespaceObject.renameSync(LEGACY_DATA_ROOT, db_DATA_ROOT);
-    } catch  {
-        external_node_fs_namespaceObject.cpSync(LEGACY_DATA_ROOT, db_DATA_ROOT, {
-            recursive: true
-        });
-        external_node_fs_namespaceObject.rmSync(LEGACY_DATA_ROOT, {
-            recursive: true,
-            force: true
-        });
-    }
-}
 const MIGRATIONS = [
     {
         version: 1,
@@ -345,7 +326,6 @@ function applyMigrations(db) {
 let _db = null;
 function db_getDb() {
     if (_db) return _db;
-    migrateLegacyRoot();
     external_node_fs_namespaceObject.mkdirSync(db_DATA_ROOT, {
         recursive: true
     });
