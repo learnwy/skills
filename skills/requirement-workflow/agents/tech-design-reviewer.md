@@ -1,57 +1,57 @@
 # tech-design-reviewer
 
-Technical design and architecture review agent.
+技术设计与架构审查 agent。
 
-## When to Use
+## 适用场景
 
-- After design.md is written
-- Reviewing architecture decisions
-- Checking for scalability/security issues
+- design.md 编写完成后
+- 审查架构决策
+- 检查可扩展性/安全性问题
 
-## Hook Point
+## 钩子触发点
 
 `post_stage_DESIGNING`
 
-## Capabilities
+## 能力
 
-1. **Architecture Review**: Evaluate component design
-2. **Scalability Check**: Identify bottlenecks
-3. **Security Review**: Check for vulnerabilities
-4. **Best Practices**: Validate against standards
+1. **架构审查**：评估组件设计
+2. **可扩展性检查**：识别瓶颈
+3. **安全审查**：检查安全漏洞
+4. **最佳实践**：对标业界标准验证
 
-## Output
+## 输出
 
-Design review report with:
+设计审查报告，包含：
 
-- Issues found
-- Recommendations
-- Approval status
+- 发现的问题
+- 改进建议
+- 审批状态
 
-## Config Options
+## 配置选项
 
 ```yaml
 config:
   review_aspects: ["architecture", "scalability", "security"]
 ```
 
-## Example Invocation
+## 调用示例
 
 ```
-AI: Launching tech-design-reviewer...
+AI: 启动 tech-design-reviewer...
 
-📐 Design Review Results:
+📐 设计审查结果：
 
-✅ Architecture: PASS
-   - Clean separation of concerns
-   - Proper API boundaries
+✅ 架构：通过
+   - 关注点分离清晰
+   - API 边界合理
 
-⚠️ Scalability: NEEDS ATTENTION
-   - Consider caching for image serving
-   - Add CDN for static assets
+⚠️ 可扩展性：需关注
+   - 建议为图片服务添加缓存
+   - 静态资源添加 CDN
 
-✅ Security: PASS
-   - Input validation present
-   - File type restrictions implemented
+✅ 安全性：通过
+   - 输入验证已实现
+   - 文件类型限制已实现
 
-Recommendation: Add caching layer before implementation
+建议：在实现前添加缓存层
 ```

@@ -1,6 +1,6 @@
 ---
 name: llm-wiki
-description: "Use this skill to build and maintain a persistent, compounding knowledge base where the LLM summarizes sources, compiles wiki pages, and maintains cross-references. When a wiki exists at ~/.learnwy/llm-wiki/, check it before answering complex questions — skip if the directory does not exist. Use when the user mentions 'knowledge base', 'llm wiki', 'personal wiki', 'ingest this source', 'compile knowledge', 'second brain', 'build a wiki', 'knowledge management', or wants to add books, articles, or notes to a persistent store."
+description: "当用户提到'知识库'、'llm wiki'、'个人wiki'、'收录来源'、'编译知识'、'第二大脑'、'构建wiki'、'知识管理'，或想要将书籍、文章、笔记添加到持久化存储时，使用此技能构建和维护持续复利的知识库。当 ~/.learnwy/llm-wiki/ 存在时，在回答复杂问题前先检查wiki——若目录不存在则跳过。"
 metadata:
   author: "learnwy"
   version: "3.1"
@@ -10,194 +10,194 @@ metadata:
 
 # LLM Wiki
 
-Build and maintain a persistent, compounding knowledge base where the LLM does all the grunt work — summarizing, cross-referencing, filing, and bookkeeping — while you focus on sourcing, exploration, and asking the right questions.
+构建和维护持续复利的个人知识库。LLM 负责所有繁重工作——摘要、交叉引用、归档和记账——而你专注于搜集来源、探索和提出好问题。
 
-> **Core Principle**: Stop using LLMs like search engines. Use them as knowledge compilers. Instead of re-deriving knowledge from raw documents on every query (RAG), the LLM incrementally builds a persistent wiki — structured, interlinked markdown files that compound in value with every source you add and every question you ask.
+> **核心原则**: 不要把 LLM 当搜索引擎用。要把它当知识编译器用。不是每次查询都从原始文档重新推导知识（RAG），而是由 LLM 增量构建持久化 wiki——结构化、互相链接的 markdown 文件，随着每个来源的添加和每个问题的提出而持续增值。
 
-## Prerequisites
+## 前置条件
 
-- Any LLM Agent with file read/write capability
-- A file system for storing markdown files
-- Node.js >= 18 (for management scripts)
-- Optional: Obsidian for browsing/graph view, Git for version control
+- 具备文件读写能力的 LLM Agent
+- 用于存储 markdown 文件的文件系统
+- Node.js >= 18（管理脚本需要）
+- 可选：Obsidian 用于浏览/图谱视图，Git 用于版本控制
 
-## When to Use
+## 使用时机
 
-| Signal | Action |
-|--------|--------|
-| "ingest this", "add this source", "process this document" | Ingest |
-| "what does the wiki say about X", complex knowledge question | Query / Auto-query |
-| "save this to wiki", "capture this" | Quick-capture |
-| "save this pattern", reusable code snippet | Snippet-capture |
-| "health check", "lint the wiki", "find contradictions" | Lint |
-| "set up a new wiki", "initialize knowledge base" | Setup |
-| "build a wiki from these files" | Setup → batch ingest |
+| 信号 | 动作 |
+|------|------|
+| "收录这个"、"添加这个来源"、"处理这份文档" | 收录 |
+| "wiki 里怎么说X"、复杂知识问题 | 查询 / 自动查询 |
+| "保存到wiki"、"记录下来" | 快捷捕获 |
+| "保存这个模式"、可复用代码片段 | 代码片段捕获 |
+| "健康检查"、"lint wiki"、"查找矛盾" | 检查 |
+| "建一个新wiki"、"初始化知识库" | 初始化 |
+| "从这些文件构建wiki" | 初始化 → 批量收录 |
 
-**Do NOT invoke when:** single conversation insight (→ `knowledge-consolidation`), structural analysis (→ `on-contradiction`), practice validation (→ `on-practice`), long-term strategy (→ `on-protracted-war`), code implementation (→ `requirement-workflow`).
+**不应调用的场景：** 单次对话洞察（→ `knowledge-consolidation`），结构分析（→ `on-contradiction`），实践验证（→ `on-practice`），长期战略（→ `on-protracted-war`），代码实现（→ `requirement-workflow`）。
 
-## Auto Modes
+## 自动模式
 
-### Auto-Query
+### 自动查询
 
-When a wiki exists at `~/.learnwy/llm-wiki/`, proactively check before answering complex questions:
+当 `~/.learnwy/llm-wiki/` 存在时，回答复杂问题前主动检查：
 
-1. Scan `wiki/topics.txt` (flat keyword file) for topic match
-2. If match → read relevant wiki pages
-3. Prepend wiki insight with `[[page]]` citations to your answer
-4. Offer write-back if answer adds new knowledge
+1. 扫描 `wiki/topics.txt`（关键词平面文件）匹配主题
+2. 若匹配 → 阅读相关 wiki 页面
+3. 在回答前附上 wiki 洞见并标注 `[[page]]` 引用
+4. 如果回答贡献了新知识，提议回写
 
-Skip auto-query for: code questions, trivial facts, when wiki doesn't exist.
+对以下情况跳过自动查询：代码问题、简单事实、wiki不存在。
 
-### Quick-Capture
+### 快捷捕获
 
-Lightweight save to `raw/notes/{date}-{slug}.md` when user says "save this" or shares valuable knowledge. Does NOT create wiki pages — run ingest later.
+当用户说"保存这个"或分享有价值知识时，轻量保存到 `raw/notes/{date}-{slug}.md`。不创建 wiki 页面——稍后运行收录。
 
-### Snippet-Capture
+### 代码片段捕获
 
-Save code patterns to `raw/snippets/` → `wiki/snippets/` with platform + language tags. Cross-reference with related concepts.
+保存代码模式到 `raw/snippets/` → `wiki/snippets/`，带平台 + 语言标签。与相关概念交叉引用。
 
-## The Three-Layer Architecture
+## 三层架构
 
-| Layer | Owner | Path | Purpose |
-|-------|-------|------|---------|
-| **Raw** | You | `raw/` | Immutable source material — LLM reads, never modifies |
-| **Wiki** | LLM | `wiki/` | Compiled pages: summaries, concepts, entities, comparisons, snippets, troubleshooting, decisions, cheatsheets |
-| **Schema** | Co-evolved | `CLAUDE.md` | Structure rules, conventions, templates |
+| 层级 | 所有者 | 路径 | 用途 |
+|------|--------|------|------|
+| **原始层** | 你 | `raw/` | 不可变的源材料——LLM 只读，绝不修改 |
+| **Wiki层** | LLM | `wiki/` | 编译页面：摘要、概念、实体、对比、代码片段、故障排除、决策、速查表 |
+| **Schema层** | 共同演进 | `CLAUDE.md` | 结构规则、约定、模板 |
 
-### Storage Location
+### 存储位置
 
-- **Global (default)**: `~/.learnwy/llm-wiki/` — shared across all projects and sessions
-- **Project-scoped**: `<project-root>/.trae/wikis/` — for domain-specific knowledge
+- **全局（默认）**: `~/.learnwy/llm-wiki/` — 跨项目跨会话共享
+- **项目级**: `<project-root>/.trae/wikis/` — 领域专属知识
 
-## Directory Structure
+## 目录结构
 
 ```
 ~/.learnwy/llm-wiki/
-├── raw/                    # Layer 1: articles/, books/, notes/, snippets/, ...
-├── wiki/                   # Layer 2
-│   ├── summaries/          #   One per raw source
-│   ├── concepts/           #   Organized by domain subdirs
-│   │   ├── frontend/       #     React, TS, CSS, bundlers
+├── raw/                    # 第1层：articles/, books/, notes/, snippets/, ...
+├── wiki/                   # 第2层
+│   ├── summaries/          #   每个原始来源一个摘要
+│   ├── concepts/           #   按领域子目录组织
+│   │   ├── frontend/       #     React, TS, CSS, 打包工具
 │   │   ├── ios/            #     Swift, SwiftUI, UIKit
 │   │   ├── android/        #     Kotlin, Compose
-│   │   ├── go/             #     Go, BFF, middleware
-│   │   ├── architecture/   #     Patterns, DDD
-│   │   ├── se-practices/   #     Testing, refactoring
-│   │   ├── system-design/  #     Distributed systems
-│   │   ├── philosophy/     #     Ethics, Taoism
-│   │   ├── psychology/     #     Habits, mindset
-│   │   ├── methodology/    #     Mao trilogy
-│   │   └── ...             #     21 domain dirs total
-│   ├── entities/           #   People, orgs, products
-│   ├── comparisons/        #   Side-by-side analyses
-│   ├── snippets/           #   Code patterns (tagged)
-│   ├── troubleshooting/    #   Problem → solution
-│   ├── index.md            #   Auto-generated master index
-│   └── topics.txt          #   Auto-generated keyword list
-├── CLAUDE.md               # Layer 3: Schema
-└── log.md                  # Audit trail
+│   │   ├── go/             #     Go, BFF, 中间件
+│   │   ├── architecture/   #     模式, DDD
+│   │   ├── se-practices/   #     测试, 重构
+│   │   ├── system-design/  #     分布式系统
+│   │   ├── philosophy/     #     哲学, 伦理, 道家
+│   │   ├── psychology/     #     习惯, 心态
+│   │   ├── methodology/    #     毛泽东三部曲
+│   │   └── ...             #     共21个领域目录
+│   ├── entities/           #   人物、组织、产品
+│   ├── comparisons/        #   并列分析
+│   ├── snippets/           #   代码模式（带标签）
+│   ├── troubleshooting/    #   问题 → 解决方案
+│   ├── index.md            #   自动生成的主索引
+│   └── topics.txt          #   自动生成的关键词列表
+├── CLAUDE.md               # 第3层：Schema
+└── log.md                  # 审计日志
 ```
 
-## Operations & Agents
+## 操作与 Agent
 
-| Operation | Agent | Trigger | Mode |
-|-----------|-------|---------|------|
-| **Auto-Query** | querier | User asks complex question + wiki exists | Automatic |
-| **Quick-Capture** | (inline) | "save to wiki" or valuable knowledge detected | Semi-auto |
-| **Snippet-Capture** | (inline) | Code pattern shared or discovered | Semi-auto |
-| **Ingest** | ingestor | New raw source added | Manual |
-| **Query** | querier | User asks the wiki explicitly | Manual |
-| **Lint** | linter | Health check requested | Manual |
-| **Setup** | schema-writer | New wiki project | Manual |
-| **Cross-Platform** | ingestor | Platform comparison needed | Manual |
+| 操作 | Agent | 触发条件 | 模式 |
+|------|-------|----------|------|
+| **自动查询** | querier | 用户提出复杂问题 + wiki 存在 | 自动 |
+| **快捷捕获** | (内联) | "保存到wiki"或检测到有价值知识 | 半自动 |
+| **片段捕获** | (内联) | 代码模式被分享或发现 | 半自动 |
+| **收录** | ingestor | 新的原始来源被添加 | 手动 |
+| **查询** | querier | 用户明确询问 wiki | 手动 |
+| **检查** | linter | 请求健康检查 | 手动 |
+| **初始化** | schema-writer | 新建 wiki 项目 | 手动 |
+| **跨平台** | ingestor | 需要平台对比 | 手动 |
 
-Agents: [ingestor](agents/operations/ingestor.md), [querier](agents/operations/querier.md), [linter](agents/operations/linter.md), [schema-writer](agents/writing/schema-writer.md).
+Agent 定义：[收录器](agents/operations/ingestor.md)、[查询器](agents/operations/querier.md)、[检查器](agents/operations/linter.md)、[Schema编写器](agents/writing/schema-writer.md)。
 
-## Management Scripts
+## 管理脚本
 
-Single CLI entry at `{skill_root}/scripts/cli.cjs` dispatches all maintenance subcommands:
+单一 CLI 入口 `{skill_root}/scripts/cli.cjs` 分发所有维护子命令：
 
 ```sh
 cd skills/llm-wiki
-node scripts/cli.cjs generate-index            # Regenerate wiki/index.md from filesystem
-node scripts/cli.cjs generate-topics           # Regenerate wiki/topics.txt
-node scripts/cli.cjs lint                      # Check broken links, orphans, missing tags
-node scripts/cli.cjs stats                     # Quick dashboard of raw + wiki counts
-node scripts/cli.cjs freshness-check           # Flag stale/unverified pages
-node scripts/cli.cjs reorganize --dry-run      # Preview concept reorganization
-node scripts/cli.cjs install / uninstall       # Register/remove IDE hooks
+node scripts/cli.cjs generate-index            # 从文件系统重新生成 wiki/index.md
+node scripts/cli.cjs generate-topics           # 重新生成 wiki/topics.txt
+node scripts/cli.cjs lint                      # 检查断链、孤立页面、缺失标签
+node scripts/cli.cjs stats                     # 快速仪表板：原始层 + Wiki层统计
+node scripts/cli.cjs freshness-check           # 标记过时/未验证的页面
+node scripts/cli.cjs reorganize --dry-run      # 预览概念重组
+node scripts/cli.cjs install / uninstall       # 注册/移除 IDE 钩子
 ```
 
-| Subcommand | Output | When to Run |
-|------------|--------|-------------|
-| `generate-index` | `wiki/index.md` — categorized, accurate page counts | After batch ingestion or when index drifts |
-| `generate-topics` | `wiki/topics.txt` — keywords for auto-query matching | After new topic areas are added |
-| `lint` | Errors (broken wikilinks) + warnings (orphans, missing tags) | Weekly maintenance or before commits |
-| `stats` | Box-drawing dashboard of Layer 1 + Layer 2 counts | Anytime — quick health snapshot |
-| `freshness-check` | Stale pages (90d tech, 180d stable), unverified, missing dates | Monthly or after major version releases |
-| `reorganize` | Move concepts/ into domain subdirs (supports `--dry-run`) | When new domain areas are added |
+| 子命令 | 输出 | 运行时机 |
+|--------|------|----------|
+| `generate-index` | `wiki/index.md` — 分类准确的页面计数 | 批量收录后或索引漂移时 |
+| `generate-topics` | `wiki/topics.txt` — 自动查询匹配用的关键词 | 新增主题领域后 |
+| `lint` | 错误（断链）+ 警告（孤立页面、缺失标签） | 每周维护或提交前 |
+| `stats` | 原始层 + Wiki层计数的方框图仪表板 | 随时——快速健康快照 |
+| `freshness-check` | 过时页面（技术类90天，稳定类180天）、未验证、缺少日期 | 每月或重大版本发布后 |
+| `reorganize` | 将 concepts/ 移入领域子目录（支持 `--dry-run`） | 新增领域时 |
 
-Override wiki location with `LLM_WIKI_ROOT` env var.
+可通过 `LLM_WIKI_ROOT` 环境变量覆盖 wiki 位置。
 
-## Agent Output Contract
+## Agent 输出契约
 
-| Allowed | Not Allowed |
-|---------|-------------|
-| Read raw sources (never modify) | Modify anything in `raw/` |
-| Create/update files in `wiki/` and `outputs/` | Delete raw sources |
-| Update `index.md` and `log.md` after operations | Create pages without cross-references |
-| Flag contradictions between sources | Silently override existing content |
+| 允许 | 不允许 |
+|------|--------|
+| 读取原始来源（绝不修改） | 修改 `raw/` 中的任何内容 |
+| 在 `wiki/` 和 `outputs/` 中创建/更新文件 | 删除原始来源 |
+| 操作后更新 `index.md` 和 `log.md` | 创建没有交叉引用的页面 |
+| 标记来源间的矛盾 | 静默覆盖已有内容 |
 
-Every operation must: (1) log in `log.md`, (2) update `index.md`, (3) check contradictions, (4) maintain cross-references.
+每次操作必须：(1) 记录到 `log.md`，(2) 更新 `index.md`，(3) 检查矛盾，(4) 维护交叉引用。
 
-## Execution Checklist
+## 执行检查清单
 
-**Before**: Wiki exists? → CLAUDE.md present? → Raw sources in correct subdir? → For Android: set `Verified: no`. For snippets: include platform + language tags.
+**操作前**: Wiki存在？ → CLAUDE.md存在？ → 原始来源在正确子目录？ → Android内容：设置 `Verified: no`。代码片段：包含平台+语言标签。
 
-**After**: log.md updated? → index.md reflects changes? → Cross-refs added (top-5 limit, "See Also" for extras)? → topics.txt updated if new topic area?
+**操作后**: log.md已更新？ → index.md反映变更？ → 交叉引用已添加（上限5个，超出用"另见"）？ → 新主题领域时topics.txt已更新？
 
-## Boundary Enforcement
+## 边界约束
 
-This skill handles: wiki setup, ingestion, querying, linting, cross-references, index maintenance.
+本技能处理：wiki 初始化、收录、查询、检查、交叉引用、索引维护。
 
-Does NOT handle: single insights (→ `knowledge-consolidation`), contradiction analysis (→ `on-contradiction`), practice validation (→ `on-practice`), phased strategy (→ `on-protracted-war`), code implementation (→ `requirement-workflow`).
+不处理：单次洞察（→ `knowledge-consolidation`），矛盾分析（→ `on-contradiction`），实践验证（→ `on-practice`），分阶段战略（→ `on-protracted-war`），代码实现（→ `requirement-workflow`）。
 
-## References (Loaded on Demand)
+## 参考文档（按需加载）
 
-- [Page templates](references/templates.md) — 9 templates: summary, concept, entity, index, snippet, troubleshooting, decision, cheatsheet, comparison
-- [Workflows & reference](references/workflows.md) — Composition workflows, error handling, key concepts, expansion roadmap
+- [页面模板](references/templates.md) — 9种模板：摘要、概念、实体、索引、代码片段、故障排除、决策、速查表、对比
+- [工作流与参考](references/workflows.md) — 组合工作流、错误处理、核心概念、扩展路线图
 
-## Hooks
+## 钩子
 
-This skill registers IDE hooks to enable **deterministic auto-query** — the wiki is consulted automatically when relevant, without relying on the AI remembering.
+本技能注册 IDE 钩子以实现**确定性自动查询**——wiki 在相关时自动被查阅，无需依赖 AI 记忆。
 
-### Scope
+### 作用域
 
-**Global** — installs to `~/.claude/settings.json` and `~/.trae/hooks.json` since wiki lives at `~/.learnwy/llm-wiki/`.
+**全局** — 安装到 `~/.claude/settings.json` 和 `~/.trae/hooks.json`，因为 wiki 位于 `~/.learnwy/llm-wiki/`。
 
-### Events
+### 事件
 
-| Event | Script | Purpose |
-|-------|--------|---------|
-| `SessionStart` | `scripts/hooks/session-context.cjs` | Load wiki topics into session context (max 30 topics) |
-| `UserPromptSubmit` | `scripts/hooks/auto-query.cjs` | Match user question against wiki topics, inject reading hints |
+| 事件 | 脚本 | 用途 |
+|------|------|------|
+| `SessionStart` | `scripts/hooks/session-context.cjs` | 将 wiki 主题加载到会话上下文（最多30个主题） |
+| `UserPromptSubmit` | `scripts/hooks/auto-query.cjs` | 将用户问题与 wiki 主题匹配，注入阅读提示 |
 
-### Install
+### 安装
 
 ```bash
-# Install hooks globally (supports both Trae and Claude Code)
+# 全局安装钩子（同时支持 Trae 和 Claude Code）
 node scripts/cli.cjs install --scope global --target both
 ```
 
-### Uninstall
+### 卸载
 
 ```bash
 node scripts/cli.cjs uninstall --scope global --target both
 ```
 
-### How It Works
+### 工作原理
 
-1. **SessionStart**: loads `wiki/topics.txt` and injects up to 30 topic keywords into session context
-2. **UserPromptSubmit**: for each user message >15 chars, checks keyword overlap with wiki topics
-3. If matches found → injects topic names + wiki path for the AI to read relevant pages
-4. If no matches or wiki doesn't exist → exits silently
+1. **SessionStart**: 加载 `wiki/topics.txt` 并注入最多30个主题关键词到会话上下文
+2. **UserPromptSubmit**: 对每条超过15字符的用户消息，检查与 wiki 主题的关键词重叠
+3. 若匹配 → 注入主题名称 + wiki 路径供 AI 阅读相关页面
+4. 若不匹配或 wiki 不存在 → 静默退出

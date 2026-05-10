@@ -1,26 +1,26 @@
 ---
 name: {{SKILL_NAME}}
-description: "{{DESCRIPTION}}. Use when {{USE_CASES}}. Triggers on '{{TRIGGER1}}', '{{TRIGGER2}}', '{{TRIGGER3}}'. Do NOT use for {{EXCEPTIONS}}."
+description: "{{DESCRIPTION}}。适用于 {{USE_CASES}}。触发词：'{{TRIGGER1}}'、'{{TRIGGER2}}'、'{{TRIGGER3}}'。不适用于 {{EXCEPTIONS}}。"
 ---
 
 # {{SKILL_TITLE}}
 
 {{BRIEF_INTRO}}
 
-## When to Use
+## 适用场景
 
-**Invoke when:**
+**适合调用：**
 
 - {{CONDITION_1}}
 - {{CONDITION_2}}
 - {{CONDITION_3}}
 
-**Do NOT invoke when:**
+**不适合调用：**
 
 - {{EXCEPTION_1}}
 - {{EXCEPTION_2}}
 
-## Workflow
+## 工作流
 
 ```
 [{{STEP_1}}]
@@ -32,48 +32,48 @@ description: "{{DESCRIPTION}}. Use when {{USE_CASES}}. Triggers on '{{TRIGGER1}}
 [{{STEP_4}}]
 ```
 
-## Quick Reference
+## 快速参考
 
 | {{COL1}} | {{COL2}} | {{COL3}} |
 | -------- | -------- | -------- |
 | {{VAL1}} | {{VAL2}} | {{VAL3}} |
 
-## Error Handling
+## 错误处理
 
-| Issue      | Solution        |
+| 问题       | 解决方案        |
 | ---------- | --------------- |
 | {{ISSUE1}} | {{SOLUTION1}}   |
 | {{ISSUE2}} | {{SOLUTION2}}   |
 
 ## Hooks
 
-<!-- Remove this section if the skill does not need deterministic IDE automation -->
+<!-- 如果技能不需要确定性 IDE 自动化，请删除此章节 -->
 
-### Scope
+### 作用域
 
-**{{global|project}}** — {{reason for scope choice}}
+**{{global|project}}** — {{选择此作用域的原因}}
 
-### Events
+### 事件
 
-| Event | Script | Purpose |
-|-------|--------|---------|
+| 事件 | 脚本 | 用途 |
+|------|------|------|
 | `{{EVENT_NAME}}` | `scripts/hooks/{{SCRIPT}}` | {{PURPOSE}} |
 
-### Install
+### 安装
 
 ```bash
 node {{PATH_TO_SHARED}}/scripts/hooks/install.cjs install \
   --config ./hooks.json --scope {{global|project}} --target both
 ```
 
-### Uninstall
+### 卸载
 
 ```bash
 node {{PATH_TO_SHARED}}/scripts/hooks/install.cjs uninstall \
   --skill-id {{SKILL_NAME}} --scope {{global|project}} --target both
 ```
 
-## References
+## 参考文档
 
 - [{{REF_1}}](references/{{REF_1_FILE}}) - {{REF_1_DESC}}
 - [{{REF_2}}](assets/{{REF_2_FILE}}) - {{REF_2_DESC}}

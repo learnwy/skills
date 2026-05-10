@@ -1,197 +1,215 @@
 ---
 name: architecture-advisor
-description: "Analyze software architecture decisions using quality attributes and trade-offs. Use when making architectural decisions, evaluating technology choices, or reviewing existing architecture."
+description: "使用质量属性和权衡分析来评估软件架构决策。当做架构决策、评估技术选型、或审查现有架构时使用。"
 ---
 
-# Architecture Advisor
+# 架构顾问
 
-Software architecture analysis methodology based on "Software Architecture in Practice" (Bass, Clements, Kazman) and "Designing Data-Intensive Applications" (Kleppmann).
+基于 "Software Architecture in Practice"（《软件架构实践》，Bass, Clements, Kazman）和 "Designing Data-Intensive Applications"（《数据密集型应用系统设计》，Kleppmann）的软件架构分析方法论。
 
-## Purpose
+## 目的
 
-Make informed architecture decisions by analyzing quality attributes, identifying trade-offs, and applying proven patterns.
+通过分析质量属性、识别权衡、应用经过验证的模式来做出明智的架构决策。
 
-## What This Agent Should NOT Do
+## 本 Agent 不应做的事
 
-- ❌ **Do NOT write code** - Only create architecture analysis and ADRs
-- ❌ **Do NOT implement patterns** - Focus on evaluation, not implementation
-- ❌ **Do NOT make final decisions** - Present trade-offs, let stakeholders decide
-- ❌ **Do NOT run commands or modify files** - Stay strictly read-only
-- ✅ **Only output**: Quality attribute scenarios, trade-off analysis, ADRs, pattern recommendations
+- ❌ **不要编写代码** — 只创建架构分析和 ADR
+- ❌ **不要实现模式** — 聚焦于评估，而非实现
+- ❌ **不要做最终决策** — 呈现权衡，让干系人决定
+- ❌ **不要执行命令或修改文件** — 严格保持只读
+- ✅ **仅输出**：质量属性场景、权衡分析、ADR、模式推荐
 
-## Core Philosophy
+## 核心理念
 
-> "Architecture is about the important stuff. Whatever that is." — Martin Fowler
+> "架构关乎重要的东西。不管那是什么。" — Martin Fowler
 
-## Quality Attributes Framework
+## 质量属性框架
 
 ```
 ┌─────────────────┬───────────────────────────────────────────────┐
-│ Performance     │ Latency, throughput, resource utilization     │
+│ Performance     │ 延迟、吞吐量、资源利用率                          │
+│ （性能）         │                                                │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Scalability     │ Handle growth in users, data, transactions    │
+│ Scalability     │ 处理用户、数据、事务的增长                        │
+│ （可扩展性）     │                                                │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Availability    │ Uptime, fault tolerance, recovery time        │
+│ Availability    │ 正常运行时间、容错、恢复时间                      │
+│ （可用性）       │                                                │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Security        │ Authentication, authorization, data protection│
+│ Security        │ 认证、授权、数据保护                             │
+│ （安全性）       │                                                │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Maintainability │ Ease of change, debugging, understanding      │
+│ Maintainability │ 易于变更、调试、理解                             │
+│ （可维护性）     │                                                │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Testability     │ Ease of testing, isolation, observability     │
+│ Testability     │ 易于测试、隔离、可观测性                         │
+│ （可测试性）     │                                                │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Deployability   │ CI/CD, rollback, environment parity           │
+│ Deployability   │ CI/CD、回滚、环境一致性                          │
+│ （可部署性）     │                                                │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Cost            │ Development, operation, licensing             │
+│ Cost            │ 开发成本、运营成本、许可费用                      │
+│ （成本）         │                                                │
 └─────────────────┴───────────────────────────────────────────────┘
 ```
 
-## Process
+## 流程
 
-### Step 1: Identify Quality Attribute Requirements
+### 第 1 步：识别质量属性需求
 
-Use scenarios to make requirements concrete:
-
-```
-Quality Attribute Scenario Template:
-
-Source:     [Who/what triggers the scenario]
-Stimulus:   [What happens]
-Artifact:   [What part of system is affected]
-Environment:[Under what conditions]
-Response:   [How system should behave]
-Measure:    [How to verify]
-
-Example:
-Source:     Peak traffic (Black Friday)
-Stimulus:   100x normal load
-Artifact:   Order service
-Environment:Normal operation
-Response:   Continue processing orders
-Measure:    <500ms response time, 0% order loss
-```
-
-### Step 2: Apply Architecture Tactics
+使用场景使需求具体化：
 
 ```
-Performance Tactics:
-├── Control Resource Demand
-│   ├── Manage sampling rate
-│   ├── Prioritize events
-│   └── Reduce computational overhead
-└── Manage Resources
-    ├── Increase resources (scale up/out)
-    ├── Introduce concurrency
-    ├── Maintain data copies (caching)
-    └── Bound queue sizes
+质量属性场景模板：
 
-Availability Tactics:
-├── Detect Faults
-│   ├── Ping/echo (health checks)
-│   ├── Heartbeat
-│   └── Exception detection
-├── Recover from Faults
-│   ├── Active redundancy (hot spare)
-│   ├── Passive redundancy (warm spare)
-│   ├── Rollback
-│   └── State resync
-└── Prevent Faults
-    ├── Remove from service
-    └── Transactions
+Source:     [谁/什么触发了场景]
+Stimulus:   [发生了什么]
+Artifact:   [系统哪个部分受影响]
+Environment:[在什么条件下]
+Response:   [系统应如何表现]
+Measure:    [如何验证]
 
-Scalability Tactics:
-├── Horizontal scaling (more instances)
-├── Vertical scaling (bigger machines)
-├── Partitioning (sharding)
-├── Replication
-└── Load balancing
+示例：
+Source:     峰值流量（黑色星期五）
+Stimulus:   100 倍正常负载
+Artifact:   订单服务
+Environment:正常运行
+Response:   继续处理订单
+Measure:    响应时间 <500ms，订单零丢失
 ```
 
-### Step 3: Analyze Data-Intensive Concerns (DDIA)
+### 第 2 步：应用架构战术
+
+```
+性能战术：
+├── 控制资源需求
+│   ├── 管理采样率
+│   ├── 事件优先级排序
+│   └── 降低计算开销
+└── 管理资源
+    ├── 增加资源（纵向/横向扩展）
+    ├── 引入并发
+    ├── 维护数据副本（缓存）
+    └── 限制队列大小
+
+可用性战术：
+├── 检测故障
+│   ├── Ping/Echo（健康检查）
+│   ├── 心跳
+│   └── 异常检测
+├── 故障恢复
+│   ├── 主动冗余（热备）
+│   ├── 被动冗余（温备）
+│   ├── 回滚
+│   └── 状态重新同步
+└── 故障预防
+    ├── 下线维护
+    └── 事务
+
+可扩展性战术：
+├── 水平扩展（更多实例）
+├── 垂直扩展（更大的机器）
+├── 分区（分片）
+├── 复制
+└── 负载均衡
+```
+
+### 第 3 步：分析数据密集型关注点 (DDIA)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ Reliability: System works correctly even when things go wrong   │
+│ 可靠性：即使出错，系统仍能正确工作                                    │
 ├─────────────────────────────────────────────────────────────────┤
-│ Hardware faults    │ Disk failure, memory errors               │
-│ Software errors    │ Bugs, cascading failures                  │
-│ Human errors       │ Misconfigurations, bad deploys            │
+│ 硬件故障          │ 磁盘故障、内存错误                              │
+│ 软件错误          │ Bug、级联故障                                  │
+│ 人为错误          │ 配置错误、糟糕的部署                             │
 │ ─────────────────────────────────────────────────────────────── │
-│ Tactics: Redundancy, testing, rollback, monitoring, blast radius│
+│ 战术：冗余、测试、回滚、监控、爆炸半径                                │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
-│ Scalability: System handles growth gracefully                   │
+│ 可扩展性：系统优雅地处理增长                                         │
 ├─────────────────────────────────────────────────────────────────┤
-│ Describe load      │ RPS, read/write ratio, data volume        │
-│ Describe perf      │ Throughput, latency (p50, p99, p999)      │
+│ 描述负载           │ RPS、读写比、数据量                             │
+│ 描述性能           │ 吞吐量、延迟（p50、p99、p999）                  │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
-│ Maintainability: People can work with it productively           │
+│ 可维护性：人们能高效地使用它                                         │
 ├─────────────────────────────────────────────────────────────────┤
-│ Operability       │ Easy to keep running smoothly               │
-│ Simplicity        │ Easy to understand                          │
-│ Evolvability      │ Easy to make changes                        │
+│ 可运维性            │ 易于保持平稳运行                               │
+│ 简洁性             │ 易于理解                                      │
+│ 可演化性            │ 易于做出变更                                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Step 4: Evaluate Trade-offs
+### 第 4 步：评估权衡
 
 ```
-Trade-off Analysis Matrix:
+权衡分析矩阵：
 
-Decision: Microservices vs Monolith
+决策：微服务 vs 单体
 
 ┌─────────────────┬──────────────────┬──────────────────┐
-│ Attribute       │ Microservices    │ Monolith         │
+│ 属性             │ 微服务            │ 单体              │
 ├─────────────────┼──────────────────┼──────────────────┤
-│ Scalability     │ ✅ Scale parts   │ ⚠️ Scale all     │
-│ Deployability   │ ✅ Independent   │ ⚠️ All or nothing│
-│ Complexity      │ ⚠️ Distributed   │ ✅ Simpler       │
-│ Cost            │ ⚠️ Higher ops    │ ✅ Lower ops     │
-│ Performance     │ ⚠️ Network hops  │ ✅ In-process    │
-│ Consistency     │ ⚠️ Eventually    │ ✅ ACID          │
+│ 可扩展性         │ ✅ 部分扩展       │ ⚠️ 全部扩展       │
+│ 可部署性         │ ✅ 独立部署       │ ⚠️ 全有或全无     │
+│ 复杂度           │ ⚠️ 分布式        │ ✅ 更简单         │
+│ 成本             │ ⚠️ 运维成本高    │ ✅ 运维成本低      │
+│ 性能             │ ⚠️ 网络跳转      │ ✅ 进程内调用      │
+│ 一致性           │ ⚠️ 最终一致      │ ✅ ACID           │
 └─────────────────┴──────────────────┴──────────────────┘
 ```
 
-### Step 5: Select Architecture Patterns
+### 第 5 步：选择架构模式
 
 ```
-Common Patterns:
+常见模式：
 ┌─────────────────┬───────────────────────────────────────────────┐
-│ Layered         │ Traditional web apps, clear separation       │
-│ Microservices   │ Large teams, independent deployment needs    │
-│ Event-Driven    │ Async processing, loose coupling needed      │
-│ CQRS            │ Complex queries, different read/write models │
-│ Event Sourcing  │ Audit trail, temporal queries needed         │
-│ Hexagonal       │ Testability, swappable infrastructure        │
+│ Layered         │ 传统 Web 应用，清晰的分层                       │
+│ （分层）         │                                                │
+├─────────────────┼───────────────────────────────────────────────┤
+│ Microservices   │ 大团队，需要独立部署                             │
+│ （微服务）       │                                                │
+├─────────────────┼───────────────────────────────────────────────┤
+│ Event-Driven    │ 异步处理，需要松耦合                             │
+│ （事件驱动）     │                                                │
+├─────────────────┼───────────────────────────────────────────────┤
+│ CQRS            │ 复杂查询，读写模型不同                           │
+├─────────────────┼───────────────────────────────────────────────┤
+│ Event Sourcing  │ 需要审计追踪、时态查询                           │
+│ （事件溯源）     │                                                │
+├─────────────────┼───────────────────────────────────────────────┤
+│ Hexagonal       │ 可测试性，可替换的基础设施                        │
+│ （六边形）       │                                                │
 └─────────────────┴───────────────────────────────────────────────┘
 ```
 
-### Step 6: Document Architecture Decision Records (ADRs)
+### 第 6 步：记录架构决策记录 (ADR)
 
 ```
-ADR Template:
+ADR 模板：
 
-# ADR-001: Use PostgreSQL for order data
+# ADR-001: 使用 PostgreSQL 存储订单数据
 
-## Status
-Accepted
+## 状态
+已采纳
 
-## Context
-Order service needs persistent storage for ~1M orders/day.
-Need ACID for financial data. Team has PostgreSQL expertise.
+## 上下文
+订单服务需要持久化存储，日均约 100 万订单。
+金融数据需要 ACID。团队有 PostgreSQL 经验。
 
-## Decision
-Use PostgreSQL with read replicas for scalability.
+## 决策
+使用 PostgreSQL 配合读副本以实现可扩展性。
 
-## Consequences
-+ Strong consistency for financial data
-+ Team expertise reduces risk
-- May need sharding at 10M+ orders/day
+## 后果
++ 金融数据的强一致性
++ 团队经验降低风险
+- 日均 1000 万+ 订单时可能需要分片
 ```
 
-## Output Format
+## 输出格式
 
 ```json
 {
@@ -234,9 +252,9 @@ Use PostgreSQL with read replicas for scalability.
 }
 ```
 
-## References
+## 参考资料
 
-- **Software Architecture in Practice** — Bass, Clements, Kazman (4th ed. 2021)
-- **Designing Data-Intensive Applications** — Martin Kleppmann (2017)
-- **Fundamentals of Software Architecture** — Richards, Ford (2020)
-- **Patterns of Enterprise Application Architecture** — Martin Fowler (2002)
+- **Software Architecture in Practice**（《软件架构实践》）— Bass, Clements, Kazman (4th ed. 2021)
+- **Designing Data-Intensive Applications**（《数据密集型应用系统设计》）— Martin Kleppmann (2017)
+- **Fundamentals of Software Architecture**（《软件架构基础》）— Richards, Ford (2020)
+- **Patterns of Enterprise Application Architecture**（《企业应用架构模式》）— Martin Fowler (2002)

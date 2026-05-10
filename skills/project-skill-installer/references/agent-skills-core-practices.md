@@ -1,42 +1,42 @@
-## Agent Skills — Core Practices
+## Agent Skills — 核心实践
 
-Best practices for AI-assistable skills in the agent ecosystem.
+AI 智能体生态系统中 AI 可辅助技能的最佳实践。
 
-### Skill Quality Indicators
+### 技能质量指标
 
-| Indicator | Good | Bad |
-|-----------|------|-----|
-| Description | Includes trigger phrases, use cases, exclusions | Generic "does stuff" |
-| SKILL.md | Structured with sections, workflow, references | Flat text blob |
-| Triggers | Specific: "create react component" | Vague: "help me" |
-| Boundary | Clear "Do NOT" section | No scope limits |
-| Error handling | Explicit failure modes + solutions | Silent failures |
+| 指标 | 好 | 差 |
+|------|-----|-----|
+| 描述 | 包含触发短语、用例、排除项 | 通用的"做某事" |
+| SKILL.md | 结构化分节、工作流、参考资料 | 一大段纯文本 |
+| 触发词 | 具体："create react component" | 模糊："help me" |
+| 边界 | 明确的"不处理"部分 | 无范围限制 |
+| 错误处理 | 明确的失败场景 + 解决方案 | 静默失败 |
 
-### Project-Level vs Global Skills
+### 项目级 vs 全局技能
 
-| Aspect | Project-Level | Global |
-|--------|--------------|--------|
-| Path | `.trae/skills/` in project root | `~/.trae/skills/` |
-| Scope | This project only | All projects |
-| Version control | Committed with project | User-specific |
-| Use case | Project-specific workflows | General-purpose utilities |
+| 方面 | 项目级 | 全局 |
+|------|--------|------|
+| 路径 | 项目根目录的 `.trae/skills/` | `~/.trae/skills/` |
+| 范围 | 仅限此项目 | 所有项目 |
+| 版本控制 | 随项目提交 | 用户特定 |
+| 用例 | 项目特定工作流 | 通用工具 |
 
-**This installer ONLY handles project-level skills.**
+**此安装器仅处理项目级技能。**
 
-### Installation Verification Checklist
+### 安装验证检查清单
 
-After installing a skill, verify:
+安装技能后验证：
 
-1. **Directory exists**: `<path>/<skill-name>/` is created
-2. **SKILL.md present**: Main skill file is readable
-3. **Description valid**: Contains trigger keywords
-4. **No conflicts**: Doesn't overlap with existing skills
-5. **Dependencies met**: Referenced tools/libs are available
+1. **目录存在**: `<path>/<skill-name>/` 已创建
+2. **SKILL.md 存在**: 主技能文件可读
+3. **描述有效**: 包含触发关键词
+4. **无冲突**: 不与现有技能重叠
+5. **依赖满足**: 引用的工具/库可用
 
-### Skill Discovery Best Practices
+### 技能发现最佳实践
 
-1. **Search by problem, not by name** — "how to lint my code" not "eslint skill"
-2. **Check local first** — already-installed global skills may work
-3. **Prefer specific over generic** — "react-component-generator" over "code-generator"
-4. **Read the SKILL.md** — verify it actually does what the user needs
-5. **Check compatibility** — language/framework match with project
+1. **按问题搜索，而非按名称** — "how to lint my code" 而非 "eslint skill"
+2. **先检查本地** — 已安装的全局技能可能就适用
+3. **优先具体而非通用** — "react-component-generator" 优于 "code-generator"
+4. **阅读 SKILL.md** — 验证它确实满足用户需求
+5. **检查兼容性** — 语言/框架是否与项目匹配

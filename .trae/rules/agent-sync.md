@@ -1,31 +1,31 @@
 ---
-description: Sync agents between universal, adapted, and standalone copies
+description: 在通用、适配和独立副本之间同步代理
 globs: agents/*.md,agents/**/agent.md
 alwaysApply: false
 ---
 
-# Agent Sync Rule
+# 代理同步规则
 
-## Architecture
+## 架构
 
 ```
-agents/{name}/agent.md                          # Universal (canonical)
-skills/{skill}/agents/{name}.md                 # Adapted (skill-specific)
-skills/software-methodology-toolkit/agents/     # Standalone (grouped by phase)
+agents/{name}/agent.md                          # 通用版（权威）
+skills/{skill}/agents/{name}.md                 # 适配版（技能专属）
+skills/software-methodology-toolkit/agents/     # 独立版（按阶段分组）
 ```
 
-## Sync Rules
+## 同步规则
 
-**Update universal** → Sync to adapted + standalone copies.
+**更新通用版** → 同步到适配版 + 独立版。
 
-**Update adapted** → If methodology change: update universal first. If context-only change: keep local.
+**更新适配版** → 如果是方法论变更：先更新通用版。如果仅是上下文调整：保持本地修改。
 
-**Update standalone** → Full copy from universal, no modifications.
+**更新独立版** → 从通用版完整复制，不做修改。
 
-## Current Mappings
+## 当前映射关系
 
-| Universal | Adapted (in skill) | Standalone (phase/) |
-|-----------|-------------------|-------------------|
+| 通用版 | 适配版（所属技能） | 独立版（phase/） |
+|--------|-------------------|------------------|
 | problem-definer | requirement-workflow | analyzing/ |
 | spec-by-example | requirement-workflow | analyzing/ |
 | story-mapper | requirement-workflow | planning/ |
@@ -37,13 +37,13 @@ skills/software-methodology-toolkit/agents/     # Standalone (grouped by phase)
 | legacy-surgeon | requirement-workflow | implementing/ |
 | test-strategist | requirement-workflow | testing/ |
 
-## Checklist
+## 检查清单
 
-When editing any agent:
+编辑任何代理时：
 
-- [ ] Universal copy updated?
-- [ ] Adapted versions in skill synced?
-- [ ] Standalone copies in software-methodology-toolkit synced?
-- [ ] Hook points preserved in adapted versions?
+- [ ] 通用版已更新？
+- [ ] 技能中的适配版已同步？
+- [ ] software-methodology-toolkit 中的独立版已同步？
+- [ ] 适配版中的钩子点已保留？
 
-**Note:** software-methodology-toolkit is a fallback skill (lower priority than requirement-workflow).
+**注意：** software-methodology-toolkit 是兜底技能（优先级低于 requirement-workflow）。

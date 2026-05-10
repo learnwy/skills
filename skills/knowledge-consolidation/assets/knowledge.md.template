@@ -1,25 +1,25 @@
 # {{TITLE}}
 
-> **Type:** {{TYPE}}
-> **Date:** {{DATE}}
-> **Context:** {{CONTEXT}}
+> **类型:** {{TYPE}}
+> **日期:** {{DATE}}
+> **上下文:** {{CONTEXT}}
 
-## Summary
+## 摘要
 
 {{SUMMARY}}
 
-## Background
+## 背景
 
 {{BACKGROUND}}
 
-## Details
+## 详情
 
 {{DETAILS}}
 
-## Key Takeaways
+## 关键收获
 
 {{TAKEAWAYS}}
 
-## Related
+## 相关
 
 {{RELATED}}

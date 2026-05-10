@@ -1,43 +1,43 @@
-# {{AGENT_NAME}} Agent
+# {{AGENT_NAME}} 智能体
 
 {{ONE_SENTENCE_ROLE}}
 
-## Role
+## 角色
 
 {{EXPANDED_ROLE_DESCRIPTION}}
 
-## What This Agent Should NOT Do
+## 此智能体不应做的事
 
 - ❌ **{{NEGATIVE_CONSTRAINT_1}}** - {{EXPLANATION_1}}
 - ❌ **{{NEGATIVE_CONSTRAINT_2}}** - {{EXPLANATION_2}}
 - ❌ **{{NEGATIVE_CONSTRAINT_3}}** - {{EXPLANATION_3}}
-- ❌ **Do NOT run commands or modify files** - Stay strictly read-only (unless explicitly designed for writing)
-- ✅ **Only output**: {{ALLOWED_OUTPUT_TYPES}}
+- ❌ **不得执行命令或修改文件** - 严格保持只读（除非明确设计为可写）
+- ✅ **仅输出**: {{ALLOWED_OUTPUT_TYPES}}
 
-## Inputs
+## 输入
 
-You receive these parameters in your prompt:
+你会在提示中收到以下参数：
 
 - **{{INPUT_1}}**: {{INPUT_1_DESCRIPTION}}
 - **{{INPUT_2}}**: {{INPUT_2_DESCRIPTION}}
-- **{{OUTPUT_PATH}}**: Where to save results
+- **{{OUTPUT_PATH}}**: 结果保存位置
 
-## Process
+## 流程
 
-### Step 1: {{FIRST_ACTION_TITLE}}
+### 步骤 1: {{FIRST_ACTION_TITLE}}
 
 1. {{SUBSTEP_1}}
 2. {{SUBSTEP_2}}
 3. {{SUBSTEP_3}}
 
-### Step 2: {{SECOND_ACTION_TITLE}}
+### 步骤 2: {{SECOND_ACTION_TITLE}}
 
 1. {{SUBSTEP_1}}
 2. {{SUBSTEP_2}}
 
-### Step 3: {{THIRD_ACTION_TITLE}}
+### 步骤 3: {{THIRD_ACTION_TITLE}}
 
-For each {{ITEM}}:
+对每个 {{ITEM}}:
 
 1. **{{SUB_ACTION_A}}**
    - {{DETAIL}}
@@ -46,13 +46,13 @@ For each {{ITEM}}:
 2. **{{SUB_ACTION_B}}**
    - {{DETAIL}}
 
-### Step N: Write Results
+### 步骤 N: 写入结果
 
-Save results to `{{OUTPUT_PATH}}`.
+将结果保存到 `{{OUTPUT_PATH}}`。
 
-## Output Format
+## 输出格式
 
-Write a JSON file with this structure:
+写入一个如下结构的 JSON 文件：
 
 ```json
 {
@@ -71,19 +71,19 @@ Write a JSON file with this structure:
 }
 ```
 
-## Field Descriptions
+## 字段说明
 
 - **{{MAIN_FIELD}}**: {{FIELD_DESCRIPTION}}
   - **{{ITEM_FIELD_1}}**: {{FIELD_DESCRIPTION}}
   - **{{ITEM_FIELD_2}}**: {{FIELD_DESCRIPTION}}
   - **{{ITEM_FIELD_3}}**: {{FIELD_DESCRIPTION}}
-- **summary**: Aggregate statistics
+- **summary**: 汇总统计
   - **{{SUMMARY_FIELD_1}}**: {{FIELD_DESCRIPTION}}
-  - **{{SUMMARY_RATE}}**: {{FIELD_DESCRIPTION}} (0.0 to 1.0)
+  - **{{SUMMARY_RATE}}**: {{FIELD_DESCRIPTION}}（0.0 到 1.0）
 
-## Guidelines
+## 准则
 
-- **Be {{GUIDELINE_1_QUALITY}}**: {{GUIDELINE_1_EXPLANATION}}
-- **Be {{GUIDELINE_2_QUALITY}}**: {{GUIDELINE_2_EXPLANATION}}
-- **Be {{GUIDELINE_3_QUALITY}}**: {{GUIDELINE_3_EXPLANATION}}
+- **做到 {{GUIDELINE_1_QUALITY}}**: {{GUIDELINE_1_EXPLANATION}}
+- **做到 {{GUIDELINE_2_QUALITY}}**: {{GUIDELINE_2_EXPLANATION}}
+- **做到 {{GUIDELINE_3_QUALITY}}**: {{GUIDELINE_3_EXPLANATION}}
 - **{{GUIDELINE_4_VERB}}**: {{GUIDELINE_4_EXPLANATION}}

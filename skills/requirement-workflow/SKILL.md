@@ -1,312 +1,312 @@
 ---
 name: requirement-workflow
-description: "Use this skill when the user wants to build, implement, or develop a feature using a structured workflow. Orchestrates Spec-Driven Development (SDD): spec.md → tasks.md → implementation → verification. Triggers on: '开发功能', '实现这个', 'build this feature', 'implement', 'add new module', 'fix bug', 'develop', 'create feature', 'new feature', 'build this', or when a vague requirement needs to be decomposed into actionable tasks."
+description: "当用户需要构建、实现或开发功能时使用此技能，基于结构化工作流进行编排。编排规格驱动开发（SDD）：spec.md → tasks.md → 实现 → 验证。触发词：'开发功能'、'实现这个'、'build this feature'、'implement'、'add new module'、'fix bug'、'develop'、'create feature'、'new feature'、'build this'，或当模糊需求需要分解为可执行任务时。"
 metadata:
   author: "learnwy"
   version: "4.0"
   methodology: "SDD (Spec-Driven Development)"
 ---
 
-# Requirement Workflow (SDD)
+# 需求工作流（SDD）
 
-Structured development orchestrator based on **Spec-Driven Development**: define specs first, decompose into tasks, execute with quality gates, verify against acceptance criteria.
+基于 **规格驱动开发** 的结构化开发编排器：先定义规格，分解为任务，通过质量门禁执行，依据验收标准进行验证。
 
-> **Core principle**: Spec is the single source of truth. Code follows spec, not the other way around.
+> **核心原则**：规格是唯一的事实来源。代码遵循规格，而非反过来。
 
-## Prerequisites
+## 前置条件
 
 - Node.js >= 18
-- Writable project directory for workflow state files (`.trae/workflow/`)
+- 可写的项目目录，用于存放工作流状态文件（`.trae/workflow/`）
 
-## Quick Start
+## 快速开始
 
 ```
-User says anything about building/implementing/fixing →
-  1. AI classifies the request (type + size + risk)
-  2. AI runs: node scripts/cli.cjs init -r <root> -n <name> -t <type> -s <size> -k <risk>
-  3. AI fills spec.md with structured requirements (EARS format)
-  4. AI decomposes spec.md into tasks.md
-  5. AI implements task by task, advancing stages
-  6. AI verifies against checklist.md
+用户说任何关于构建/实现/修复的内容 →
+  1. AI 对请求进行分类（类型 + 规模 + 风险）
+  2. AI 执行：node scripts/cli.cjs init -r <root> -n <name> -t <type> -s <size> -k <risk>
+  3. AI 用结构化需求（EARS 格式）填写 spec.md
+  4. AI 将 spec.md 分解为 tasks.md
+  5. AI 逐任务实现，推进阶段
+  6. AI 依据 checklist.md 进行验证
 ```
 
-## Working Modes
+## 工作模式
 
-This skill supports two modes, selected based on classification:
+此技能支持两种模式，根据分类结果选择：
 
-### Agent Mode (Default)
+### Agent 模式（默认）
 
-For **small/tiny** scope or **bugfix** type: skip spec phase, go straight to implementation.
+适用于 **小型/微型** 范围或 **缺陷修复** 类型：跳过规格阶段，直接进入实现。
 
 ```
 INIT → IMPLEMENTING → TESTING → DONE
 ```
 
-### Spec Mode (SDD)
+### Spec 模式（SDD）
 
-For **medium/large** scope or **elevated/critical** risk: full SDD lifecycle.
+适用于 **中型/大型** 范围或 **升高/关键** 风险：完整 SDD 生命周期。
 
 ```
 INIT → DEFINING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → DELIVERING → DONE
 ```
 
-## Classification Matrix
+## 分类矩阵
 
-| Signal | Type | Size | Risk |
-|--------|------|------|------|
-| "fix bug", "broken", "crash" | bugfix | tiny-small | normal |
-| "add feature", "implement", "build" | feature | small-large | normal |
-| "refactor", "clean up", "reorganize" | refactor | small-medium | normal |
-| "tech debt", "upgrade", "migrate" | tech-debt | medium-large | elevated |
-| auth, payments, data, security | any | any | elevated-critical |
-| >15 files estimated | any | large | elevated |
+| 信号 | 类型 | 规模 | 风险 |
+|------|------|------|------|
+| "fix bug"、"broken"、"crash" | bugfix | tiny-small | normal |
+| "add feature"、"implement"、"build" | feature | small-large | normal |
+| "refactor"、"clean up"、"reorganize" | refactor | small-medium | normal |
+| "tech debt"、"upgrade"、"migrate" | tech-debt | medium-large | elevated |
+| 认证、支付、数据、安全相关 | any | any | elevated-critical |
+| 预估 >15 个文件 | any | large | elevated |
 
-### Size Heuristics
+### 规模启发式
 
-| Size | Files | Duration | Stages |
-|------|-------|----------|--------|
-| tiny | ≤2 | <30min | INIT → IMPLEMENTING → DONE |
-| small | 3-5 | 30min-2h | INIT → IMPLEMENTING → TESTING → DONE |
-| medium | 6-15 | 2h-1d | Full SDD |
-| large | >15 | >1d | Full SDD + all checkpoints |
+| 规模 | 文件数 | 时长 | 阶段 |
+|------|--------|------|------|
+| tiny | ≤2 | <30分钟 | INIT → IMPLEMENTING → DONE |
+| small | 3-5 | 30分钟-2小时 | INIT → IMPLEMENTING → TESTING → DONE |
+| medium | 6-15 | 2小时-1天 | 完整 SDD |
+| large | >15 | >1天 | 完整 SDD + 所有检查点 |
 
-## SDD Lifecycle
+## SDD 生命周期
 
-### Stage 1: INIT
+### 阶段 1：INIT
 
-Classify request, initialize workflow, create artifact directory.
+对请求进行分类，初始化工作流，创建产物目录。
 
 ```bash
 node scripts/cli.cjs init -r <project_root> -n "<name>" -t <type> -s <size> -k <risk>
 ```
 
-**Output**: `workflow.yaml`, empty `spec.md`, `tasks.md`, `checklist.md`
+**输出**：`workflow.yaml`、空的 `spec.md`、`tasks.md`、`checklist.md`
 
-### Stage 2: DEFINING (Spec Mode only)
+### 阶段 2：DEFINING（仅 Spec 模式）
 
-Fill `spec.md` with structured requirements using EARS format:
-
-```markdown
-# Feature Name
-
-## Background
-{Why this is needed — problem statement}
-
-## Scope
-- In: {what IS included}
-- Out: {what is NOT included}
-
-## Acceptance Criteria (EARS format)
-- [ ] When <condition>, the system shall <response>
-- [ ] While <state>, the system shall <behavior>
-- [ ] Where <constraint>, the system shall <limit>
-
-## Constraints
-- {Performance, security, compatibility requirements}
-
-## Out of Scope
-- {Explicitly deferred items}
-```
-
-**Checkpoint**: If risk is elevated/critical, pause for user review of spec.md.
-
-**Hooks**: `pre_stage_DEFINING` → iron-audit-pm, problem-definer, risk-auditor
-
-### Stage 3: PLANNING (Spec Mode only)
-
-Decompose spec.md into `tasks.md` — every acceptance criterion maps to ≥1 task:
+使用 EARS 格式填写 `spec.md` 的结构化需求：
 
 ```markdown
-# Tasks
+# 功能名称
 
-## Phase 1: Foundation
-- [ ] Task 1.1: {description} [files: x, y]
-- [ ] Task 1.2: {description} [files: z]
+## 背景
+{为什么需要这个功能——问题陈述}
 
-## Phase 2: Core Logic
-- [ ] Task 2.1: {description} [files: a, b]
+## 范围
+- 包含：{哪些内容在范围内}
+- 排除：{哪些内容不在范围内}
 
-## Phase 3: Integration & Polish
-- [ ] Task 3.1: {description} [files: c]
+## 验收标准（EARS 格式）
+- [ ] When <条件>, the system shall <响应>
+- [ ] While <状态>, the system shall <行为>
+- [ ] Where <约束>, the system shall <限制>
 
-## Verification
-- [ ] All acceptance criteria pass
-- [ ] Lint clean
-- [ ] Type check pass
+## 约束
+- {性能、安全、兼容性要求}
+
+## 超出范围
+- {明确延期的事项}
 ```
 
-**Rule**: Each task must be atomic (completable independently) and traceable to a spec item.
+**检查点**：如果风险为 elevated/critical，暂停等待用户审核 spec.md。
 
-**Hooks**: `pre_stage_PLANNING` → story-mapper, mvp-freeze-architect
+**钩子**：`pre_stage_DEFINING` → iron-audit-pm、problem-definer、risk-auditor
 
-### Stage 4: DESIGNING (Spec Mode only)
+### 阶段 3：PLANNING（仅 Spec 模式）
 
-Create `design.md` (only for medium+ size) with architecture decisions:
-
-- Component structure
-- Data flow
-- API contracts
-- Key trade-offs
-
-**Checkpoint**: If risk is elevated/critical, pause for user review.
-
-**Hooks**: `pre_stage_DESIGNING` → domain-modeler, architecture-advisor, responsibility-modeler
-
-### Stage 5: IMPLEMENTING
-
-Execute tasks from tasks.md sequentially. For each task:
-
-1. Read the task description
-2. Implement the change
-3. Mark task as `[x]` in tasks.md
-4. Run relevant tests if available
-
-**Hooks**: `pre_stage_IMPLEMENTING` → tdd-coach
-
-### Stage 6: TESTING
-
-Run full test suite. Update `checklist.md`:
+将 spec.md 分解为 `tasks.md`——每个验收标准映射到 ≥1 个任务：
 
 ```markdown
-# Checklist
+# 任务
 
-## Code Quality
-- [ ] Implementation complete
-- [ ] Lint clean (run lint command)
-- [ ] Type check pass (run typecheck command)
+## 阶段 1：基础
+- [ ] 任务 1.1：{描述} [files: x, y]
+- [ ] 任务 1.2：{描述} [files: z]
 
-## Tests
-- [ ] Unit tests pass
-- [ ] Integration tests pass (if applicable)
+## 阶段 2：核心逻辑
+- [ ] 任务 2.1：{描述} [files: a, b]
 
-## Acceptance Criteria
-- [ ] AC 1: {criterion from spec} — verified
-- [ ] AC 2: {criterion from spec} — verified
+## 阶段 3：集成与打磨
+- [ ] 任务 3.1：{描述} [files: c]
 
-## Review
-- [ ] Self-review complete
-- [ ] No TODO/FIXME left unresolved
+## 验证
+- [ ] 所有验收标准通过
+- [ ] Lint 检查通过
+- [ ] 类型检查通过
 ```
 
-**Hooks**: `pre_stage_TESTING` → test-strategy-advisor, test-strategist, code-reviewer
+**规则**：每个任务必须是原子性的（可独立完成）且可追溯到某个规格项。
 
-### Stage 7: DELIVERING (Spec Mode only)
+**钩子**：`pre_stage_PLANNING` → story-mapper、mvp-freeze-architect
 
-Final verification against spec.md. Ensure every acceptance criterion has been met.
+### 阶段 4：DESIGNING（仅 Spec 模式）
 
-**Hooks**: `post_stage_DELIVERING` → code-reviewer, tech-design-reviewer
+创建 `design.md`（仅限 medium+ 规模），记录架构决策：
 
-### Stage 8: DONE
+- 组件结构
+- 数据流
+- API 契约
+- 关键权衡
 
-Workflow complete. Summary output:
-- What was delivered
-- Files changed
-- Tests passed
-- Time elapsed
+**检查点**：如果风险为 elevated/critical，暂停等待用户审核。
 
-## Stage Advancement
+**钩子**：`pre_stage_DESIGNING` → domain-modeler、architecture-advisor、responsibility-modeler
+
+### 阶段 5：IMPLEMENTING
+
+按顺序执行 tasks.md 中的任务。对于每个任务：
+
+1. 阅读任务描述
+2. 实现变更
+3. 在 tasks.md 中将任务标记为 `[x]`
+4. 如果有可用测试则运行
+
+**钩子**：`pre_stage_IMPLEMENTING` → tdd-coach
+
+### 阶段 6：TESTING
+
+运行完整测试套件。更新 `checklist.md`：
+
+```markdown
+# 检查清单
+
+## 代码质量
+- [ ] 实现完成
+- [ ] Lint 检查通过（运行 lint 命令）
+- [ ] 类型检查通过（运行 typecheck 命令）
+
+## 测试
+- [ ] 单元测试通过
+- [ ] 集成测试通过（如适用）
+
+## 验收标准
+- [ ] AC 1：{来自规格的标准}——已验证
+- [ ] AC 2：{来自规格的标准}——已验证
+
+## 审查
+- [ ] 自审完成
+- [ ] 无未解决的 TODO/FIXME
+```
+
+**钩子**：`pre_stage_TESTING` → test-strategy-advisor、test-strategist、code-reviewer
+
+### 阶段 7：DELIVERING（仅 Spec 模式）
+
+针对 spec.md 的最终验证。确保每个验收标准都已满足。
+
+**钩子**：`post_stage_DELIVERING` → code-reviewer、tech-design-reviewer
+
+### 阶段 8：DONE
+
+工作流完成。输出摘要：
+- 交付了什么
+- 变更了哪些文件
+- 测试通过情况
+- 耗时
+
+## 阶段推进
 
 ```bash
-# Check current status
+# 检查当前状态
 node scripts/cli.cjs status -r <project_root>
 
-# Advance to next stage
+# 推进到下一阶段
 node scripts/cli.cjs advance -r <project_root>
 
-# Force advance (skip checkpoint)
+# 强制推进（跳过检查点）
 node scripts/cli.cjs advance -r <project_root> --force
 ```
 
-## Hooks System
+## 钩子系统
 
-Hooks are agents/skills that run at stage transitions. Three scopes:
+钩子是在阶段转换时运行的 agent/skill。三个作用域：
 
-| Scope | File | Priority |
-|-------|------|----------|
-| Global | `hooks.yaml` (skill dir) | Lowest |
-| Project | `.trae/workflow/hooks.yaml` | Medium |
-| Workflow | `workflow.yaml` (in workflow dir) | Highest |
+| 作用域 | 文件 | 优先级 |
+|--------|------|--------|
+| 全局 | `hooks.yaml`（skill 目录） | 最低 |
+| 项目 | `.trae/workflow/hooks.yaml` | 中等 |
+| 工作流 | `workflow.yaml`（工作流目录内） | 最高 |
 
-### Hook Points
+### 钩子触发点
 
-| Hook | When | Default Agents |
-|------|------|----------------|
-| `pre_stage_DEFINING` | Before filling spec | iron-audit-pm, risk-auditor |
-| `pre_stage_PLANNING` | Before task decomposition | story-mapper, mvp-freeze-architect |
-| `pre_stage_DESIGNING` | Before architecture | domain-modeler, architecture-advisor |
-| `pre_stage_IMPLEMENTING` | Before coding | tdd-coach |
-| `pre_stage_TESTING` | Before test phase | test-strategy-advisor, code-reviewer |
-| `post_stage_DELIVERING` | After final check | tech-design-reviewer |
+| 钩子 | 触发时机 | 默认 Agent |
+|------|----------|------------|
+| `pre_stage_DEFINING` | 填写规格前 | iron-audit-pm、risk-auditor |
+| `pre_stage_PLANNING` | 任务分解前 | story-mapper、mvp-freeze-architect |
+| `pre_stage_DESIGNING` | 架构设计前 | domain-modeler、architecture-advisor |
+| `pre_stage_IMPLEMENTING` | 编码前 | tdd-coach |
+| `pre_stage_TESTING` | 测试阶段前 | test-strategy-advisor、code-reviewer |
+| `post_stage_DELIVERING` | 最终检查后 | tech-design-reviewer |
 
 ```bash
-# List hooks
+# 列出钩子
 node scripts/cli.cjs hooks -r <project_root> list
 
-# Add a hook
+# 添加钩子
 node scripts/cli.cjs hooks -r <project_root> add pre_stage_TESTING -n my-validator --type skill
 ```
 
-## Quality Gates
+## 质量门禁
 
-### Checkpoint Rules
+### 检查点规则
 
-| Stage | Checkpoint When |
-|-------|----------------|
-| DEFINING | risk = elevated or critical |
-| PLANNING | size = large or risk ≥ elevated |
-| DESIGNING | size ≥ medium or risk ≥ elevated |
-| TESTING | always (all risk levels) |
+| 阶段 | 何时触发检查点 |
+|------|---------------|
+| DEFINING | 风险 = elevated 或 critical |
+| PLANNING | 规模 = large 或 风险 ≥ elevated |
+| DESIGNING | 规模 ≥ medium 或 风险 ≥ elevated |
+| TESTING | 始终（所有风险级别） |
 
-At checkpoints, AI **pauses and asks user** for confirmation before advancing.
+在检查点，AI **暂停并询问用户** 确认后再推进。
 
-### SDD Traceability Rule
+### SDD 可追溯性规则
 
-Every line of code must trace back to:
-1. A task in `tasks.md`
-2. Which traces to an acceptance criterion in `spec.md`
+每行代码必须可追溯到：
+1. `tasks.md` 中的一个任务
+2. 该任务可追溯到 `spec.md` 中的一个验收标准
 
-If you find yourself writing code not covered by any task — **stop and update tasks.md first**.
+如果发现自己编写的代码未被任何任务覆盖——**停下来，先更新 tasks.md**。
 
-## Error Handling
+## 错误处理
 
-| Issue | Solution |
-|-------|----------|
-| User gives vague request | Classify as feature/small, use Agent Mode, refine during implementation |
-| Spec is incomplete | Add missing acceptance criteria before advancing to PLANNING |
-| Task is too large | Break into sub-tasks, each ≤1 file change |
-| Tests fail during TESTING | Stay in TESTING, fix issues, re-run |
-| Checkpoint rejected by user | Stay in current stage, revise artifacts per feedback |
-| Workflow abandoned | No cleanup needed, state persists in `.trae/workflow/` |
+| 问题 | 解决方案 |
+|------|----------|
+| 用户给出模糊请求 | 分类为 feature/small，使用 Agent 模式，在实现过程中细化 |
+| 规格不完整 | 在推进到 PLANNING 之前补充缺失的验收标准 |
+| 任务过大 | 拆分为子任务，每个 ≤1 个文件变更 |
+| TESTING 阶段测试失败 | 留在 TESTING，修复问题，重新运行 |
+| 用户拒绝检查点 | 留在当前阶段，根据反馈修改产物 |
+| 工作流被放弃 | 无需清理，状态持久化在 `.trae/workflow/` 中 |
 
-## Scripts
+## 脚本
 
-Single CLI entry at `scripts/cli.cjs` dispatches all workflow commands.
+单一 CLI 入口 `scripts/cli.cjs` 分发所有工作流命令。
 
-| Subcommand | Purpose |
-|------------|---------|
-| `init` | Initialize workflow with classification |
-| `advance` | Advance to next stage |
-| `status` | Show current workflow status |
-| `hooks` | List/add internal workflow hooks; generate/install IDE hooks.json |
+| 子命令 | 用途 |
+|--------|------|
+| `init` | 带分类的工作流初始化 |
+| `advance` | 推进到下一阶段 |
+| `status` | 显示当前工作流状态 |
+| `hooks` | 列出/添加内部工作流钩子；生成/安装 IDE hooks.json |
 
-## Agents
+## Agent
 
-See [AGENTS.md](agents/AGENTS.md) for the full registry. Key agents by phase:
+完整注册表见 [AGENTS.md](agents/AGENTS.md)。各阶段关键 agent：
 
-| Phase | Agent | Methodology |
-|-------|-------|-------------|
-| DEFINING | [iron-audit-pm](agents/iron-audit-pm.md) | PRD audit, DNA extraction |
-| DEFINING | [risk-auditor](agents/risk-auditor.md) | Risk scanning |
-| DEFINING | [problem-definer](agents/problem-definer.md) | Weinberg problem analysis |
-| PLANNING | [story-mapper](agents/story-mapper.md) | Patton story mapping |
-| PLANNING | [mvp-freeze-architect](agents/mvp-freeze-architect.md) | Scope freezing |
-| DESIGNING | [domain-modeler](agents/domain-modeler.md) | DDD/Evans modeling |
-| DESIGNING | [architecture-advisor](agents/architecture-advisor.md) | Quality attributes |
-| IMPLEMENTING | [tdd-coach](agents/tdd-coach.md) | Beck TDD cycle |
-| TESTING | [test-strategist](agents/test-strategist.md) | Crispin test strategy |
-| TESTING | [code-reviewer](agents/code-reviewer.md) | Code review |
-| DELIVERING | [tech-design-reviewer](agents/tech-design-reviewer.md) | Architecture review |
+| 阶段 | Agent | 方法论 |
+|------|-------|--------|
+| DEFINING | [iron-audit-pm](agents/iron-audit-pm.md) | PRD 审计、DNA 提取 |
+| DEFINING | [risk-auditor](agents/risk-auditor.md) | 风险扫描 |
+| DEFINING | [problem-definer](agents/problem-definer.md) | Weinberg 问题分析 |
+| PLANNING | [story-mapper](agents/story-mapper.md) | Patton 故事地图 |
+| PLANNING | [mvp-freeze-architect](agents/mvp-freeze-architect.md) | 范围冻结 |
+| DESIGNING | [domain-modeler](agents/domain-modeler.md) | DDD/Evans 建模 |
+| DESIGNING | [architecture-advisor](agents/architecture-advisor.md) | 质量属性分析 |
+| IMPLEMENTING | [tdd-coach](agents/tdd-coach.md) | Beck TDD 循环 |
+| TESTING | [test-strategist](agents/test-strategist.md) | Crispin 测试策略 |
+| TESTING | [code-reviewer](agents/code-reviewer.md) | 代码审查 |
+| DELIVERING | [tech-design-reviewer](agents/tech-design-reviewer.md) | 架构审查 |
 
-## References
+## 参考资料
 
-- [Quick Reference](references/QUICKREF.md) - Condensed decision tables
+- [快速参考](references/QUICKREF.md) - 精简决策表

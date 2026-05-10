@@ -1,135 +1,135 @@
 ---
 name: project-skill-installer
-description: "Use this skill when the user wants to install, add, or configure a skill into their project. Analyzes the project's tech stack and workflows, then recommends and installs the best matching skills. Triggers on: 'install skill', 'add skill', 'configure skill', 'set up skill', 'enable skill', 'use skill in project', 'project skill', or when the user asks how to bring an existing skill capability into their current workspace."
+description: "当用户想要在项目中安装、添加或配置技能时使用此技能。分析项目的技术栈和工作流，然后推荐并安装最匹配的技能。触发词：'install skill'、'add skill'、'configure skill'、'set up skill'、'enable skill'、'use skill in project'、'project skill'，或当用户询问如何将现有技能能力引入当前工作区时触发。"
 metadata:
   author: "learnwy"
   version: "3.0"
 ---
 
-# Project Skill Installer
+# 项目技能安装器
 
-Analyzes a project's tech stack, workflows, and pain points, then **recommends** the best skills to install. Always confirms with the user via `AskUserQuestion` before installing anything.
+分析项目的技术栈、工作流和痛点，然后**推荐**最佳技能进行安装。在安装任何内容之前，始终通过 `AskUserQuestion` 与用户确认。
 
-> **Core Principle**: Understand the project first, recommend second, install only after user confirms.
+> **核心原则**：先理解项目，再推荐，仅在用户确认后安装。
 
-## When to Use
+## 使用场景
 
-**Invoke when:**
+**触发条件：**
 
-- User says "install a skill", "find a skill for X", "what skills would help this project"
-- User describes a capability gap ("I wish AI would automatically...")
-- User wants to set up a new project with skills
+- 用户说"install a skill"、"find a skill for X"、"what skills would help this project"
+- 用户描述能力缺口（"I wish AI would automatically..."）
+- 用户想用技能设置新项目
 
-**Do NOT invoke when:**
+**不触发条件：**
 
-- User wants to **create** a new skill (delegate to `project-skill-writer`)
-- User wants to **create** an agent (delegate to `project-agent-writer`)
-- User wants to **create** a rule (delegate to `trae-rules-writer`)
+- 用户想**创建**新技能（委托给 `project-skill-writer`）
+- 用户想**创建**智能体（委托给 `project-agent-writer`）
+- 用户想**创建**规则（委托给 `trae-rules-writer`）
 
-## Prerequisites
+## 前置条件
 
 - Node.js >= 18
-- Requires `find-skills` or `trae-skill-finder` skill to be available globally
-- If missing, prompt user: `npx skills add find-skills -g -y`
+- 需要全局可用的 `find-skills` 或 `trae-skill-finder` 技能
+- 如果缺失，提示用户：`npx skills add find-skills -g -y`
 
-## Workflow
-
-```
-[L1: Goal Understanding]
-         ↓
-[L2: Project Analysis]
-         ↓
-[L3: Skill Discovery]
-         ↓
-[L4: Recommendation]  ← AskUserQuestion (MUST confirm)
-         ↓
-[L5: Installation]
-         ↓
-[L6: Verification]
-```
-
-## L1: Goal Understanding
-
-Extract what the user needs — do NOT ask "what skill do you want?" Instead, understand:
-
-| User Says | Real Need |
-|-----------|-----------|
-| "install a skill" | Vague — proceed to L2 analysis to find gaps |
-| "find a skill for testing" | Specific domain — search for testing skills |
-| "set up this project with skills" | Full audit — analyze project and recommend suite |
-| "I keep doing X manually" | Automation gap — find skill that addresses X |
-
-## L2: Project Analysis
-
-Scan the project to build a tech profile. Use search tools in parallel:
-
-### Detection Targets
-
-| Signal | What to Look For | Tool |
-|--------|-----------------|------|
-| Language | File extensions (`.ts`, `.py`, `.swift`, `.go`) | Glob |
-| Framework | package.json deps, Podfile, go.mod, Cargo.toml | Read |
-| Build Tool | Makefile, webpack.config, vite.config, Bazel | Glob |
-| Testing | jest.config, pytest.ini, XCTest, go test | Glob |
-| CI/CD | .github/workflows/, Jenkinsfile, .gitlab-ci.yml | Glob |
-| Existing Skills | .trae/skills/, .cursor/skills/ | Glob |
-| Existing Rules | .trae/rules/ | Glob |
-
-### Tech Profile Output
+## 工作流
 
 ```
-Project: {name}
-Languages: TypeScript, Swift
-Frameworks: React 18, UIKit
-Build: Vite, Bazel
-Testing: Jest, XCTest
+[L1: 理解目标]
+         ↓
+[L2: 项目分析]
+         ↓
+[L3: 技能发现]
+         ↓
+[L4: 推荐]  ← AskUserQuestion（必须确认）
+         ↓
+[L5: 安装]
+         ↓
+[L6: 验证]
+```
+
+## L1: 理解目标
+
+提取用户需求——不要问"你想要什么技能？"而是理解：
+
+| 用户说的 | 真实需求 |
+|----------|----------|
+| "install a skill" | 模糊——进入 L2 分析寻找缺口 |
+| "find a skill for testing" | 特定领域——搜索测试技能 |
+| "set up this project with skills" | 全面审计——分析项目并推荐套件 |
+| "I keep doing X manually" | 自动化缺口——查找解决 X 的技能 |
+
+## L2: 项目分析
+
+扫描项目构建技术画像。并行使用搜索工具：
+
+### 检测目标
+
+| 信号 | 查找内容 | 工具 |
+|------|----------|------|
+| 语言 | 文件扩展名（`.ts`、`.py`、`.swift`、`.go`） | Glob |
+| 框架 | package.json 依赖、Podfile、go.mod、Cargo.toml | Read |
+| 构建工具 | Makefile、webpack.config、vite.config、Bazel | Glob |
+| 测试 | jest.config、pytest.ini、XCTest、go test | Glob |
+| CI/CD | .github/workflows/、Jenkinsfile、.gitlab-ci.yml | Glob |
+| 现有技能 | .trae/skills/、.cursor/skills/ | Glob |
+| 现有规则 | .trae/rules/ | Glob |
+
+### 技术画像输出
+
+```
+项目: {name}
+语言: TypeScript, Swift
+框架: React 18, UIKit
+构建: Vite, Bazel
+测试: Jest, XCTest
 CI: GitHub Actions
-Existing Skills: [list]
-Existing Rules: [list]
+现有技能: [列表]
+现有规则: [列表]
 ```
 
-## L3: Skill Discovery
+## L3: 技能发现
 
-Based on the tech profile and user's goal, search for matching skills:
+基于技术画像和用户目标，搜索匹配的技能：
 
-### Search Strategy
+### 搜索策略
 
-1. **Direct match**: Search by user's exact request → `npx skills find "<user_query>"`
-2. **Tech match**: Search by detected tech stack → `npx skills find "react"`, `npx skills find "swift"`
-3. **Gap match**: Search by detected workflow gaps → if no testing skill, search `npx skills find "testing"`
+1. **直接匹配**：按用户的精确请求搜索 → `npx skills find "<user_query>"`
+2. **技术匹配**：按检测到的技术栈搜索 → `npx skills find "react"`、`npx skills find "swift"`
+3. **缺口匹配**：按检测到的工作流缺口搜索 → 如果没有测试技能，搜索 `npx skills find "testing"`
 
-### Skill Sources (Priority Order)
+### 技能来源（优先级顺序）
 
-1. **Local registry**: Check `~/.trae/skills/` and `~/.trae-cn/skills/` for already-installed global skills
-2. **Community registry**: `npx skills find "<query>"` — searches skills.sh marketplace
-3. **ByteDance registry**: `npx @tiktok-fe/skills find "<query>"` — searches internal registry (if available)
+1. **本地注册表**：检查 `~/.trae/skills/` 和 `~/.trae-cn/skills/` 中已安装的全局技能
+2. **社区注册表**：`npx skills find "<query>"` — 搜索 skills.sh 市场
+3. **字节跳动注册表**：`npx @tiktok-fe/skills find "<query>"` — 搜索内部注册表（如可用）
 
-### Filtering Criteria
+### 筛选标准
 
-Reject skills that:
-- Conflict with existing installed skills (same purpose)
-- Don't match the project's language/framework
-- Are global-only (this skill installs project-level)
-- Have no description or are clearly low-quality
+拒绝以下技能：
+- 与已安装技能冲突（相同用途）
+- 不匹配项目的语言/框架
+- 仅限全局使用（此技能安装项目级别的）
+- 没有描述或明显低质量
 
-## L4: Recommendation (MUST USE AskUserQuestion)
+## L4: 推荐（必须使用 AskUserQuestion）
 
-**CRITICAL**: Before installing ANY skill, present recommendations via `AskUserQuestion`.
+**关键**：在安装任何技能之前，通过 `AskUserQuestion` 展示推荐。
 
-### Recommendation Format
+### 推荐格式
 
-For each recommended skill, prepare:
+对每个推荐的技能，准备：
 
 ```
-Skill: {name}
-Purpose: {what it does, 1 sentence}
-Why: {why it fits this project specifically}
-Install: {command}
+技能: {name}
+用途: {做什么，一句话}
+原因: {为什么适合这个项目}
+安装: {命令}
 ```
 
-### AskUserQuestion Call
+### AskUserQuestion 调用
 
-Use `AskUserQuestion` with:
+使用 `AskUserQuestion`：
 
 ```json
 {
@@ -140,11 +140,11 @@ Use `AskUserQuestion` with:
     "options": [
       {
         "label": "{skill-1-name} (Recommended)",
-        "description": "{1-sentence: what it does + why it fits}"
+        "description": "{一句话：做什么 + 为什么适合}"
       },
       {
         "label": "{skill-2-name}",
-        "description": "{1-sentence: what it does + why it fits}"
+        "description": "{一句话：做什么 + 为什么适合}"
       },
       {
         "label": "Skip",
@@ -155,87 +155,87 @@ Use `AskUserQuestion` with:
 }
 ```
 
-**Rules**:
-- Put the most relevant skill first with "(Recommended)"
-- Max 4 options (3 skills + Skip)
-- Include "Skip" as last option
-- Use `multiSelect: true` to allow multiple installs
-- Never install without user confirmation
+**规则**：
+- 将最相关的技能放在最前面并标记"(Recommended)"
+- 最多 4 个选项（3 个技能 + Skip）
+- 将"Skip"作为最后一个选项
+- 使用 `multiSelect: true` 允许多个安装
+- 绝不在用户确认前安装
 
-## L5: Installation
+## L5: 安装
 
-After user confirms which skills to install:
+用户确认要安装哪些技能后：
 
-### Install Path Discovery
+### 安装路径发现
 
-Determine project-relative install path using [Path Discovery](references/path-discovery.md):
+使用[路径发现](references/path-discovery.md)确定项目相对安装路径：
 
-1. Check for existing `.trae/skills/` in project root
-2. Check for `.cursor/skills/` or `.claude/skills/`
-3. Default to `.trae/skills/`
+1. 检查项目根目录是否存在 `.trae/skills/`
+2. 检查 `.cursor/skills/` 或 `.claude/skills/`
+3. 默认使用 `.trae/skills/`
 
-### Install Commands
+### 安装命令
 
 ```bash
-# Community skills (skills.sh)
+# 社区技能 (skills.sh)
 npx skills add <package-name> --path <project-root>/.trae/skills/
 
-# ByteDance internal skills
+# 字节跳动内部技能
 npx @tiktok-fe/skills add <package-name> --agent trae-cn --path <project-root>/.trae/skills/
 ```
 
-### Install Rules
+### 安装规则
 
-- **ALWAYS** project-relative path — NEVER `~/.trae/skills/` or other global paths
-- Install one skill at a time, verify each before proceeding to next
-- If install fails, report error and suggest manual install steps
+- **始终**使用项目相对路径 — 绝不使用 `~/.trae/skills/` 或其他全局路径
+- 逐个安装技能，每个验证后再继续下一个
+- 如果安装失败，报告错误并建议手动安装步骤
 
-## L6: Verification
+## L6: 验证
 
-After installation, verify:
+安装后验证：
 
-- [ ] Skill directory exists at expected path
-- [ ] SKILL.md is present and readable
-- [ ] Skill's description mentions relevant triggers
-- [ ] No conflicts with existing skills
+- [ ] 技能目录存在于预期路径
+- [ ] SKILL.md 存在且可读
+- [ ] 技能描述提及相关触发词
+- [ ] 与现有技能无冲突
 
-Report to user:
+向用户报告：
 
 ```
-Installed {N} skill(s):
+已安装 {N} 个技能:
   ✓ {skill-1} → {path}
   ✓ {skill-2} → {path}
 
-To use: just describe what you need, the skill will activate automatically.
+使用方式: 只需描述你的需求，技能会自动激活。
 ```
 
-## Error Handling
+## 错误处理
 
-| Issue | Solution |
-|-------|----------|
-| `find-skills` not available | Prompt: `npx skills add find-skills -g -y` |
-| No skills found for query | Suggest creating a custom skill via `project-skill-writer` |
-| User requests global install | Reject, explain project-scope boundary, offer project-relative alternative |
-| User requests agent/rule creation | Route to `project-agent-writer` or `trae-rules-writer` |
-| Install command fails | Show error, suggest `npx skills add <name> --path <path>` manually |
-| Skill conflicts with existing | Show comparison, ask user which to keep |
+| 问题 | 解决方案 |
+|------|----------|
+| `find-skills` 不可用 | 提示：`npx skills add find-skills -g -y` |
+| 未找到匹配查询的技能 | 建议通过 `project-skill-writer` 创建自定义技能 |
+| 用户请求全局安装 | 拒绝，解释项目范围限制，提供项目相对路径替代方案 |
+| 用户请求创建智能体/规则 | 路由到 `project-agent-writer` 或 `trae-rules-writer` |
+| 安装命令失败 | 显示错误，建议手动 `npx skills add <name> --path <path>` |
+| 技能与现有的冲突 | 展示对比，询问用户保留哪个 |
 
-## Boundary Enforcement
+## 边界限定
 
-This skill ONLY handles:
-- ✅ Analyzing project for skill needs
-- ✅ Searching skill registries
-- ✅ Recommending skills with user confirmation
-- ✅ Installing skills to project-relative paths
-- ✅ Verifying installation
+此技能**仅**处理：
+- ✅ 分析项目的技能需求
+- ✅ 搜索技能注册表
+- ✅ 带用户确认的技能推荐
+- ✅ 将技能安装到项目相对路径
+- ✅ 验证安装
 
-This skill does NOT handle:
-- ❌ Creating new skills → `project-skill-writer`
-- ❌ Creating agents → `project-agent-writer`
-- ❌ Creating rules → `trae-rules-writer`
-- ❌ Global installation (always project-scoped)
+此技能**不**处理：
+- ❌ 创建新技能 → `project-skill-writer`
+- ❌ 创建智能体 → `project-agent-writer`
+- ❌ 创建规则 → `trae-rules-writer`
+- ❌ 全局安装（始终限定在项目范围内）
 
-## References
+## 参考资料
 
-- [Path Discovery](references/path-discovery.md) — Install path determination
-- [Agent Skills Core Practices](references/agent-skills-core-practices.md) — Best practices for AI skills
+- [路径发现](references/path-discovery.md) — 安装路径确定
+- [Agent Skills 核心实践](references/agent-skills-core-practices.md) — AI 技能最佳实践

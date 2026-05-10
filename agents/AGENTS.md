@@ -1,76 +1,76 @@
-# Software Engineering Methodology Agents
+# 软件工程方法论 Agent
 
-Universal agents based on classic software engineering books. These agents encapsulate timeless methodologies that can be applied across different contexts.
+基于经典软件工程著作的通用 Agent。这些 Agent 封装了历久弥新的方法论，可应用于各种场景。
 
-## Organization
+## 组织结构
 
-Each agent is a folder containing:
-- `agent.md` — Core methodology (universal, no context-specific logic)
+每个 Agent 是一个文件夹，包含：
+- `agent.md` — 核心方法论（通用，不含特定上下文逻辑）
 
-When used in skills (like `requirement-workflow`), create an adapted version that:
-1. References the core methodology
-2. Adds context-specific logic (Hook Points, output formats, etc.)
+在技能中使用时（如 `requirement-workflow`），请创建改编版本：
+1. 引用核心方法论
+2. 添加上下文相关逻辑（Hook Point、输出格式等）
 
-## Available Agents
+## 可用 Agent
 
-### Requirements Analysis
+### 需求分析
 
-| Agent | Based On | Purpose |
-|-------|----------|---------|
-| [problem-definer](problem-definer/agent.md) | Are Your Lights On? (Weinberg) | Systematic problem definition |
-| [spec-by-example](spec-by-example/agent.md) | Specification by Example (Adzic) | Living documentation through examples |
-| [story-mapper](story-mapper/agent.md) | User Story Mapping (Patton) | User journey visualization |
+| Agent | Based On | 用途 |
+|-------|----------|------|
+| [problem-definer](problem-definer/agent.md) | Are Your Lights On? (Weinberg) | 系统化问题定义 |
+| [spec-by-example](spec-by-example/agent.md) | Specification by Example (Adzic) | 通过示例创建活文档 |
+| [story-mapper](story-mapper/agent.md) | User Story Mapping (Patton) | 用户旅程可视化 |
 
-### Object & Domain Modeling
+### 对象与领域建模
 
-| Agent | Based On | Purpose |
-|-------|----------|---------|
-| [responsibility-modeler](responsibility-modeler/agent.md) | Object Design (Wirfs-Brock) | Responsibility-Driven Design |
-| [domain-modeler](domain-modeler/agent.md) | Domain-Driven Design (Evans) | Strategic & tactical DDD |
+| Agent | Based On | 用途 |
+|-------|----------|------|
+| [responsibility-modeler](responsibility-modeler/agent.md) | Object Design (Wirfs-Brock) | 职责驱动设计 |
+| [domain-modeler](domain-modeler/agent.md) | Domain-Driven Design (Evans) | 战略与战术 DDD |
 
-### Architecture & Design
+### 架构与设计
 
-| Agent | Based On | Purpose |
-|-------|----------|---------|
-| [architecture-advisor](architecture-advisor/agent.md) | Software Architecture in Practice, DDIA | Quality attributes & trade-offs |
+| Agent | Based On | 用途 |
+|-------|----------|------|
+| [architecture-advisor](architecture-advisor/agent.md) | Software Architecture in Practice, DDIA | 质量属性与权衡分析 |
 
-### Implementation
+### 实现
 
-| Agent | Based On | Purpose |
-|-------|----------|---------|
-| [refactoring-guide](refactoring-guide/agent.md) | Refactoring (Fowler) | Code smells & refactoring techniques |
-| [tdd-coach](tdd-coach/agent.md) | TDD by Example (Beck) | Test-Driven Development guidance |
-| [legacy-surgeon](legacy-surgeon/agent.md) | Working Effectively with Legacy Code (Feathers) | Safe legacy code modification |
+| Agent | Based On | 用途 |
+|-------|----------|------|
+| [refactoring-guide](refactoring-guide/agent.md) | Refactoring (Fowler) | 代码异味识别与重构技术 |
+| [tdd-coach](tdd-coach/agent.md) | TDD by Example (Beck) | 测试驱动开发指导 |
+| [legacy-surgeon](legacy-surgeon/agent.md) | Working Effectively with Legacy Code (Feathers) | 安全修改遗留代码 |
 
-### Testing
+### 测试
 
-| Agent | Based On | Purpose |
-|-------|----------|---------|
-| [test-strategist](test-strategist/agent.md) | Agile Testing, xUnit Patterns | Test strategy & planning |
+| Agent | Based On | 用途 |
+|-------|----------|------|
+| [test-strategist](test-strategist/agent.md) | Agile Testing, xUnit Patterns | 测试策略与规划 |
 
-## Usage Pattern
+## 使用模式
 
-### Direct Usage (Generic)
+### 直接使用（通用）
 
 ```
 AI: Use problem-definer agent to analyze this requirement...
 ```
 
-### Via Skill (Adapted)
+### 通过技能使用（改编版）
 
 ```
-# In requirement-workflow skill:
-# Uses adapted version with Hook Point and workflow integration
+# 在 requirement-workflow 技能中：
+# 使用带有 Hook Point 和工作流集成的改编版本
 AI: Launching problem-definer at pre_stage_ANALYZING...
 ```
 
-## Contribution
+## 贡献指南
 
-When updating an agent:
-1. Update the core version in `agents/{agent-name}/agent.md`
-2. Propagate changes to adapted versions in skill directories
-3. Follow the sync rule: `.trae/rules/agent-sync.md`
+更新 Agent 时：
+1. 更新 `agents/{agent-name}/agent.md` 中的核心版本
+2. 将变更同步到技能目录中的改编版本
+3. 遵循同步规则：`.trae/rules/agent-sync.md`
 
-## References
+## 参考资料
 
-See each agent's `agent.md` for detailed references to source materials.
+各 Agent 的 `agent.md` 中包含了对源材料的详细引用。

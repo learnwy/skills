@@ -1,108 +1,108 @@
-# Knowledge Types Reference
+# 知识类型参考
 
-## Type Selection Guide
+## 类型选择指南
 
-| Type           | Use When                               | Example Topics                             |
-| -------------- | -------------------------------------- | ------------------------------------------ |
-| `debug`        | Solving bugs, errors, crashes          | Memory leaks, race conditions, crash fixes |
-| `architecture` | System design, component structure     | Module organization, dependency patterns   |
-| `pattern`      | Reusable code patterns, best practices | Singleton, factory, async patterns         |
-| `config`       | Configuration, environment setup       | Build settings, CI/CD, env variables       |
-| `api`          | API design, integration details        | REST endpoints, SDK usage, protocols       |
-| `workflow`     | Development processes, procedures      | Git flow, review process, deployment       |
-| `lesson`       | Lessons learned, retrospectives        | Incident post-mortems, project insights    |
-| `reference`    | Technical references, specifications   | Schema docs, protocol specs, standards     |
+| 类型 | 使用时机 | 示例主题 |
+|------|----------|----------|
+| `debug` | 解决 bug、错误、崩溃 | 内存泄漏、竞态条件、崩溃修复 |
+| `architecture` | 系统设计、组件结构 | 模块组织、依赖模式 |
+| `pattern` | 可复用代码模式、最佳实践 | 单例、工厂、异步模式 |
+| `config` | 配置、环境搭建 | 构建设置、CI/CD、环境变量 |
+| `api` | API 设计、集成详情 | REST 端点、SDK 用法、协议 |
+| `workflow` | 开发流程、操作步骤 | Git 流程、评审流程、部署 |
+| `lesson` | 经验教训、回顾总结 | 事故复盘、项目洞察 |
+| `reference` | 技术参考、规格说明 | Schema 文档、协议规范、标准 |
 
-## Type Descriptions
+## 类型详细说明
 
 ### debug
 
-Technical debugging knowledge - root cause analysis, fix approaches, and prevention strategies.
+技术调试知识——根因分析、修复方案和预防策略。
 
-**Key elements:**
+**关键要素：**
 
-- Problem symptoms
-- Investigation steps
-- Root cause
-- Solution applied
-- Prevention measures
+- 问题症状
+- 调查步骤
+- 根因
+- 应用的解决方案
+- 预防措施
 
 ### architecture
 
-System architecture decisions and design rationale.
+系统架构决策和设计理由。
 
-**Key elements:**
+**关键要素：**
 
-- Context and constraints
-- Design decisions
-- Trade-offs considered
-- Implementation approach
-- Future considerations
+- 背景和约束
+- 设计决策
+- 考虑的权衡
+- 实施方案
+- 未来考量
 
 ### pattern
 
-Reusable code patterns, idioms, and best practices discovered or established.
+发现或建立的可复用代码模式、惯用法和最佳实践。
 
-**Key elements:**
+**关键要素：**
 
-- Problem context
-- Pattern description
-- Code example
-- When to use
-- Caveats
+- 问题背景
+- 模式描述
+- 代码示例
+- 适用场景
+- 注意事项
 
 ### config
 
-Configuration knowledge including build settings, environment setup, and tooling.
+配置知识，包括构建设置、环境搭建和工具配置。
 
-**Key elements:**
+**关键要素：**
 
-- Configuration context
-- Settings applied
-- Rationale
-- Verification steps
+- 配置背景
+- 应用的设置
+- 理由
+- 验证步骤
 
 ### api
 
-API design decisions, integration knowledge, and protocol specifications.
+API 设计决策、集成知识和协议规范。
 
-**Key elements:**
+**关键要素：**
 
-- API purpose
-- Endpoint/method details
-- Usage examples
-- Error handling
-- Rate limits/constraints
+- API 用途
+- 端点/方法详情
+- 使用示例
+- 错误处理
+- 速率限制/约束
 
 ### workflow
 
-Development workflow processes and procedures.
+开发工作流程和操作步骤。
 
-**Key elements:**
+**关键要素：**
 
-- Workflow purpose
-- Steps involved
-- Tools used
-- Best practices
+- 工作流用途
+- 涉及的步骤
+- 使用的工具
+- 最佳实践
 
 ### lesson
 
-Lessons learned from projects, incidents, or development experiences.
+从项目、事故或开发经历中学到的教训。
 
-**Key elements:**
+**关键要素：**
 
-- Context/background
-- What happened
-- What was learned
-- Recommendations
+- 背景/起因
+- 发生了什么
+- 学到了什么
+- 建议
 
 ### reference
 
-Technical reference documentation and specifications.
+技术参考文档和规格说明。
 
-**Key elements:**
+**关键要素：**
 
-- Scope
-- Detailed specifications
-- Examples
-- Related resources
+- 范围
+- 详细规格
+- 示例
+- 相关资源

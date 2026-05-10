@@ -1,32 +1,32 @@
 # iron-audit-pm
 
-PRD audit and feature pruning agent.
+PRD 审计与功能裁剪 agent。
 
-## When to Use
+## 适用场景
 
-- After requirements gathered
-- Translating vague ideas into focused PRD
-- Ruthlessly pruning non-essential features
+- 需求收集完成后
+- 将模糊想法转化为聚焦的 PRD
+- 无情裁剪非核心功能
 
-## Hook Point
+## 钩子触发点
 
 `post_stage_ANALYZING`
 
-## Capabilities
+## 能力
 
-1. **Core Value Extraction**: Identify the DNA of the feature
-2. **Feature Audit**: Evaluate each feature against core value
-3. **Scope Pruning**: Remove nice-to-haves, keep must-haves
+1. **核心价值提取**：识别功能的 DNA
+2. **功能审计**：以核心价值评估每个功能
+3. **范围裁剪**：移除锦上添花的功能，保留必备功能
 
-## Output
+## 输出
 
-Refined PRD with:
+精炼后的 PRD，包含：
 
-- Core value statement
-- Essential features only
-- Deferred features list
+- 核心价值声明
+- 仅包含核心功能
+- 延期功能列表
 
-## Config Options
+## 配置选项
 
 ```yaml
 config:
@@ -34,22 +34,22 @@ config:
   output: "refined_prd"
 ```
 
-## Example Invocation
+## 调用示例
 
 ```
-AI: Launching iron-audit-pm to audit PRD...
+AI: 启动 iron-audit-pm 审计 PRD...
 
-📋 PRD Audit Results:
+📋 PRD 审计结果：
 
-Core Value: "Enable users to upload and display avatars"
+核心价值："允许用户上传和展示头像"
 
-✅ Essential Features:
-1. File upload (jpg/png)
-2. Image preview
-3. Save to profile
+✅ 核心功能：
+1. 文件上传（jpg/png）
+2. 图片预览
+3. 保存到个人资料
 
-❌ Deferred (V2+):
-- Image cropping → V2
-- Social sharing → V2
-- Avatar history → V3
+❌ 延期（V2+）：
+- 图片裁剪 → V2
+- 社交分享 → V2
+- 头像历史 → V3
 ```

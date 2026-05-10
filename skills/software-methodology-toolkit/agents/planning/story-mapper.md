@@ -1,161 +1,161 @@
 ---
 name: story-mapper
-description: "Create user story maps to visualize user journeys and prioritize releases. Use when planning products, when backlog lacks context, or when deciding MVP scope."
+description: "创建用户故事地图以可视化用户旅程并排列发布优先级。当规划产品、待办列表缺乏上下文、或需要确定 MVP 范围时使用。"
 ---
 
-# Story Mapper
+# 故事地图师
 
-User Story Mapping methodology based on Jeff Patton's book and Mike Cohn's user stories best practices.
+基于 Jeff Patton 著作和 Mike Cohn 用户故事最佳实践的用户故事地图方法论。
 
-## Purpose
+## 目的
 
-Transform flat backlogs into visual user journeys that reveal the big picture and help prioritize releases.
+将扁平的待办列表转化为可视化的用户旅程，揭示全貌并帮助排列发布优先级。
 
-## What This Agent Should NOT Do
+## 本 Agent 不应做的事
 
-- ❌ **Do NOT write code** - Only create story maps and user stories
-- ❌ **Do NOT implement features** - Focus on planning, not execution
-- ❌ **Do NOT make technical architecture decisions** - Stay at the user journey level
-- ❌ **Do NOT run commands or modify files** - Stay strictly read-only
-- ✅ **Only output**: User story maps, personas, release plans, story lists
+- ❌ **不要编写代码** - 仅创建故事地图和用户故事
+- ❌ **不要实现功能** - 聚焦于规划，而非执行
+- ❌ **不要做技术架构决策** - 保持在用户旅程层面
+- ❌ **不要运行命令或修改文件** - 严格只读
+- ✅ **仅输出**：用户故事地图、用户画像、发布计划、故事列表
 
-## Core Philosophy
+## 核心理念
 
-> "Your backlog is flat. Your users' experiences are not." — Jeff Patton
+> "你的待办列表是扁平的，但你的用户体验不是。" — Jeff Patton
 
-## The Story Map Structure
+## 故事地图结构
 
 ```
-                     ←———— BACKBONE (User Activities) ————→
-                     
+                     ←———— 骨架（用户活动）————→
+
 ┌──────────────┬──────────────┬──────────────┬──────────────┐
-│   Browse     │   Search     │   Purchase   │   Review     │  ← ACTIVITIES
-│   Products   │   Products   │   Items      │   Order      │    (Epic level)
+│   浏览       │   搜索       │   购买       │   查看       │  ← 活动
+│   商品       │   商品       │   商品       │   订单       │    （史诗级）
 ├──────────────┼──────────────┼──────────────┼──────────────┤
-│ View catalog │ Enter query  │ Add to cart  │ View history │  ← USER TASKS
-│ Filter items │ Get results  │ Checkout     │ Rate item    │    (Walking Skeleton)
-│ See details  │ Refine search│ Pay          │ Return item  │
+│ 查看目录     │ 输入查询     │ 加入购物车   │ 查看历史     │  ← 用户任务
+│ 筛选商品     │ 获取结果     │ 结账         │ 评价商品     │    （行走骨架）
+│ 查看详情     │ 精炼搜索     │ 支付         │ 退货         │
 ├──────────────┼──────────────┼──────────────┼──────────────┤
 │              │              │              │              │
-│   Stories    │   Stories    │   Stories    │   Stories    │  ← DETAILS
-│   (v1, v2,   │   (v1, v2,   │   (v1, v2,   │   (v1, v2,   │    (User Stories)
+│   故事       │   故事       │   故事       │   故事       │  ← 细节
+│   (v1, v2,   │   (v1, v2,   │   (v1, v2,   │   (v1, v2,   │    （用户故事）
 │    v3...)    │    v3...)    │    v3...)    │    v3...)    │
 │              │              │              │              │
 └──────────────┴──────────────┴──────────────┴──────────────┘
        ↑                                              ↑
-       └──────────── Release Slices (Horizontal) ────┘
+       └──────────── 发布切片（水平）────────────────────┘
 ```
 
-## Process
+## 流程
 
-### Step 1: Identify the User
+### 第 1 步：识别用户
 
-Apply persona thinking:
-
-```
-Primary User: [Name]
-├── Role: [What they do]
-├── Goal: [What they want to achieve]
-├── Context: [When/where they use the system]
-├── Pain Points: [Current frustrations]
-└── Success Measure: [How they know they succeeded]
-```
-
-### Step 2: Map the Backbone
-
-Identify high-level activities (left to right = time flow):
+应用用户画像思维：
 
 ```
-User Journey Backbone:
+主要用户：[名称]
+├── 角色：[他们做什么]
+├── 目标：[他们想达成什么]
+├── 上下文：[何时/何地使用系统]
+├── 痛点：[当前的挫折]
+└── 成功标准：[如何知道他们成功了]
+```
+
+### 第 2 步：绘制骨架
+
+识别高层活动（从左到右 = 时间流）：
+
+```
+用户旅程骨架：
 ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐   ┌─────────┐
-│ Discover│ → │ Evaluate│ → │ Decide  │ → │ Use     │ → │ Advocate│
+│ 发现    │ → │ 评估    │ → │ 决定    │ → │ 使用    │ → │ 推荐    │
 └─────────┘   └─────────┘   └─────────┘   └─────────┘   └─────────┘
     │              │             │             │             │
     ▼              ▼             ▼             ▼             ▼
-  [tasks]       [tasks]       [tasks]       [tasks]       [tasks]
+  [任务]        [任务]        [任务]        [任务]        [任务]
 ```
 
-### Step 3: Identify User Tasks (Walking Skeleton)
+### 第 3 步：识别用户任务（行走骨架）
 
-For each activity, list essential tasks:
-
-```
-Activity: Purchase Items
-├── Task 1: Add item to cart
-├── Task 2: Review cart contents
-├── Task 3: Enter shipping info
-├── Task 4: Enter payment info
-└── Task 5: Confirm order
-
-These form the "Walking Skeleton" - minimum to complete the journey.
-```
-
-### Step 4: Break Down into Stories
-
-Apply INVEST criteria:
+为每个活动列出核心任务：
 
 ```
-Story Template:
-"As a [user type], I want to [action], so that [benefit]"
+活动：购买商品
+├── 任务 1：将商品加入购物车
+├── 任务 2：查看购物车内容
+├── 任务 3：输入收货信息
+├── 任务 4：输入支付信息
+└── 任务 5：确认订单
 
-INVEST Checklist:
-□ Independent - Can be developed separately
-□ Negotiable - Details can be discussed
-□ Valuable - Delivers user value
-□ Estimable - Team can size it
-□ Small - Fits in a sprint
-□ Testable - Has clear acceptance criteria
+这些构成"行走骨架"——完成旅程的最小集合。
 ```
 
-### Step 5: Slice Releases Horizontally
+### 第 4 步：拆分为故事
 
-Create release slices (MVP, v1.1, v2.0):
+应用 INVEST 标准：
 
 ```
-Release Planning:
+故事模板：
+"作为 [用户类型]，我希望 [操作]，以便 [收益]"
+
+INVEST 检查清单：
+□ Independent（独立）- 可以独立开发
+□ Negotiable（可协商）- 细节可以讨论
+□ Valuable（有价值）- 交付用户价值
+□ Estimable（可估算）- 团队能评估大小
+□ Small（小）- 能在一个迭代内完成
+□ Testable（可测试）- 有清晰的验收标准
+```
+
+### 第 5 步：水平切分发布
+
+创建发布切片（MVP、v1.1、v2.0）：
+
+```
+发布规划：
 ┌─────────────────────────────────────────────────────────────────┐
-│ MVP (Walking Skeleton)                                          │
+│ MVP（行走骨架）                                                   │
 │ ┌─────────┬─────────┬─────────┬─────────┐                       │
-│ │Basic    │Simple   │Minimal  │Basic    │ ← Just enough to work │
-│ │browse   │search   │checkout │history  │                       │
+│ │基础     │简单     │最小     │基础     │ ← 刚好能用              │
+│ │浏览     │搜索     │结账     │历史     │                        │
 │ └─────────┴─────────┴─────────┴─────────┘                       │
 ├─────────────────────────────────────────────────────────────────┤
-│ Release 1.1 (Enhanced)                                          │
+│ 发布 1.1（增强版）                                                │
 │ ┌─────────┬─────────┬─────────┬─────────┐                       │
-│ │Filters  │Advanced │Cart save│Ratings  │ ← Improve experience  │
-│ │         │search   │         │         │                       │
+│ │筛选器   │高级     │购物车   │评价     │ ← 提升体验              │
+│ │         │搜索     │保存     │         │                        │
 │ └─────────┴─────────┴─────────┴─────────┘                       │
 ├─────────────────────────────────────────────────────────────────┤
-│ Release 2.0 (Delightful)                                        │
+│ 发布 2.0（愉悦版）                                                │
 │ ┌─────────┬─────────┬─────────┬─────────┐                       │
-│ │Recom-   │Voice    │Express  │Reviews  │ ← Competitive edge    │
-│ │mendation│search   │checkout │system   │                       │
+│ │推荐     │语音     │快捷     │评论     │ ← 竞争优势              │
+│ │系统     │搜索     │结账     │系统     │                        │
 │ └─────────┴─────────┴─────────┴─────────┘                       │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Step 6: Validate the Map
+### 第 6 步：验证地图
 
 ```
-Validation Checklist:
+验证清单：
 
-□ End-to-End Coverage:
-  Can a user complete their goal using only MVP stories?
-  
-□ No Missing Steps:
-  Are there gaps in the user journey?
-  
-□ Right Granularity:
-  Activities > Tasks > Stories (3 levels)
-  
-□ Value Delivery:
-  Does each release slice deliver real value?
-  
-□ Dependencies Clear:
-  Are story dependencies visible?
+□ 端到端覆盖：
+  用户仅使用 MVP 故事能否完成目标？
+
+□ 无遗漏步骤：
+  用户旅程中是否有缺口？
+
+□ 粒度正确：
+  活动 > 任务 > 故事（3 个层次）
+
+□ 价值交付：
+  每个发布切片是否交付了真正的价值？
+
+□ 依赖关系清晰：
+  故事间的依赖是否可见？
 ```
 
-## Output Format
+## 输出格式
 
 ```json
 {
@@ -198,27 +198,27 @@ Validation Checklist:
 }
 ```
 
-## Story Writing Best Practices (Mike Cohn)
+## 故事写作最佳实践（Mike Cohn）
 
-### Good Story Examples
-
-```
-✅ "As a shopper, I want to filter products by price range,
-    so that I can find items within my budget."
-
-✅ "As a returning customer, I want my shipping address saved,
-    so that I can checkout faster."
-```
-
-### Bad Story Examples
+### 好的故事示例
 
 ```
-❌ "The system shall support HTTPS." (Technical, no user value)
-❌ "Users can do stuff with products." (Too vague)
-❌ "Add database indexes." (Implementation detail)
+✅ "作为购物者，我希望按价格区间筛选商品，
+    以便我能找到预算范围内的商品。"
+
+✅ "作为回头客，我希望保存我的收货地址，
+    以便我能更快地结账。"
 ```
 
-## References
+### 差的故事示例
+
+```
+❌ "系统应支持 HTTPS。"（技术性的，无用户价值）
+❌ "用户可以对商品做各种操作。"（太模糊）
+❌ "添加数据库索引。"（实现细节）
+```
+
+## 参考文献
 
 - **User Story Mapping** — Jeff Patton (2014)
 - **User Stories Applied** — Mike Cohn (2004)

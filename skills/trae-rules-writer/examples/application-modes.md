@@ -1,59 +1,59 @@
-# Application Mode Examples
+# 应用模式示例
 
-Complete examples for each rule application mode.
+每种规则应用模式的完整示例。
 
-## Example 1: Always Apply (Security Rule)
+## 示例 1：始终应用（安全规则）
 
-**Scenario:** Enforce security practices across all code.
+**场景**：在所有代码中强制安全实践。
 
-### Step 1: Create Rule File
+### 步骤 1：创建规则文件
 
 ```bash
-# Create: .trae/rules/security.md
+# 创建：.trae/rules/security.md
 ```
 
-### Step 2: Write Rule
+### 步骤 2：编写规则
 
 ```markdown
 ---
 alwaysApply: true
 ---
 
-# Security Practices
+# 安全实践
 
-## Sensitive Data
-- NEVER log passwords, tokens, API keys, or PII
-- Use environment variables for secrets
-- Mask sensitive data in error messages
+## 敏感数据
+- 绝不记录密码、令牌、API 密钥或个人信息
+- 使用环境变量存储密钥
+- 在错误消息中遮盖敏感数据
 
-## Input Validation
-- Validate all user input at entry points
-- Use allowlists over denylists
-- Sanitize data before database operations
+## 输入验证
+- 在入口处验证所有用户输入
+- 使用允许列表优于拒绝列表
+- 在数据库操作前净化数据
 
-## Authentication
-- Use secure session management
-- Implement proper CSRF protection
-- Enforce strong password policies
+## 认证
+- 使用安全的会话管理
+- 实现适当的 CSRF 防护
+- 强制强密码策略
 ```
 
-### Step 3: Verify
+### 步骤 3：验证
 
-Start new chat and write any code - security rules will apply.
+开启新聊天并编写任意代码——安全规则将自动生效。
 
 ---
 
-## Example 2: File-Specific (TypeScript Rule)
+## 示例 2：文件特定（TypeScript 规则）
 
-**Scenario:** TypeScript guidelines for `.ts` and `.tsx` files only.
+**场景**：仅适用于 `.ts` 和 `.tsx` 文件的 TypeScript 指南。
 
-### Step 1: Create Rule File
+### 步骤 1：创建规则文件
 
 ```bash
-# Create: .trae/rules/typescript.md
+# 创建：.trae/rules/typescript.md
 ```
 
-### Step 2: Write Rule
+### 步骤 2：编写规则
 
 ```markdown
 ---
@@ -61,166 +61,166 @@ globs: *.ts,*.tsx
 alwaysApply: false
 ---
 
-# TypeScript Guidelines
+# TypeScript 指南
 
-## Type Safety
-- Enable strict mode in tsconfig
-- Avoid `any` - use `unknown` for unknown types
-- Prefer type inference when obvious
-- Use discriminated unions for complex state
+## 类型安全
+- 在 tsconfig 中启用严格模式
+- 避免 `any`——对未知类型使用 `unknown`
+- 当类型显而易见时优先使用类型推断
+- 使用可辨识联合处理复杂状态
 
-## Patterns
-- Export types alongside implementations
-- Use `as const` for literal types
-- Prefer interfaces for objects, types for unions
+## 模式
+- 类型与实现一起导出
+- 使用 `as const` 处理字面量类型
+- 对象使用接口（interface），联合使用类型别名（type）
 
-## Imports
-- Use absolute imports with path aliases
-- Group: external → internal → relative
+## 导入
+- 使用路径别名的绝对导入
+- 分组：外部 → 内部 → 相对
 ```
 
-### Step 3: Usage
+### 步骤 3：用法
 
-Rule activates when editing TypeScript files:
+编辑 TypeScript 文件时规则自动激活：
 
 ```
-User: "Create a user service"
-→ Mentions user.service.ts
-→ TypeScript rule auto-activates
+用户："创建一个用户服务"
+→ 涉及 user.service.ts
+→ TypeScript 规则自动激活
 ```
 
 ---
 
-## Example 3: Intelligent Application (Testing Rule)
+## 示例 3：智能应用（测试规则）
 
-**Scenario:** Apply testing guidelines when writing tests.
+**场景**：编写测试时应用测试指南。
 
-### Step 1: Create Rule File
+### 步骤 1：创建规则文件
 
 ```bash
-# Create: .trae/rules/testing.md
+# 创建：.trae/rules/testing.md
 ```
 
-### Step 2: Write Rule
+### 步骤 2：编写规则
 
 ```markdown
 ---
-description: Apply when writing, reviewing, or discussing test code
+description: 编写、审查或讨论测试代码时应用
 alwaysApply: false
 ---
 
-# Testing Guidelines
+# 测试指南
 
-## Test Structure
-- Follow AAA pattern: Arrange, Act, Assert
-- One assertion concept per test
-- Use descriptive test names
+## 测试结构
+- 遵循 AAA 模式：Arrange（准备）、Act（执行）、Assert（断言）
+- 每个测试一个断言概念
+- 使用描述性测试名称
 
-## Naming Convention
-- Format: `describe('[Unit]', () => it('should [behavior] when [condition]'))`
-- Example: `it('should return null when user not found')`
+## 命名约定
+- 格式：`describe('[单元]', () => it('当 [条件] 时应 [行为]'))`
+- 示例：`it('should return null when user not found')`
 
-## Mocking
-- Mock external dependencies only
-- Reset mocks between tests
-- Use dependency injection for testability
+## Mock 处理
+- 仅 mock 外部依赖
+- 在测试之间重置 mock
+- 使用依赖注入提高可测试性
 
-## Coverage
-- Aim for 80% coverage on business logic
-- 100% coverage on utility functions
-- Don't test implementation details
+## 覆盖率
+- 业务逻辑目标 80% 覆盖率
+- 工具函数 100% 覆盖率
+- 不要测试实现细节
 ```
 
-### Step 3: Usage
+### 步骤 3：用法
 
-AI determines relevance:
+AI 判断相关性：
 
 ```
-User: "Help me write tests for the auth module"
-→ AI detects testing intent
-→ Testing rule auto-activates
+用户："帮我为认证模块编写测试"
+→ AI 检测到测试意图
+→ 测试规则自动激活
 
-User: "Refactor the auth module"
-→ No testing intent detected
-→ Testing rule NOT activated
+用户："重构认证模块"
+→ 未检测到测试意图
+→ 测试规则未激活
 ```
 
 ---
 
-## Example 4: Manual Application (Experimental Rule)
+## 示例 4：手动应用（实验性规则）
 
-**Scenario:** Experimental patterns used only when explicitly requested.
+**场景**：仅在明确请求时使用的实验性模式。
 
-### Step 1: Create Rule File
+### 步骤 1：创建规则文件
 
 ```bash
-# Create: .trae/rules/experimental-patterns.md
+# 创建：.trae/rules/experimental-patterns.md
 ```
 
-### Step 2: Write Rule
+### 步骤 2：编写规则
 
 ```markdown
 ---
 alwaysApply: false
 ---
 
-# Experimental Patterns
+# 实验性模式
 
-## Feature Flags
-- Wrap experimental features in feature flags
-- Use LaunchDarkly SDK for flag management
-- Default all flags to false in production
+## 功能开关
+- 用功能开关包装实验性功能
+- 使用 LaunchDarkly SDK 管理开关
+- 生产环境中所有开关默认为 false
 
-## A/B Testing
-- Use analytics events for conversion tracking
-- Implement variant assignment at session start
-- Log all variant assignments
+## A/B 测试
+- 使用分析事件追踪转化
+- 在会话开始时实现变体分配
+- 记录所有变体分配
 
-## Gradual Rollout
-- Start with 5% traffic
-- Monitor error rates before increasing
-- Have kill switch ready
+## 渐进式发布
+- 从 5% 流量开始
+- 增量前监控错误率
+- 准备好熔断开关
 ```
 
-### Step 3: Usage
+### 步骤 3：用法
 
-Must explicitly reference:
+必须显式引用：
 
 ```
-User: "Using #experimental-patterns, implement the new checkout flow"
-→ Experimental rule activated via mention
+用户："使用 #experimental-patterns，实现新的结账流程"
+→ 实验性规则通过引用激活
 ```
 
 ---
 
-## Quick Reference
+## 快速参考
 
-| Mode           | Config                                | Activation                   |
-| -------------- | ------------------------------------- | ---------------------------- |
-| Always Apply   | `alwaysApply: true`                   | Every chat in project        |
-| File-Specific  | `globs: *.ts` + `alwaysApply: false`  | When matching files involved |
-| Intelligent    | `description: "..."` + `alwaysApply: false` | AI determines relevance |
-| Manual         | `alwaysApply: false` (no globs/desc)  | `#RuleName` in chat          |
+| 模式 | 配置 | 激活方式 |
+| ---- | ---- | ------- |
+| 始终应用 | `alwaysApply: true` | 项目中每次聊天 |
+| 文件特定 | `globs: *.ts` + `alwaysApply: false` | 当匹配文件参与时 |
+| 智能 | `description: "..."` + `alwaysApply: false` | AI 判断相关性 |
+| 手动 | `alwaysApply: false`（无 globs/desc） | 聊天中使用 `#RuleName` |
 
-## Workflow Summary
+## 工作流总结
 
 ```
-[Identify rule purpose]
+[确定规则用途]
        ↓
-[Choose mode based on scope]
+[根据范围选择模式]
        ↓
 ┌─────────────────────────────────────────┐
-│ Global enforcement? → Always Apply      │
-│ Specific file types? → File-Specific    │
-│ Context-dependent? → Intelligent        │
-│ On-demand only? → Manual                │
+│ 全局强制？      → 始终应用              │
+│ 特定文件类型？  → 文件特定              │
+│ 依赖上下文？    → 智能                  │
+│ 仅按需？        → 手动                  │
 └─────────────────────────────────────────┘
        ↓
-[Create .trae/rules/<name>.md]
+[创建 .trae/rules/<name>.md]
        ↓
-[Configure frontmatter]
+[配置 frontmatter]
        ↓
-[Write rule content]
+[编写规则内容]
        ↓
-[Start new chat to verify]
+[开启新聊天验证]
 ```

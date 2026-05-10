@@ -1,48 +1,48 @@
-## Project Skill Path Discovery
+## 项目技能路径发现
 
-This reference is used AFTER problem analysis and skill design. Load it when:
-1. You have a designed skill and need to determine where it should be placed
-2. User has confirmed the skill design and you're ready to generate files
+此参考在问题分析和技能设计**之后**使用。在以下情况加载：
+1. 已设计好技能，需要确定放置位置
+2. 用户已确认技能设计，准备生成文件
 
-### DO NOT load this first!
+### 不要先加载此文件！
 
 ```
-Correct Flow:
-1. Understand user's problem
-2. Analyze project (tech stack, conventions, patterns)
-3. Design skill solution
-4. Validate with user (show what will be created)
-5. Only THEN: Load path-discovery to determine output location
+正确流程：
+1. 理解用户的问题
+2. 分析项目（技术栈、约定、模式）
+3. 设计技能方案
+4. 与用户确认（展示将创建什么）
+5. 仅在此时：加载 path-discovery 确定输出位置
 ```
 
-### Runtime Marker Detection
+### 运行时标记检测
 
-Detect runtime/tooling markers in project root and user home:
+在项目根目录和用户主目录中检测运行时/工具标记：
 
-| Marker | Runtime |
-|--------|---------|
+| 标记 | 运行时 |
+|------|--------|
 | `.claude/` | Claude Code |
 | `.cursor/` | Cursor |
-| `{project_dir}/.trae/` | Trae (project) |
-| `~/.trae/` | Trae (user) |
-| `~/.trae-cn/` | Trae-CN (user) |
+| `{project_dir}/.trae/` | Trae（项目级） |
+| `~/.trae/` | Trae（用户级） |
+| `~/.trae-cn/` | Trae-CN（用户级） |
 
-### Discovery Priority
+### 发现优先级
 
-When multiple markers exist, resolve in this order:
+当存在多个标记时，按以下顺序解析：
 
-1. **Explicit user target** — user said where to put it
-2. **Workspace marker evidence** — `.trae/` or `.cursor/` in project root
-3. **User-home marker evidence** — `~/.trae/` or `~/.trae-cn/`
-4. **Existing convention** — what other skills in the project already use
-5. **Default** — `.trae/skills/` in project root
+1. **用户明确指定** — 用户说了放在哪里
+2. **工作空间标记** — 项目根目录的 `.trae/` 或 `.cursor/`
+3. **用户主目录标记** — `~/.trae/` 或 `~/.trae-cn/`
+4. **现有约定** — 项目中其他技能已使用的路径
+5. **默认值** — 项目根目录的 `.trae/skills/`
 
-If ambiguity remains, select the most conservative writable path and report why.
+如果仍有歧义，选择最保守的可写路径并报告原因。
 
-### Validation Rules
+### 验证规则
 
-- Path must exist or be creatable inside project workspace
-- Path must be writable
-- Path selection must be reported in final output
-- **NEVER** use global paths like `~/.trae/skills` or `~/.claude/skills` for project skills
-- Absolute paths (e.g., `/Users/foo/bar`) are rejected — always use project-relative
+- 路径必须存在或可在项目工作空间内创建
+- 路径必须可写
+- 路径选择必须在最终输出中报告
+- **绝不**对项目技能使用全局路径如 `~/.trae/skills` 或 `~/.claude/skills`
+- 拒绝绝对路径（如 `/Users/foo/bar`）——始终使用项目相对路径

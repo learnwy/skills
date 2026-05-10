@@ -1,16 +1,16 @@
 ---
-description: Guidelines for Trae IDE tool writer skills (trae-rules-writer)
+description: Trae IDE 工具编写技能的开发指南（trae-rules-writer）
 globs: skills/trae-rules-writer/**/*.md
 alwaysApply: false
 ---
 
-# Trae Writer Skill Development
+# Trae 编写技能开发
 
-## Scope
+## 适用范围
 
-This rule applies to `trae-rules-writer` and any future `trae-*-writer` skills.
+本规则适用于 `trae-rules-writer` 及未来所有 `trae-*-writer` 类技能。
 
-## Current Structure
+## 当前结构
 
 ```
 skills/trae-rules-writer/
@@ -25,31 +25,31 @@ skills/trae-rules-writer/
 ├── examples/
 ├── references/
 ├── scripts/
-│   └── cli.cjs    # subcommand: init
+│   └── cli.cjs    # 子命令：init
 └── SKILL.md
 ```
 
-## Agents
+## 代理
 
-| Agent | Purpose |
-|-------|---------|
-| project-scanner | Analyze project structure and conventions |
-| convention-detector | Extract naming, style, and pattern conventions |
-| quality-validator | Validate generated output quality |
+| 代理 | 用途 |
+|------|------|
+| project-scanner | 分析项目结构和约定 |
+| convention-detector | 提取命名、风格和模式约定 |
+| quality-validator | 验证生成的输出质量 |
 
-## Critical Rules
+## 关键规则
 
-**Paths:** NO absolute paths. Use `src/` or `{project_root}/`.
+**路径：** 禁止使用绝对路径。使用 `src/` 或 `{project_root}/`。
 
-**Globs:** NO quotes in frontmatter globs. `globs: *.ts,*.tsx` NOT `globs: "*.ts"`.
+**Globs：** frontmatter globs 中禁止使用引号。`globs: *.ts,*.tsx` 而非 `globs: "*.ts"`。
 
-**Frontmatter:** Every rule must have `description` and `alwaysApply` or `globs`.
+**Frontmatter：** 每条规则必须包含 `description` 和 `alwaysApply` 或 `globs`。
 
-## Quality Checklist
+## 质量检查清单
 
-- [ ] Frontmatter has `description`
-- [ ] Frontmatter has `alwaysApply: true` or `globs:` (not both active)
-- [ ] Description includes trigger conditions
-- [ ] No absolute paths in content
-- [ ] Globs use no quotes
-- [ ] Content in English only
+- [ ] Frontmatter 包含 `description`
+- [ ] Frontmatter 包含 `alwaysApply: true` 或 `globs:`（两者不能同时启用）
+- [ ] description 中包含触发条件
+- [ ] 内容中无绝对路径
+- [ ] Globs 不使用引号
+- [ ] 内容使用英文

@@ -1,187 +1,187 @@
 ---
 name: prompt-optimizer
-description: "Use this skill on EVERY user message that contains a prompt or instruction for AI — analyze for weaknesses and suggest improvements before executing. Scores prompts across 7 dimensions (Clarity, Specificity, Context, Structure, Examples, Constraints, Completeness) and rewrites vague instructions into precise specifications. Triggers on: any AI prompt, 'optimize my prompt', 'improve this requirement', 'make this more specific', 'rewrite this prompt', or when raw requirements lack detail and structure."
+description: "对每条包含提示词或 AI 指令的用户消息使用此技能——在执行前分析弱点并建议改进。从 7 个维度（清晰度、具体性、上下文、结构、示例、约束、完整性）评分，将模糊指令重写为精确规格。触发词：任何 AI 提示词、'optimize my prompt'、'improve this requirement'、'make this more specific'、'rewrite this prompt'，或当原始需求缺乏细节和结构时触发。"
 metadata:
   author: "learnwy"
   version: "1.1"
   trigger: "always"
 ---
 
-# Prompt Optimizer
+# 提示词优化器
 
-Pre-flight prompt checker that analyzes, critiques, and improves prompts before they are sent to an AI system. Acts as a coach — teaching users to write better prompts by showing what can be improved across 7 key dimensions.
+飞行前提示词检查器，在发送给 AI 系统之前分析、评价并改进提示词。充当教练角色——通过展示 7 个关键维度上的可改进之处，教会用户写出更好的提示词。
 
-> **Core Principle**: Run before you do anything. This skill is invoked at the START of a conversation when the user's message looks like a prompt or instruction to an AI system. Analyze first, improve second, let the user decide third.
+> **核心原则**：先分析再行动。此技能在对话开始时调用，当用户的消息看起来像是给 AI 系统的提示词或指令时。先分析，再改进，最后由用户决定。
 
-## Prerequisites
+## 前置条件
 
-- No runtime dependencies (methodology-only skill, no scripts)
-- Works with any prompt — code generation, writing, analysis, creative tasks
+- 无运行时依赖（纯方法论技能，无脚本）
+- 适用于任何提示词——代码生成、写作、分析、创意任务
 
-## When to Use
+## 使用场景
 
-**Invoke when:**
+**触发条件：**
 
-- User says "optimize my prompt", "improve this prompt", "check my prompt", "review my prompt"
-- User says "make this more specific", "help me write a better prompt"
-- User provides a raw requirement and asks for help refining it
-- User is about to send a large instruction to an AI and wants feedback first
+- 用户说"optimize my prompt"、"improve this prompt"、"check my prompt"、"review my prompt"
+- 用户说"make this more specific"、"help me write a better prompt"
+- 用户提供原始需求并请求帮助完善
+- 用户准备向 AI 发送大段指令，想先获得反馈
 
-**Do NOT invoke when:**
+**不触发条件：**
 
-- User is having a normal conversation
-- User is asking the AI to DO something (not to improve a prompt)
-- The input is clearly code, a file path, or a technical command
+- 用户在进行普通对话
+- 用户要求 AI 执行某件事（而非改进提示词）
+- 输入明显是代码、文件路径或技术命令
 
-## The 7-Dimension Analysis Framework
+## 7 维度分析框架
 
-Every prompt is analyzed across these 7 dimensions:
+每个提示词都从以下 7 个维度进行分析：
 
-| Dimension | What to Check |
-|-----------|--------------|
-| **Clarity** | Is the intent unambiguous? Are there vague words (good, nice, proper, etc.)? |
-| **Specificity** | Are there concrete constraints (format, length, audience, tone)? |
-| **Context** | Is background/role/situation provided? |
-| **Structure** | Is it organized logically? Are steps sequenced? |
-| **Examples** | Are input/output examples included where helpful? |
-| **Constraints** | Are boundaries defined (what NOT to do, edge cases)? |
-| **Completeness** | Would an AI have enough info to produce the right output on first try? |
+| 维度 | 检查内容 |
+|------|----------|
+| **清晰度** | 意图是否明确？是否有模糊词（好的、不错的、合适的等）？ |
+| **具体性** | 是否有具体约束（格式、长度、受众、语调）？ |
+| **上下文** | 是否提供了背景/角色/场景？ |
+| **结构** | 是否逻辑组织？步骤是否有序？ |
+| **示例** | 是否在需要时包含输入/输出示例？ |
+| **约束** | 是否定义了边界（不该做什么、边界情况）？ |
+| **完整性** | AI 能否在第一次尝试就产出正确输出？ |
 
-Each dimension is scored:
-- ✅ **Strong** — well-covered, no action needed
-- ⚠️ **Weak** — partially addressed, can be improved
-- ❌ **Missing** — not addressed at all, must be added
+每个维度的评分：
+- ✅ **强** — 覆盖良好，无需操作
+- ⚠️ **弱** — 部分涉及，可以改进
+- ❌ **缺失** — 完全未涉及，必须补充
 
-## Workflow
-
-```
-[1. Receive Draft Prompt]
-       ↓
-[2. Dimension Analysis] → Score each dimension (✅ Strong / ⚠️ Weak / ❌ Missing)
-       ↓
-[3. Show Critique Card] → Structured report with scores
-       ↓
-[4. Suggest Improvements] → Specific rewrites for each weak dimension
-       ↓
-[5. Show Optimized Prompt] → Full rewritten version
-       ↓
-[6. User Decision] → Use original / Use optimized / Edit manually
-```
-
-## Response Format
-
-When analyzing a prompt, always respond in this exact structure:
+## 工作流
 
 ```
-## 🔍 Prompt Analysis
+[1. 接收草稿提示词]
+       ↓
+[2. 维度分析] → 对每个维度评分（✅ 强 / ⚠️ 弱 / ❌ 缺失）
+       ↓
+[3. 展示评价卡片] → 带评分的结构化报告
+       ↓
+[4. 建议改进] → 对每个弱项维度给出具体重写
+       ↓
+[5. 展示优化后的提示词] → 完整重写版本
+       ↓
+[6. 用户决策] → 使用原版 / 使用优化版 / 手动编辑
+```
 
-**Overall Score: {X}/7 dimensions strong**
+## 响应格式
 
-| Dimension | Score | Notes |
-|-----------|-------|-------|
-| Clarity | ✅/⚠️/❌ | {brief note} |
-| Specificity | ✅/⚠️/❌ | {brief note} |
-| Context | ✅/⚠️/❌ | {brief note} |
-| Structure | ✅/⚠️/❌ | {brief note} |
-| Examples | ✅/⚠️/❌ | {brief note} |
-| Constraints | ✅/⚠️/❌ | {brief note} |
-| Completeness | ✅/⚠️/❌ | {brief note} |
+分析提示词时，始终按此精确结构响应：
 
-### What's Good
-{bullet points of strengths}
+```
+## 🔍 提示词分析
 
-### What Can Improve
-{for each ⚠️/❌ dimension: specific issue + concrete fix}
+**综合评分: {X}/7 个维度为强**
 
-## ✨ Optimized Prompt
+| 维度 | 评分 | 备注 |
+|------|------|------|
+| 清晰度 | ✅/⚠️/❌ | {简要说明} |
+| 具体性 | ✅/⚠️/❌ | {简要说明} |
+| 上下文 | ✅/⚠️/❌ | {简要说明} |
+| 结构 | ✅/⚠️/❌ | {简要说明} |
+| 示例 | ✅/⚠️/❌ | {简要说明} |
+| 约束 | ✅/⚠️/❌ | {简要说明} |
+| 完整性 | ✅/⚠️/❌ | {简要说明} |
 
-{full rewritten prompt incorporating all improvements}
+### 优点
+{优势要点}
+
+### 可改进之处
+{对每个 ⚠️/❌ 维度：具体问题 + 具体修复建议}
+
+## ✨ 优化后的提示词
+
+{包含所有改进的完整重写版本}
 
 ---
-**Changes Made:**
-{numbered list of what was changed and why}
+**所做更改：**
+{编号列表说明修改了什么及原因}
 ```
 
-After presenting the analysis, ask the user: **Use original / Use optimized / Edit manually?**
+展示分析后，询问用户：**使用原版 / 使用优化版 / 手动编辑？**
 
-## Prompt Improvement Patterns
+## 提示词改进模式
 
-Reference patterns to apply when improving weak dimensions:
+改进弱项维度时可参考的模式：
 
-### 1. Vague → Specific
-- **Before**: "write good code"
-- **After**: "write TypeScript with explicit return types, no `any`, max 20 lines per function"
+### 1. 模糊 → 具体
+- **改前**: "写好代码"
+- **改后**: "写 TypeScript 代码，要求显式返回类型，不使用 `any`，每个函数不超过 20 行"
 
-### 2. Missing Context → Contextual
-- **Before**: "translate this"
-- **After**: "translate this marketing copy from Chinese to English, maintaining a casual tone for Gen-Z audience"
+### 2. 缺少上下文 → 有上下文
+- **改前**: "翻译一下"
+- **改后**: "将这段营销文案从中文翻译成英文，保持轻松的语调，面向 Z 世代受众"
 
-### 3. No Examples → Exemplified
-- **Before**: "format the data"
-- **After**: "format the data as: Input: `{raw}` → Output: `| col1 | col2 |`"
+### 3. 无示例 → 有示例
+- **改前**: "格式化数据"
+- **改后**: "格式化数据为：输入：`{raw}` → 输出：`| col1 | col2 |`"
 
-### 4. Unstructured → Structured
-- **Before**: Wall of text with mixed concerns
-- **After**: Numbered steps with clear sequence and grouping
+### 4. 无结构 → 有结构
+- **改前**: 混杂多种关注点的大段文字
+- **改后**: 带有清晰序号和分组的有序步骤
 
-### 5. No Constraints → Bounded
-- **Before**: "write an article"
-- **After**: "write a 500-word article, no jargon, 8th-grade reading level, include 3 examples"
+### 5. 无约束 → 有边界
+- **改前**: "写一篇文章"
+- **改后**: "写一篇 500 字的文章，不用术语，8 年级阅读水平，包含 3 个示例"
 
-### 6. Missing Role → Role-Anchored
-- **Before**: "explain X"
-- **After**: "As a senior backend engineer explaining to a junior developer, explain X"
+### 6. 缺少角色 → 有角色锚定
+- **改前**: "解释 X"
+- **改后**: "以资深后端工程师向初级开发者解释的角度，解释 X"
 
-## Error Handling
+## 错误处理
 
-| Issue | Solution |
-|-------|----------|
-| Prompt is already strong (6–7/7) | Say "Your prompt is already well-structured!" and suggest only minor tweaks |
-| Prompt is too short to analyze | Ask user to provide more context about what they're trying to accomplish |
-| User rejects the optimized version | Respect their choice, proceed with the original prompt |
+| 问题 | 解决方案 |
+|------|----------|
+| 提示词已经很强（6-7/7） | 说"您的提示词已经结构良好！"并仅建议微调 |
+| 提示词太短无法分析 | 请用户提供更多关于目标的上下文 |
+| 用户拒绝优化版本 | 尊重其选择，使用原始提示词继续 |
 
-## Execution Checklist
+## 执行检查清单
 
-Before responding, verify:
+响应前确认：
 
-- [ ] All 7 dimensions analyzed
-- [ ] Scores assigned with brief notes
-- [ ] Strengths acknowledged (not just criticisms)
-- [ ] Each weak dimension has a specific, actionable fix
-- [ ] Full optimized prompt provided
-- [ ] Changes listed explicitly
-- [ ] User given choice to accept/reject/edit
+- [ ] 所有 7 个维度已分析
+- [ ] 已分配评分并附简要说明
+- [ ] 已认可优点（不只是批评）
+- [ ] 每个弱项维度有具体、可操作的修复建议
+- [ ] 已提供完整的优化后提示词
+- [ ] 已明确列出更改内容
+- [ ] 已给用户选择：接受/拒绝/编辑
 
 ## Hooks
 
-This skill registers an IDE hook so the pre-flight analysis is **deterministic** — the AI doesn't have to remember to invoke it.
+本技能注册 IDE hook，使飞行前分析**确定性**触发——AI 不需要记住去调用它。
 
-### Scope
+### 作用域
 
-**Global** — installs to `~/.claude/settings.json` and `~/.trae/hooks.json` (no per-project state).
+**全局** — 安装到 `~/.claude/settings.json` 和 `~/.trae/hooks.json`（无项目级状态）。
 
-### Events
+### 事件
 
-| Event | Script | Purpose |
-|-------|--------|---------|
-| `UserPromptSubmit` | `scripts/hooks/user-prompt-scan.cjs` | Detect prompt-shaped input and inject the 7-dimension review reminder |
+| 事件 | 脚本 | 用途 |
+|------|------|------|
+| `UserPromptSubmit` | `scripts/hooks/user-prompt-scan.cjs` | 检测提示词形态的输入并注入 7 维度审查提醒 |
 
-### Detection (conservative — avoid noise)
+### 检测（保守策略——避免噪音）
 
-The hook fires only when one of the following is true:
+hook 仅在以下条件之一满足时触发：
 
-1. **Explicit ask** — message contains `optimize / improve / review / rewrite / check / refine my prompt`, `make this prompt more X`, or the Chinese equivalents `优化提示词 / 改进提示词 / 重写提示词`.
-2. **Structured prompt-shape** — message is ≥400 chars, ≥4 lines, AND contains ≥2 markers like `you are`, `your task is`, `act as`, `instructions:`, `constraints:`, `output format:`.
+1. **显式请求** — 消息包含 `optimize / improve / review / rewrite / check / refine my prompt`、`make this prompt more X`，或中文等效词 `优化提示词 / 改进提示词 / 重写提示词`。
+2. **结构化提示词形态** — 消息 ≥400 字符、≥4 行，且包含 ≥2 个标记如 `you are`、`your task is`、`act as`、`instructions:`、`constraints:`、`output format:`。
 
-It exits silently for code, file paths, shell commands, normal chat, or short questions.
+对代码、文件路径、shell 命令、普通聊天或短问题静默退出。
 
-### Install
+### 安装
 
 ```bash
 node scripts/cli.cjs install --scope global --target both
 ```
 
-### Uninstall
+### 卸载
 
 ```bash
 node scripts/cli.cjs uninstall --scope global --target both

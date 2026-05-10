@@ -1,123 +1,123 @@
-# Complete Example: Code Quality Grader Agent
+# 完整示例：代码质量评分器智能体
 
-Full walkthrough of creating a grader agent from scratch.
+从零开始创建评分器智能体的完整演练。
 
-## Scenario
+## 场景
 
-Create an agent that grades code quality outputs (linting results, review comments, etc.) against quality expectations.
+创建一个智能体，根据质量期望评估代码质量输出（lint 结果、审查评论等）。
 
-## Step 1: Identify the Need
+## 步骤 1: 识别需求
 
-**Why an agent?**
-- Needs to evaluate objectively without bias
-- Can run in parallel for multiple outputs
-- Isolated context prevents contamination
+**为什么需要智能体？**
+- 需要客观评估，不受偏见影响
+- 可以并行运行多个输出的评估
+- 隔离的上下文防止污染
 
-**What it does:**
-- Receives code quality output and expectations
-- Checks each expectation against the output
-- Returns pass/fail with evidence
+**它做什么：**
+- 接收代码质量输出和期望
+- 对照输出检查每个期望
+- 返回通过/失败结果及证据
 
-## Step 2: Define Components
+## 步骤 2: 定义组件
 
-| Component   | Definition                                        |
-| ----------- | ------------------------------------------------- |
-| Role        | Grade code quality outputs against expectations   |
-| Inputs      | output_path, expectations[], code_path            |
-| Process     | Read → Check expectations → Extract claims → Grade |
-| Output      | grading.json with verdicts and evidence           |
+| 组件 | 定义 |
+|------|------|
+| 角色 | 根据期望评估代码质量输出 |
+| 输入 | output_path、expectations[]、code_path |
+| 流程 | 读取 → 检查期望 → 提取断言 → 评分 |
+| 输出 | grading.json，包含判定和证据 |
 
-## Step 3: Write the Agent
+## 步骤 3: 编写智能体
 
 ```markdown
-# Code Quality Grader Agent
+# 代码质量评分器智能体
 
-Evaluate code quality analysis outputs against expectations with objective evidence.
+根据期望客观评估代码质量分析输出，提供证据支持。
 
-## Role
+## 角色
 
-The Code Quality Grader assesses whether code analysis outputs (lint reports, review comments, static analysis) meet quality expectations. It operates objectively, citing specific evidence for each verdict.
+代码质量评分器评估代码分析输出（lint 报告、审查评论、静态分析）是否满足质量期望。它客观运作，为每个判定引用具体证据。
 
-You have two responsibilities:
-1. Grade the outputs against expectations
-2. Critique the expectations themselves (are they good tests?)
+你有两项职责：
+1. 根据期望评分输出
+2. 评价期望本身（它们是好的测试吗？）
 
-## Inputs
+## 输入
 
-You receive these parameters in your prompt:
+你会在提示中收到以下参数：
 
-- **output_path**: Path to the code quality output (lint report, review, etc.)
-- **expectations**: List of expectations to check (strings)
-- **code_path**: Path to the original code being analyzed (for verification)
-- **grading_output_path**: Where to save grading results
+- **output_path**: 代码质量输出的路径（lint 报告、审查等）
+- **expectations**: 要检查的期望列表（字符串数组）
+- **code_path**: 被分析的原始代码路径（用于验证）
+- **grading_output_path**: 评分结果的保存位置
 
-## Process
+## 流程
 
-### Step 1: Read the Code Quality Output
+### 步骤 1: 读取代码质量输出
 
-1. Read the output file at `output_path` completely
-2. Note the structure (is it JSON, markdown, plain text?)
-3. Identify all findings, warnings, errors reported
-4. Extract key claims made by the analysis
+1. 完整读取 `output_path` 处的输出文件
+2. 记录结构（是 JSON、markdown 还是纯文本？）
+3. 识别所有报告的发现、警告、错误
+4. 提取分析所做的关键断言
 
-### Step 2: Read the Original Code
+### 步骤 2: 读取原始代码
 
-1. Read the source code at `code_path`
-2. Understand the code structure and potential issues
-3. Prepare to verify claims against actual code
+1. 读取 `code_path` 处的源代码
+2. 理解代码结构和潜在问题
+3. 准备对照实际代码验证断言
 
-### Step 3: Evaluate Each Expectation
+### 步骤 3: 评估每个期望
 
-For each expectation in the list:
+对列表中的每个期望：
 
-**A. Search for evidence**
-- Look for explicit mentions in the output
-- Check if the finding is documented
-- Note the location/context if found
+**A. 搜索证据**
+- 在输出中查找显式提及
+- 检查发现是否有记录
+- 如果找到则记录位置/上下文
 
-**B. Determine verdict**
-- **PASS**: Clear evidence the expectation is met
-- **FAIL**: No evidence, or evidence contradicts
+**B. 确定判定**
+- **PASS**: 有明确证据表明期望已满足
+- **FAIL**: 无证据，或证据相矛盾
 
-**C. Cite specific evidence**
-- Quote the exact text that supports your verdict
-- Include line numbers or section references
-- For FAIL, explain what's missing
+**C. 引用具体证据**
+- 引用支持判定的确切文本
+- 包含行号或章节引用
+- 对于 FAIL，解释缺少什么
 
-### Step 4: Verify Claims in Output
+### 步骤 4: 验证输出中的断言
 
-Beyond checking expectations, verify accuracy:
+除了检查期望，还要验证准确性：
 
-1. **Extract all claims** from the output
-   - "Found unused variable on line 45"
-   - "SQL injection risk in query construction"
-   - "Missing error handling in function X"
+1. **提取所有断言**
+   - "在第 45 行发现未使用的变量"
+   - "查询构造中存在 SQL 注入风险"
+   - "函数 X 缺少错误处理"
 
-2. **Verify each claim** against the code
-   - Is there really an unused variable on line 45?
-   - Does the code actually have SQL injection risk?
+2. **对照代码验证每个断言**
+   - 第 45 行真的有未使用的变量吗？
+   - 代码确实有 SQL 注入风险吗？
 
-3. **Record verification results**
+3. **记录验证结果**
    - verified: true/false
-   - evidence: what you found in code
+   - evidence: 在代码中发现了什么
 
-### Step 5: Critique the Expectations
+### 步骤 5: 评价期望本身
 
-After grading, evaluate the expectations themselves:
+评分完成后，评估期望本身：
 
-- Are any expectations too easy? (would pass even for bad output)
-- Are any impossible to verify? (no way to check from available data)
-- Are important aspects missing? (obvious quality issues unchecked)
+- 是否有期望太简单？（即使输出质量差也会通过）
+- 是否有无法验证的？（无法从可用数据中检查）
+- 是否缺少重要方面？（明显的质量问题未被检查）
 
-Only flag issues you'd want the eval author to fix.
+只标记你希望评估作者修复的问题。
 
-### Step 6: Write Grading Results
+### 步骤 6: 写入评分结果
 
-Save structured results to `grading_output_path`.
+将结构化结果保存到 `grading_output_path`。
 
-## Output Format
+## 输出格式
 
-Write a JSON file with this structure:
+写入一个如下结构的 JSON 文件：
 
 ```json
 {
@@ -166,19 +166,19 @@ Write a JSON file with this structure:
 }
 ```
 
-## Guidelines
+## 准则
 
-- **Be objective**: Base verdicts on evidence, not assumptions
-- **Be specific**: Quote exact text, include line numbers
-- **Be thorough**: Check both output AND original code
-- **Be critical**: Challenge the expectations, not just grade them
-- **No partial credit**: Each expectation is pass or fail
-- **Verify claims**: Don't trust the output blindly, check the code
+- **客观**: 基于证据做判定，而非假设
+- **具体**: 引用确切文本，包含行号
+- **全面**: 同时检查输出和原始代码
+- **批判性**: 质疑期望本身，而不只是评分
+- **无部分分**: 每个期望只有通过或失败
+- **验证断言**: 不盲目信任输出，要检查代码
 ```
 
-## Step 4: Usage Example
+## 步骤 4: 使用示例
 
-**Spawning the agent:**
+**启动智能体：**
 
 ```
 Task to Code Quality Grader:
@@ -196,9 +196,9 @@ Inputs:
 Execute the grading process and save results.
 ```
 
-**Note:** All paths are relative to project root. Never use absolute paths like `/project/...`.
+**注意：** 所有路径相对于项目根目录。绝不使用 `/project/...` 这样的绝对路径。
 
-**Expected output:**
+**预期输出：**
 
 ```json
 {
@@ -228,13 +228,13 @@ Execute the grading process and save results.
 }
 ```
 
-## Checklist for Grader Agents
+## 评分器智能体检查清单
 
-- [ ] Role clearly states what is being graded
-- [ ] Inputs include all necessary paths and data
-- [ ] Process has explicit evidence-gathering steps
-- [ ] Output schema includes `passed`, `evidence` for each item
-- [ ] Summary includes aggregate statistics
-- [ ] Guidelines emphasize objectivity and citation
-- [ ] Claims verification catches false positives/negatives
-- [ ] Eval feedback improves future tests
+- [ ] 角色清晰说明评分什么
+- [ ] 输入包含所有必要的路径和数据
+- [ ] 流程有明确的证据收集步骤
+- [ ] 输出 schema 包含每项的 `passed` 和 `evidence`
+- [ ] 汇总包含聚合统计
+- [ ] 准则强调客观性和引用
+- [ ] 断言验证能捕获误报/漏报
+- [ ] 评估反馈能改进未来的测试

@@ -1,107 +1,107 @@
-# Trae IDE Rules Documentation
+# Trae IDE 规则文档
 
-> Source: https://docs.trae.ai/ide/rules
+> 来源：https://docs.trae.ai/ide/rules
 
-## Overview
+## 概述
 
-Rules regulate AI behavior within Trae IDE, making output better aligned with personal preferences and project requirements.
+规则调控 Trae IDE 中的 AI 行为，使输出更符合个人偏好和项目要求。
 
-## Use Cases
+## 使用场景
 
-1. **Efficiency Improvement**: Transform personal experience into reusable rules
-2. **Standardization**: Structure team guidelines into consistent rules
-3. **Quality Assurance**: Ensure AI understands project constraints
+1. **效率提升**：将个人经验转化为可复用的规则
+2. **标准化**：将团队指南结构化为一致的规则
+3. **质量保障**：确保 AI 理解项目约束
 
-## Types of Rules
+## 规则类型
 
-| Type          | Location                  | Scope           |
-| ------------- | ------------------------- | --------------- |
-| User Rules    | Settings > Rules & Skills | All projects    |
-| Project Rules | `.trae/rules/*.md`        | Current project |
+| 类型 | 位置 | 作用域 |
+| ---- | ---- | ------ |
+| 用户规则 | 设置 > 规则与技能 | 所有项目 |
+| 项目规则 | `.trae/rules/*.md` | 当前项目 |
 
-## Application Modes
+## 应用模式
 
-| Mode                   | Frontmatter Setting              | Behavior                                |
-| ---------------------- | -------------------------------- | --------------------------------------- |
-| Always Apply           | `alwaysApply: true`              | Effective for all AI chats in project   |
-| Apply to Specific Files| `globs: *.ts,*.tsx`              | Active when matching files are involved |
-| Apply Intelligently    | `description: "When doing X..."` | AI determines relevance based on context|
-| Apply Manually         | `alwaysApply: false` (no globs)  | Only when referenced with #RuleName     |
+| 模式 | Frontmatter 设置 | 行为 |
+| ---- | --------------- | ---- |
+| 始终应用 | `alwaysApply: true` | 在项目的所有 AI 对话中生效 |
+| 文件特定 | `globs: *.ts,*.tsx` | 当匹配文件参与时激活 |
+| 智能应用 | `description: "当执行 X 时..."` | AI 根据上下文判断相关性 |
+| 手动应用 | `alwaysApply: false`（无 globs） | 仅通过 #RuleName 引用时生效 |
 
-## Rule File Format
+## 规则文件格式
 
 ```markdown
 ---
-description: When to apply this rule (for intelligent mode)
+description: 此规则何时应用（用于智能模式）
 globs: *.ts,*.tsx
 alwaysApply: false
 ---
 
-# Rule Title
+# 规则标题
 
-Your rule content here.
+你的规则内容写在这里。
 ```
 
-### Frontmatter Properties
+### Frontmatter 属性
 
-| Property     | Type    | Description                                      |
-| ------------ | ------- | ------------------------------------------------ |
-| description  | string  | Explains when to apply (for intelligent mode)    |
-| globs        | string  | Comma-separated file patterns (no quotes)        |
-| alwaysApply  | boolean | true = always active, false = conditional        |
+| 属性 | 类型 | 描述 |
+| ---- | ---- | ---- |
+| description | string | 解释何时应用（用于智能模式） |
+| globs | string | 逗号分隔的文件模式（无引号） |
+| alwaysApply | boolean | true = 始终激活，false = 条件激活 |
 
-### Globs Format
+### Globs 格式
 
-- **Correct**: `globs: *.ts,*.tsx` (comma-separated, no quotes)
-- **Incorrect**: `globs: "*.ts,*.tsx"` (do not use quotes)
+- **正确**：`globs: *.ts,*.tsx`（逗号分隔，无引号）
+- **错误**：`globs: "*.ts,*.tsx"`（不要使用引号）
 
-Examples:
-- `globs: *.ts,*.tsx` - TypeScript files
-- `globs: *.test.ts,*.spec.ts,__tests__/**` - Test files
-- `globs: src/**/*.jsx,src/**/*.tsx` - JSX/TSX in src folder
+示例：
+- `globs: *.ts,*.tsx` - TypeScript 文件
+- `globs: *.test.ts,*.spec.ts,__tests__/**` - 测试文件
+- `globs: src/**/*.jsx,src/**/*.tsx` - src 目录下的 JSX/TSX 文件
 
-## Creating Rules
+## 创建规则
 
-### User Rules
-1. Open Settings (gear icon)
-2. Select "Rules & Skills" in left navigation
-3. In "User Rules" section, click "+ Create"
-4. Enter rule content and save
+### 用户规则
+1. 打开设置（齿轮图标）
+2. 在左侧导航选择"规则与技能"
+3. 在"用户规则"部分，点击"+ 创建"
+4. 输入规则内容并保存
 
-### Project Rules
-1. Open Settings
-2. Select "Rules & Skills"
-3. In "Project Rules" section, click "+ Create"
-4. Enter rule name and confirm
-5. System creates `.trae/rules/<name>.md`
-6. Edit the rule file in the editor
+### 项目规则
+1. 打开设置
+2. 选择"规则与技能"
+3. 在"项目规则"部分，点击"+ 创建"
+4. 输入规则名称并确认
+5. 系统创建 `.trae/rules/<name>.md`
+6. 在编辑器中编辑规则文件
 
-## Referencing Rules
+## 引用规则
 
-- **Always Apply**: Automatically displayed in chat input box
-- **File-Specific**: Auto-activated when matching files are mentioned
-- **Intelligent**: AI decides based on conversation context
-- **Manual**: Reference using `#RuleName` in chat
+- **始终应用**：自动显示在聊天输入框
+- **文件特定**：当匹配文件被提及时自动激活
+- **智能**：AI 根据对话上下文决定
+- **手动**：在聊天中使用 `#RuleName` 引用
 
-## Compatible Files
+## 兼容文件
 
-| File              | Description                           |
-| ----------------- | ------------------------------------- |
-| `AGENTS.md`       | Behavioral guidance, reusable across IDEs |
-| `CLAUDE.md`       | Compatible with Claude Code           |
-| `CLAUDE.local.md` | Local-only rules, typically gitignored |
+| 文件 | 描述 |
+| ---- | ---- |
+| `AGENTS.md` | 行为指导，可跨 IDE 复用 |
+| `CLAUDE.md` | 兼容 Claude Code |
+| `CLAUDE.local.md` | 仅本地规则，通常加入 gitignore |
 
-## Best Practices
+## 最佳实践
 
-1. **Control Granularity**: Keep each rule clear and focused
-2. **Avoid Conflicts**: Rules must not override each other
-3. **Use Relative Paths**: Reference files relative to project root
-4. **Be Specific**: Provide clear, actionable guidance
-5. **Include Examples**: Show good and bad patterns when helpful
-6. **Keep it Concise**: Under 1000 characters when possible (reduces AI attention loss)
+1. **控制粒度**：保持每条规则清晰聚焦
+2. **避免冲突**：规则之间不能相互覆盖
+3. **使用相对路径**：引用文件使用项目根目录的相对路径
+4. **保持具体**：提供清晰、可操作的指导
+5. **包含示例**：在有帮助时展示正确和错误的模式
+6. **保持精简**：尽量在 1000 字符以内（减少 AI 注意力损失）
 
-## Import Settings
+## 导入设置
 
-In Settings > Rules & Skills:
-- "Include AGENTS.md in the context" - Enable to read AGENTS.md
-- "Include CLAUDE.md in context" - Enable for Claude compatibility
+在设置 > 规则与技能中：
+- "在上下文中包含 AGENTS.md" - 启用以读取 AGENTS.md
+- "在上下文中包含 CLAUDE.md" - 启用以兼容 Claude

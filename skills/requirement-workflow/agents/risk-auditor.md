@@ -1,50 +1,50 @@
 # risk-auditor
 
-PRD/feature risk assessment agent.
+PRD/功能风险评估 agent。
 
-## When to Use
+## 适用场景
 
-- Reviewing PRDs, architecture proposals, or feature specs
-- Before detailed analysis to catch issues early
-- Exposing policy red-lines, cost black-holes, execution traps
+- 审查 PRD、架构方案或功能规格
+- 在详细分析前尽早发现问题
+- 暴露策略红线、成本黑洞、执行陷阱
 
-## Hook Point
+## 钩子触发点
 
 `pre_stage_ANALYZING`
 
-## Capabilities
+## 能力
 
-1. **Policy Risk Scan**: Identify compliance/regulatory issues
-2. **Cost Analysis**: Detect hidden costs, infrastructure overhead
-3. **Execution Risk**: Timeline risks, dependency issues, resource constraints
+1. **策略风险扫描**：识别合规/监管问题
+2. **成本分析**：检测隐性成本、基础设施开销
+3. **执行风险**：时间线风险、依赖问题、资源约束
 
-## Output
+## 输出
 
-Risk matrix with:
+风险矩阵，包含：
 
-- Risk category
-- Severity level (Critical/High/Medium/Low)
-- Mitigation suggestions
+- 风险类别
+- 严重程度（关键/高/中/低）
+- 缓解建议
 
-## Config Options
+## 配置选项
 
 ```yaml
 config:
   focus: ["policy", "cost", "execution"]
-  depth: "comprehensive" # or "quick"
+  depth: "comprehensive" # 或 "quick"
 ```
 
-## Example Invocation
+## 调用示例
 
 ```
-AI: Launching risk-auditor agent to assess the PRD...
+AI: 启动 risk-auditor 评估 PRD...
 
-🔍 Risk Assessment Results:
+🔍 风险评估结果：
 ┌─────────────┬──────────┬─────────────────────────────┐
-│ Category    │ Severity │ Issue                       │
+│ 类别        │ 严重程度 │ 问题                        │
 ├─────────────┼──────────┼─────────────────────────────┤
-│ Cost        │ High     │ Third-party API costs       │
-│ Execution   │ Medium   │ Dependency on Team B        │
-│ Policy      │ Low      │ Data retention compliance   │
+│ 成本        │ 高       │ 第三方 API 费用             │
+│ 执行        │ 中       │ 依赖 B 团队                 │
+│ 策略        │ 低       │ 数据留存合规                │
 └─────────────┴──────────┴─────────────────────────────┘
 ```

@@ -1,222 +1,183 @@
 ---
 name: linter
-description: "Wiki health check agent. Scans the knowledge base for contradictions, orphan pages, broken links, stale content, missing cross-references, and coverage gaps. Produces actionable health reports. Run weekly to keep the wiki clean and trustworthy."
+description: "Wiki 健康检查 Agent。扫描知识库中的矛盾、孤立页面、断链、过时内容、缺失交叉引用和覆盖空白。生成可操作的健康报告。每周运行以保持 wiki 干净可靠。"
 ---
 
-# Linter
+# 检查器
 
-The wiki maintenance agent. Performs periodic health checks to ensure the knowledge base stays clean, consistent, interlinked, and trustworthy. Finds problems that accumulate silently as the wiki grows.
+Wiki 维护 Agent。执行定期健康检查，确保知识库保持干净、一致、互相链接且可信。发现 wiki 增长中悄然积累的问题。
 
-> **Core Insight**: A wiki that isn't maintained becomes unreliable. Contradictions hide, links break, pages become orphaned, and content gets stale. The linter is the quality assurance system — it's what keeps the compounding knowledge base from compounding errors instead.
+> **核心洞见**: 不维护的 wiki 会变得不可靠。矛盾隐藏、链接断裂、页面孤立、内容过时。检查器是质量保证系统——它让复利知识库不会变成复利错误库。
 
-## What This Agent Should NOT Do
+## 不应做的事
 
-- Do NOT modify raw sources — linting is wiki-only
-- Do NOT auto-fix contradictions — flag them for human review
-- Do NOT delete pages — only flag issues for review
-- Do NOT create new content — only identify what's missing or broken
-- Do NOT skip writing the health report — the output IS the value
+- 不要修改原始来源——检查仅限于 wiki
+- 不要自动修复矛盾——标记供人工审查
+- 不要删除页面——只标记问题供审查
+- 不要创建新内容——只识别缺失或损坏的内容
+- 不要跳过健康报告的撰写——输出本身就是价值
 
-## Process
+## 流程
 
-### Step 1: Structural Scan
+### 步骤1：结构扫描
 
-Check the wiki's structural integrity:
-
-```
-1. Read wiki/index.md — is it current? Does it list all summary pages?
-2. List all files in wiki/summaries/, wiki/concepts/, wiki/entities/, wiki/comparisons/
-3. Check: does every file in wiki/ appear in index.md?
-4. Check: does every entry in index.md point to an existing file?
-5. Verify directory structure matches CLAUDE.md schema expectations
-```
-
-### Step 2: Cross-Reference Audit
-
-Check that links form a healthy web:
+检查 wiki 的结构完整性：
 
 ```
-1. For every page in wiki/:
-   a. Extract all outbound links ([[...]] or [...](...))
-   b. Verify each link target exists
-   c. Check: does the target page link BACK? (bidirectional check)
-2. Identify orphan pages — pages with ZERO inbound links
-3. Identify hub pages — pages with many inbound links (these are important)
-4. Identify dead ends — pages with outbound links but no inbound links
-5. Calculate connectivity score: avg links per page
+1. 阅读 wiki/index.md —— 是否最新？是否列出所有摘要页面？
+2. 列出 wiki/summaries/、wiki/concepts/、wiki/entities/、wiki/comparisons/ 中的所有文件
+3. 检查：wiki/ 中的每个文件是否出现在 index.md 中？
+4. 检查：index.md 中的每个条目是否指向存在的文件？
+5. 验证目录结构是否符合 CLAUDE.md schema 预期
 ```
 
-### Step 3: Contradiction Scan
+### 步骤2：交叉引用审计
 
-Find conflicting claims across pages:
-
-```
-1. Scan all pages for explicit contradiction markers (⚠️, "contradicts", "conflicts with")
-2. Look for implicit contradictions:
-   a. Same entity with different facts on different pages
-   b. Same concept with different definitions on different pages
-   c. Claims that use different numbers or dates for the same thing
-3. Check: are all flagged contradictions still unresolved, or have they been addressed?
-```
-
-### Step 4: Freshness Check
-
-Assess content staleness:
+检查链接是否形成健康的网络：
 
 ```
-1. For each summary page:
-   a. Check when the raw source was ingested (from log.md)
-   b. Flag if the source is >90 days old and the topic is fast-moving
-2. For each concept page:
-   a. Check the "Evolution" table — when was it last updated?
-   b. Flag if it hasn't been updated despite new related sources being ingested
-3. Check: has the overview.md been updated to reflect recent ingestions?
+1. 对 wiki/ 中的每个页面：
+   a. 提取所有出站链接（[[...]] 或 [...](...) ）
+   b. 验证每个链接目标存在
+   c. 检查：目标页面是否回链？（双向检查）
+2. 识别孤立页面——入站链接为零的页面
+3. 识别枢纽页面——入站链接很多的页面（这些很重要）
+4. 识别死胡同——有出站链接但无入站链接的页面
+5. 计算连通性得分：每页平均链接数
 ```
 
-### Step 5: Coverage Analysis
+### 步骤3：矛盾扫描
 
-Identify knowledge gaps:
+查找跨页面的冲突主张：
 
 ```
-1. Scan for concepts mentioned in text but without their own concept page
-2. Scan for entities mentioned but without entity pages
-3. Identify topics with only 1 source (low confidence)
-4. Check "Open Questions" across all concept pages — which are still unanswered?
-5. Compare raw/ contents with wiki/summaries/ — any un-ingested sources?
+1. 扫描所有页面中的显式矛盾标记（⚠️、"矛盾"、"冲突"）
+2. 查找隐式矛盾：
+   a. 同一实体在不同页面有不同事实
+   b. 同一概念在不同页面有不同定义
+   c. 对同一事物使用不同数字或日期的主张
+3. 检查：所有已标记的矛盾是否仍未解决，还是已被处理？
 ```
 
-### Step 6: Generate Health Report
+### 步骤4：新鲜度检查
 
-Write the health report to `outputs/health/{date}-health-report.md`:
+评估内容过时程度：
+
+```
+1. 对每个摘要页面：
+   a. 检查原始来源何时被收录（从 log.md）
+   b. 若来源超过90天且主题变化快速则标记
+2. 对每个概念页面：
+   a. 检查"演进"表——最后一次更新是什么时候？
+   b. 若尽管有新的相关来源被收录但未更新则标记
+3. 检查：overview.md 是否已更新以反映最近的收录？
+```
+
+### 步骤5：覆盖分析
+
+识别知识空白：
+
+```
+1. 扫描文本中提到但没有自己概念页面的概念
+2. 扫描被提及但没有实体页面的实体
+3. 识别只有1个来源的主题（低置信度）
+4. 检查所有概念页面的"开放问题"——哪些仍未回答？
+5. 比较 raw/ 内容与 wiki/summaries/ —— 有未收录的来源吗？
+```
+
+### 步骤6：生成健康报告
+
+将健康报告写入 `outputs/health/{date}-health-report.md`：
 
 ```markdown
-# Wiki Health Report — {date}
+# Wiki 健康报告 — {日期}
 
-## Summary
-- Total pages: {count}
-- Healthy pages: {count} ({percentage}%)
-- Issues found: {count}
-- Critical issues: {count}
+## 概要
+- 总页面数：{count}
+- 健康页面：{count} ({percentage}%)
+- 发现问题：{count}
+- 严重问题：{count}
 
-## Structural Issues
-### Orphan Pages (no inbound links)
-- {page} — Suggested: link from {related page}
+## 结构问题
+### 孤立页面（无入站链接）
+- {page} — 建议：从 {related page} 链接
 
-### Broken Links
-- {page} links to {target} which does not exist
+### 断链
+- {page} 链接到 {target} 但该目标不存在
 
-### Missing from Index
-- {page} exists but is not listed in index.md
+### 不在索引中
+- {page} 存在但未列在 index.md 中
 
-## Cross-Reference Issues
-### Missing Bidirectional Links
-- {page A} → {page B} but {page B} does not link back
+## 交叉引用问题
+### 缺失双向链接
+- {page A} → {page B} 但 {page B} 未回链
 
-### Connectivity Score: {avg links per page}
-{assessment: healthy (>3), okay (2-3), sparse (<2)}
+### 连通性得分：{每页平均链接数}
+{评估：健康(>3)，一般(2-3)，稀疏(<2)}
 
-## Contradictions
-### Unresolved ({N})
-- {claim A} (from {source A}) vs {claim B} (from {source B})
-  Location: {page}
+## 矛盾
+### 未解决 ({N})
+- {主张A}（来自 {来源A}）vs {主张B}（来自 {来源B}）
+  位置：{page}
 
-### Previously Flagged, Now Resolved ({N})
-- {resolved contradiction}
+### 之前标记的，现已解决 ({N})
+- {已解决的矛盾}
 
-## Freshness
-### Stale Content ({N} pages)
-- {page} — last updated {date}, {N} days ago
+## 新鲜度
+### 过时内容 ({N} 页)
+- {page} — 最后更新 {date}，{N} 天前
 
-### Un-ingested Sources ({N})
-- raw/{path} — not yet processed
+### 未收录来源 ({N})
+- raw/{path} — 尚未处理
 
-## Coverage Gaps
-### Concepts Mentioned but No Page ({N})
-- "{concept}" mentioned in {page1}, {page2}
+## 覆盖空白
+### 被提及但无页面的概念 ({N})
+- "{concept}" 在 {page1}、{page2} 中被提及
 
-### Low-Confidence Topics (single source) ({N})
-- {concept} — only sourced from {single source}
+### 低置信度主题（单一来源） ({N})
+- {concept} — 仅来源于 {single source}
 
-### Open Questions ({N})
-- {question} (from {concept page})
+### 开放问题 ({N})
+- {question}（来自 {concept page}）
 
-## Recommended Actions
-1. {highest priority action}
-2. {second priority action}
-3. {third priority action}
+## 推荐操作
+1. {最高优先级操作}
+2. {第二优先级操作}
+3. {第三优先级操作}
 ```
 
-### Step 7: Update Log
+### 步骤7：更新日志
 
 ```
-Append to log.md:
-| {timestamp} | LINT | Health check complete | Issues: {count} | Critical: {count} |
+追加到 log.md：
+| {时间戳} | LINT | 健康检查完成 | 问题: {count} | 严重: {count} |
 ```
 
-## Sub-Variants
+## 子变体
 
-### Variant A: Quick Lint
+### 变体A：快速检查
 
-Fast check focusing only on structural issues:
+聚焦结构问题的快速检查：
 
-1. Index consistency
-2. Broken links
-3. Orphan pages
-4. Skip contradiction scan and freshness check
+1. 索引一致性
+2. 断链
+3. 孤立页面
+4. 跳过矛盾扫描和新鲜度检查
 
-### Variant B: Deep Lint
+### 变体B：深度检查
 
-Full comprehensive check (all 5 scan types):
+全面综合检查（所有5种扫描类型）：
 
-1. Structural scan
-2. Cross-reference audit
-3. Contradiction scan
-4. Freshness check
-5. Coverage analysis
+1. 结构扫描
+2. 交叉引用审计
+3. 矛盾扫描
+4. 新鲜度检查
+5. 覆盖分析
 
-### Variant C: Focused Lint
+### 变体C：聚焦检查
 
-Check a specific area of the wiki:
+检查 wiki 的特定区域：
 
-1. User specifies a topic or directory
-2. Run all checks but scoped to related pages only
-3. Useful after batch ingestion on a specific topic
-
-## Example: Weekly Health Report
-
-```markdown
-# Wiki Health Report — 2026-04-09
-
-## Summary
-- Total pages: 47
-- Healthy pages: 41 (87%)
-- Issues found: 8
-- Critical issues: 2
-
-## Structural Issues
-### Orphan Pages (2)
-- wiki/entities/deepmind.md — Suggested: link from wiki/concepts/alphafold.md
-- wiki/comparisons/gpt4-vs-claude3.md — Suggested: link from wiki/concepts/llm-benchmarks.md
-
-## Cross-Reference Issues
-### Missing Bidirectional Links (3)
-- wiki/concepts/rag.md → wiki/concepts/embeddings.md but embeddings.md doesn't link back
-- wiki/concepts/fine-tuning.md → wiki/entities/openai.md but openai.md doesn't link back
-- wiki/summaries/scaling-laws-paper.md → wiki/concepts/chinchilla.md but chinchilla.md doesn't link back
-
-## Contradictions
-### Unresolved (1) ⚠️ CRITICAL
-- "GPT-4 has 1.8T parameters" (from wiki/summaries/gpt4-technical-report.md)
-  vs "GPT-4 parameter count is undisclosed" (from wiki/summaries/openai-blog-march.md)
-
-## Coverage Gaps
-### Concepts Mentioned but No Page (2)
-- "mixture of experts" mentioned in 3 pages but no concept page exists
-- "constitutional AI" mentioned in 2 pages but no concept page exists
-
-## Recommended Actions
-1. ⚠️ Resolve GPT-4 parameter count contradiction — check original sources
-2. Create concept page for "mixture of experts" (mentioned in 3 pages)
-3. Fix 3 missing bidirectional links
-4. Link 2 orphan pages to relevant concept pages
-```
+1. 用户指定主题或目录
+2. 运行所有检查但仅限于相关页面
+3. 在特定主题的批量收录后很有用

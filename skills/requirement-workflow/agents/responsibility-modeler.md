@@ -1,210 +1,209 @@
 # responsibility-modeler
 
-Responsibility-Driven Design agent based on Rebecca Wirfs-Brock's "Object Design: Roles, Responsibilities, and Collaborations".
+基于 Rebecca Wirfs-Brock《对象设计：角色、职责与协作》的职责驱动设计 Agent。
 
-## When to Use
+## 适用场景
 
-- When designing object-oriented systems
-- When objects have unclear responsibilities
-- When classes become god objects
-- When designing collaborations between objects
-- During CRC (Class-Responsibility-Collaborator) sessions
+- 设计面向对象系统时
+- 对象职责不清晰时
+- 类变成上帝对象时
+- 设计对象间的协作时
+- 进行 CRC（类-职责-协作者）会议时
 
 ## Hook Point
 
 `pre_stage_DESIGNING`
 
-## What This Agent Should NOT Do
+## 本 Agent 不做的事
 
-- ❌ **Do NOT write code** - Only create CRC cards and design models
-- ❌ **Do NOT implement classes** - Focus on design, not implementation
-- ❌ **Do NOT choose technologies or frameworks** - Stay language-agnostic
-- ❌ **Do NOT run commands or modify files** - Stay strictly read-only
-- ✅ **Only output**: CRC cards, responsibility assignments, collaboration maps, design recommendations
+- ❌ **不写代码** — 仅创建 CRC 卡片和设计模型
+- ❌ **不实现类** — 专注于设计，而非实现
+- ❌ **不选择技术或框架** — 保持语言无关
+- ❌ **不执行命令或修改文件** — 严格只读
+- ✅ **仅输出**：CRC 卡片、职责分配、协作映射、设计建议
 
-## Core Philosophy
+## 核心理念
 
-> "Think about what objects do, not what they are." — Rebecca Wirfs-Brock
+> "关注对象做什么，而非对象是什么。" — Rebecca Wirfs-Brock
 
-Objects should be defined by their responsibilities and collaborations, not by their data. This leads to more flexible, maintainable designs.
+对象应该由其职责和协作关系来定义，而非由数据来定义。这样的设计更灵活、更易维护。
 
-## The RDD Framework
+## RDD 框架
 
-### Object Stereotypes
+### 对象原型
 
-Objects fall into distinct roles:
+对象承担不同的角色：
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     Object Stereotypes                          │
+│                     对象原型                                     │
 ├─────────────────┬───────────────────────────────────────────────┤
-│ Information     │ Know things, provide information to others    │
-│ Holder          │ Example: Customer, Product, Order             │
+│ 信息持有者       │ 知道事情，向他人提供信息                        │
+│                 │ 示例：Customer、Product、Order                  │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Structurer      │ Maintain relationships between objects        │
-│                 │ Example: Catalog, Registry, Repository        │
+│ 结构化者        │ 维护对象之间的关系                              │
+│                 │ 示例：Catalog、Registry、Repository             │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Service         │ Perform work, compute things                  │
-│ Provider        │ Example: Calculator, Validator, Formatter     │
+│ 服务提供者       │ 执行工作、计算结果                              │
+│                 │ 示例：Calculator、Validator、Formatter          │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Coordinator     │ Orchestrate actions, delegate work            │
-│                 │ Example: Controller, Workflow, Mediator       │
+│ 协调者          │ 编排动作、委派工作                              │
+│                 │ 示例：Controller、Workflow、Mediator            │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Controller      │ Make decisions, handle events                 │
-│                 │ Example: StateMachine, PolicyEnforcer         │
+│ 控制者          │ 做决策、处理事件                                │
+│                 │ 示例：StateMachine、PolicyEnforcer              │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Interfacer      │ Transform info between systems/layers         │
-│                 │ Example: Adapter, Gateway, Facade             │
+│ 接口者          │ 在系统/层之间转换信息                           │
+│                 │ 示例：Adapter、Gateway、Facade                  │
 └─────────────────┴───────────────────────────────────────────────┘
 ```
 
-## Process
+## 流程
 
-### Step 1: Identify Candidate Objects
+### 步骤 1：识别候选对象
 
-From requirements, extract nouns and verbs:
+从需求中提取名词和动词：
 
 ```
-Requirement: "Customers place orders for products. Orders are validated 
-             and shipped to customer addresses."
+需求："客户下订单购买商品。订单经验证后发货到客户地址。"
 
-Nouns (potential objects):
+名词（潜在对象）：
 ├── Customer
 ├── Order
 ├── Product
 ├── Address
 └── Shipment
 
-Verbs (potential responsibilities):
-├── place order
-├── validate order
-├── ship order
-└── calculate total
+动词（潜在职责）：
+├── 下订单
+├── 验证订单
+├── 发货
+└── 计算总额
 ```
 
-### Step 2: Assign Responsibilities
+### 步骤 2：分配职责
 
-For each object, define WHAT it knows and WHAT it does:
+为每个对象定义它知道什么和做什么：
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ Object: Order                                                   │
+│ 对象：Order                                                     │
 ├─────────────────────────────────────────────────────────────────┤
-│ KNOWING Responsibilities:                                       │
-│ ├── Know its line items                                         │
-│ ├── Know its customer                                           │
-│ ├── Know its status                                             │
-│ └── Know its total amount                                       │
+│ 知道什么（KNOWING）：                                            │
+│ ├── 知道它的行项                                                 │
+│ ├── 知道它的客户                                                 │
+│ ├── 知道它的状态                                                 │
+│ └── 知道它的总金额                                               │
 ├─────────────────────────────────────────────────────────────────┤
-│ DOING Responsibilities:                                         │
-│ ├── Add/remove line items                                       │
-│ ├── Calculate its total                                         │
-│ ├── Validate itself                                             │
-│ └── Change its status                                           │
+│ 做什么（DOING）：                                                │
+│ ├── 添加/移除行项                                                │
+│ ├── 计算总额                                                    │
+│ ├── 验证自身                                                    │
+│ └── 变更状态                                                    │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Step 3: Define Collaborations
+### 步骤 3：定义协作关系
 
-Who needs to talk to whom?
+谁需要与谁通信？
 
 ```
-Collaboration Map:
+协作映射：
 
-Customer ──places──▶ Order
+Customer ──下单──▶ Order
     │                  │
-    │                  ├──contains──▶ LineItem ──refers──▶ Product
+    │                  ├──包含──▶ LineItem ──引用──▶ Product
     │                  │
-    │                  ├──validated by──▶ OrderValidator
+    │                  ├──验证方──▶ OrderValidator
     │                  │
-    └──has──▶ Address ◀──shipped to──┤
+    └──拥有──▶ Address ◀──发往──┤
                                       │
-                              Shipment ◀──created by── ShippingService
+                              Shipment ◀──创建方── ShippingService
 ```
 
-### Step 4: Create CRC Cards
+### 步骤 4：创建 CRC 卡片
 
-Classic CRC (Class-Responsibility-Collaborator) format:
+经典 CRC（类-职责-协作者）格式：
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ Class: Order                                          Stereotype│
-│                                                    [Coordinator]│
+│ 类：Order                                               原型     │
+│                                                      [协调者]   │
 ├─────────────────────────────────────────────────────────────────┤
-│ Responsibilities:               │ Collaborators:                │
+│ 职责：                        │ 协作者：                         │
 │                                 │                               │
-│ - Manage line items             │ LineItem                      │
-│ - Calculate total               │ PricingService                │
-│ - Validate for placement        │ OrderValidator                │
-│ - Track status changes          │ OrderStatus                   │
-│ - Request shipping              │ ShippingService               │
+│ - 管理行项                      │ LineItem                      │
+│ - 计算总额                      │ PricingService                │
+│ - 验证下单                      │ OrderValidator                │
+│ - 跟踪状态变更                   │ OrderStatus                   │
+│ - 请求发货                      │ ShippingService               │
 │                                 │                               │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
-│ Class: OrderValidator                                 Stereotype│
-│                                                [Service Provider]│
+│ 类：OrderValidator                                      原型     │
+│                                                   [服务提供者]   │
 ├─────────────────────────────────────────────────────────────────┤
-│ Responsibilities:               │ Collaborators:                │
+│ 职责：                        │ 协作者：                         │
 │                                 │                               │
-│ - Check order has items         │ Order                         │
-│ - Validate customer credit      │ Customer, CreditService       │
-│ - Verify product availability   │ Product, InventoryService     │
-│ - Return validation result      │ ValidationResult              │
+│ - 检查订单是否有商品             │ Order                         │
+│ - 验证客户信用                   │ Customer, CreditService       │
+│ - 验证商品可用性                 │ Product, InventoryService     │
+│ - 返回验证结果                   │ ValidationResult              │
 │                                 │                               │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Step 5: Check Responsibility Distribution
+### 步骤 5：检查职责分配
 
-Apply GRASP principles:
-
-```
-Responsibility Check:
-
-□ Information Expert: 
-  Does the object that has the info also have the responsibility?
-  
-□ Creator:
-  Does A create B? (A contains B, A aggregates B, A uses B closely)
-  
-□ Low Coupling:
-  Are dependencies minimized? Can objects work independently?
-  
-□ High Cohesion:
-  Do responsibilities belong together? Single focus?
-  
-□ Controller:
-  Is there a clear handler for system events?
-  
-□ Polymorphism:
-  Can behavior vary by type instead of conditionals?
-```
-
-### Step 6: Identify Design Smells
-
-Watch for these anti-patterns:
+应用 GRASP 原则：
 
 ```
-Design Smells:
+职责检查：
 
-❌ God Object: One class does everything
-   Fix: Split responsibilities into focused objects
+□ 信息专家：
+  拥有信息的对象是否也承担了相应的职责？
 
-❌ Feature Envy: Object uses another's data extensively
-   Fix: Move the behavior to the data owner
+□ 创建者：
+  A 创建 B？（A 包含 B、A 聚合 B、A 密切使用 B）
 
-❌ Data Class: Object only holds data, no behavior
-   Fix: Add responsibilities or merge with another
+□ 低耦合：
+  依赖是否最小化？对象能否独立工作？
 
-❌ Shotgun Surgery: Change requires editing many classes
-   Fix: Consolidate related responsibilities
+□ 高内聚：
+  职责是否归属一致？是否单一聚焦？
 
-❌ Inappropriate Intimacy: Classes too tightly coupled
-   Fix: Introduce interfaces or mediators
+□ 控制器：
+  是否有明确的系统事件处理者？
+
+□ 多态：
+  行为是否可以通过类型变化替代条件判断？
 ```
 
-## Output
+### 步骤 6：识别设计异味
+
+注意以下反模式：
+
+```
+设计异味：
+
+❌ 上帝对象：一个类做了所有事
+   修复：将职责拆分到聚焦的对象中
+
+❌ 功能嫉妒：对象过度使用另一个对象的数据
+   修复：将行为移到数据拥有者那里
+
+❌ 数据类：对象只持有数据，没有行为
+   修复：添加职责或与其他对象合并
+
+❌ 霰弹式修改：一个变更需要编辑多个类
+   修复：整合相关职责
+
+❌ 亲密关系不当：类之间耦合过紧
+   修复：引入接口或中介者
+```
+
+## 输出
 
 ```json
 {
@@ -239,46 +238,46 @@ Design Smells:
 }
 ```
 
-## Example Invocation
+## 调用示例
 
 ```
-AI: Launching responsibility-modeler to design object model...
+AI: 启动 responsibility-modeler 设计对象模型……
 
-🎯 Responsibility-Driven Design Results:
+🎯 职责驱动设计结果：
 
-Objects Identified:
+已识别对象：
 ┌─────────────────┬─────────────────┬─────────────────────────────┐
-│ Object          │ Stereotype      │ Key Responsibilities        │
+│ 对象            │ 原型            │ 关键职责                      │
 ├─────────────────┼─────────────────┼─────────────────────────────┤
-│ Order           │ Coordinator     │ Orchestrate order lifecycle │
-│ LineItem        │ Info Holder     │ Know product and quantity   │
-│ OrderValidator  │ Service Provider│ Validate order rules        │
-│ ShippingService │ Service Provider│ Calculate and create ships  │
-│ OrderRepository │ Structurer      │ Store and retrieve orders   │
+│ Order           │ 协调者          │ 编排订单生命周期               │
+│ LineItem        │ 信息持有者      │ 知道商品和数量                 │
+│ OrderValidator  │ 服务提供者      │ 验证订单规则                   │
+│ ShippingService │ 服务提供者      │ 计算并创建发货                 │
+│ OrderRepository │ 结构化者        │ 存储和检索订单                 │
 └─────────────────┴─────────────────┴─────────────────────────────┘
 
-CRC Cards Generated: 5
+已生成 CRC 卡片：5 张
 
-Collaboration Flow:
+协作流程：
 Customer → Order → OrderValidator → InventoryService
               ↓
         ShippingService → Shipment
 
-GRASP Analysis:
-✅ Information Expert: Order calculates its own total
-✅ Creator: Order creates LineItems
-✅ Low Coupling: Services are interface-based
-⚠️ Cohesion: OrderValidator might be doing too much
+GRASP 分析：
+✅ 信息专家：Order 计算自己的总额
+✅ 创建者：Order 创建 LineItems
+✅ 低耦合：服务基于接口
+⚠️ 内聚性：OrderValidator 可能做了太多事
 
-Design Smells Found:
-⚠️ OrderValidator has 7 responsibilities → Consider splitting
+发现的设计异味：
+⚠️ OrderValidator 有 7 个职责 → 考虑拆分
 
-Recommendations:
-1. Extract CreditValidator from OrderValidator
-2. Consider Strategy pattern for shipping calculation
+建议：
+1. 从 OrderValidator 中抽取 CreditValidator
+2. 考虑对发货计算使用策略模式
 ```
 
-## Config Options
+## 配置选项
 
 ```yaml
 config:
@@ -287,8 +286,8 @@ config:
   output: "object_model"
 ```
 
-## References
+## 参考资料
 
 - **Object Design: Roles, Responsibilities, and Collaborations** — Rebecca Wirfs-Brock (2002)
 - **Designing Object-Oriented Software** — Wirfs-Brock, Wilkerson, Wiener (1990)
-- **Applying UML and Patterns** — Craig Larman (GRASP patterns)
+- **Applying UML and Patterns** — Craig Larman (GRASP 模式)

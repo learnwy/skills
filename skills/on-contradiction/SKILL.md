@@ -1,280 +1,280 @@
 ---
 name: on-contradiction
-description: "Use this skill when analyzing opposing forces, trade-offs, or root causes using Mao Zedong's *On Contradiction* (《矛盾论》). Provides the law of the unity of opposites as actionable frameworks for decision-making, problem analysis, and report writing. Triggers on: 'contradiction analysis', 'principal contradiction', 'analyze contradictions', '矛盾分析', '主要矛盾', 'On Contradiction', 'decision analysis', 'root cause', 'trade-off analysis', 'opposing forces', or when the user needs to identify the core conflict in a complex situation."
+description: "当需要运用毛泽东《矛盾论》分析对立力量、权衡取舍或追溯根本原因时使用此技能。提供对立统一规律的可操作框架，用于决策、问题分析和报告撰写。触发词：'矛盾分析'、'主要矛盾'、'抓主要矛盾'、'对立统一'、'contradiction analysis'、'principal contradiction'、'trade-off analysis'、'opposing forces'、'root cause'、'decision analysis'，或用户需要在复杂局面中识别核心冲突时触发。"
 metadata:
   author: "learnwy"
   version: "1.1"
-  source: "Mao Zedong, *On Contradiction* (《矛盾论》, 1937)"
+  source: "毛泽东，《矛盾论》（1937）"
 ---
 
-# On Contradiction Methodology Toolkit
+# 《矛盾论》方法论工具箱
 
-Practical methodology toolkit derived from Mao Zedong's *On Contradiction*. Transforms the philosophical law of the unity of opposites into actionable, reusable operational frameworks for thinking, analyzing, and writing.
+源自毛泽东《矛盾论》的实用方法论工具箱。将对立统一规律这一哲学原理转化为可操作、可复用的思维、分析和写作框架。
 
-> **Core Principle**: Acknowledge the universality of contradictions, grasp the principal contradiction and its principal aspect, analyze specific issues concretely, utilize the identity of contradictions to achieve transformation, and uphold the unity of the "two-point theory" and the "key-point theory."
+> **核心原则**：承认矛盾的普遍性，把握主要矛盾及其主要方面，对具体问题进行具体分析，利用矛盾的同一性实现转化，坚持"两点论"与"重点论"的统一。
 
-## Prerequisites
+## 前置条件
 
-- No runtime dependencies (methodology-only skill, no scripts)
-- Works in any domain — business, engineering, personal, strategic
+- 无运行时依赖（纯方法论技能，无脚本）
+- 适用于任何领域——商业、工程、个人、战略
 
-## When to Use
+## 何时使用
 
-**Invoke when:**
+**应调用的场景：**
 
-- User needs to make a complex decision with competing trade-offs
-- User faces a problem with unclear root causes
-- User wants to write a report with sharp logic and clear structure
-- User mentions "contradiction", "principal contradiction", "trade-off analysis", "root cause"
-- User asks for structured thinking frameworks beyond simple pros/cons
+- 用户需要在相互竞争的取舍中做出复杂决策
+- 用户面对根本原因不明的问题
+- 用户想撰写逻辑严密、结构清晰的报告
+- 用户提到"矛盾"、"主要矛盾"、"权衡分析"、"根本原因"
+- 用户需要超越简单利弊分析的结构化思维框架
 
-**Do NOT invoke when:**
+**不应调用的场景：**
 
-- User needs code implementation → use `requirement-workflow` or IDE directly
-- User needs software-specific methodology → use `software-methodology-toolkit`
-- User needs a quick factual answer → answer directly
-- The problem is trivial and doesn't warrant deep analysis
+- 用户需要代码实现 → 使用 `requirement-workflow` 或直接使用 IDE
+- 用户需要软件专用方法论 → 使用 `software-methodology-toolkit`
+- 用户需要快速回答事实性问题 → 直接回答
+- 问题过于简单，不需要深入分析
 
-## Relationship with On Practice and On Protracted War
+## 与《实践论》《论持久战》的关系
 
-*On Contradiction*, *On Practice*, and *On Protracted War* form a trilogy:
+《矛盾论》、《实践论》、《论持久战》构成三部曲：
 
-| Dimension | On Contradiction | On Practice | On Protracted War |
-|-----------|-----------------|-------------|-------------------|
-| **Focus** | Structure of forces | Process of knowing | Evolution over time |
-| **Question** | "What are the contradictions?" | "How do we verify truth?" | "How does this unfold and when do we act?" |
-| **Method** | Identify, prioritize, transform | Investigate, test, validate | Stage, strategize, maneuver, evolve |
-| **Strength** | Structural clarity — sees the skeleton | Process rigor — ensures grounding | Temporal wisdom — sees the arc of change |
-| **Combine** | Identify WHAT forces are at play | Validate HOW through practice | Plan WHEN to act and how each phase differs |
+| 维度 | 《矛盾论》 | 《实践论》 | 《论持久战》 |
+|------|-----------|-----------|------------|
+| **聚焦** | 力量的结构 | 认知的过程 | 时间的演变 |
+| **核心问题** | "矛盾是什么？" | "如何验证真理？" | "事物如何发展，何时行动？" |
+| **方法** | 识别、排序、转化 | 调查、试验、验证 | 分阶段、定战略、灵活机动、持续演进 |
+| **优势** | 结构清晰——看到骨架 | 过程严谨——确保扎根 | 时间智慧——看到变化的弧线 |
+| **组合** | 识别有哪些力量在起作用 | 验证如何通过实践来检验 | 规划何时行动以及各阶段如何不同 |
 
-## The Universal Contradiction Framework
+## 通用矛盾分析框架
 
-Every agent in this toolkit applies a 5-step formula:
-
-```
-Step 1: IDENTIFY    — List all opposing contradictions in the situation
-Step 2: PRIORITIZE  — Separate principal from secondary contradictions
-Step 3: ANALYZE     — Examine the unity (shared ground) and struggle (opposing forces)
-Step 4: TRANSFORM   — Find conditions to turn unfavorable contradictions into favorable ones
-Step 5: ACT         — Execute on the principal contradiction, defer secondary ones
-```
-
-This formula is the DNA of all agents. Each agent applies it to a specific domain.
-
-## Key Concepts
-
-| Concept | Definition | Practical Meaning |
-|---------|-----------|-------------------|
-| **Universality of Contradictions** | Contradictions exist in everything, at all times | Never deny that a problem exists; every situation has tensions |
-| **Particularity of Contradictions** | Each contradiction has unique characteristics | Reject one-size-fits-all; analyze each situation concretely |
-| **Principal Contradiction** | The dominant contradiction that determines overall development | Focus energy on the ONE thing that matters most |
-| **Principal Aspect** | The dominant side within a single contradiction | The mainstream trend — distinguish it from the secondary aspect |
-| **Identity of Contradictions** | Opposing sides share a common ground and can transform | Enemies can become allies; weaknesses can become strengths |
-| **Struggle of Contradictions** | Opposing sides clash and push change | Conflict drives progress; don't fear productive tension |
-| **Two-Point Theory** | Consider BOTH sides of every contradiction | Avoid one-sidedness; acknowledge achievements AND problems |
-| **Key-Point Theory** | Focus on the MAIN point among all contradictions | Don't spread energy thin; tackle the core issue |
-| **Contradiction Transformation** | Under certain conditions, opposites switch positions | Plan for how today's advantage may become tomorrow's liability |
-| **Internal vs External Causes** | Internal causes are fundamental; external causes are conditions | Fix the root (internal), don't just blame the environment |
-
-## Agent Summary
-
-| Domain | Agent | Core Principles Applied |
-|--------|-------|------------------------|
-| Thinking | [decision-maker](agents/thinking/decision-maker.md) | Principal/secondary contradictions + transformation + two-point theory |
-| Thinking | [problem-analyzer](agents/thinking/problem-analyzer.md) | Universality/particularity + internal/external causes + layered analysis |
-| Writing | [report-writer](agents/writing/report-writer.md) | Key-point theory + two-point theory + developmental prediction |
-
-## Routing Decision Table
-
-| User Signal | Agent | Confidence |
-|-------------|-------|------------|
-| "make a decision", "choose between", "trade-off", "dilemma" | decision-maker | High |
-| "analyze the problem", "root cause", "why is this happening", "dig deeper" | problem-analyzer | High |
-| "write a report", "summarize findings", "present analysis" | report-writer | High |
-| "矛盾分析", "主要矛盾", "抓主要矛盾" | problem-analyzer | High |
-| Complex situation with no clear direction | problem-analyzer (entry point) → decision-maker | Medium |
-| Need to present findings to stakeholders | report-writer | Medium |
-| General mention of "contradictions" or "On Contradiction" | problem-analyzer (default entry) | Low |
-
-If confidence is Low, confirm agent selection with the user before proceeding.
-
-## Composition Workflows
-
-### Full Analysis Workflow (Problem → Decision → Report)
+本工具箱中每个智能体都遵循5步公式：
 
 ```
-1. problem-analyzer  → Identify and layer all contradictions, find root cause
-2. decision-maker    → Grasp principal contradiction, evaluate transformation conditions
-3. report-writer     → Present findings with two-point structure and actionable conclusions
+第1步：识别    — 列出局面中所有对立矛盾
+第2步：排序    — 区分主要矛盾与次要矛盾
+第3步：分析    — 考察同一性（共同基础）与斗争性（对立力量）
+第4步：转化    — 寻找将不利矛盾转化为有利矛盾的条件
+第5步：行动    — 集中力量解决主要矛盾，推迟处理次要矛盾
 ```
 
-### Quick Decision Workflow
+此公式是所有智能体的基因。每个智能体将其应用于特定领域。
+
+## 关键概念
+
+| 概念 | 定义 | 实践含义 |
+|------|------|---------|
+| **矛盾的普遍性** | 矛盾存在于一切事物中，贯穿一切过程的始终 | 永远不要否认问题的存在；任何局面都存在张力 |
+| **矛盾的特殊性** | 每个矛盾都有其独特特征 | 拒绝一刀切；对具体问题进行具体分析 |
+| **主要矛盾** | 决定事物整体发展的主导矛盾 | 将精力集中在最重要的那一件事上 |
+| **矛盾的主要方面** | 单一矛盾中占主导地位的一方 | 主流趋势——将其与次要方面区分开来 |
+| **矛盾的同一性** | 对立双方共存于统一体中，可以相互转化 | 敌人可以变盟友；弱点可以变优势 |
+| **矛盾的斗争性** | 对立双方相互冲突，推动变化 | 冲突推动进步；不要惧怕有建设性的紧张 |
+| **两点论** | 看问题要看到矛盾的两个方面 | 避免片面性；既要看到成绩，也要看到问题 |
+| **重点论** | 在所有矛盾中抓住主要的 | 不要分散精力；集中解决核心问题 |
+| **矛盾转化** | 在一定条件下，对立面会互相转换位置 | 规划今天的优势如何可能变成明天的负担 |
+| **内因与外因** | 内因是根本，外因是条件 | 要解决根本问题（内因），不要只怪环境 |
+
+## 智能体概览
+
+| 领域 | 智能体 | 应用的核心原理 |
+|------|--------|--------------|
+| 思维 | [decision-maker](agents/thinking/decision-maker.md) | 主次矛盾 + 矛盾转化 + 两点论 |
+| 思维 | [problem-analyzer](agents/thinking/problem-analyzer.md) | 普遍性/特殊性 + 内因/外因 + 分层分析 |
+| 写作 | [report-writer](agents/writing/report-writer.md) | 重点论 + 两点论 + 发展预判 |
+
+## 路由决策表
+
+| 用户信号 | 智能体 | 置信度 |
+|---------|--------|-------|
+| "做个决策"、"选择哪个"、"权衡取舍"、"两难困境" | decision-maker | 高 |
+| "分析问题"、"根本原因"、"为什么会这样"、"深入挖掘" | problem-analyzer | 高 |
+| "写一份报告"、"总结分析结果"、"呈现分析" | report-writer | 高 |
+| "矛盾分析"、"主要矛盾"、"抓主要矛盾" | problem-analyzer | 高 |
+| 复杂局面，没有明确方向 | problem-analyzer（入口）→ decision-maker | 中 |
+| 需要向利益相关方呈现分析结果 | report-writer | 中 |
+| 泛泛提及"矛盾"或"《矛盾论》" | problem-analyzer（默认入口） | 低 |
+
+置信度为"低"时，先与用户确认智能体选择再继续。
+
+## 组合工作流
+
+### 完整分析工作流（问题 → 决策 → 报告）
 
 ```
-1. decision-maker    → List contradictions, isolate principal one, predict transformation, decide
+1. problem-analyzer  → 识别并分层所有矛盾，找到根本原因
+2. decision-maker    → 把握主要矛盾，评估转化条件
+3. report-writer     → 以两点论结构呈现分析结果和可行结论
 ```
 
-### Deep Investigation Workflow
+### 快速决策工作流
 
 ```
-1. problem-analyzer  → Surface → Intermediate → Essential contradiction layers
-2. problem-analyzer  → Internal causes vs external causes
-3. decision-maker    → Prioritize and plan resolution
+1. decision-maker    → 列出矛盾，锁定主要矛盾，预判转化，做出决策
 ```
 
-## Cross-Skill Composition Workflows (Trilogy)
-
-### Structure-Then-Validate (with On Practice)
+### 深度调查工作流
 
 ```
-1. on-contradiction / problem-analyzer  → Identify all contradictions, find the principal one
-2. on-contradiction / decision-maker    → Evaluate transformation conditions, propose a path
-3. on-practice / decision-maker         → Surface untested assumptions, design small-scale trials
-4. on-practice / problem-analyzer       → Analyze practice results, extract validated knowledge
-5. on-contradiction / report-writer     → Final report: contradiction structure + practice evidence
+1. problem-analyzer  → 表层 → 中间层 → 本质矛盾逐层剥离
+2. problem-analyzer  → 内因 vs 外因分析
+3. decision-maker    → 排序优先级并规划解决方案
 ```
 
-### Rapid Evidence-Grounded Decision (with On Practice)
+## 跨技能组合工作流（三部曲）
+
+### 先结构后验证（与《实践论》结合）
 
 ```
-1. on-contradiction / decision-maker    → Identify principal contradiction and two sides
-2. on-practice / decision-maker         → Audit assumptions: which side has practice evidence?
-3. on-contradiction / decision-maker    → Decide with both structural and empirical confidence
+1. on-contradiction / problem-analyzer  → 识别所有矛盾，找到主要矛盾
+2. on-contradiction / decision-maker    → 评估转化条件，提出路径
+3. on-practice / decision-maker         → 识别未经验证的假设，设计小规模试验
+4. on-practice / problem-analyzer       → 分析实践结果，提炼已验证的认识
+5. on-contradiction / report-writer     → 最终报告：矛盾结构 + 实践证据
 ```
 
-### The Full Trilogy Workflow (Structure → Time → Evidence)
+### 快速循证决策（与《实践论》结合）
 
 ```
-1. on-contradiction / problem-analyzer   → Identify all contradictions, find the principal one
-2. on-protracted-war / problem-analyzer  → Diagnose current stage, assess four factors over time
-3. on-protracted-war / decision-maker    → Choose phase-appropriate strategy
-4. on-practice / decision-maker          → Validate strategy assumptions through small-scale practice
-5. on-protracted-war / report-writer     → Full strategic report: contradiction + phased plan + evidence
+1. on-contradiction / decision-maker    → 识别主要矛盾及两个方面
+2. on-practice / decision-maker         → 审计假设：哪一方有实践证据？
+3. on-contradiction / decision-maker    → 以结构和实证双重信心做出决策
 ```
 
-## Contradiction Analysis Tools
+### 完整三部曲工作流（结构 → 时间 → 证据）
 
-### Tool 1: Contradiction Matrix
+```
+1. on-contradiction / problem-analyzer   → 识别所有矛盾，找到主要矛盾
+2. on-protracted-war / problem-analyzer  → 诊断当前阶段，从时间维度评估四要素
+3. on-protracted-war / decision-maker    → 选择适合当前阶段的策略
+4. on-practice / decision-maker          → 通过小规模实践验证策略假设
+5. on-protracted-war / report-writer     → 完整战略报告：矛盾结构 + 分阶段计划 + 实践证据
+```
 
-For any situation, fill this matrix:
+## 矛盾分析工具
 
-| # | Contradiction | Side A | Side B | Principal? | Transformable? |
-|---|--------------|--------|--------|------------|----------------|
-| 1 | {name} | {benefit/positive} | {risk/negative} | ✅ / ❌ | {conditions} |
-| 2 | {name} | {short-term} | {long-term} | ✅ / ❌ | {conditions} |
-| 3 | {name} | {individual} | {collective} | ✅ / ❌ | {conditions} |
+### 工具1：矛盾矩阵
 
-### Tool 2: Principal Contradiction Checklist
+针对任何局面，填写此矩阵：
 
-To identify the principal contradiction, ask:
+| # | 矛盾 | A面 | B面 | 是否主要？ | 可否转化？ |
+|---|------|-----|-----|----------|----------|
+| 1 | {名称} | {利益/正面} | {风险/负面} | ✅ / ❌ | {条件} |
+| 2 | {名称} | {短期} | {长期} | ✅ / ❌ | {条件} |
+| 3 | {名称} | {个人} | {集体} | ✅ / ❌ | {条件} |
 
-1. Which contradiction, if resolved, would make most others dissolve or become manageable?
-2. Which contradiction most affects the overall direction of development?
-3. Which contradiction currently has the most energy/conflict?
-4. If you could only fix ONE thing, what would it be?
+### 工具2：主要矛盾识别清单
 
-The answer to all four should converge on the same contradiction.
+判断主要矛盾时，问以下四个问题：
 
-### Tool 3: Transformation Condition Map
+1. 解决了哪个矛盾，大多数其他矛盾就会消解或变得可控？
+2. 哪个矛盾最影响事物发展的整体方向？
+3. 哪个矛盾当前能量/冲突最大？
+4. 如果只能解决一个问题，会是哪个？
 
-For the principal contradiction:
+四个问题的答案应指向同一个矛盾。
 
-| Current State | Desired State | Transformation Conditions | Actions Required |
-|--------------|---------------|--------------------------|------------------|
-| {unfavorable aspect dominates} | {favorable aspect dominates} | {what must change} | {concrete steps} |
+### 工具3：转化条件图
 
-## Agent Output Contract
+针对主要矛盾：
 
-All agents follow the same output rules:
+| 当前状态 | 期望状态 | 转化条件 | 所需行动 |
+|---------|---------|---------|---------|
+| {不利方面占主导} | {有利方面占主导} | {什么必须改变} | {具体步骤} |
 
-| Allowed | Not Allowed |
-|---------|-------------|
-| Structured contradiction analysis | Making decisions for the user |
-| Recommendations with trade-offs | Ignoring the secondary side (violates two-point theory) |
-| Transformation predictions | Presenting only one perspective |
-| Actionable next steps | Abstract philosophizing without practical steps |
+## 智能体输出契约
 
-Every agent output must include:
-1. **Contradiction Inventory** — All identified contradictions
-2. **Principal Contradiction** — The one that matters most, with reasoning
-3. **Two-Point Analysis** — Both sides examined honestly
-4. **Transformation Path** — How to shift the balance
-5. **Action Plan** — Concrete next steps focused on the principal contradiction
+所有智能体遵循相同的输出规则：
 
-## Error Handling
+| 允许 | 不允许 |
+|------|-------|
+| 结构化的矛盾分析 | 替用户做决定 |
+| 附带权衡的建议 | 忽略次要方面（违反两点论） |
+| 转化预判 | 只呈现一方观点 |
+| 可行的后续步骤 | 脱离实际步骤的抽象哲学化 |
 
-| Issue | Solution |
-|-------|----------|
-| User's request matches no agent trigger | Default to problem-analyzer as the entry point |
-| User's request matches multiple agents | Use Routing Decision Table; pick highest-confidence match |
-| Situation has too many contradictions to list | Use Contradiction Matrix tool, limit to top 5-7, then prioritize |
-| User cannot agree on which is the principal contradiction | Apply the Principal Contradiction Checklist systematically |
-| Analysis becomes too abstract | Ground every contradiction in concrete, observable evidence |
-| User expects a definitive answer, not analysis | Clarify: this toolkit provides structured analysis; the user makes the final call |
-| Contradiction transformation seems impossible | Re-examine conditions; sometimes the solution is to change the conditions, not the contradiction directly |
+每个智能体的输出必须包含：
+1. **矛盾清单** — 所有已识别的矛盾
+2. **主要矛盾** — 最关键的那个，附带理由
+3. **两点分析** — 诚实审视两个方面
+4. **转化路径** — 如何转变力量对比
+5. **行动计划** — 聚焦主要矛盾的具体后续步骤
 
-## Execution Checklist
+## 错误处理
 
-Before invoking any agent, verify:
+| 问题 | 解决方案 |
+|------|---------|
+| 用户请求不匹配任何智能体触发词 | 默认使用 problem-analyzer 作为入口 |
+| 用户请求匹配多个智能体 | 使用路由决策表；选择置信度最高的匹配 |
+| 局面矛盾太多，无法全部列出 | 使用矛盾矩阵工具，限制为最重要的5-7个，然后排序 |
+| 用户无法就哪个是主要矛盾达成共识 | 系统性地应用主要矛盾识别清单 |
+| 分析变得过于抽象 | 用具体、可观察的证据来支撑每个矛盾 |
+| 用户期望得到确定性答案而非分析 | 澄清：本工具箱提供结构化分析；最终决定由用户做出 |
+| 矛盾转化看似不可能 | 重新审视条件；有时解决方案是改变条件，而非直接改变矛盾 |
 
-- [ ] The situation genuinely involves competing forces or trade-offs
-- [ ] Agent selection follows the Routing Decision Table
-- [ ] Low-confidence selections are confirmed with the user
-- [ ] Agent receives sufficient context (situation description, stakeholders, constraints)
+## 执行检查清单
 
-After agent produces output, verify:
+调用任何智能体之前，验证：
 
-- [ ] Output includes a Contradiction Inventory (not just conclusions)
-- [ ] A Principal Contradiction is identified with clear reasoning
-- [ ] Both sides are analyzed (two-point theory enforced)
-- [ ] Transformation conditions are concrete, not vague
-- [ ] Action plan focuses on the principal contradiction, not scattered across all
-- [ ] Secondary contradictions are acknowledged but deferred
+- [ ] 局面确实涉及相互竞争的力量或权衡取舍
+- [ ] 智能体选择遵循路由决策表
+- [ ] 低置信度的选择已与用户确认
+- [ ] 智能体获得了充分的上下文（局面描述、利益相关方、约束条件）
 
-## Boundary Enforcement
+智能体产出后，验证：
 
-This skill ONLY handles:
+- [ ] 输出包含矛盾清单（不仅仅是结论）
+- [ ] 识别了主要矛盾并附有清晰的推理
+- [ ] 分析了两个方面（执行两点论）
+- [ ] 转化条件具体，不含糊
+- [ ] 行动计划聚焦主要矛盾，而非分散到所有矛盾
+- [ ] 次要矛盾已被承认但被推迟处理
 
-- Contradiction-based analysis of complex situations
-- Structured decision-making through principal/secondary contradiction identification
-- Problem root-cause analysis using internal/external cause distinction
-- Report writing with contradiction-based logical structure
-- Providing the analytical framework — the user makes the final decision
+## 边界约束
 
-This skill does NOT handle:
+本技能仅处理：
 
-- Long-term phased strategy or stage diagnosis → `on-protracted-war`
-- Practice-based evidence validation → `on-practice`
-- Code generation or software implementation → `requirement-workflow`
-- Software engineering methodology → `software-methodology-toolkit`
-- Quick factual answers → answer directly
-- Emotional counseling → out of scope (future v2.0 agent: emotion-manager)
-- Project management execution → out of scope (future v2.0 agent: project-manager)
+- 基于矛盾的复杂局面分析
+- 通过主次矛盾识别实现结构化决策
+- 使用内因/外因区分进行问题根因分析
+- 基于矛盾逻辑结构的报告写作
+- 提供分析框架——最终决定由用户做出
 
-## Expansion Roadmap (v2.0)
+本技能不处理：
 
-> **Guiding principle**: No new agents until v1.0 agents are practice-tested. Apply On Practice — use the skills in real work first, then expand based on evidence.
+- 长期分阶段策略或阶段诊断 → `on-protracted-war`
+- 基于实践的证据验证 → `on-practice`
+- 代码生成或软件实现 → `requirement-workflow`
+- 软件工程方法论 → `software-methodology-toolkit`
+- 快速事实性问答 → 直接回答
+- 情绪疏导 → 超出范围（未来 v2.0 智能体：emotion-manager）
+- 项目管理执行 → 超出范围（未来 v2.0 智能体：project-manager）
 
-The following agents are planned for future versions. Agents are assigned to the skill whose **core method** (contradiction structure vs practice spiral) is the primary lens.
+## 扩展路线图（v2.0）
 
-| Domain | Agent | Core Principle | Notes |
-|--------|-------|---------------|-------|
-| Communication | negotiation-advisor | Identity (common ground) + struggle (resolve divergences) | |
-| Management | project-manager | Staged principal contradictions + internal/external causes | |
-| Growth | self-growth-coach | Internal contradictions + transformation | |
-| Innovation | innovation-catalyst | Unity of opposites + restructuring contradictions | |
-| Risk | risk-controller | Risk/opportunity coexistence + prediction | |
-| Team | team-harmonizer | Group contradiction universality + principal contradiction | |
-| Review | retrospective-guide | Contradiction development over time + internal/external causes | Complements `on-practice / pattern-extractor` (which extracts patterns from practice data) |
-| Learning | knowledge-absorber | Universality (underlying logic) + particularity (scenarios) | Complements `on-practice / learning-master` (which focuses on learning by doing) |
-| Career | career-planner | Personal/environment contradictions + staged resolution | |
-| Product | product-designer | User demand contradictions + supply-demand unity | |
-| Emotion | emotion-manager | Rational/emotional contradictions + transformation | |
-| Task | task-decomposer | Hierarchical contradictions + principal prioritization | |
+> **指导原则**：在 v1.0 智能体经过实践检验之前不添加新智能体。应用《实践论》——先在实际工作中使用技能，再基于证据进行扩展。
 
-## References
+以下智能体规划在未来版本中实现。智能体根据其**核心方法**（矛盾结构 vs 实践螺旋）归属到对应技能。
 
-- **On Contradiction** (《矛盾论》) — Mao Zedong (1937)
-- **On Practice** (《实践论》) — Mao Zedong (1937)
-- **On Protracted War** (《论持久战》) — Mao Zedong (1938)
-- **"On the Correct Handling of Contradictions Among the People"** (《关于正确处理人民内部矛盾的问题》) — Mao Zedong (1957)
+| 领域 | 智能体 | 核心原理 | 备注 |
+|------|--------|---------|------|
+| 沟通 | negotiation-advisor | 同一性（共同基础）+ 斗争性（化解分歧） | |
+| 管理 | project-manager | 分阶段主要矛盾 + 内因/外因 | |
+| 成长 | self-growth-coach | 内部矛盾 + 转化 | |
+| 创新 | innovation-catalyst | 对立统一 + 矛盾重构 | |
+| 风险 | risk-controller | 风险/机遇共存 + 预判 | |
+| 团队 | team-harmonizer | 群体矛盾普遍性 + 主要矛盾 | |
+| 复盘 | retrospective-guide | 矛盾随时间发展 + 内因/外因 | 与 `on-practice / pattern-extractor`（从实践数据中提炼模式）互补 |
+| 学习 | knowledge-absorber | 普遍性（底层逻辑）+ 特殊性（应用场景） | 与 `on-practice / learning-master`（聚焦在做中学）互补 |
+| 职业 | career-planner | 个人/环境矛盾 + 分阶段化解 | |
+| 产品 | product-designer | 用户需求矛盾 + 供需统一 | |
+| 情绪 | emotion-manager | 理性/感性矛盾 + 转化 | |
+| 任务 | task-decomposer | 层级矛盾 + 主要矛盾优先 | |
+
+## 参考文献
+
+- **《矛盾论》** — 毛泽东（1937）
+- **《实践论》** — 毛泽东（1937）
+- **《论持久战》** — 毛泽东（1938）
+- **《关于正确处理人民内部矛盾的问题》** — 毛泽东（1957）

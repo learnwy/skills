@@ -1,19 +1,19 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with this repository.
+本文件为 Claude Code (claude.ai/code) 在本仓库中工作提供指引。
 
-All project conventions, skill inventory, and development guidelines are maintained in [AGENTS.md](AGENTS.md). Refer to that file for:
+所有项目约定、技能清单和开发指南均维护在 [AGENTS.md](AGENTS.md) 中。请参阅该文件了解：
 
-- Repository structure and current skills inventory
-- Skill specification (directory layout, frontmatter, progressive disclosure)
-- Development guidelines (creating skills, code style, testing)
-- Common workflows (methodology analysis, knowledge management, project extensions)
+- 仓库结构和当前技能清单
+- 技能规范（目录结构、frontmatter、渐进式加载）
+- 开发指南（创建技能、代码风格、测试）
+- 常用工作流（方法论分析、知识管理、项目扩展）
 
-## Quick Reference
+## 快速参考
 
-- **13 skills** in `skills/` directory, each with a `SKILL.md`
-- **10 universal agents** in `agents/` directory
-- **No comments** in code unless explicitly requested
-- **English** for all skill documents
-- **Package manager**: pnpm (`pnpm install`, `pnpm run check`, `pnpm run release`)
-- **Scripts**: TypeScript in `src/<skill>/{cli,cmd/,lib/,hooks/}`, bundled to CJS in `skills/<skill>/scripts/{cli.cjs, hooks/<event>.cjs}` via rslib's auto-scanner
+- `skills/` 目录下有 **13 个技能**，每个都有 `SKILL.md`
+- `agents/` 目录下有 **10 个通用代理**
+- 代码中**不加注释**，除非明确要求
+- 所有技能文档使用**英文**
+- **包管理器**：pnpm（`pnpm install`、`pnpm run check`、`pnpm run release`）
+- **脚本**：TypeScript 源码在 `src/<skill>/{cli,cmd/,lib/,hooks/}`，通过 rslib 自动扫描器打包为 CJS 输出到 `skills/<skill>/scripts/{cli.cjs, hooks/<event>.cjs}`

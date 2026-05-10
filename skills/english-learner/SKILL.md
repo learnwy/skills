@@ -1,150 +1,150 @@
 ---
 name: english-learner
-description: "Use this skill on EVERY user message written in English to auto-detect grammar, word choice, and expression issues — teach corrections before proceeding with the task. Also use when the user looks up a single word, asks about a phrase like 'break the ice', requests translation, or asks for quiz/review. Triggers on: any English message, single English words, idioms, '查单词', '学英语', 'what does X mean', vocabulary review. Stores vocabulary in ~/.english-learner/ with mastery tracking and spaced repetition."
+description: "对用户发送的每条英文消息自动检测语法、用词和表达问题——先教学纠正，再处理实际任务。也适用于查单词、查短语（如 'break the ice'）、翻译请求或复习测验。触发词：任何英文消息、单个英文单词、习语、'查单词'、'学英语'、'what does X mean'、词汇复习等。词汇数据存储在 ~/.english-learner/，支持掌握度追踪和间隔复习。"
 metadata:
   author: "learnwy"
   version: "3.1"
   trigger: "always"
 ---
 
-# English Learner
+# 英语学习助手
 
-Personal vocabulary learning assistant with persistent storage, mastery tracking, and spaced review.
+个人词汇学习助手，支持持久化存储、掌握度追踪和间隔复习。
 
-## When to Use
+## 使用场景
 
-**Invoke when:**
+**触发条件：**
 
-- User inputs a single English word (e.g. `run`, `ephemeral`)
-- User inputs an English phrase or idiom (e.g. `break the ice`, `by and large`)
-- User inputs a sentence to translate or analyze (English or Chinese)
-- User asks to learn, review, or quiz vocabulary (`学习`, `review`, `quiz`)
-- User asks for vocabulary stats (`stats`, `统计`)
-- User says `查单词`, `学英语`, or similar learning-intent phrases
-- **Auto-intercept**: User writes in English with detectable grammar/expression issues (passive mode — no explicit trigger needed)
+- 用户输入一个英文单词（如 `run`、`ephemeral`）
+- 用户输入一个英文短语或习语（如 `break the ice`、`by and large`）
+- 用户输入一个句子进行翻译或分析（英文或中文）
+- 用户要求学习、复习或测验词汇（`学习`、`review`、`quiz`）
+- 用户查看词汇统计（`stats`、`统计`）
+- 用户说 `查单词`、`学英语` 或类似学习意图的短语
+- **自动拦截**：用户使用英文书写且存在可检测的语法/表达问题（被动模式——无需显式触发）
 
-**Do NOT invoke when:**
+**不触发条件：**
 
-- User is asking about code, programming, or technical concepts
-- User is having a general conversation not related to language learning
-- Input is clearly a command or file path, not language content
-- User's English is already fluent and natural in the current message (auto-intercept: skip silently)
-- The message is clearly copy-pasted content, code, or technical output
+- 用户询问代码、编程或技术概念
+- 用户进行与语言学习无关的一般对话
+- 输入明显是命令或文件路径，而非语言内容
+- 用户当前消息的英文已经流利自然（自动拦截：静默跳过）
+- 消息明显是复制粘贴的内容、代码或技术输出
 
-## Auto-Intercept Mode
+## 自动拦截模式
 
-This mode runs **automatically** when the user writes in English. It does NOT require explicit invocation.
+此模式在用户使用英文书写时**自动运行**，不需要显式调用。
 
-### How It Works
+### 工作原理
 
 ```
-[1. User sends message in English]
+[1. 用户发送英文消息]
        ↓
-[2. Scan for issues]  → grammar, word choice, awkward expressions, spelling
+[2. 扫描问题]  → 语法、用词、别扭表达、拼写
        ↓
-[3. Issues found?]
-   ├── NO  → Proceed with user's task normally
-   └── YES → Show brief teaching moment, THEN proceed with task
+[3. 发现问题？]
+   ├── 否  → 正常处理用户任务
+   └── 是  → 先展示简短教学提示，再处理任务
 ```
 
-### Teaching Moment Format
+### 教学提示格式
 
-When issues are found, prepend this to your response BEFORE doing the user's actual task:
+发现问题时，在响应中先展示以下内容，再完成用户的实际任务：
 
 ```
 💡 **English Tip:**
 
 | Your Expression | Better Expression | Why |
 |----------------|-------------------|-----|
-| {original} | {corrected} | {brief grammar/usage explanation} |
+| {原文} | {修正} | {简要语法/用法说明} |
 
 ---
 ```
 
-### Rules
+### 规则
 
-1. **Never block the task** — always complete the user's original request after the teaching moment
-2. **Max 3 corrections per message** — don't overwhelm; pick the most important ones
-3. **Be encouraging** — frame as tips, not errors
-4. **Skip trivial issues** — don't correct informal style, abbreviations, or intentional slang
-5. **Skip when user is copy-pasting** — if the text is clearly copied content (code, quotes, etc.), don't correct
-6. **Auto-save new vocabulary** — any corrected words/phrases should be saved to the vocabulary store via `batch_save`
-7. **Track teaching frequency** — don't repeat the same correction within the same session
+1. **绝不阻断任务** — 教学提示后务必完成用户的原始请求
+2. **每条消息最多 3 个纠正** — 不要让人应接不暇，挑最重要的
+3. **鼓励为主** — 以提示而非纠错的方式呈现
+4. **跳过琐碎问题** — 不纠正非正式风格、缩写或有意为之的俚语
+5. **跳过复制粘贴内容** — 如果文本明显是复制的（代码、引文等），不做纠正
+6. **自动保存新词汇** — 被纠正的单词/短语应通过 `batch_save` 保存到词汇库
+7. **追踪教学频率** — 同一会话中不重复相同的纠正
 
-### Issue Detection Categories
+### 问题检测类别
 
-| Category | Examples | Priority |
-|----------|----------|----------|
-| Grammar | Subject-verb agreement, tense errors, article misuse | High |
-| Word Choice | Wrong preposition, confusable words (affect/effect) | High |
-| Awkward Expression | Unnatural phrasing, Chinglish patterns | Medium |
-| Spelling | Typos, common misspellings | Low (skip if clearly a typo) |
+| 类别 | 示例 | 优先级 |
+|------|------|--------|
+| 语法 | 主谓一致、时态错误、冠词误用 | 高 |
+| 用词 | 介词错误、易混淆词 (affect/effect) | 高 |
+| 别扭表达 | 不自然的措辞、中式英语模式 | 中 |
+| 拼写 | 打字错误、常见拼写错误 | 低（明显是笔误则跳过） |
 
-### Chinglish Patterns to Watch For
+### 中式英语常见模式
 
-| Pattern | Example | Correction |
-|---------|---------|------------|
-| Missing articles | "I need go store" | "I need to go to the store" |
-| Verb form errors | "I suggest to do" | "I suggest doing" / "I suggest we do" |
-| Preposition misuse | "discuss about" | "discuss" (no preposition needed) |
-| Double subject | "This problem it is" | "This problem is" |
-| Word order | "I very like it" | "I really like it" / "I like it very much" |
+| 模式 | 例子 | 纠正 |
+|------|------|------|
+| 缺少冠词 | "I need go store" | "I need to go to the store" |
+| 动词形式错误 | "I suggest to do" | "I suggest doing" / "I suggest we do" |
+| 介词误用 | "discuss about" | "discuss"（不需要介词） |
+| 双重主语 | "This problem it is" | "This problem is" |
+| 词序错误 | "I very like it" | "I really like it" / "I like it very much" |
 
-## Prerequisites
+## 前置条件
 
-- Node.js >= 24 (uses built-in `node:sqlite`)
-- Writable home directory for `~/.english-learner/data.db`
+- Node.js >= 24（使用内置 `node:sqlite`）
+- 主目录可写，用于存储 `~/.english-learner/data.db`
 
-If you have legacy JSON data under `~/.english-learner/{words,phrases,history}/`, run the importer once:
+如果 `~/.english-learner/{words,phrases,history}/` 下存在旧版 JSON 数据，运行一次导入：
 
 ```bash
-node scripts/cli.cjs migrate              # import into data.db
-node scripts/cli.cjs migrate --dry-run    # preview row counts only
+node scripts/cli.cjs migrate              # 导入到 data.db
+node scripts/cli.cjs migrate --dry-run    # 仅预览行数
 ```
 
-The import is idempotent — safe to re-run. Original JSON files are not touched; you can archive them after verifying the import.
+导入是幂等的——可安全重复运行。原始 JSON 文件不会被修改；验证导入后可归档。
 
-## Workflow
+## 工作流
 
 ```
-[0. Auto-Intercept Check] → English issues? → Show tip, then continue
-       ↓ (no issues or explicit learning request)
-[1. Detect Mode]  → keyword? → Learning Mode
-       ↓ (no)
-[2. Classify Input]  → word / phrase / sentence
+[0. 自动拦截检查] → 英文有问题？ → 展示提示，然后继续
+       ↓ (无问题或显式学习请求)
+[1. 检测模式]  → 关键词？ → 学习模式
+       ↓ (否)
+[2. 分类输入]  → 单词 / 短语 / 句子
        ↓
-[3. Batch Lookup]  → check existing vocabulary
+[3. 批量查询]  → 检查已有词汇
        ↓
-[4. AI Generate]  → definitions, phonetics, examples for unknowns
+[4. AI 生成]  → 为未知词生成释义、音标、例句
        ↓
-[5. Batch Save]  ← MANDATORY before responding
+[5. 批量保存]  ← 响应前必须完成
        ↓
-[6. Log Query]
+[6. 记录查询]
        ↓
-[7. Respond]  → unified format
+[7. 输出响应]  → 统一格式
 ```
 
-### Mode Detection
+### 模式检测
 
-| Input | Mode | Action |
-|-------|------|--------|
-| `学习` / `review` / `quiz` | Learning Mode | Generate quiz from saved vocabulary |
-| `stats` / `统计` | Stats Mode | Show learning statistics |
-| Everything else | Lookup Mode | Translate/learn the content |
+| 输入 | 模式 | 行为 |
+|------|------|------|
+| `学习` / `review` / `quiz` | 学习模式 | 从已存词汇生成测验 |
+| `stats` / `统计` | 统计模式 | 展示学习统计 |
+| 其他所有 | 查询模式 | 翻译/学习内容 |
 
-### Input Classification
+### 输入分类
 
-Use `cli.cjs sentence classify <text>` to determine type:
+使用 `cli.cjs sentence classify <text>` 判断类型：
 
-| Type | Rule | Example |
-|------|------|---------|
-| word | Single token | `run`, `ephemeral` |
-| phrase | 2-5 tokens, no sentence punctuation | `break the ice` |
-| sentence | 6+ tokens or has `.!?` | `The early bird catches the worm.` |
+| 类型 | 规则 | 示例 |
+|------|------|------|
+| word | 单个词元 | `run`、`ephemeral` |
+| phrase | 2-5 个词元，无句号标点 | `break the ice` |
+| sentence | 6+ 个词元或含 `.!?` | `The early bird catches the worm.` |
 
-### Ambiguity Handling
+### 歧义处理
 
-If input contains multiple items or intent is unclear, use `AskUserQuestion`:
+如果输入包含多个项目或意图不明确，使用 `AskUserQuestion`：
 
 ```json
 {
@@ -161,12 +161,12 @@ If input contains multiple items or intent is unclear, use `AskUserQuestion`:
 }
 ```
 
-## Scripts
+## 脚本
 
-Single entry point at `{skill_root}/scripts/cli.cjs`. Data stored in `~/.english-learner/`.
+单入口 `{skill_root}/scripts/cli.cjs`。数据存储在 `~/.english-learner/`。
 
 ```bash
-# vocab — Word/Phrase CRUD + batch operations
+# vocab — 单词/短语的增删改查 + 批量操作
 node cli.cjs vocab get_word <word>
 node cli.cjs vocab save_word <word> <definition> [phonetic] [examples_json]
 node cli.cjs vocab get_phrase "<phrase>"
@@ -175,28 +175,28 @@ node cli.cjs vocab log_query <query> <type>
 node cli.cjs vocab stats
 node cli.cjs vocab update_mastery <item> <is_word:true/false> <correct:true/false>
 
-# Batch operations (PREFERRED for multiple words)
+# 批量操作（多个单词时优先使用）
 node cli.cjs vocab batch_get '["word1", "word2"]'
 node cli.cjs vocab batch_save '[{"word":"...","definition":"...","phonetic":"...","examples":[]}]'
 
-# sentence — Input classification + word extraction
+# sentence — 输入分类 + 词汇提取
 node cli.cjs sentence classify <text>
 node cli.cjs sentence parse <sentence>
 node cli.cjs sentence batch_check <words>
 
-# quiz — Learning sessions
+# quiz — 学习会话
 node cli.cjs quiz generate [count] [type] [focus]
 node cli.cjs quiz review [limit]
 node cli.cjs quiz summary
 
-# Hook registration
-node cli.cjs install      # register hooks into ~/.claude/ and ~/.trae/
-node cli.cjs uninstall    # remove this skill's hook entries
+# Hook 注册
+node cli.cjs install      # 注册 hooks 到 ~/.claude/ 和 ~/.trae/
+node cli.cjs uninstall    # 移除本技能的 hook 条目
 ```
 
-## Response Formats
+## 响应格式
 
-### Word
+### 单词
 
 ```
 📖 **{english}** {phonetic}
@@ -218,7 +218,7 @@ node cli.cjs uninstall    # remove this skill's hook entries
 📊 查询次数: {lookup_count} | 掌握度: {mastery}%
 ```
 
-### Phrase
+### 短语
 
 ```
 📖 **{english_phrase}** {phonetic}
@@ -234,7 +234,7 @@ node cli.cjs uninstall    # remove this skill's hook entries
 📊 查询次数: {lookup_count} | 掌握度: {mastery}%
 ```
 
-### Sentence
+### 句子
 
 ```
 📝 **句子分析**
@@ -247,20 +247,20 @@ node cli.cjs uninstall    # remove this skill's hook entries
 
 **词汇拆解:**
 
-{For each key word/phrase, use Word format above}
+{对每个关键词/短语，使用上述单词格式}
 
 ---
 📊 新增词汇: {new_words_list}
 ```
 
-## Learning Mode
+## 学习模式
 
-When user says `学习` / `review` / `quiz`:
+当用户说 `学习` / `review` / `quiz` 时：
 
 ```
-1. Generate quiz:  node cli.cjs quiz generate 5 all low_mastery
-2. If empty → show "词库为空" message with usage hints
-3. For EACH quiz item:
+1. 生成测验:  node cli.cjs quiz generate 5 all low_mastery
+2. 如果为空 → 展示"词库为空"消息及使用提示
+3. 对每个测验项目:
 
    AskUserQuestion:
      question: "📖 **{word}** 的意思是什么？"
@@ -270,7 +270,7 @@ When user says `学习` / `review` / `quiz`:
        - "模糊" — "有点印象但不确定"
        - "不认识" — "完全不知道"
 
-4. Show answer (unified format)
+4. 展示答案（统一格式）
 
 5. AskUserQuestion:
      question: "掌握程度如何？"
@@ -280,13 +280,13 @@ When user says `学习` / `review` / `quiz`:
        - "基本掌握" — "+5 mastery"
        - "需要加强" — "-5 mastery"
 
-6. Update mastery:  node cli.cjs vocab update_mastery <item> true <result>
-7. Continue or show summary
+6. 更新掌握度:  node cli.cjs vocab update_mastery <item> true <result>
+7. 继续或展示总结
 ```
 
-### Empty Vocabulary
+### 词库为空
 
-If quiz returns empty list:
+如果测验返回空列表：
 
 ```
 📚 **词库为空**
@@ -299,9 +299,9 @@ If quiz returns empty list:
 - 输入一句英文或中文来翻译和学习
 ```
 
-## Stats Mode
+## 统计模式
 
-When user says `stats` / `统计`:
+当用户说 `stats` / `统计` 时：
 
 ```
 📊 **学习统计**
@@ -316,19 +316,19 @@ When user says `stats` / `统计`:
 | 总查询次数 | {total_lookups} |
 ```
 
-## Data Structure
+## 数据结构
 
-Storage is SQLite at `~/.english-learner/data.db`. Memory files (Markdown) stay separate.
+存储为 SQLite 数据库 `~/.english-learner/data.db`。记忆文件（Markdown）独立存储。
 
 ```
 ~/.english-learner/
-├── data.db              # SQLite — words, phrases, history
+├── data.db              # SQLite — 单词、短语、历史
 └── memory/
     ├── SOUL.md
     └── USER.md
 ```
 
-### SQLite Schema
+### SQLite 表结构
 
 ```sql
 CREATE TABLE words (
@@ -364,9 +364,9 @@ CREATE TABLE history (
 CREATE INDEX idx_history_ts ON history(ts);
 ```
 
-The `data` column carries the JSON shape; indexed columns (`mastery`, `lookup_count`, `created_at`) enable fast quiz/review queries (`ORDER BY mastery ASC`, etc.).
+`data` 列存储 JSON 数据；索引列（`mastery`、`lookup_count`、`created_at`）支持快速的测验/复习查询（`ORDER BY mastery ASC` 等）。
 
-### Word Record Shape (returned by `get_word`)
+### 单词记录结构（`get_word` 返回格式）
 
 ```json
 {
@@ -385,69 +385,69 @@ The `data` column carries the JSON shape; indexed columns (`mastery`, `lookup_co
 }
 ```
 
-## Error Handling
+## 错误处理
 
-| Issue | Solution |
-|-------|----------|
-| `~/.english-learner/` not writable | Report error, suggest `mkdir -p ~/.english-learner` |
-| `node:sqlite` not available | Upgrade Node.js to ≥ 24 |
-| `batch_get` returns all `not_found` | AI generates all definitions, then `batch_save` |
-| Quiz returns empty list | Show "词库为空" message with usage hints |
-| Input language ambiguous | Use `cli.cjs sentence classify` first, then confirm with user if still unclear |
-| `batch_save` fails | Retry once, then report error with raw data so user can save manually |
-| Legacy JSON data still on disk | Run `node scripts/cli.cjs migrate` to import into SQLite (idempotent) |
+| 问题 | 解决方案 |
+|------|----------|
+| `~/.english-learner/` 不可写 | 报告错误，建议 `mkdir -p ~/.english-learner` |
+| `node:sqlite` 不可用 | 升级 Node.js 到 >= 24 |
+| `batch_get` 全部返回 `not_found` | AI 生成所有释义，然后 `batch_save` |
+| 测验返回空列表 | 展示"词库为空"消息及使用提示 |
+| 输入语言不确定 | 先用 `cli.cjs sentence classify`，仍不确定则向用户确认 |
+| `batch_save` 失败 | 重试一次，然后报告错误及原始数据，以便用户手动保存 |
+| 磁盘上仍有旧版 JSON 数据 | 运行 `node scripts/cli.cjs migrate` 导入 SQLite（幂等） |
 
-## Execution Checklist
+## 执行检查清单
 
-Before responding to user, verify:
+响应用户前，确认：
 
-- [ ] Auto-intercept: scanned user's English for issues (if writing in English)
-- [ ] Auto-intercept: corrections shown (max 3) with teaching moments
-- [ ] Auto-intercept: corrected words/phrases saved via batch_save
-- [ ] All words/phrases extracted from input
-- [ ] Batch lookup executed via `batch_get`
-- [ ] New words SAVED via `batch_save` (MANDATORY — not optional)
-- [ ] Query logged via `log_query`
-- [ ] Response uses unified format above
+- [ ] 自动拦截：已扫描用户英文中的问题（如使用英文书写）
+- [ ] 自动拦截：已展示纠正（最多 3 个）及教学提示
+- [ ] 自动拦截：已通过 batch_save 保存纠正的单词/短语
+- [ ] 已从输入中提取所有单词/短语
+- [ ] 已通过 `batch_get` 执行批量查询
+- [ ] 新单词已通过 `batch_save` 保存（必须——不是可选的）
+- [ ] 已通过 `log_query` 记录查询
+- [ ] 响应使用上述统一格式
 
 ## Hooks
 
-This skill registers IDE hooks to enable **deterministic auto-intercept** — no reliance on the AI "remembering" to check English.
+本技能注册 IDE hooks 以实现**确定性自动拦截**——不依赖 AI "记住"去检查英文。
 
-### Scope
+### 作用域
 
-**Global** — installs to `~/.claude/settings.json` and `~/.trae/hooks.json` since vocabulary data lives at `~/.english-learner/`.
+**全局** — 安装到 `~/.claude/settings.json` 和 `~/.trae/hooks.json`，因为词汇数据存储在 `~/.english-learner/`。
 
-### Events
+### 事件
 
-| Event | Script | Purpose |
-|-------|--------|---------|
-| `UserPromptSubmit` | `scripts/hooks/user-prompt-scan.cjs` | Scan user English input, inject skill activation reminder |
-| `Stop` | `scripts/hooks/stop-response-scan.cjs` | After every AI response, surface 2–4 advanced English words the user might want to save (asks for confirmation, never auto-saves). Skips silently when the response is english-learner's own output, too short, or contains only common words. |
+| 事件 | 脚本 | 用途 |
+|------|------|------|
+| `UserPromptSubmit` | `scripts/hooks/user-prompt-scan.cjs` | 扫描用户英文输入，注入技能激活提醒 |
+| `Stop` | `scripts/hooks/stop-response-scan.cjs` | 每次 AI 响应后，提取 2-4 个高级英文词汇供用户选择保存（请求确认，从不自动保存）。当响应是 english-learner 自身的输出、太短或仅含常见词时静默跳过。 |
 
-### Install
+### 安装
 
 ```bash
-# Install hooks globally (supports both Trae and Claude Code)
+# 全局安装 hooks（同时支持 Trae 和 Claude Code）
 node scripts/cli.cjs install --scope global --target both
 ```
 
-### Uninstall
+### 卸载
 
 ```bash
 node scripts/cli.cjs uninstall --scope global --target both
 ```
 
-### How It Works
+### 工作原理
 
-1. **UserPromptSubmit** fires on every user message
-2. `user-prompt-scan.cjs` checks if message is English (>60% ASCII alpha, not code/path/command)
-3. If English detected → injects reminder context for the AI to activate the skill
-4. If not English or too short → exits silently (exit 0, no output)
+1. **UserPromptSubmit** 在每条用户消息时触发
+2. `user-prompt-scan.cjs` 检查消息是否为英文（>60% ASCII 字母，非代码/路径/命令）
+3. 如检测到英文 → 注入提醒上下文，让 AI 激活本技能
+4. 如非英文或太短 → 静默退出（exit 0，无输出）
 
-**Stop hook** — fires after every AI response:
+**Stop hook** — 在每次 AI 响应后触发：
 
-1. `stop-response-scan.cjs` reads the assistant's last message
-2. Bails out if response is too short, looks like english-learner's own output (vocabulary card markers), or has fewer than ~5 long words
-3. Otherwise extracts up to 12 long English token candidates
-4. Injects a reminder asking the AI to surface 2–4 genuinely advanced/non-obvious words and ask the user whether to save them — **never auto-save**, the user must confirm
+1. `stop-response-scan.cjs` 读取助手的最后一条消息
+2. 如果响应太短、看起来是 english-learner 自身的输出（词汇卡片标记）、或长单词少于 ~5 个则跳过
+3. 否则提取最多 12 个长英文词元候选
+4. 注入提醒，要求 AI 提取 2-4 个真正高级/非显而易见的单词并询问用户是否保存——**从不自动保存**，用户必须确认

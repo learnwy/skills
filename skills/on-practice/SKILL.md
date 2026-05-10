@@ -1,280 +1,280 @@
 ---
 name: on-practice
-description: "Use this skill when validating assumptions through real-world testing using Mao Zedong's *On Practice* (《实践论》). Applies the practice-cognition-re-practice spiral to decision-making, problem analysis, and report writing. Triggers on: 'practice-based', 'verify through practice', 'seek truth from facts', '实践论', '实事求是', 'On Practice', 'test assumptions', 'practice spiral', 'field investigation', 'validate hypothesis', or when the user needs to move from theory to verified action."
+description: "当需要运用毛泽东《实践论》通过实际行动验证假设时使用此技能。将实践-认识-再实践的螺旋式上升应用于决策、问题分析和报告撰写。触发词：'实践检验'、'实事求是'、'调查研究'、'实践论'、'practice-based'、'verify through practice'、'seek truth from facts'、'test assumptions'、'practice spiral'、'field investigation'、'validate hypothesis'，或用户需要从理论走向经过验证的行动时触发。"
 metadata:
   author: "learnwy"
   version: "1.1"
-  source: "Mao Zedong, *On Practice* (《实践论》, 1937)"
+  source: "毛泽东，《实践论》（1937）"
 ---
 
-# On Practice Methodology Toolkit
+# 《实践论》方法论工具箱
 
-Practical methodology toolkit derived from Mao Zedong's *On Practice*. Transforms the philosophical theory of the unity of knowing and doing into actionable, reusable operational frameworks for decision-making, problem analysis, and report writing.
+源自毛泽东《实践论》的实用方法论工具箱。将知行合一的哲学理论转化为可操作、可复用的决策、问题分析和报告撰写框架。
 
-> **Core Principle**: Practice is the source, driving force, purpose, and sole criterion for testing truth. Cognition follows a spiral: practice → perceptual knowledge → rational knowledge → re-practice → re-cognition, repeating infinitely. All correct ideas come from social practice; their real value lies in guiding and improving practice.
+> **核心原则**：实践是认识的来源、动力、目的和检验真理的唯一标准。认识遵循螺旋式上升：实践 → 感性认识 → 理性认识 → 再实践 → 再认识，循环往复以至无穷。一切正确的思想来自社会实践；其真正价值在于指导和改进实践。
 
-## Prerequisites
+## 前置条件
 
-- No runtime dependencies (methodology-only skill, no scripts)
-- Works in any domain — business, engineering, personal, strategic
+- 无运行时依赖（纯方法论技能，无脚本）
+- 适用于任何领域——商业、工程、个人、战略
 
-## When to Use
+## 何时使用
 
-**Invoke when:**
+**应调用的场景：**
 
-- User needs to make a decision grounded in real-world evidence rather than speculation
-- User faces a problem that requires investigation and fact-finding before analysis
-- User wants to write a report structured around what was done, learned, and will be improved
-- User mentions "practice-based", "verify through practice", "seek truth from facts", "test assumptions"
-- User needs to move from theory to action, or validate ideas through experimentation
-- User wants to break analysis paralysis by grounding thinking in concrete practice
+- 用户需要基于真实证据而非推测做出决策
+- 用户面对的问题需要先调查研究再分析
+- 用户想撰写围绕"做了什么、学到了什么、将改进什么"的报告
+- 用户提到"实践检验"、"实事求是"、"调查研究"、"验证假设"
+- 用户需要从理论走向行动，或通过实验验证想法
+- 用户想打破分析瘫痪，将思维扎根于具体实践
 
-**Do NOT invoke when:**
+**不应调用的场景：**
 
-- User needs contradiction-based structural analysis → use `on-contradiction`
-- User needs code implementation → use `requirement-workflow` or IDE directly
-- User needs software-specific methodology → use `software-methodology-toolkit`
-- The problem is purely theoretical with no practical component
+- 用户需要基于矛盾的结构性分析 → 使用 `on-contradiction`
+- 用户需要代码实现 → 使用 `requirement-workflow` 或直接使用 IDE
+- 用户需要软件专用方法论 → 使用 `software-methodology-toolkit`
+- 问题纯粹是理论性的，没有实践成分
 
-## Relationship with On Contradiction and On Protracted War
+## 与《矛盾论》《论持久战》的关系
 
-*On Practice*, *On Contradiction*, and *On Protracted War* form a trilogy:
+《实践论》、《矛盾论》、《论持久战》构成三部曲：
 
-| Dimension | On Contradiction | On Practice | On Protracted War |
-|-----------|-----------------|-------------|-------------------|
-| **Focus** | Structure of forces | Process of knowing | Evolution over time |
-| **Question** | "What are the contradictions?" | "How do we verify truth?" | "How does this unfold and when do we act?" |
-| **Method** | Identify, prioritize, transform | Investigate, test, validate | Stage, strategize, maneuver, evolve |
-| **Strength** | Structural clarity — sees the skeleton | Process rigor — ensures grounding | Temporal wisdom — sees the arc of change |
-| **Combine** | Identify WHAT forces are at play | Validate HOW through practice | Plan WHEN to act and how each phase differs |
+| 维度 | 《矛盾论》 | 《实践论》 | 《论持久战》 |
+|------|-----------|-----------|------------|
+| **聚焦** | 力量的结构 | 认知的过程 | 时间的演变 |
+| **核心问题** | "矛盾是什么？" | "如何验证真理？" | "事物如何发展，何时行动？" |
+| **方法** | 识别、排序、转化 | 调查、试验、验证 | 分阶段、定战略、灵活机动、持续演进 |
+| **优势** | 结构清晰——看到骨架 | 过程严谨——确保扎根 | 时间智慧——看到变化的弧线 |
+| **组合** | 识别有哪些力量在起作用 | 验证如何通过实践来检验 | 规划何时行动以及各阶段如何不同 |
 
-## The Practice-Cognition Spiral
+## 实践-认识螺旋
 
-Every agent in this toolkit applies this spiral:
-
-```
-Step 1: PRACTICE    — Engage with reality: investigate, experiment, observe
-Step 2: PERCEIVE    — Gather perceptual knowledge: raw facts, data, impressions
-Step 3: REASON      — Elevate to rational knowledge: patterns, laws, theories
-Step 4: RE-PRACTICE — Apply rational knowledge back to practice: test, validate
-Step 5: RE-COGNIZE  — Refine understanding based on results: correct, deepen
-                      ↻ Repeat — each cycle spirals upward
-```
-
-This spiral is the DNA of all agents. Each applies it to a specific domain.
-
-## Key Concepts
-
-| Concept | Definition | Practical Meaning |
-|---------|-----------|-------------------|
-| **Practice is Primary** | All knowledge originates from practice | Don't theorize in a vacuum; get your hands dirty first |
-| **Perceptual Knowledge** | Direct, surface-level impressions from experience | Raw data, observations, first-hand impressions — necessary but insufficient |
-| **Rational Knowledge** | Systematic understanding of patterns and laws | Theories, frameworks, principles extracted from perceptual knowledge |
-| **Perceptual → Rational Leap** | The qualitative leap from observation to understanding | Don't stay at the data level; synthesize patterns and laws |
-| **Rational → Practice Return** | The second leap: applying theory back to action | Theory without practice is empty; apply and validate |
-| **Unity of Knowing and Doing** | Knowledge and action are inseparable | Knowing without doing is not truly knowing |
-| **Seek Truth from Facts** | Conclusions must come from actual investigation | No investigation, no right to speak |
-| **Spiral Development** | Each practice-cognition cycle advances understanding | Learning is not linear; it spirals upward through repetition |
-| **Practice as Criterion** | Only practice can verify whether an idea is correct | Arguments don't settle truth — results do |
-| **Concrete Analysis** | Study the actual conditions, not abstract categories | Every situation has specific circumstances that generic theory misses |
-
-## Agent Summary
-
-| Domain | Agent | Core Principles Applied |
-|--------|-------|------------------------|
-| Thinking | [decision-maker](agents/thinking/decision-maker.md) | Small-scale trials + feedback validation + unity of judgment and results |
-| Thinking | [problem-analyzer](agents/thinking/problem-analyzer.md) | Investigation first + perceptual → rational leap + internal process tracing |
-| Writing | [report-writer](agents/writing/report-writer.md) | Practice-based evidence chain + continuous improvement cycle |
-
-## Routing Decision Table
-
-| User Signal | Agent | Confidence |
-|-------------|-------|------------|
-| "make a decision", "choose between", "test this option", "validate assumptions" | decision-maker | High |
-| "analyze the problem", "investigate", "what actually happened", "root cause" | problem-analyzer | High |
-| "write a report", "summarize findings", "document what we learned" | report-writer | High |
-| "实事求是", "调查研究", "实践检验" | problem-analyzer | High |
-| Need to validate an idea before committing | decision-maker | Medium |
-| Need to present practice-based findings to stakeholders | report-writer | Medium |
-| General mention of "practice" or "On Practice" | problem-analyzer (default entry) | Low |
-
-If confidence is Low, confirm agent selection with the user before proceeding.
-
-## Composition Workflows
-
-### Full Practice Cycle Workflow (Investigate → Decide → Report)
+本工具箱中每个智能体都遵循这个螺旋：
 
 ```
-1. problem-analyzer  → Investigate the real situation, extract rational knowledge
-2. decision-maker    → Design practice-based validation, decide based on evidence
-3. report-writer     → Document what was done, learned, verified, and next steps
+第1步：实践    — 接触现实：调查、实验、观察
+第2步：感知    — 获取感性认识：原始事实、数据、印象
+第3步：推理    — 上升为理性认识：模式、规律、理论
+第4步：再实践  — 将理性认识应用回实践：检验、验证
+第5步：再认识  — 根据结果完善认识：修正、深化
+                  ↻ 循环——每次循环螺旋式上升
 ```
 
-### Assumption Validation Workflow
+此螺旋是所有智能体的基因。每个智能体将其应用于特定领域。
+
+## 关键概念
+
+| 概念 | 定义 | 实践含义 |
+|------|------|---------|
+| **实践第一** | 一切认识来源于实践 | 不要闭门造车；先亲自动手 |
+| **感性认识** | 从经验中获得的直接、表面的印象 | 原始数据、观察、第一手印象——必要但不充分 |
+| **理性认识** | 对模式和规律的系统性理解 | 从感性认识中提炼出的理论、框架、原理 |
+| **感性→理性的飞跃** | 从观察到理解的质变 | 不要停留在数据层面；要综合提炼模式和规律 |
+| **理性→实践的回归** | 第二次飞跃：将理论应用回行动 | 理论脱离实践是空的；要应用并验证 |
+| **知行合一** | 认识和行动不可分割 | 知而不行非真知 |
+| **实事求是** | 结论必须来自实际调查 | 没有调查就没有发言权 |
+| **螺旋式发展** | 每次实践-认识循环都推进认识 | 学习不是线性的；通过反复实践螺旋式上升 |
+| **实践是检验标准** | 只有实践才能验证一个想法是否正确 | 争论解决不了真理——结果说了算 |
+| **具体分析** | 研究实际条件，而非抽象类别 | 每个局面都有通用理论遗漏的具体情况 |
+
+## 智能体概览
+
+| 领域 | 智能体 | 应用的核心原理 |
+|------|--------|--------------|
+| 思维 | [decision-maker](agents/thinking/decision-maker.md) | 小规模试验 + 反馈验证 + 判断与结果的统一 |
+| 思维 | [problem-analyzer](agents/thinking/problem-analyzer.md) | 先调查后分析 + 感性→理性飞跃 + 内在过程追溯 |
+| 写作 | [report-writer](agents/writing/report-writer.md) | 基于实践的证据链 + 持续改进循环 |
+
+## 路由决策表
+
+| 用户信号 | 智能体 | 置信度 |
+|---------|--------|-------|
+| "做个决策"、"选择哪个"、"验证这个方案"、"验证假设" | decision-maker | 高 |
+| "分析问题"、"调查一下"、"到底发生了什么"、"根本原因" | problem-analyzer | 高 |
+| "写一份报告"、"总结发现"、"记录我们学到了什么" | report-writer | 高 |
+| "实事求是"、"调查研究"、"实践检验" | problem-analyzer | 高 |
+| 需要在承诺前验证一个想法 | decision-maker | 中 |
+| 需要向利益相关方呈现基于实践的发现 | report-writer | 中 |
+| 泛泛提及"实践"或"《实践论》" | problem-analyzer（默认入口） | 低 |
+
+置信度为"低"时，先与用户确认智能体选择再继续。
+
+## 组合工作流
+
+### 完整实践循环工作流（调查 → 决策 → 报告）
 
 ```
-1. decision-maker    → Identify assumptions, design small-scale tests
-2. problem-analyzer  → Analyze test results, extract patterns
-3. decision-maker    → Refine decision based on validated evidence
+1. problem-analyzer  → 调查真实情况，提炼理性认识
+2. decision-maker    → 设计基于实践的验证，基于证据做出决策
+3. report-writer     → 记录做了什么、学到了什么、验证了什么、下一步是什么
 ```
 
-### Continuous Improvement Workflow
+### 假设验证工作流
 
 ```
-1. problem-analyzer  → Investigate current state through practice lens
-2. report-writer     → Document the practice → learning → improvement cycle
-   ↻ Repeat each iteration
+1. decision-maker    → 识别假设，设计小规模试验
+2. problem-analyzer  → 分析试验结果，提炼模式
+3. decision-maker    → 根据已验证的证据完善决策
 ```
 
-## Cross-Skill Composition Workflows (Trilogy)
-
-### Validate-Then-Structure (with On Contradiction)
+### 持续改进工作流
 
 ```
-1. on-practice / problem-analyzer       → Investigate reality: gather first-hand perceptual knowledge
-2. on-practice / decision-maker         → Audit assumptions: which have practice evidence?
-3. on-contradiction / problem-analyzer  → Structure validated findings into contradiction layers
-4. on-contradiction / decision-maker    → Identify principal contradiction, plan transformation
-5. on-practice / report-writer          → Document the full practice → structure → action cycle
+1. problem-analyzer  → 以实践视角调查当前状态
+2. report-writer     → 记录实践 → 学习 → 改进循环
+   ↻ 每次迭代重复
 ```
 
-### Practice-Driven Decision (with On Contradiction)
+## 跨技能组合工作流（三部曲）
+
+### 先验证后结构化（与《矛盾论》结合）
 
 ```
-1. on-practice / decision-maker         → Surface assumptions, design small-scale trials
-2. on-contradiction / decision-maker    → Frame validated results as contradictions, find principal one
-3. on-practice / decision-maker         → Final decision grounded in both evidence and structural clarity
+1. on-practice / problem-analyzer       → 调查现实：获取第一手感性认识
+2. on-practice / decision-maker         → 审计假设：哪些有实践证据？
+3. on-contradiction / problem-analyzer  → 将已验证的发现结构化为矛盾层次
+4. on-contradiction / decision-maker    → 识别主要矛盾，规划转化
+5. on-practice / report-writer          → 记录完整的实践 → 结构 → 行动循环
 ```
 
-### The Full Trilogy Workflow (Evidence → Structure → Time)
+### 实践驱动的决策（与《矛盾论》结合）
 
 ```
-1. on-practice / problem-analyzer        → Investigate reality, gather first-hand perceptual knowledge
-2. on-contradiction / problem-analyzer   → Structure findings into contradiction layers, find principal one
-3. on-protracted-war / problem-analyzer  → Diagnose current stage, assess four factors over time
-4. on-protracted-war / decision-maker    → Choose phase-appropriate strategy
-5. on-practice / report-writer           → Full report: evidence + contradiction structure + phased plan
+1. on-practice / decision-maker         → 识别假设，设计小规模试验
+2. on-contradiction / decision-maker    → 将已验证的结果构建为矛盾，找到主要矛盾
+3. on-practice / decision-maker         → 以证据和结构双重支撑做出最终决策
 ```
 
-## Practice Analysis Tools
+### 完整三部曲工作流（证据 → 结构 → 时间）
 
-### Tool 1: Practice-Cognition Map
+```
+1. on-practice / problem-analyzer        → 调查现实，获取第一手感性认识
+2. on-contradiction / problem-analyzer   → 将发现结构化为矛盾层次，找到主要矛盾
+3. on-protracted-war / problem-analyzer  → 诊断当前阶段，从时间维度评估四要素
+4. on-protracted-war / decision-maker    → 选择适合当前阶段的策略
+5. on-practice / report-writer           → 完整报告：证据 + 矛盾结构 + 分阶段计划
+```
 
-For any situation, trace the knowledge chain:
+## 实践分析工具
 
-| Stage | Content | Evidence | Confidence |
-|-------|---------|----------|------------|
-| Practice (what was done) | {concrete actions taken} | {records, logs, data} | Factual |
-| Perception (what was observed) | {raw observations} | {direct experience} | Perceptual |
-| Reason (what was understood) | {patterns, principles extracted} | {analysis, synthesis} | Rational |
-| Validation (was it correct?) | {re-practice results} | {outcomes, metrics} | Verified / Unverified |
+### 工具1：实践-认识图
 
-### Tool 2: Assumption Audit
+针对任何局面，追溯认识链条：
 
-Before any decision, list all assumptions and their practice-basis:
+| 阶段 | 内容 | 证据 | 置信度 |
+|------|------|-----|-------|
+| 实践（做了什么） | {采取的具体行动} | {记录、日志、数据} | 事实性 |
+| 感知（观察到什么） | {原始观察} | {直接经验} | 感性 |
+| 推理（理解了什么） | {提炼的模式、原理} | {分析、综合} | 理性 |
+| 验证（是否正确） | {再实践的结果} | {成果、指标} | 已验证 / 未验证 |
 
-| # | Assumption | Practice-Based? | Evidence | Confidence |
-|---|-----------|-----------------|----------|------------|
-| 1 | {assumption} | ✅ Tested / ❌ Untested | {what evidence exists} | High / Low |
-| 2 | {assumption} | ✅ / ❌ | {evidence} | High / Low |
+### 工具2：假设审计
 
-**Rule**: Untested assumptions with high impact must be validated through practice before proceeding.
+在做任何决策之前，列出所有假设及其实践依据：
 
-### Tool 3: Investigation Checklist
+| # | 假设 | 有实践依据？ | 证据 | 置信度 |
+|---|------|------------|------|-------|
+| 1 | {假设} | ✅ 已验证 / ❌ 未验证 | {现有证据} | 高 / 低 |
+| 2 | {假设} | ✅ / ❌ | {证据} | 高 / 低 |
 
-Before drawing ANY conclusion, verify:
+**规则**：影响大且未经验证的假设，必须先通过实践验证再推进。
 
-1. Have you investigated the actual situation first-hand?
-2. Is your data from practice (observed/measured) or from theory (assumed/deduced)?
-3. Have you distinguished perceptual knowledge (raw facts) from rational knowledge (interpreted patterns)?
-4. Has your conclusion been tested in practice, or is it still theoretical?
-5. If tested, did the practice results confirm or contradict your theory?
+### 工具3：调查检查清单
 
-> **"No investigation, no right to speak."** — Mao Zedong
+在得出任何结论之前，验证：
 
-## Agent Output Contract
+1. 你是否亲自调查了实际情况？
+2. 你的数据来自实践（观察/测量）还是来自理论（假设/推导）？
+3. 你是否区分了感性认识（原始事实）和理性认识（解读出的模式）？
+4. 你的结论是否经过实践检验，还是仍停留在理论层面？
+5. 如果已检验，实践结果是证实还是推翻了你的理论？
 
-All agents follow the same output rules:
+> **"没有调查就没有发言权。"** — 毛泽东
 
-| Allowed | Not Allowed |
-|---------|-------------|
-| Practice-grounded analysis with evidence | Conclusions without investigation evidence |
-| Recommendations with validation plans | Pure theoretical reasoning without practice links |
-| Experiment designs for testing assumptions | Presenting untested assumptions as facts |
-| Actionable next practice steps | Abstract advice disconnected from action |
+## 智能体输出契约
 
-Every agent output must include:
-1. **Practice Evidence** — What was actually done/observed (not assumed)
-2. **Knowledge Stage** — Whether findings are perceptual, rational, or practice-verified
-3. **Assumptions Audit** — Which conclusions are tested vs untested
-4. **Validation Plan** — How to test unverified conclusions through practice
-5. **Next Practice** — Concrete actions for the next spiral cycle
+所有智能体遵循相同的输出规则：
 
-## Error Handling
+| 允许 | 不允许 |
+|------|-------|
+| 有证据支撑的实践分析 | 没有调查证据的结论 |
+| 附带验证计划的建议 | 不与实践挂钩的纯理论推理 |
+| 用于检验假设的实验设计 | 将未经验证的假设当作事实 |
+| 可行的后续实践步骤 | 脱离行动的抽象建议 |
 
-| Issue | Solution |
-|-------|----------|
-| User's request matches no agent trigger | Default to problem-analyzer as the entry point |
-| User wants to decide without any evidence | Highlight untested assumptions; recommend small-scale practice first |
-| Analysis is based entirely on theory/logic | Challenge: "What practice evidence supports this?" Design investigation |
-| User cannot access real-world data | Suggest proxy practices: interviews, prototypes, small experiments |
-| Previous practice results contradict current theory | This is the spiral at work — revise rational knowledge, plan re-practice |
-| User expects certainty from limited practice | Clarify: practice spirals upward; one cycle gives partial truth, not full truth |
-| Conclusions feel correct but are untested | Mark as "rational knowledge (unverified)" — design validation practice |
+每个智能体的输出必须包含：
+1. **实践证据** — 实际做了什么/观察到什么（非假设）
+2. **认识阶段** — 发现处于感性、理性还是经实践验证阶段
+3. **假设审计** — 哪些结论已验证，哪些未验证
+4. **验证计划** — 如何通过实践检验未验证的结论
+5. **下一步实践** — 下一次螺旋循环的具体行动
 
-## Execution Checklist
+## 错误处理
 
-Before invoking any agent, verify:
+| 问题 | 解决方案 |
+|------|---------|
+| 用户请求不匹配任何智能体触发词 | 默认使用 problem-analyzer 作为入口 |
+| 用户想在没有任何证据的情况下做决策 | 指出未经验证的假设；建议先进行小规模实践 |
+| 分析完全基于理论/逻辑 | 质问："什么实践证据支持这一点？"设计调查 |
+| 用户无法获取真实世界数据 | 建议替代实践：访谈、原型、小实验 |
+| 之前的实践结果与当前理论矛盾 | 这正是螺旋在起作用——修正理性认识，规划再实践 |
+| 用户期望从有限实践中获得确定性 | 澄清：实践螺旋式上升；一次循环给出部分真理，非完整真理 |
+| 结论感觉正确但未经检验 | 标记为"理性认识（未验证）"——设计验证实践 |
 
-- [ ] The situation involves real-world action, not pure abstract reasoning
-- [ ] Agent selection follows the Routing Decision Table
-- [ ] Agent receives concrete context (what was done, what was observed, what is planned)
+## 执行检查清单
 
-After agent produces output, verify:
+调用任何智能体之前，验证：
 
-- [ ] Every conclusion traces back to practice evidence (not just logic)
-- [ ] Assumptions are explicitly labeled as tested or untested
-- [ ] A validation plan exists for untested conclusions
-- [ ] Next steps are concrete actions (practice), not abstract recommendations
-- [ ] The output identifies which stage of the spiral the user is in
+- [ ] 局面涉及真实世界的行动，而非纯粹的抽象推理
+- [ ] 智能体选择遵循路由决策表
+- [ ] 智能体获得了具体的上下文（做了什么、观察到什么、计划做什么）
 
-## Boundary Enforcement
+智能体产出后，验证：
 
-This skill ONLY handles:
+- [ ] 每个结论都追溯到实践证据（而非仅靠逻辑）
+- [ ] 假设被明确标注为已验证或未验证
+- [ ] 为未验证的结论制定了验证计划
+- [ ] 下一步是具体的行动（实践），而非抽象建议
+- [ ] 输出识别了用户处于螺旋的哪个阶段
 
-- Practice-grounded decision-making with evidence validation
-- Problem investigation rooted in real-world observation and data
-- Report writing structured around the practice-cognition-improvement cycle
-- Designing experiments and investigations to test assumptions
-- Tracing the practice → cognition → re-practice spiral
+## 边界约束
 
-This skill does NOT handle:
+本技能仅处理：
 
-- Structural contradiction analysis → `on-contradiction`
-- Long-term phased strategy or stage diagnosis → `on-protracted-war`
-- Code generation or software implementation → `requirement-workflow`
-- Software engineering methodology → `software-methodology-toolkit`
-- Quick factual answers → answer directly
-- Project management execution → out of scope (future v2.0)
+- 基于实践证据验证的决策
+- 扎根于真实观察和数据的问题调查
+- 围绕实践-认识-改进循环构建的报告写作
+- 设计检验假设的实验和调查
+- 追溯实践 → 认识 → 再实践的螺旋
 
-## Expansion Roadmap (v2.0)
+本技能不处理：
 
-> **Guiding principle**: No new agents until v1.0 agents are practice-tested. Apply our own spiral — use the skills in real work first, then expand based on evidence.
+- 结构性矛盾分析 → `on-contradiction`
+- 长期分阶段策略或阶段诊断 → `on-protracted-war`
+- 代码生成或软件实现 → `requirement-workflow`
+- 软件工程方法论 → `software-methodology-toolkit`
+- 快速事实性问答 → 直接回答
+- 项目管理执行 → 超出范围（未来 v2.0）
 
-The following agents are planned for future versions. Agents are assigned to the skill whose **core method** (practice spiral vs contradiction structure) is the primary lens.
+## 扩展路线图（v2.0）
 
-| Domain | Agent | Core Principle | Notes |
-|--------|-------|---------------|-------|
-| Learning | learning-master | Learn by doing; deepen through repeated practice; summarize laws | Complements `on-contradiction / knowledge-absorber` (which focuses on structural universality/particularity) |
-| Experimentation | experiment-designer | Small practices to test ideas; iterate on results | |
-| Execution | execution-driver | Translate plans into actions; correct deviations through practice | |
-| Investigation | field-investigator | First-hand research; rational knowledge from perceptual facts | |
-| Improvement | pattern-extractor | Extract regular patterns; turn experience into methods into systems | Complements `on-contradiction / retrospective-guide` (which focuses on contradiction development over time) |
+> **指导原则**：在 v1.0 智能体经过实践检验之前不添加新智能体。应用我们自己的螺旋——先在实际工作中使用技能，再基于证据进行扩展。
 
-## References
+以下智能体规划在未来版本中实现。智能体根据其**核心方法**（实践螺旋 vs 矛盾结构）归属到对应技能。
 
-- **On Practice** (《实践论》) — Mao Zedong (1937)
-- **On Contradiction** (《矛盾论》) — Mao Zedong (1937)
-- **On Protracted War** (《论持久战》) — Mao Zedong (1938)
-- **"Where Do Correct Ideas Come From?"** (《人的正确思想是从哪里来的？》) — Mao Zedong (1963)
-- **"Oppose Book Worship"** (《反对本本主义》) — Mao Zedong (1930)
+| 领域 | 智能体 | 核心原理 | 备注 |
+|------|--------|---------|------|
+| 学习 | learning-master | 在做中学；通过反复实践深化；总结规律 | 与 `on-contradiction / knowledge-absorber`（聚焦结构性的普遍性/特殊性）互补 |
+| 实验 | experiment-designer | 小规模实践检验想法；迭代改进 | |
+| 执行 | execution-driver | 将计划转化为行动；通过实践修正偏差 | |
+| 调查 | field-investigator | 第一手调研；从感性事实中提炼理性认识 | |
+| 改进 | pattern-extractor | 提炼规律性模式；将经验变方法变体系 | 与 `on-contradiction / retrospective-guide`（聚焦矛盾随时间发展）互补 |
+
+## 参考文献
+
+- **《实践论》** — 毛泽东（1937）
+- **《矛盾论》** — 毛泽东（1937）
+- **《论持久战》** — 毛泽东（1938）
+- **《人的正确思想是从哪里来的？》** — 毛泽东（1963）
+- **《反对本本主义》** — 毛泽东（1930）

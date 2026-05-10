@@ -1,26 +1,26 @@
-# Advanced Skill Patterns
+# 高级技能模式
 
-Patterns for creating project-specific skills based on analysis.
+基于分析创建项目特定技能的模式。
 
-## Analysis → Skill Pattern Mapping
+## 分析 → 技能模式映射
 
-| What You Find in Project         | Recommended Skill Pattern    | Example                      |
-| -------------------------------- | ---------------------------- | ---------------------------- |
-| Multi-step workflows             | Workflow Automation          | Order processing, deployment |
-| Complex business domain          | Domain Knowledge Injection   | Pricing rules, entity models |
-| Repetitive code generation       | Template/Scaffold Generation | Component creation, API stubs|
-| CLI tools with specific usage    | Tool Integration             | Database migration, testing  |
-| Multiple variants (frameworks)   | Multi-Variant Selection      | Cloud providers, DB types    |
+| 项目中发现的内容 | 推荐的技能模式 | 示例 |
+| -------------- | ------------ | ---- |
+| 多步骤工作流 | 工作流自动化 | 订单处理、部署 |
+| 复杂业务领域 | 领域知识注入 | 定价规则、实体模型 |
+| 重复的代码生成 | 模板/脚手架生成 | 组件创建、API 存根 |
+| 有特定用法的 CLI 工具 | 工具集成 | 数据库迁移、测试 |
+| 多种变体（框架） | 多变体选择 | 云服务商、数据库类型 |
 
-## Pattern 1: Workflow Automation Skills
+## 模式 1：工作流自动化技能
 
-**When to use:** Project has repetitive multi-step processes.
+**适用场景**：项目有重复的多步骤流程。
 
-**Structure:**
+**结构**：
 
 ```
 workflow-skill/
-├── SKILL.md (overview + stage flow)
+├── SKILL.md（概述 + 阶段流程）
 ├── references/
 │   ├── stage-details.md
 │   └── error-handling.md
@@ -28,103 +28,103 @@ workflow-skill/
     └── validate.sh
 ```
 
-**SKILL.md pattern:**
+**SKILL.md 模式**：
 
 ```markdown
-## Workflow
+## 工作流
 
 \`\`\`
-[Stage 1: Analyze]
+[阶段 1：分析]
        ↓
-[Stage 2: Validate]
+[阶段 2：验证]
        ↓
-[Stage 3: Execute]
+[阶段 3：执行]
        ↓
-[Stage 4: Verify]
+[阶段 4：确认]
 \`\`\`
 
-## Stage Details
+## 阶段详情
 
-| Stage    | Input         | Output        | Reference                         |
-| -------- | ------------- | ------------- | --------------------------------- |
-| Analyze  | User request  | Requirements  | [details.md](references/stage-details.md#analyze) |
-| Validate | Requirements  | Validation OK | [details.md](references/stage-details.md#validate) |
+| 阶段 | 输入 | 输出 | 参考 |
+| ---- | ---- | ---- | ---- |
+| 分析 | 用户请求 | 需求 | [details.md](references/stage-details.md#analyze) |
+| 验证 | 需求 | 验证通过 | [details.md](references/stage-details.md#validate) |
 ```
 
-## Pattern 2: Domain Knowledge Skills
+## 模式 2：领域知识技能
 
-**When to use:** Project has complex business logic that AI needs to understand.
+**适用场景**：项目有复杂的业务逻辑需要 AI 理解。
 
-**Structure:**
+**结构**：
 
 ```
 domain-skill/
-├── SKILL.md (domain overview)
+├── SKILL.md（领域概述）
 └── references/
-    ├── entities.md (entity models)
-    ├── rules.md (business rules)
-    └── terminology.md (domain vocabulary)
+    ├── entities.md（实体模型）
+    ├── rules.md（业务规则）
+    └── terminology.md（领域词汇）
 ```
 
-**SKILL.md pattern:**
+**SKILL.md 模式**：
 
 ```markdown
-## Domain Model
+## 领域模型
 
-| Entity      | Key Attributes        | Rules                           |
-| ----------- | --------------------- | ------------------------------- |
-| Order       | id, status, items     | [rules.md#order](references/rules.md#order) |
-| Payment     | amount, method        | [rules.md#payment](references/rules.md#payment) |
+| 实体 | 关键属性 | 规则 |
+| ---- | ------- | ---- |
+| Order | id, status, items | [rules.md#order](references/rules.md#order) |
+| Payment | amount, method | [rules.md#payment](references/rules.md#payment) |
 
-## Terminology
+## 术语表
 
-- **SKU**: Stock Keeping Unit, unique product identifier
-- **Fulfillment**: Process of preparing and shipping order
+- **SKU**：库存单位，唯一产品标识符
+- **Fulfillment**：准备和发货订单的流程
 
-See [terminology.md](references/terminology.md) for complete glossary.
+完整术语表参见 [terminology.md](references/terminology.md)。
 ```
 
-## Pattern 3: Multi-Variant Selection
+## 模式 3：多变体选择
 
-**When to use:** Skill needs to support multiple frameworks/variants.
+**适用场景**：技能需要支持多种框架/变体。
 
-**Structure:**
+**结构**：
 
 ```
 multi-variant-skill/
-├── SKILL.md (selection logic + quick start)
+├── SKILL.md（选择逻辑 + 快速入门）
 └── references/
     ├── variant-a.md
     ├── variant-b.md
     └── variant-c.md
 ```
 
-**SKILL.md pattern:**
+**SKILL.md 模式**：
 
 ```markdown
-## Variant Selection
+## 变体选择
 
-| Variant | Use When                      | Reference                        |
-| ------- | ----------------------------- | -------------------------------- |
-| AWS     | Team uses AWS infrastructure  | [aws.md](references/aws.md)      |
-| GCP     | Team uses GCP                 | [gcp.md](references/gcp.md)      |
-| Azure   | Team uses Azure               | [azure.md](references/azure.md)  |
+| 变体 | 适用场景 | 参考 |
+| ---- | ------- | ---- |
+| AWS | 团队使用 AWS 基础设施 | [aws.md](references/aws.md) |
+| GCP | 团队使用 GCP | [gcp.md](references/gcp.md) |
+| Azure | 团队使用 Azure | [azure.md](references/azure.md) |
 
-**Selection logic:**
-1. Check existing infrastructure in project
-2. Look for existing cloud config files
-3. Ask user if unclear
+**选择逻辑：**
+1. 检查项目中现有的基础设施
+2. 查找现有的云配置文件
+3. 不确定时询问用户
 ```
 
-## Pattern 4: Tool Integration Skills
+## 模式 4：工具集成技能
 
-**When to use:** Project uses CLI tools with specific patterns.
+**适用场景**：项目使用有特定模式的 CLI 工具。
 
-**Structure:**
+**结构**：
 
 ```
 tool-skill/
-├── SKILL.md (overview + quick usage)
+├── SKILL.md（概述 + 快速用法）
 ├── references/
 │   ├── cmd-x.md
 │   ├── cmd-y.md
@@ -133,17 +133,17 @@ tool-skill/
     └── wrapper.sh
 ```
 
-**SKILL.md pattern:**
+**SKILL.md 模式**：
 
 ```markdown
-## Command Reference
+## 命令参考
 
-| Command | Purpose              | Reference                      |
-| ------- | -------------------- | ------------------------------ |
-| `init`  | Initialize           | [cmd-init.md](references/cmd-init.md) |
-| `run`   | Execute              | [cmd-run.md](references/cmd-run.md)   |
+| 命令 | 用途 | 参考 |
+| ---- | ---- | ---- |
+| `init` | 初始化 | [cmd-init.md](references/cmd-init.md) |
+| `run` | 执行 | [cmd-run.md](references/cmd-run.md) |
 
-## Quick Usage
+## 快速用法
 
 \`\`\`bash
 tool init <name>
@@ -151,57 +151,57 @@ tool run <target>
 \`\`\`
 ```
 
-## Pattern 5: Template Generation Skills
+## 模式 5：模板生成技能
 
-**When to use:** Project needs standardized file generation.
+**适用场景**：项目需要标准化的文件生成。
 
-**Structure:**
+**结构**：
 
 ```
 template-skill/
-├── SKILL.md (generation rules)
+├── SKILL.md（生成规则）
 └── assets/
     ├── component.tsx.template
     ├── test.tsx.template
     └── style.css.template
 ```
 
-**SKILL.md pattern:**
+**SKILL.md 模式**：
 
 ```markdown
-## Generation Rules
+## 生成规则
 
-1. Analyze target location
-2. Select appropriate template
-3. Fill template with context
-4. Create file at correct path
+1. 分析目标位置
+2. 选择合适的模板
+3. 用上下文填充模板
+4. 在正确路径创建文件
 
-## Templates
+## 模板
 
-| Type      | Template                          | Output Location        |
-| --------- | --------------------------------- | ---------------------- |
-| Component | [component.tsx](assets/component.tsx.template) | src/components/{name}/ |
-| Test      | [test.tsx](assets/test.tsx.template) | src/components/{name}/__tests__/ |
+| 类型 | 模板 | 输出位置 |
+| ---- | ---- | ------- |
+| 组件 | [component.tsx](assets/component.tsx.template) | src/components/{name}/ |
+| 测试 | [test.tsx](assets/test.tsx.template) | src/components/{name}/__tests__/ |
 ```
 
-## Pattern 6: IDE Hooks Integration
+## 模式 6：IDE Hooks 集成
 
-**When to use:** Skill needs deterministic automation at IDE lifecycle events (auto-format, quality gates, context injection). Works across both Trae and Claude Code.
+**适用场景**：技能需要在 IDE 生命周期事件中进行确定性自动化（自动格式化、质量门禁、上下文注入）。同时支持 Trae 和 Claude Code。
 
-**Structure:**
+**结构**：
 
 ```
 hooks-skill/
-├── SKILL.md (skill logic + hook registration)
+├── SKILL.md（技能逻辑 + hook 注册）
 ├── scripts/
-│   ├── session-init.cjs    (SessionStart handler)
-│   ├── quality-gate.cjs    (Stop handler)
-│   └── post-edit.cjs       (PostToolUse handler)
+│   ├── session-init.cjs    （SessionStart 处理器）
+│   ├── quality-gate.cjs    （Stop 处理器）
+│   └── post-edit.cjs       （PostToolUse 处理器）
 └── references/
-    └── hooks-standard.md   (spec reference)
+    └── hooks-standard.md   （规范参考）
 ```
 
-**Config format** (generates to `.trae/hooks.json` AND `.claude/settings.json`):
+**配置格式**（生成至 `.trae/hooks.json` 和 `.claude/settings.json`）：
 
 ```json
 {
@@ -222,28 +222,28 @@ hooks-skill/
 }
 ```
 
-**Key events:**
+**关键事件：**
 
-| Event | Matcher | Use Case |
-|-------|---------|----------|
-| `SessionStart` | — | Inject context, load project state |
-| `UserPromptSubmit` | — | Enrich/block user prompts |
-| `PreToolUse` | tool regex | Block/modify tool calls |
-| `PostToolUse` | tool regex | Auto-format, log changes |
-| `Stop` | — | Quality gate before stop (loop_limit prevents infinite) |
+| 事件 | Matcher | 用途 |
+|------|---------|------|
+| `SessionStart` | — | 注入上下文、加载项目状态 |
+| `UserPromptSubmit` | — | 丰富/阻止用户提示 |
+| `PreToolUse` | 工具正则 | 阻止/修改工具调用 |
+| `PostToolUse` | 工具正则 | 自动格式化、记录变更 |
+| `Stop` | — | 停止前的质量门禁（loop_limit 防止无限循环） |
 
-**I/O contract:** Scripts receive JSON on stdin, output JSON on stdout. Exit 0 = allow, exit 2 = block.
+**I/O 合约**：脚本从 stdin 接收 JSON，stdout 输出 JSON。Exit 0 = 允许，Exit 2 = 阻止。
 
-**Portability:** Use `command` type only. Check `$TRAE_PROJECT_DIR` or `$CLAUDE_PROJECT_DIR`.
+**可移植性**：仅使用 `command` 类型。检查 `$TRAE_PROJECT_DIR` 或 `$CLAUDE_PROJECT_DIR`。
 
-## Project Analysis Checklist
+## 项目分析清单
 
-Before creating any skill, analyze:
+创建任何技能之前，分析：
 
-- [ ] What workflows are repetitive?
-- [ ] What domain knowledge is project-specific?
-- [ ] What tools does the project use?
-- [ ] What conventions exist?
-- [ ] What templates would help?
-- [ ] What patterns exist in existing `.trae/skills/`?
-- [ ] Should the skill register IDE hooks for deterministic automation?
+- [ ] 哪些工作流是重复的？
+- [ ] 哪些领域知识是项目特有的？
+- [ ] 项目使用什么工具？
+- [ ] 存在什么约定？
+- [ ] 什么模板会有帮助？
+- [ ] 现有 `.trae/skills/` 中有什么模式？
+- [ ] 技能是否应注册 IDE hooks 用于确定性自动化？

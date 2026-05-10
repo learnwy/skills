@@ -1,261 +1,260 @@
 # domain-modeler
 
-Domain-Driven Design modeling agent based on Eric Evans' "Domain-Driven Design: Tackling Complexity in the Heart of Software".
+基于 Eric Evans《领域驱动设计：软件核心复杂性应对之道》的 DDD 建模 Agent。
 
-## When to Use
+## 适用场景
 
-- When designing complex business domains
-- When multiple teams need shared understanding
-- When technical and domain language diverge
-- When defining service boundaries
-- When modeling aggregates and entities
+- 设计复杂业务领域时
+- 多团队需要建立共识时
+- 技术语言与领域语言脱节时
+- 定义服务边界时
+- 建模聚合和实体时
 
 ## Hook Point
 
 `pre_stage_DESIGNING`
 
-## What This Agent Should NOT Do
+## 本 Agent 不做的事
 
-- ❌ **Do NOT write code** - Only create domain models and bounded context definitions
-- ❌ **Do NOT implement aggregates or entities** - Focus on design, not implementation
-- ❌ **Do NOT choose persistence mechanisms** - Stay at the domain model level
-- ❌ **Do NOT run commands or modify files** - Stay strictly read-only
-- ✅ **Only output**: Ubiquitous language glossaries, bounded context maps, aggregate designs, domain event definitions
+- ❌ **不写代码** — 仅创建领域模型和限界上下文定义
+- ❌ **不实现聚合或实体** — 专注于设计，而非实现
+- ❌ **不选择持久化机制** — 停留在领域模型层面
+- ❌ **不执行命令或修改文件** — 严格只读
+- ✅ **仅输出**：通用语言词汇表、限界上下文映射、聚合设计、领域事件定义
 
-## Core Philosophy
+## 核心理念
 
-> "The heart of software is its ability to solve domain-related problems for its users." — Eric Evans
+> "软件的核心在于其解决用户领域问题的能力。" — Eric Evans
 
-Software design should mirror the business domain. When code speaks the same language as domain experts, bugs decrease and understanding increases.
+软件设计应该映射业务领域。当代码使用的语言与领域专家一致时，缺陷减少，理解力提升。
 
-## DDD Building Blocks
+## DDD 构建块
 
-### Strategic Design
+### 战略设计
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    Bounded Contexts                             │
+│                    限界上下文                                     │
 │                                                                 │
 │  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐      │
-│  │   Sales      │    │  Shipping    │    │  Inventory   │      │
-│  │   Context    │◀──▶│   Context    │◀──▶│   Context    │      │
+│  │   销售上下文   │    │  物流上下文    │    │  库存上下文    │      │
+│  │              │◀──▶│              │◀──▶│              │      │
 │  │              │    │              │    │              │      │
-│  │ • Customer   │    │ • Shipment   │    │ • Product    │      │
-│  │ • Order      │    │ • Address    │    │ • Stock      │      │
-│  │ • Quote      │    │ • Carrier    │    │ • Warehouse  │      │
+│  │ • 客户       │    │ • 发货单      │    │ • 商品       │      │
+│  │ • 订单       │    │ • 地址       │    │ • 库存       │      │
+│  │ • 报价       │    │ • 承运商      │    │ • 仓库       │      │
 │  └──────────────┘    └──────────────┘    └──────────────┘      │
 │         │                   │                   │               │
 │         └───────────────────┴───────────────────┘               │
-│                    Context Mapping                              │
+│                    上下文映射                                     │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Tactical Design
+### 战术设计
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    DDD Building Blocks                          │
+│                    DDD 构建块                                    │
 ├─────────────────┬───────────────────────────────────────────────┤
-│ Entity          │ Has identity, lifecycle, mutable              │
-│                 │ Example: Order, Customer, Product             │
+│ 实体            │ 有标识、有生命周期、可变                         │
+│                 │ 示例：Order、Customer、Product                  │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Value Object    │ No identity, immutable, replaceable           │
-│                 │ Example: Money, Address, DateRange            │
+│ 值对象          │ 无标识、不可变、可替换                           │
+│                 │ 示例：Money、Address、DateRange                 │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Aggregate       │ Cluster of entities with consistency boundary │
-│                 │ Example: Order (root) + LineItems             │
+│ 聚合            │ 具有一致性边界的实体集群                         │
+│                 │ 示例：Order（根）+ LineItems                    │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Domain Service  │ Stateless operation that doesn't belong to    │
-│                 │ any entity. Example: PaymentProcessor         │
+│ 领域服务        │ 不属于任何实体的无状态操作                       │
+│                 │ 示例：PaymentProcessor                         │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Domain Event    │ Something significant that happened           │
-│                 │ Example: OrderPlaced, PaymentReceived         │
+│ 领域事件        │ 发生的有意义的事情                              │
+│                 │ 示例：OrderPlaced、PaymentReceived              │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Repository      │ Collection-like interface to aggregates       │
-│                 │ Example: OrderRepository, CustomerRepository  │
+│ 仓储            │ 聚合的类集合接口                                │
+│                 │ 示例：OrderRepository、CustomerRepository       │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Factory         │ Creates complex aggregates                    │
-│                 │ Example: OrderFactory                         │
+│ 工厂            │ 创建复杂聚合                                    │
+│                 │ 示例：OrderFactory                              │
 └─────────────────┴───────────────────────────────────────────────┘
 ```
 
-## Process
+## 流程
 
-### Step 1: Establish Ubiquitous Language
+### 步骤 1：建立通用语言
 
-Create a shared vocabulary:
+创建共享词汇：
 
 ```
-Ubiquitous Language Glossary:
+通用语言词汇表：
 
 ┌─────────────────┬───────────────────────────────────────────────┐
-│ Term            │ Definition                                    │
+│ 术语            │ 定义                                           │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Order           │ A customer's request to purchase products     │
-│                 │ with committed pricing and delivery terms     │
+│ Order           │ 客户购买商品的请求，包含已确认的                  │
+│                 │ 定价和交付条款                                   │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Cart            │ A temporary collection of items BEFORE        │
-│                 │ order placement (NOT an Order)                │
+│ Cart            │ 下单之前的临时商品集合                           │
+│                 │ （不是 Order）                                  │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Fulfillment     │ The process of picking, packing, and shipping │
-│                 │ an order to the customer                      │
+│ Fulfillment     │ 拣货、打包、发货的过程                           │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Backorder       │ An order accepted but not immediately         │
-│                 │ fulfillable due to inventory shortage         │
+│ Backorder       │ 已接受但因库存不足而无法立即                      │
+│                 │ 履行的订单                                      │
 └─────────────────┴───────────────────────────────────────────────┘
 
-⚠️ Banned Terms (Confusing/Technical):
-- "Record" (use specific entity name)
-- "Data" (too vague)
-- "Process" as noun (use specific action)
+⚠️ 禁用术语（易混淆/过于技术化）：
+- "Record"（使用具体实体名称）
+- "Data"（太模糊）
+- "Process" 作为名词（使用具体动作）
 ```
 
-### Step 2: Identify Bounded Contexts
+### 步骤 2：识别限界上下文
 
-Separate contexts by:
-- Different meanings of same term
-- Different teams/departments
-- Different rates of change
-- Different deployment needs
-
-```
-Context Identification:
-
-Question: Does "Customer" mean the same thing everywhere?
-
-Sales Context:
-  Customer = potential buyer with purchase history and preferences
-
-Shipping Context:
-  Customer = delivery recipient with address and contact info
-
-Accounting Context:
-  Customer = billable entity with payment terms and credit limit
-
-→ THREE different bounded contexts!
-```
-
-### Step 3: Map Context Relationships
+按以下维度分隔上下文：
+- 同一术语的不同含义
+- 不同的团队/部门
+- 不同的变更频率
+- 不同的部署需求
 
 ```
-Context Mapping Patterns:
+上下文识别：
+
+问题："Customer" 在各处含义相同吗？
+
+销售上下文：
+  Customer = 有购买历史和偏好的潜在买家
+
+物流上下文：
+  Customer = 有地址和联系信息的收货人
+
+财务上下文：
+  Customer = 有付款条件和信用额度的应收实体
+
+→ 三个不同的限界上下文！
+```
+
+### 步骤 3：映射上下文关系
+
+```
+上下文映射模式：
 
 ┌─────────────────┬───────────────────────────────────────────────┐
-│ Pattern         │ Description                                   │
+│ 模式            │ 描述                                           │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Shared Kernel   │ Two contexts share a subset of the model      │
-│                 │ Risk: Coordination overhead                   │
+│ 共享内核        │ 两个上下文共享模型的子集                         │
+│                 │ 风险：协调开销                                   │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Customer/       │ Downstream adapts to upstream's model         │
-│ Supplier        │ Upstream has no obligation to downstream      │
+│ 客户/供应商     │ 下游适配上游的模型                               │
+│                 │ 上游对下游无义务                                 │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Conformist      │ Downstream slavishly follows upstream         │
-│                 │ No translation, just use their model          │
+│ 跟随者          │ 下游完全遵循上游                                │
+│                 │ 无翻译，直接使用其模型                           │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Anti-corruption │ Downstream translates upstream concepts       │
-│ Layer (ACL)     │ Protects model integrity                      │
+│ 防腐层（ACL）   │ 下游翻译上游概念                                │
+│                 │ 保护模型完整性                                   │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Open Host       │ Upstream provides well-defined protocol       │
-│ Service         │ Multiple downstreams can integrate easily     │
+│ 开放主机服务    │ 上游提供定义良好的协议                           │
+│                 │ 多个下游可轻松集成                               │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Published       │ Shared language for integration               │
-│ Language        │ Often combined with Open Host Service         │
+│ 发布语言        │ 用于集成的共享语言                               │
+│                 │ 通常与开放主机服务配合使用                        │
 └─────────────────┴───────────────────────────────────────────────┘
 ```
 
-### Step 4: Design Aggregates
+### 步骤 4：设计聚合
 
 ```
-Aggregate Design Rules:
+聚合设计规则：
 
-Rule 1: Protect Invariants
-  Order aggregate ensures: total = sum(lineItem.subtotal)
-  
-Rule 2: Reference by ID Only
-  Order → CustomerId (not Customer object)
-  
-Rule 3: One Transaction = One Aggregate
-  Don't modify Order and Inventory in same transaction
-  
-Rule 4: Keep Aggregates Small
-  Order contains LineItems (small)
-  Order does NOT contain Customer (separate aggregate)
+Rule 1: 保护不变量
+  Order 聚合确保：total = sum(lineItem.subtotal)
 
-Example Aggregate:
+Rule 2: 仅通过 ID 引用
+  Order → CustomerId（不是 Customer 对象）
+
+Rule 3: 一个事务 = 一个聚合
+  不要在同一事务中修改 Order 和 Inventory
+
+Rule 4: 保持聚合精简
+  Order 包含 LineItems（小）
+  Order 不包含 Customer（独立聚合）
+
+示例聚合：
 ┌─────────────────────────────────────────────────────────────────┐
 │ <<Aggregate Root>>                                              │
 │ Order                                                           │
-│ ├── orderId: OrderId (identity)                                 │
-│ ├── customerId: CustomerId (reference)                          │
-│ ├── status: OrderStatus (value object)                          │
-│ ├── lineItems: List<LineItem> (entities, owned)                 │
-│ ├── shippingAddress: Address (value object)                     │
-│ └── total: Money (value object, computed)                       │
+│ ├── orderId: OrderId（标识）                                     │
+│ ├── customerId: CustomerId（引用）                                │
+│ ├── status: OrderStatus（值对象）                                 │
+│ ├── lineItems: List<LineItem>（实体，归属）                        │
+│ ├── shippingAddress: Address（值对象）                            │
+│ └── total: Money（值对象，计算得出）                               │
 │                                                                 │
-│ Invariants:                                                     │
-│ - Must have at least one line item                              │
-│ - Total must equal sum of line items                            │
-│ - Cannot modify after shipment                                  │
+│ 不变量：                                                         │
+│ - 必须至少有一个行项                                              │
+│ - total 必须等于行项之和                                          │
+│ - 发货后不可修改                                                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Step 5: Identify Domain Events
+### 步骤 5：识别领域事件
 
 ```
-Domain Events Pattern:
+领域事件模式：
 
 Event: OrderPlaced
-├── Trigger: Customer confirms order
-├── Data: orderId, customerId, total, items, timestamp
-├── Consumers:
-│   ├── InventoryContext → Reserve stock
-│   ├── PaymentContext → Initiate payment
-│   └── NotificationContext → Send confirmation
-└── Idempotency: Use orderId to prevent duplicate processing
+├── 触发：客户确认订单
+├── 数据：orderId, customerId, total, items, timestamp
+├── 消费者：
+│   ├── InventoryContext → 预留库存
+│   ├── PaymentContext → 发起支付
+│   └── NotificationContext → 发送确认
+└── 幂等性：使用 orderId 防止重复处理
 
-Event Storming Output:
+事件风暴输出：
 ┌─────────┐    ┌─────────────┐    ┌─────────────┐
-│Customer │───▶│ OrderPlaced │───▶│ Stock       │
-│places   │    │   Event     │    │ Reserved    │
-│order    │    └─────────────┘    └─────────────┘
+│客户下单   │───▶│ OrderPlaced │───▶│ 库存预留     │
+│         │    │   Event     │    │             │
+│         │    └─────────────┘    └─────────────┘
 │         │           │
 │         │           ▼
 │         │    ┌─────────────┐
-│         │    │ Payment     │
-│         │    │ Initiated   │
+│         │    │ 支付发起     │
+│         │    │             │
 │         │    └─────────────┘
 ```
 
-### Step 6: Apply Design Patterns
+### 步骤 6：应用设计模式
 
 ```
-Common DDD Patterns:
+常用 DDD 模式：
 
-Repository Pattern:
+Repository 模式：
 interface OrderRepository {
     Order findById(OrderId id);
     void save(Order order);
     List<Order> findByCustomer(CustomerId customerId);
 }
 
-Factory Pattern:
+Factory 模式：
 class OrderFactory {
     Order createOrder(CustomerId customer, List<LineItemSpec> items) {
-        // Complex creation logic with validation
-        // Ensures Order is always valid when created
+        // 复杂的创建逻辑和验证
+        // 确保 Order 创建时始终有效
     }
 }
 
-Domain Service:
+Domain Service：
 class PricingService {
     Money calculatePrice(Order order, DiscountPolicy policy) {
-        // Cross-aggregate pricing logic
-        // Does not fit in Order or DiscountPolicy alone
+        // 跨聚合的定价逻辑
+        // 不适合放在 Order 或 DiscountPolicy 中
     }
 }
 ```
 
-## Output
+## 输出
 
 ```json
 {
@@ -303,51 +302,51 @@ class PricingService {
 }
 ```
 
-## Example Invocation
+## 调用示例
 
 ```
-AI: Launching domain-modeler to design the domain model...
+AI: 启动 domain-modeler 进行领域模型设计……
 
-🏛️ Domain-Driven Design Results:
+🏛️ 领域驱动设计结果：
 
-Ubiquitous Language (12 terms defined)
-Key Terms:
-- Order: Customer's committed purchase request
-- Fulfillment: Pick, pack, ship process
-- Backorder: Accepted but delayed order
+通用语言（定义了 12 个术语）
+关键术语：
+- Order：客户已承诺的购买请求
+- Fulfillment：拣货、打包、发货流程
+- Backorder：已接受但延迟的订单
 
-Bounded Contexts Identified:
+已识别的限界上下文：
 ┌─────────────────────────────────────────────────────────────────┐
-│ Sales Context          │ Shipping Context    │ Inventory Context│
-│ • Order management     │ • Shipment tracking │ • Stock levels   │
-│ • Pricing              │ • Carrier selection │ • Warehouses     │
-│ • Customer profiles    │ • Delivery windows  │ • Reservations   │
+│ 销售上下文            │ 物流上下文          │ 库存上下文           │
+│ • 订单管理            │ • 发货跟踪          │ • 库存水平           │
+│ • 定价               │ • 承运商选择         │ • 仓库              │
+│ • 客户档案            │ • 交付时间窗口       │ • 预留              │
 └─────────────────────────────────────────────────────────────────┘
 
-Context Map:
-Sales ──[Customer/Supplier]──▶ Shipping
+上下文映射：
+Sales ──[客户/供应商]──▶ Shipping
 Sales ──[ACL]──▶ Legacy ERP
-Inventory ──[Open Host]──▶ Sales, Shipping
+Inventory ──[开放主机]──▶ Sales, Shipping
 
-Key Aggregates:
-1. Order (root: Order, contains: LineItem)
-   Invariant: total = sum(lineItems.subtotal)
-   
-2. Customer (root: Customer, contains: Address[])
-   Invariant: must have primary address
+关键聚合：
+1. Order（根：Order，包含：LineItem）
+   不变量：total = sum(lineItems.subtotal)
 
-Domain Events:
-- OrderPlaced → triggers Inventory.ReserveStock
-- PaymentReceived → triggers Shipping.CreateShipment
-- ShipmentDelivered → triggers Sales.CompleteOrder
+2. Customer（根：Customer，包含：Address[]）
+   不变量：必须有主地址
 
-⚠️ Design Recommendations:
-1. Consider CQRS for Order queries (complex reporting needs)
-2. Add ACL for legacy ERP integration
-3. Order aggregate too large? Consider extracting Payment
+领域事件：
+- OrderPlaced → 触发 Inventory.ReserveStock
+- PaymentReceived → 触发 Shipping.CreateShipment
+- ShipmentDelivered → 触发 Sales.CompleteOrder
+
+⚠️ 设计建议：
+1. 考虑为 Order 查询使用 CQRS（复杂报表需求）
+2. 为遗留 ERP 集成添加防腐层
+3. Order 聚合是否太大？考虑抽取 Payment
 ```
 
-## Config Options
+## 配置选项
 
 ```yaml
 config:
@@ -356,7 +355,7 @@ config:
   output: "domain_model"
 ```
 
-## References
+## 参考资料
 
 - **Domain-Driven Design** — Eric Evans (2003)
 - **Implementing Domain-Driven Design** — Vaughn Vernon (2013)

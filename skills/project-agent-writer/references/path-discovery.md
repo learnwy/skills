@@ -1,47 +1,47 @@
-## Project Agent Path Discovery
+## 项目智能体路径发现
 
-This reference is used AFTER agent design. Load it when:
-1. You have a designed agent and need to determine where it should be placed
-2. User has confirmed the agent design and you're ready to generate files
+此参考在智能体设计完成后使用。在以下情况下加载：
+1. 你有一个设计好的智能体，需要确定它应放置的位置
+2. 用户已确认智能体设计，你准备生成文件
 
-### DO NOT load this first!
+### 不要首先加载此文档！
 
-**Critical**: Path discovery is the LAST step, not the first!
+**关键**：路径发现是最后一步，不是第一步！
 
 ```
-Correct Flow:
-1. Understand user's problem
-2. Analyze project (existing agents, integration points, conventions)
-3. Design agent solution
-4. Validate with user via AskUserQuestion
-5. Only THEN: Load path-discovery to determine output location
+正确流程:
+1. 理解用户的问题
+2. 分析项目（现有智能体、集成点、规范）
+3. 设计智能体方案
+4. 通过 AskUserQuestion 与用户验证
+5. 最后才：加载 path-discovery 确定输出位置
 ```
 
-### Runtime Marker Detection
+### 运行时标记检测
 
-Detect runtime/tooling markers in project root:
+检测项目根目录中的运行时/工具标记：
 
 - Trae: `{project_dir}/.trae/`
 - Trae-CN: `{project_dir}/.trae/`
 - Claude Code: `{project_dir}/.claude/`
 - Cursor: `{project_dir}/.cursor/`
 
-If multiple markers exist, judge with this priority:
-1. Explicit user target
-2. Workspace marker evidence
-3. Existing project convention evidence from docs and file tree
+如果存在多个标记，按以下优先级判断：
+1. 用户明确指定的目标
+2. 工作区标记证据
+3. 从文档和文件树中获取的现有项目规范证据
 
-If ambiguity remains, select the most conservative writable path and report why.
+如果仍有歧义，选择最保守的可写路径并报告原因。
 
-### Discovery Priority
+### 发现优先级
 
-1. Runtime-specific project agent path (detected from markers)
-2. Project-managed shared agent path
-3. Default local `agents/` path
+1. 运行时特定的项目智能体路径（从标记中检测）
+2. 项目管理的共享智能体路径
+3. 默认的本地 `agents/` 路径
 
-### Validation Rules
+### 验证规则
 
-- Path must exist or be creatable inside project workspace
-- Path must be writable
-- Path selection must be reported in final output
-- Use project-relative paths, never global paths like `~/.trae/agents`
+- 路径必须存在或可在项目工作区内创建
+- 路径必须可写
+- 路径选择必须在最终输出中报告
+- 使用项目相对路径，绝不使用 `~/.trae/agents` 这样的全局路径

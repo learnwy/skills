@@ -1,19 +1,19 @@
 # AGENTS.md
 
-This file provides guidance to AI agents (Claude Code, Codex, Cursor, etc.) when working with this repository.
+本文件为 AI 代理（Claude Code、Codex、Cursor 等）在本仓库中工作提供指引。
 
-## Project Overview
+## 项目概述
 
-Personal skills repository containing reusable AI capabilities following the [Agent Skills Specification](https://agentskills.io/specification). Each skill is a self-contained directory with a `SKILL.md` file defining its functionality, triggers, and usage patterns.
+个人技能仓库，遵循 [Agent Skills Specification](https://agentskills.io/specification) 规范，包含可复用的 AI 能力。每个技能是一个独立目录，通过 `SKILL.md` 文件定义其功能、触发条件和使用模式。
 
-## Repository Structure
+## 仓库结构
 
 ```
-skills/                                    # Repository root
-├── AGENTS.md                              # This file — project guidelines
-├── CLAUDE.md                              # Claude-specific pointer (→ AGENTS.md)
-├── LICENSE                                # MIT License
-├── agents/                                # Universal methodology agents (canonical copies)
+skills/                                    # 仓库根目录
+├── AGENTS.md                              # 本文件 — 项目指引
+├── CLAUDE.md                              # Claude 专用指引（→ AGENTS.md）
+├── LICENSE                                # MIT 许可证
+├── agents/                                # 通用方法论代理（权威副本）
 │   ├── AGENTS.md
 │   ├── problem-definer/
 │   ├── story-mapper/
@@ -25,173 +25,173 @@ skills/                                    # Repository root
 │   ├── refactoring-guide/
 │   ├── legacy-surgeon/
 │   └── test-strategist/
-└── skills/                                # Runnable skill modules
-    ├── english-learner/                   # Vocabulary learning assistant
-    ├── knowledge-consolidation/           # Persist conversation insights
-    ├── llm-wiki/                          # Karpathy-style knowledge base
-    ├── on-contradiction/                  # Mao's contradiction methodology
-    ├── on-practice/                       # Mao's practice methodology
-    ├── on-protracted-war/                 # Mao's protracted war methodology
-    ├── project-agent-writer/              # Create project-level agents
-    ├── project-skill-installer/           # Install skills into projects
-    ├── project-skill-writer/              # Create project-level skills
-    ├── requirement-workflow/              # SDD development orchestrator
-    ├── software-methodology-toolkit/      # 10 methodology agents (fallback)
-    ├── prompt-optimizer/                  # Pre-flight prompt analysis & improvement
-    └── trae-rules-writer/                 # Create Trae IDE rules
+└── skills/                                # 可运行的技能模块
+    ├── english-learner/                   # 词汇学习助手
+    ├── knowledge-consolidation/           # 对话洞察持久化
+    ├── llm-wiki/                          # Karpathy 式知识库
+    ├── on-contradiction/                  # 矛盾论方法论
+    ├── on-practice/                       # 实践论方法论
+    ├── on-protracted-war/                 # 论持久战方法论
+    ├── project-agent-writer/              # 创建项目级代理
+    ├── project-skill-installer/           # 将技能安装到项目中
+    ├── project-skill-writer/              # 创建项目级技能
+    ├── requirement-workflow/              # SDD 开发编排器
+    ├── software-methodology-toolkit/      # 10 个方法论代理（兜底）
+    ├── prompt-optimizer/                  # 提示词预检分析与优化
+    └── trae-rules-writer/                 # 创建 Trae IDE 规则
 ```
 
-## Skills by Category
+## 技能分类
 
-### Methodology Skills (No Scripts — Pure Agent Frameworks)
+### 方法论技能（无脚本 — 纯代理框架）
 
-| Skill | Description | Agents |
-|-------|-------------|--------|
-| **on-contradiction** | Mao's *On Contradiction* — structural analysis of opposing forces | decision-maker, problem-analyzer, report-writer |
-| **on-practice** | Mao's *On Practice* — practice-cognition spiral for validation | decision-maker, problem-analyzer, report-writer |
-| **on-protracted-war** | Mao's *On Protracted War* — staged strategy for long games | decision-maker, problem-analyzer, report-writer |
-| **llm-wiki** | Karpathy's LLM Wiki — compounding knowledge base | ingestor, querier, linter, schema-writer |
-| **software-methodology-toolkit** | 10 methodology agents (fallback when no specific skill matches) | problem-definer, story-mapper, domain-modeler, etc. |
+| 技能 | 说明 | 代理 |
+|------|------|------|
+| **on-contradiction** | 毛泽东《矛盾论》— 对立力量的结构分析 | decision-maker, problem-analyzer, report-writer |
+| **on-practice** | 毛泽东《实践论》— 实践-认知螺旋式验证 | decision-maker, problem-analyzer, report-writer |
+| **on-protracted-war** | 毛泽东《论持久战》— 长期博弈的阶段性战略 | decision-maker, problem-analyzer, report-writer |
+| **llm-wiki** | Karpathy 式 LLM Wiki — 复利式知识库 | ingestor, querier, linter, schema-writer |
+| **software-methodology-toolkit** | 10 个方法论代理（当无特定技能匹配时作为兜底） | problem-definer, story-mapper, domain-modeler 等 |
 
-### Development Workflow Skills
+### 开发工作流技能
 
-| Skill | Description | Has Scripts |
-|-------|-------------|-------------|
-| **requirement-workflow** | Spec-Driven Development: spec.md → tasks.md → implementation → verification | Yes (shell) |
-| **project-skill-writer** | Create project-level skills with convention detection | No |
-| **project-agent-writer** | Create project-level agents | No |
-| **project-skill-installer** | Install skills into projects | No |
-| **trae-rules-writer** | Create Trae IDE rules | No |
+| 技能 | 说明 | 包含脚本 |
+|------|------|----------|
+| **requirement-workflow** | 规格驱动开发：spec.md → tasks.md → 实现 → 验证 | 是 (shell) |
+| **project-skill-writer** | 带约定检测的项目级技能创建 | 否 |
+| **project-agent-writer** | 创建项目级代理 | 否 |
+| **project-skill-installer** | 将技能安装到项目中 | 否 |
+| **trae-rules-writer** | 创建 Trae IDE 规则 | 否 |
 
-### Utility Skills
+### 工具类技能
 
-| Skill | Description | Has Scripts |
-|-------|-------------|-------------|
-| **english-learner** | Vocabulary learning with auto-intercept English coaching | Yes (TS → bundled CJS) |
-| **knowledge-consolidation** | Persist conversation insights to project knowledges/ | Yes (CJS) |
-| **prompt-optimizer** | Pre-flight prompt analysis & improvement (7-dimension scoring) | TS → bundled CJS (hooks only) |
+| 技能 | 说明 | 包含脚本 |
+|------|------|----------|
+| **english-learner** | 词汇学习，自动拦截式英语辅导 | 是 (TS → bundled CJS) |
+| **knowledge-consolidation** | 将对话洞察持久化到项目 knowledges/ | 是 (CJS) |
+| **prompt-optimizer** | 提示词预检分析与优化（7 维度评分） | TS → bundled CJS（仅 hooks） |
 
-## Skill Specification
+## 技能规范
 
-### Directory Layout
+### 目录结构
 
 ```
 {skill-name}/
-├── SKILL.md              # REQUIRED: Skill definition
-├── scripts/              # Optional: Executable code
-├── references/           # Optional: Detailed documentation
-├── assets/               # Optional: Templates and resources
-└── agents/               # Optional: Sub-agent definitions
-    ├── thinking/         #   Analysis/decision agents
-    ├── writing/          #   Report/document agents
-    └── operations/       #   Workflow operation agents
+├── SKILL.md              # 必需：技能定义
+├── scripts/              # 可选：可执行代码
+├── references/           # 可选：详细文档
+├── assets/               # 可选：模板和资源
+└── agents/               # 可选：子代理定义
+    ├── thinking/         #   分析/决策代理
+    ├── writing/          #   报告/文档代理
+    └── operations/       #   工作流操作代理
 ```
 
 ### SKILL.md Frontmatter
 
 ```yaml
 ---
-name: skill-name              # 1-64 chars, lowercase, hyphens only
-description: "What it does and when to use it (1-1024 chars)"
+name: skill-name              # 1-64 字符，小写，仅允许连字符
+description: "功能描述及使用场景（1-1024 字符）"
 metadata:
   author: "learnwy"
   version: "1.0"
-  source: "optional source reference"
+  source: "可选的来源引用"
 ---
 ```
 
-### Progressive Disclosure
+### 渐进式加载
 
-| Level | Token Budget | When Loaded |
-|-------|-------------|-------------|
-| Metadata | ~100 tokens | Startup (all skills) |
-| Instructions | < 5000 tokens | Skill activation |
-| Resources | As needed | On demand |
+| 层级 | Token 预算 | 加载时机 |
+|------|-----------|---------|
+| Metadata | ~100 tokens | 启动时（所有技能） |
+| Instructions | < 5000 tokens | 技能激活时 |
+| Resources | 按需 | 按需加载 |
 
-### Script Conventions
+### 脚本约定
 
-- **TypeScript source** lives at repo root in `src/<skill-name>/` and `src/shared/`
-- **Build outputs** are committed at `skills/<skill-name>/scripts/*.cjs` (do NOT edit them by hand)
-- Each skill follows a 1:1 layout that the `rslib.config.ts` scanner picks up automatically:
+- **TypeScript 源码**位于仓库根目录的 `src/<skill-name>/` 和 `src/shared/`
+- **构建产物**提交在 `skills/<skill-name>/scripts/*.cjs`（请勿手动编辑）
+- 每个技能遵循 1:1 布局，由 `rslib.config.ts` 扫描器自动识别：
   ```
   src/<skill>/
-  ├── cli.ts              ← optional; bundled as scripts/cli.cjs (single entry, subcommand dispatcher)
-  ├── cmd/<verb>.ts       ← exports `command: Command` consumed by cli.ts
-  ├── lib/*.ts            ← internal helpers (bundled into above; never an entry)
-  └── hooks/<event>.ts    ← optional; one bundled scripts/hooks/<event>.cjs per file
+  ├── cli.ts              ← 可选；打包为 scripts/cli.cjs（单入口，子命令分发器）
+  ├── cmd/<verb>.ts       ← 导出 `command: Command`，由 cli.ts 消费
+  ├── lib/*.ts            ← 内部辅助函数（打包到上述文件中；不作为入口）
+  └── hooks/<event>.ts    ← 可选；每个文件打包为一个 scripts/hooks/<event>.cjs
   ```
-  `src/shared/cli.ts` provides `dispatch({ name, commands })` and `parseArgs`. Skills with hooks add `install` / `uninstall` subcommands by importing from `src/shared/install-entry.ts`.
-- All scripts ship as bundled CJS targeting Node.js ≥ 22 (the `english-learner` SQLite path additionally requires Node ≥ 24 for the built-in `node:sqlite` module)
-- **Path convention**: All script paths in SKILL.md are relative to `{skill_root}` (the SKILL.md directory). The standard invocation form is `node scripts/cli.cjs <subcommand> [args]` for command skills and `node scripts/hooks/<event>.cjs` for hook entry points.
-- All skill documents in English
+  `src/shared/cli.ts` 提供 `dispatch({ name, commands })` 和 `parseArgs`。包含 hooks 的技能通过从 `src/shared/install-entry.ts` 导入来添加 `install` / `uninstall` 子命令。
+- 所有脚本以打包 CJS 形式发布，目标 Node.js ≥ 22（`english-learner` 的 SQLite 路径另需 Node ≥ 24 以使用内置 `node:sqlite` 模块）
+- **路径约定**：SKILL.md 中所有脚本路径相对于 `{skill_root}`（即 SKILL.md 所在目录）。标准调用形式为 `node scripts/cli.cjs <subcommand> [args]`（命令类技能）和 `node scripts/hooks/<event>.cjs`（hook 入口）。
+- 所有技能文档使用英文
 
-## Development Guidelines
+## 开发指南
 
-### Creating a New Skill
+### 创建新技能
 
-1. Create directory: `skills/{skill-name}/`
-2. Create `SKILL.md` with valid frontmatter
-3. Verify name matches directory name (lowercase, hyphens only)
-4. Include: When to Use, When NOT to Use, Prerequisites
-5. Add agents to `agents/` if the skill has sub-agents
-6. Add scripts to `scripts/` if needed
+1. 创建目录：`skills/{skill-name}/`
+2. 创建包含有效 frontmatter 的 `SKILL.md`
+3. 确认名称与目录名一致（小写，仅连字符）
+4. 包含：何时使用、何时不使用、前置条件
+5. 如有子代理，添加到 `agents/`
+6. 如需脚本，添加到 `scripts/`
 
-### Code Style
+### 代码风格
 
-- No comments unless explicitly requested
-- English for all skill documents and code
-- Named exports, arrow functions for scripts
-- Follow existing patterns in neighboring skills
+- 除非明确要求，不添加注释
+- 所有技能文档和代码使用英文
+- 使用命名导出、箭头函数
+- 遵循相邻技能中的现有模式
 
-### Testing
+### 测试
 
-No automated test framework. Test skills by:
-1. Loading them in an AI assistant
-2. Verifying triggers work as specified
-3. Checking scripts execute correctly
-4. Validating output format
+没有自动化测试框架。通过以下方式测试技能：
+1. 在 AI 助手中加载
+2. 验证触发条件按预期工作
+3. 检查脚本正确执行
+4. 验证输出格式
 
-## Common Workflows
+## 常用工作流
 
-### Structured Development
-Use `requirement-workflow` for multi-stage software development:
+### 结构化开发
+使用 `requirement-workflow` 进行多阶段软件开发：
 ```
 ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → DELIVERING
 ```
 
-### Methodology Analysis
-The Mao Zedong Trilogy provides three complementary lenses:
+### 方法论分析
+毛泽东三论提供三个互补视角：
 ```
-on-contradiction   → WHAT are the forces?      (Structure)
-on-practice        → HOW do we verify?          (Process)
-on-protracted-war  → WHEN do we act & evolve?   (Time/Strategy)
-```
-
-### Knowledge Management
-```
-knowledge-consolidation  → Save single conversation insights
-llm-wiki                 → Build full compounding knowledge base
+on-contradiction   → 力量是什么？      （结构）
+on-practice        → 如何验证？        （过程）
+on-protracted-war  → 何时行动与演进？  （时间/战略）
 ```
 
-### Creating Project-Level Extensions
+### 知识管理
 ```
-project-skill-writer     → Create a reusable skill for a project
-project-agent-writer     → Create a specialized agent
-trae-rules-writer        → Create AI behavior rules
-project-skill-installer  → Install an existing skill into a project
+knowledge-consolidation  → 保存单次对话洞察
+llm-wiki                 → 构建完整的复利式知识库
 ```
 
-### Build System (rslib + pnpm)
+### 创建项目级扩展
+```
+project-skill-writer     → 为项目创建可复用技能
+project-agent-writer     → 创建专用代理
+trae-rules-writer        → 创建 AI 行为规则
+project-skill-installer  → 将已有技能安装到项目中
+```
 
-The repo uses [`@rslib/core`](https://rslib.rs) and [pnpm](https://pnpm.io). `rslib.config.ts` auto-scans `src/<skill>/` directories and emits one bundled CJS entry per `cli.ts` plus one per `hooks/<event>.ts` — there is no per-skill entry list to maintain.
+### 构建系统（rslib + pnpm）
+
+仓库使用 [`@rslib/core`](https://rslib.rs) 和 [pnpm](https://pnpm.io)。`rslib.config.ts` 自动扫描 `src/<skill>/` 目录，为每个 `cli.ts` 和每个 `hooks/<event>.ts` 各生成一个打包后的 CJS 入口 — 无需维护逐技能的入口列表。
 
 ```
-src/                          ← source of truth (TypeScript)
+src/                          ← 源码（TypeScript）
 ├── shared/
-│   ├── cli.ts                ← Command dispatcher + parseArgs helper
-│   ├── hooks-lib.ts          ← Hook utilities (stdin, injectContext, install/uninstall primitives)
-│   ├── install-entry.ts      ← `installCommand` / `uninstallCommand` exposed as subcommands
-│   └── db.ts                 ← SQLite helper (english-learner)
+│   ├── cli.ts                ← 命令分发器 + parseArgs 辅助函数
+│   ├── hooks-lib.ts          ← Hook 工具函数（stdin、injectContext、install/uninstall 原语）
+│   ├── install-entry.ts      ← `installCommand` / `uninstallCommand` 作为子命令导出
+│   └── db.ts                 ← SQLite 辅助函数（english-learner）
 ├── english-learner/{cli,cmd/,hooks/}
 ├── llm-wiki/{cli,cmd/,lib/,hooks/}
 ├── prompt-optimizer/{cli,hooks/}
@@ -200,83 +200,83 @@ src/                          ← source of truth (TypeScript)
 ├── project-{agent,skill}-writer/{cli,cmd/}
 └── trae-rules-writer/{cli,cmd/}
 
-skills/<name>/scripts/        ← bundled output, COMMITTED, never hand-edit
-├── cli.cjs                   ← single entry per skill
-└── hooks/<event>.cjs         ← one per src/<skill>/hooks/*.ts
+skills/<name>/scripts/        ← 打包产物，已提交，请勿手动编辑
+├── cli.cjs                   ← 每个技能的单一入口
+└── hooks/<event>.cjs         ← 每个 src/<skill>/hooks/*.ts 对应一个
 
-scripts/manage-hooks.mjs      ← orchestrator that runs `cli.cjs install` for every skill with hooks.json
+scripts/manage-hooks.mjs      ← 编排器，为每个包含 hooks.json 的技能运行 `cli.cjs install`
 ```
 
-**Build commands**:
+**构建命令**：
 ```bash
-pnpm install                  # one-time
-pnpm run build                # bundle all skills
-pnpm run watch                # watch mode for development
-pnpm run typecheck            # type-check without emitting
-pnpm run check                # typecheck + build (CI gate)
+pnpm install                  # 一次性安装
+pnpm run build                # 打包所有技能
+pnpm run watch                # 开发监听模式
+pnpm run typecheck            # 仅类型检查不生成文件
+pnpm run check                # typecheck + build（CI 门禁）
 ```
 
-**Skill commands** (uniform per-skill CLI):
+**技能命令**（统一的逐技能 CLI）：
 ```bash
-pnpm run install:hooks                                     # register all skill hooks globally
-pnpm run uninstall:hooks                                   # remove all skill hooks
-node skills/english-learner/scripts/cli.cjs migrate        # legacy JSON → SQLite (any subcommand --help for usage)
-node skills/english-learner/scripts/cli.cjs install        # per-skill install (called by manage-hooks)
+pnpm run install:hooks                                     # 全局注册所有技能 hooks
+pnpm run uninstall:hooks                                   # 移除所有技能 hooks
+node skills/english-learner/scripts/cli.cjs migrate        # 旧版 JSON → SQLite（任何子命令可用 --help 查看用法）
+node skills/english-learner/scripts/cli.cjs install        # 单技能安装（由 manage-hooks 调用）
 ```
 
-**Release commands**:
+**发布命令**：
 ```bash
-pnpm run release              # git push + pnpm dlx skills install + register IDE hooks
+pnpm run release              # git push + pnpm dlx skills install + 注册 IDE hooks
 ```
 
-The release runs three steps in order:
-1. `git push origin main` — publish the new bundles to GitHub
-2. `pnpm dlx skills install -g -y learnwy/skills` — pull the latest into `~/.agents/skills/<name>/` and register every skill with all 15 supported AI agents
-3. `pnpm run install:hooks` — `scripts/manage-hooks.mjs` walks each skill that ships a `hooks.json`, runs its `cli.cjs install --scope global --target both`, and registers entries in `~/.claude/settings.json`, `~/.trae/hooks.json`, and `~/.trae-cn/hooks.json`. Idempotent.
+发布按以下三个步骤顺序执行：
+1. `git push origin main` — 将新的打包文件发布到 GitHub
+2. `pnpm dlx skills install -g -y learnwy/skills` — 拉取最新版到 `~/.agents/skills/<name>/`，并向所有 15 个支持的 AI 代理注册每个技能
+3. `pnpm run install:hooks` — `scripts/manage-hooks.mjs` 遍历每个包含 `hooks.json` 的技能，运行其 `cli.cjs install --scope global --target both`，在 `~/.claude/settings.json`、`~/.trae/hooks.json` 和 `~/.trae-cn/hooks.json` 中注册条目。幂等操作。
 
-**Pre-commit guard**: `.githooks/pre-commit` runs `pnpm run check` whenever `src/`, `scripts/`, `rslib.config.ts`, `tsconfig.json`, or `package.json` is staged, then refuses the commit if `skills/*/scripts/` is out of sync. `pnpm install` wires this in via the `prepare` script (`git config core.hooksPath .githooks`).
+**Pre-commit 守卫**：`.githooks/pre-commit` 在 `src/`、`scripts/`、`rslib.config.ts`、`tsconfig.json` 或 `package.json` 被暂存时运行 `pnpm run check`，如果 `skills/*/scripts/` 不同步则拒绝提交。`pnpm install` 通过 `prepare` 脚本（`git config core.hooksPath .githooks`）将其接入。
 
-### Dependency Strategy
+### 依赖策略
 
-When a skill needs runtime dependencies, pick the right tier — never default to "consumer runs `pnpm install`":
+当技能需要运行时依赖时，选择合适的层级 — 切勿默认让消费者执行 `pnpm install`：
 
-| Dep type | Strategy |
-|---|---|
-| **Built-in Node modules** (`node:sqlite`, `node:fs`, …) | Add to `output.externals` in `rslib.config.ts`. Document the required Node version in the skill's SKILL.md `## Prerequisites`. |
-| **Pure-JS deps** (e.g. `yaml`, `zod`, `chalk`) | Bundle into the output (rslib's default). No install needed at consumer site. |
-| **Native deps** (e.g. `better-sqlite3`, `sharp`) | Ship a tiny per-skill `skills/<name>/package.json` with the runtime dep. Add a Prerequisites note in SKILL.md telling the user to run `cd skills/<name> && pnpm install` once. |
+| 依赖类型 | 策略 |
+|----------|------|
+| **内置 Node 模块**（`node:sqlite`、`node:fs` 等） | 添加到 `rslib.config.ts` 的 `output.externals` 中。在技能的 SKILL.md `## Prerequisites` 中记录所需的 Node 版本。 |
+| **纯 JS 依赖**（如 `yaml`、`zod`、`chalk`） | 打包到产物中（rslib 默认行为）。消费端无需安装。 |
+| **原生依赖**（如 `better-sqlite3`、`sharp`） | 为技能提供一个小型 `skills/<name>/package.json` 包含运行时依赖。在 SKILL.md 的 Prerequisites 中告知用户执行一次 `cd skills/<name> && pnpm install`。 |
 
-Every skill that has a non-trivial runtime requirement MUST list it in its SKILL.md `## Prerequisites` section so the AI assistant (and human reader) sees it before running.
+每个有非平凡运行时需求的技能都必须在其 SKILL.md `## Prerequisites` 章节中列出，以便 AI 助手（和人类读者）在运行前了解。
 
-**Build philosophy**:
-- One source per shared utility — hook helpers, the CLI dispatcher, and the install entry are bundled in from `src/shared/`, never copy-pasted.
-- Bundle output is **readable** (no minify, no mangle) so AI assistants can introspect it.
-- `cleanDistPath: false` — the build never deletes `SKILL.md`, `hooks.json`, `agents/`, or `references/`. It only writes `*.cjs` files under `scripts/`.
-- Every commit that changes `src/` MUST be accompanied by the corresponding rebuilt `skills/*/scripts/`. Run `pnpm run build` before committing — the `pre-commit` hook also enforces this.
+**构建理念**：
+- 每个共享工具一份源码 — hook 辅助函数、CLI 分发器和安装入口从 `src/shared/` 打包引入，从不复制粘贴。
+- 打包产物**可读**（不压缩、不混淆），便于 AI 助手内省。
+- `cleanDistPath: false` — 构建不会删除 `SKILL.md`、`hooks.json`、`agents/` 或 `references/`。只在 `scripts/` 下写入 `*.cjs` 文件。
+- 每次修改 `src/` 的提交都必须附带相应重建的 `skills/*/scripts/`。提交前运行 `pnpm run build` — `pre-commit` 钩子也会强制执行此规则。
 
 ### IDE Hooks
 
-Skills can register deterministic hooks that fire at IDE lifecycle events (SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, Stop). Works with both Trae and Claude Code.
+技能可以注册确定性 hooks，在 IDE 生命周期事件（SessionStart、UserPromptSubmit、PreToolUse、PostToolUse、Stop）时触发。兼容 Trae 和 Claude Code。
 
 ```
-skills/<name>/hooks.json                       → Per-skill hook configuration (handwritten)
-skills/<name>/scripts/cli.cjs                  → install/uninstall subcommands (via shared install-entry)
-skills/<name>/scripts/hooks/<event>.cjs        → Bundled hook event handlers
+skills/<name>/hooks.json                       → 逐技能 hook 配置（手写）
+skills/<name>/scripts/cli.cjs                  → install/uninstall 子命令（通过共享 install-entry）
+skills/<name>/scripts/hooks/<event>.cjs        → 打包后的 hook 事件处理器
 ```
 
-**Scope Convention**:
-- Skills storing data globally (`~/...`) → install hooks globally (`--scope global`)
-- Skills operating per-project → install hooks per-project (`--scope project`)
+**作用域约定**：
+- 全局存储数据的技能（`~/...`）→ 全局安装 hooks（`--scope global`）
+- 项目级操作的技能 → 项目级安装 hooks（`--scope project`）
 
-**Hook Installation**:
+**Hook 安装**：
 ```bash
-# Install (from skill directory)
+# 安装（从技能目录执行）
 node scripts/cli.cjs install --scope global --target both
 
-# Uninstall
+# 卸载
 node scripts/cli.cjs uninstall --scope global --target both
 ```
 
-**Installed locations**:
-- Trae: `~/.trae/hooks.json` (standalone hooks file)
-- Claude Code: `~/.claude/settings.json` (merged into `hooks` key)
+**安装位置**：
+- Trae: `~/.trae/hooks.json`（独立 hooks 文件）
+- Claude Code: `~/.claude/settings.json`（合并到 `hooks` 键中）

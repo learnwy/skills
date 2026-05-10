@@ -1,277 +1,277 @@
 ---
 name: on-protracted-war
-description: "Use this skill when planning long-term strategy for competitions, projects, or challenges where the weaker side must persevere to win, using Mao Zedong's *On Protracted War* (《论持久战》). Provides staged strategy thinking with strength/weakness transformation. Triggers on: 'long-term strategy', 'protracted war', 'staged approach', '持久战', 'phased strategy', 'we are weaker but', 'how to survive and win', 'strategic patience', 'competitive marathon', 'underdog strategy', or when facing a stronger competitor."
+description: "当需要为竞争、项目或挑战制定长期战略——尤其是弱势一方需要坚持取胜时使用此技能，运用毛泽东《论持久战》。提供分阶段的战略思维和强弱转化分析。触发词：'持久战'、'分阶段策略'、'长期战略'、'战略防御'、'战略相持'、'战略反攻'、'long-term strategy'、'protracted war'、'staged approach'、'phased strategy'、'how to survive and win'、'underdog strategy'、'strategic patience'，或面对更强竞争对手时触发。"
 metadata:
   author: "learnwy"
   version: "1.0"
-  source: "Mao Zedong, *On Protracted War* (《论持久战》, 1938)"
+  source: "毛泽东，《论持久战》（1938）"
 ---
 
-# On Protracted War Methodology Toolkit
+# 《论持久战》方法论工具箱
 
-Practical methodology toolkit derived from Mao Zedong's *On Protracted War*. Transforms the strategic theory of staged warfare and strength/weakness transformation into actionable frameworks for navigating long-term competitions, projects, and challenges where conditions evolve over time.
+源自毛泽东《论持久战》的实用方法论工具箱。将分阶段作战和强弱转化的战略理论转化为可操作的框架，用于应对条件随时间演变的长期竞争、项目和挑战。
 
-> **Core Principle**: Reject both despair ("we will fail") and haste ("we will win quickly"). Recognize that long-term struggles pass through distinct stages — each requiring a different strategy. The weaker side can prevail by correctly diagnosing the current stage, applying the right tactics for that stage, and actively creating conditions for the next stage transition.
+> **核心原则**：既反对悲观的"亡国论"，也反对盲目的"速胜论"。认识到长期斗争经历不同阶段——每个阶段需要不同的策略。弱势一方可以通过正确诊断当前阶段、采用适合该阶段的战术、并主动创造下一阶段转变的条件来取得胜利。
 
-## Prerequisites
+## 前置条件
 
-- No runtime dependencies (methodology-only skill, no scripts)
-- Works in any domain — business competition, career development, product roadmaps, technical debt, organizational change
+- 无运行时依赖（纯方法论技能，无脚本）
+- 适用于任何领域——商业竞争、职业发展、产品路线图、技术债务、组织变革
 
-## When to Use
+## 何时使用
 
-**Invoke when:**
+**应调用的场景：**
 
-- User faces a long-term challenge where they are currently at a disadvantage
-- User needs to plan a multi-phase strategy with different approaches per phase
-- User is stuck in a difficult middle period and losing confidence (the "stalemate")
-- User is choosing between an aggressive fast approach and a conservative slow approach
-- User mentions "long game", "phased strategy", "competitive marathon", "we're outmatched but"
-- User needs to assess whether they are in defense, stalemate, or counteroffensive position
+- 用户面临长期挑战且当前处于劣势
+- 用户需要制定每个阶段采用不同方法的多阶段策略
+- 用户陷入艰难的相持期并失去信心（"战略相持"）
+- 用户在激进快速方案和保守慢速方案之间犹豫
+- 用户提到"持久战"、"分阶段策略"、"长期博弈"、"我们实力不如对手但是"
+- 用户需要判断自己处于防御、相持还是反攻阶段
 
-**Do NOT invoke when:**
+**不应调用的场景：**
 
-- User needs structural analysis of opposing forces → use `on-contradiction`
-- User needs practice-based evidence validation → use `on-practice`
-- User needs code implementation → use `requirement-workflow` or IDE directly
-- The challenge is short-term and doesn't evolve through phases
-- The situation doesn't involve a weaker/stronger dynamic or time-based evolution
+- 用户需要对立力量的结构性分析 → 使用 `on-contradiction`
+- 用户需要基于实践的证据验证 → 使用 `on-practice`
+- 用户需要代码实现 → 使用 `requirement-workflow` 或直接使用 IDE
+- 挑战是短期的，不经历阶段演变
+- 局面不涉及强弱动态或基于时间的演变
 
-## Relationship with On Contradiction and On Practice
+## 与《矛盾论》《实践论》的关系
 
-*On Protracted War* completes the trilogy with *On Contradiction* and *On Practice*:
+《论持久战》与《矛盾论》《实践论》构成三部曲：
 
-| Dimension | On Contradiction | On Practice | On Protracted War |
-|-----------|-----------------|-------------|-------------------|
-| **Focus** | Structure of forces | Process of knowing | Evolution over time |
-| **Question** | "What are the opposing forces?" | "How do we verify truth?" | "How does this unfold and when do we act?" |
-| **Method** | Identify, prioritize, transform | Investigate, test, validate | Stage, strategize, maneuver, evolve |
-| **Strength** | Structural clarity — sees the skeleton | Process rigor — ensures grounding | Temporal wisdom — sees the arc of change |
-| **Combine** | Identify WHAT forces are at play | Validate HOW through practice | Plan WHEN to act and how each phase differs |
+| 维度 | 《矛盾论》 | 《实践论》 | 《论持久战》 |
+|------|-----------|-----------|------------|
+| **聚焦** | 力量的结构 | 认知的过程 | 时间的演变 |
+| **核心问题** | "对立力量是什么？" | "如何验证真理？" | "事物如何发展，何时行动？" |
+| **方法** | 识别、排序、转化 | 调查、试验、验证 | 分阶段、定战略、灵活机动、持续演进 |
+| **优势** | 结构清晰——看到骨架 | 过程严谨——确保扎根 | 时间智慧——看到变化的弧线 |
+| **组合** | 识别有哪些力量在起作用 | 验证如何通过实践来检验 | 规划何时行动以及各阶段如何不同 |
 
-## The Protracted Strategy Framework
+## 持久战略框架
 
-Every agent in this toolkit applies this 5-step framework:
-
-```
-Step 1: ASSESS      — Analyze four factors: strength, momentum, scale, and support
-Step 2: STAGE       — Diagnose which phase you're in (defense, stalemate, or counteroffensive)
-Step 3: STRATEGIZE  — Apply the correct strategy for the current phase
-Step 4: MANEUVER    — Execute tactical actions suited to your position
-Step 5: EVOLVE      — Monitor phase transitions, prepare for the next stage
-                      ↻ Repeat — conditions change, stages shift
-```
-
-This framework is the DNA of all agents. Each agent applies it to a specific domain.
-
-## Key Concepts
-
-| Concept | Definition | Practical Meaning |
-|---------|-----------|-------------------|
-| **Three-Stage Development** | Every long struggle passes through defense → stalemate → counteroffensive | Don't apply the same strategy across all phases; each requires different tactics |
-| **Reject Despair AND Haste** | Neither "we will certainly fail" nor "we will win quickly" is correct | Be realistic about timelines; avoid both panic and wishful thinking |
-| **The Stalemate as Pivot** | The hardest middle phase is where the turning point lives | The most painful period is the most important — don't give up during the stalemate |
-| **Strength/Weakness Transformation** | Today's weak can become tomorrow's strong under the right conditions | Disadvantages are not permanent; actively create conditions for reversal |
-| **Defense-within-Offense** | Even while defending strategically, attack tactically where you can win | Don't be purely passive; find local opportunities within an overall defensive posture |
-| **Strategic Persistence, Tactical Speed** | The overall game is long, but each battle should be fast and decisive | Win small, win fast, accumulate — "积小胜为大胜" (accumulate small victories into big victory) |
-| **Inner-Line to Outer-Line** | When surrounded, create local superiority through maneuver | Even in a disadvantaged position, you can create pockets of advantage |
-| **Conscious Initiative** | Strategy doesn't execute itself; requires active, purposeful human effort | Passive waiting loses; actively shape the situation at every stage |
-| **People as Foundation** | Victory depends on mobilizing all stakeholders, not just resources | Engage your team, users, allies — the deepest source of strength is in people |
-| **Four-Factor Analysis** | Assess strength, momentum, scale, and support — not just one dimension | A weak side can compensate through other factors (justice, scale, allies) |
-
-## Agent Summary
-
-| Domain | Agent | Core Principles Applied |
-|--------|-------|------------------------|
-| Thinking | [decision-maker](agents/thinking/decision-maker.md) | Three-stage + defense-within-offense + reject despair/haste |
-| Thinking | [problem-analyzer](agents/thinking/problem-analyzer.md) | Four-factor analysis + stage diagnosis + stalemate pivot |
-| Writing | [report-writer](agents/writing/report-writer.md) | Phased narrative + strength/weakness transformation arc |
-
-## Routing Decision Table
-
-| User Signal | Agent | Confidence |
-|-------------|-------|------------|
-| "long-term strategy", "phased plan", "when should we act" | decision-maker | High |
-| "assess the situation", "which phase are we in", "why are we stuck" | problem-analyzer | High |
-| "write a strategy report", "present our roadmap", "document the plan" | report-writer | High |
-| "持久战", "战略防御", "战略相持", "战略反攻" | problem-analyzer | High |
-| Feeling overwhelmed or wanting to give up on a long effort | problem-analyzer (diagnose stage) → decision-maker | Medium |
-| Need to present a multi-phase plan to stakeholders | report-writer | Medium |
-| General mention of "protracted" or "long game" | problem-analyzer (default entry) | Low |
-
-If confidence is Low, confirm agent selection with the user before proceeding.
-
-## Composition Workflows
-
-### Full Strategic Planning Workflow (Assess → Decide → Report)
+本工具箱中每个智能体都遵循这个5步框架：
 
 ```
-1. problem-analyzer  → Assess four factors, diagnose current stage
-2. decision-maker    → Choose strategy for current stage, plan phase transitions
-3. report-writer     → Present the phased strategy with stage-specific actions
+第1步：评估    — 分析四要素：实力、势头、纵深、支持
+第2步：定阶段  — 诊断当前处于哪个阶段（防御、相持或反攻）
+第3步：定战略  — 运用适合当前阶段的策略
+第4步：机动    — 执行与当前位置匹配的战术行动
+第5步：演进    — 监控阶段转换，为下一阶段做准备
+                  ↻ 循环——条件变化，阶段转移
 ```
 
-### Stage Transition Workflow
+此框架是所有智能体的基因。每个智能体将其应用于特定领域。
+
+## 关键概念
+
+| 概念 | 定义 | 实践含义 |
+|------|------|---------|
+| **三阶段发展** | 每场长期斗争都经历防御 → 相持 → 反攻 | 不要在所有阶段套用同一策略；每个阶段需要不同的战术 |
+| **反对"亡国论"和"速胜论"** | "我们必败"和"我们速胜"都是错误的 | 对时间线保持现实；既不恐慌也不抱幻想 |
+| **相持是转折点** | 最艰难的中间阶段正是转折点所在 | 最痛苦的时期是最重要的——不要在相持期放弃 |
+| **强弱转化** | 今天的弱者在适当条件下可以变成明天的强者 | 劣势不是永恒的；主动创造逆转条件 |
+| **防中有攻** | 即使在战略防御中，也要在战术层面找到能赢的进攻点 | 不要完全被动；在整体防御态势中寻找局部机会 |
+| **战略持久，战术速决** | 整体博弈是持久的，但每一仗都要快速果断 | 赢小仗，赢快仗，积累——"积小胜为大胜" |
+| **内线变外线** | 被包围时，通过机动创造局部优势 | 即使在劣势位置，也可以创造局部优势区域 |
+| **自觉能动性** | 战略不会自动执行；需要主动的、有目的的人为努力 | 被动等待就是输；在每个阶段主动塑造局面 |
+| **人民是根本** | 胜利取决于动员所有利益相关方，而非仅靠资源 | 发动你的团队、用户、盟友——最深厚的力量源泉在人 |
+| **四要素分析** | 评估实力、势头、纵深和支持——不仅仅看一个维度 | 弱势方可以通过其他要素弥补（正义性、规模、盟友） |
+
+## 智能体概览
+
+| 领域 | 智能体 | 应用的核心原理 |
+|------|--------|--------------|
+| 思维 | [decision-maker](agents/thinking/decision-maker.md) | 三阶段 + 防中有攻 + 反对亡国论/速胜论 |
+| 思维 | [problem-analyzer](agents/thinking/problem-analyzer.md) | 四要素分析 + 阶段诊断 + 相持转折 |
+| 写作 | [report-writer](agents/writing/report-writer.md) | 分阶段叙事 + 强弱转化弧线 |
+
+## 路由决策表
+
+| 用户信号 | 智能体 | 置信度 |
+|---------|--------|-------|
+| "长期战略"、"分阶段计划"、"何时该行动" | decision-maker | 高 |
+| "评估形势"、"我们在哪个阶段"、"为什么卡住了" | problem-analyzer | 高 |
+| "写一份战略报告"、"呈现我们的路线图"、"记录计划" | report-writer | 高 |
+| "持久战"、"战略防御"、"战略相持"、"战略反攻" | problem-analyzer | 高 |
+| 感到不堪重负或想放弃一项长期努力 | problem-analyzer（诊断阶段）→ decision-maker | 中 |
+| 需要向利益相关方呈现多阶段计划 | report-writer | 中 |
+| 泛泛提及"持久"或"长期博弈" | problem-analyzer（默认入口） | 低 |
+
+置信度为"低"时，先与用户确认智能体选择再继续。
+
+## 组合工作流
+
+### 完整战略规划工作流（评估 → 决策 → 报告）
 
 ```
-1. problem-analyzer  → Diagnose: are we still in defense, or entering stalemate?
-2. problem-analyzer  → Identify transformation conditions for next stage
-3. decision-maker    → Decide whether to shift strategy for the new stage
+1. problem-analyzer  → 评估四要素，诊断当前阶段
+2. decision-maker    → 选择当前阶段的策略，规划阶段转换
+3. report-writer     → 呈现分阶段战略及各阶段具体行动
 ```
 
-### Confidence Recovery Workflow (for "stalemate despair")
+### 阶段转换工作流
 
 ```
-1. problem-analyzer  → Diagnose: this IS the stalemate — the pivot, not the end
-2. decision-maker    → Identify defense-within-offense opportunities
-3. report-writer     → Reframe narrative: show progress arc from defense through stalemate to future counteroffensive
+1. problem-analyzer  → 诊断：我们仍在防御阶段，还是正进入相持？
+2. problem-analyzer  → 识别下一阶段的转化条件
+3. decision-maker    → 决定是否为新阶段调整策略
 ```
 
-## Cross-Skill Composition Workflows (with On Contradiction and On Practice)
-
-### The Trilogy Workflow (Structure → Time → Evidence)
+### 信心恢复工作流（应对"相持期绝望"）
 
 ```
-1. on-contradiction / problem-analyzer   → Identify all contradictions, find the principal one
-2. on-protracted-war / problem-analyzer  → Diagnose current stage, assess four factors
-3. on-protracted-war / decision-maker    → Choose phase-appropriate strategy
-4. on-practice / decision-maker          → Validate strategy assumptions through small-scale practice
-5. on-protracted-war / report-writer     → Full strategic report with contradiction structure + phased plan + evidence
+1. problem-analyzer  → 诊断：这就是相持——是转折点，不是终点
+2. decision-maker    → 识别防中有攻的机会
+3. report-writer     → 重构叙事：展示从防御经过相持到未来反攻的进展弧线
 ```
 
-### Quick Strategic Assessment
+## 跨技能组合工作流（与《矛盾论》《实践论》结合）
+
+### 三部曲工作流（结构 → 时间 → 证据）
 
 ```
-1. on-protracted-war / problem-analyzer  → Four-factor analysis + stage diagnosis
-2. on-contradiction / decision-maker     → Identify principal contradiction at this stage
-3. on-protracted-war / decision-maker    → Phase-appropriate action plan
+1. on-contradiction / problem-analyzer   → 识别所有矛盾，找到主要矛盾
+2. on-protracted-war / problem-analyzer  → 诊断当前阶段，评估四要素
+3. on-protracted-war / decision-maker    → 选择适合当前阶段的策略
+4. on-practice / decision-maker          → 通过小规模实践验证策略假设
+5. on-protracted-war / report-writer     → 完整战略报告：矛盾结构 + 分阶段计划 + 实践证据
 ```
 
-### Long-Game Confidence Builder
+### 快速战略评估
 
 ```
-1. on-protracted-war / problem-analyzer  → "You are in the stalemate — the hardest but most important phase"
-2. on-practice / problem-analyzer        → "Here is the evidence of progress from your practice"
-3. on-contradiction / decision-maker     → "Here is the principal contradiction to resolve for phase transition"
+1. on-protracted-war / problem-analyzer  → 四要素分析 + 阶段诊断
+2. on-contradiction / decision-maker     → 识别当前阶段的主要矛盾
+3. on-protracted-war / decision-maker    → 适合当前阶段的行动计划
 ```
 
-## Strategy Analysis Tools
+### 长期博弈信心构建
 
-### Tool 1: Four-Factor Assessment Matrix
+```
+1. on-protracted-war / problem-analyzer  → "你正处于相持期——最艰难但最重要的阶段"
+2. on-practice / problem-analyzer        → "这是你实践中的进展证据"
+3. on-contradiction / decision-maker     → "这是需要解决以实现阶段转换的主要矛盾"
+```
 
-For any competitive or challenging situation, assess all four factors:
+## 战略分析工具
 
-| Factor | Your Side | Opponent/Challenge | Implication |
-|--------|-----------|-------------------|-------------|
-| **Strength** (current capability) | {your resources, skills, tech} | {their resources, skills, tech} | Who has raw power advantage? |
-| **Momentum** (direction of change) | {improving / stable / declining} | {improving / stable / declining} | Who is gaining ground? |
-| **Scale** (depth of reserves) | {how long can you sustain} | {how long can they sustain} | Who can outlast? |
-| **Support** (allies, ecosystem) | {community, partners, users} | {their ecosystem, support} | Who has broader backing? |
+### 工具1：四要素评估矩阵
 
-**Rule**: Being weaker on ONE factor does not mean defeat. Assess all four — compensating advantages matter.
+针对任何竞争或挑战局面，评估全部四个要素：
 
-### Tool 2: Stage Diagnosis Checklist
+| 要素 | 我方 | 对手/挑战 | 含义 |
+|------|------|---------|------|
+| **实力**（当前能力） | {资源、技能、技术} | {其资源、技能、技术} | 谁有原始力量优势？ |
+| **势头**（变化方向） | {上升 / 持平 / 下降} | {上升 / 持平 / 下降} | 谁在赢得势头？ |
+| **纵深**（储备深度） | {能坚持多久} | {能坚持多久} | 谁能耗过谁？ |
+| **支持**（盟友与生态） | {社区、合作伙伴、用户} | {其生态系统、支持基础} | 谁有更广泛的支持？ |
 
-To identify which stage you're currently in:
+**规则**：在某一个要素上较弱不意味着失败。评估全部四个——补偿性优势很重要。
 
-| Stage | Signals | Strategy |
-|-------|---------|----------|
-| **Defense** (敌攻我守) | Losing ground, opponent advancing, you're reactive | Preserve core assets, trade space for time, seek local tactical wins |
-| **Stalemate** (相持) | Neither side making decisive progress, grind, fatigue | This is the PIVOT — invest in capability building, find guerrilla opportunities, accumulate small wins |
-| **Counteroffensive** (反攻) | Your strength has caught up or surpassed, initiative shifting to you | Concentrate force, seize strategic opportunities, push decisively |
+### 工具2：阶段诊断清单
 
-### Tool 3: Defense-within-Offense Finder
+判断当前处于哪个阶段：
 
-Even in a defensive stage, find offensive opportunities:
+| 阶段 | 信号 | 策略 |
+|------|------|------|
+| **战略防御**（敌攻我守） | 失去阵地，对手在推进，我方处于被动 | 保存核心资产，以空间换时间，寻找局部战术胜利 |
+| **战略相持**（相持） | 双方都没有取得决定性进展，消耗、疲劳 | 这是转折点——投入能力建设，寻找游击式机会，积小胜为大胜 |
+| **战略反攻**（反攻） | 实力追上或超越对手，主动权正在转移 | 集中力量，抓住战略机会，果断推进 |
 
-| Dimension | Strategic Posture | Tactical Opportunity |
-|-----------|------------------|---------------------|
-| Overall position | Defending (weaker) | Where can you attack locally? |
-| Time horizon | Long game (持久) | Which battles can you win fast (速决)? |
-| Territory | Surrounded (内线) | Where can you create local superiority (外线)? |
+### 工具3：防中有攻机会识别
 
-## Agent Output Contract
+即使在防御阶段，也要找到进攻机会：
 
-All agents follow the same output rules:
+| 维度 | 战略态势 | 战术机会 |
+|------|---------|---------|
+| 整体位置 | 防守中（较弱） | 哪里可以局部进攻？ |
+| 时间维度 | 持久战（持久） | 哪些战斗可以速战速决（速决）？ |
+| 空间维度 | 被包围（内线） | 哪里可以创造局部优势（外线）？ |
 
-| Allowed | Not Allowed |
-|---------|-------------|
-| Phased strategic analysis with stage-specific actions | One-size-fits-all strategy ignoring current stage |
-| Realistic timelines rejecting both despair and haste | Promise of quick victory or prediction of inevitable defeat |
-| Identification of transformation conditions between stages | Static analysis that ignores how conditions evolve |
-| Actionable next steps for the CURRENT stage | Actions that belong to a future stage applied prematurely |
+## 智能体输出契约
 
-Every agent output must include:
-1. **Four-Factor Assessment** — Strength, momentum, scale, support for both sides
-2. **Stage Diagnosis** — Which phase the situation is in, with evidence
-3. **Stage-Appropriate Strategy** — Tactics matched to the current phase
-4. **Transformation Conditions** — What must change for the next phase transition
-5. **Immediate Actions** — Concrete next steps for THIS stage, not the next one
+所有智能体遵循相同的输出规则：
 
-## Error Handling
+| 允许 | 不允许 |
+|------|-------|
+| 带有阶段具体行动的分阶段战略分析 | 忽视当前阶段的一刀切策略 |
+| 既反对悲观也反对盲目的现实时间线 | 承诺速胜或预判必败 |
+| 识别阶段间转化条件 | 忽视条件如何演变的静态分析 |
+| 针对当前阶段的可行后续步骤 | 过早应用属于未来阶段的行动 |
 
-| Issue | Solution |
-|-------|----------|
-| User's request matches no agent trigger | Default to problem-analyzer for stage diagnosis |
-| User wants to skip stages (jump from defense to counteroffensive) | Explain why stages can't be skipped; the stalemate is the necessary pivot |
-| User has given up hope during stalemate | Apply Confidence Recovery Workflow; show that stalemate IS the turning point |
-| User is too aggressive (wants to counterattack while still in defense) | Diagnose the actual stage; show which conditions must change before counteroffensive |
-| Situation doesn't have clear strong/weak dynamics | Simplify to: "which side has the initiative?" and "is it shifting?" |
-| User expects precise timing for phase transitions | Clarify: transitions are condition-driven, not calendar-driven; list the conditions |
+每个智能体的输出必须包含：
+1. **四要素评估** — 双方的实力、势头、纵深、支持
+2. **阶段诊断** — 局面处于哪个阶段，附带证据
+3. **阶段适配策略** — 与当前阶段匹配的战术
+4. **转化条件** — 下一阶段转换需要什么改变
+5. **即时行动** — 当前阶段（而非下一阶段）的具体后续步骤
 
-## Execution Checklist
+## 错误处理
 
-Before invoking any agent, verify:
+| 问题 | 解决方案 |
+|------|---------|
+| 用户请求不匹配任何智能体触发词 | 默认使用 problem-analyzer 进行阶段诊断 |
+| 用户想跳过阶段（从防御直接跳到反攻） | 解释为什么阶段不能跳过；相持是必要的转折点 |
+| 用户在相持期丧失希望 | 应用信心恢复工作流；表明相持就是转折点 |
+| 用户过于激进（仍在防御却想反攻） | 诊断实际阶段；说明进入反攻之前哪些条件必须改变 |
+| 局面没有明确的强弱动态 | 简化为："谁掌握主动权？"以及"主动权是否在转移？" |
+| 用户期望精确的阶段转换时间点 | 澄清：转换是条件驱动的，不是日历驱动的；列出条件 |
 
-- [ ] The situation involves a long-term challenge with evolving conditions
-- [ ] There is a meaningful strong/weak or advantage/disadvantage dynamic
-- [ ] Agent selection follows the Routing Decision Table
-- [ ] Agent receives sufficient context (situation, competitors/challenges, timeline, resources)
+## 执行检查清单
 
-After agent produces output, verify:
+调用任何智能体之前，验证：
 
-- [ ] Output includes a four-factor assessment (not just strength comparison)
-- [ ] A stage diagnosis is provided with evidence (not assumed)
-- [ ] Strategy is matched to the CURRENT stage (not a future desired stage)
-- [ ] Neither despair nor haste is endorsed — both are explicitly rejected
-- [ ] Transformation conditions for the next stage are concrete
-- [ ] Action plan focuses on what to do NOW in this stage
+- [ ] 局面涉及一个条件不断演变的长期挑战
+- [ ] 存在有意义的强弱或优劣动态
+- [ ] 智能体选择遵循路由决策表
+- [ ] 智能体获得了充分的上下文（局面、竞争对手/挑战、时间线、资源）
 
-## Boundary Enforcement
+智能体产出后，验证：
 
-This skill ONLY handles:
+- [ ] 输出包含四要素评估（不仅仅是实力对比）
+- [ ] 提供了有证据支撑的阶段诊断（非假设）
+- [ ] 策略与当前阶段匹配（不是未来期望的阶段）
+- [ ] 既不支持悲观也不支持盲目——两者都被明确否定
+- [ ] 下一阶段的转化条件是具体的
+- [ ] 行动计划聚焦于当前阶段应该做什么
 
-- Long-term strategic planning with phased approaches
-- Stage diagnosis for competitive or challenging situations
-- Strength/weakness transformation analysis over time
-- Defense-within-offense tactical opportunity identification
-- Strategic patience and confidence during difficult middle phases
-- Report writing with phased narrative structure
+## 边界约束
 
-This skill does NOT handle:
+本技能仅处理：
 
-- Structural contradiction analysis → `on-contradiction`
-- Practice-based evidence validation → `on-practice`
-- Code generation or software implementation → `requirement-workflow`
-- Software engineering methodology → `software-methodology-toolkit`
-- Quick factual answers → answer directly
-- Short-term decisions that don't involve phased evolution
+- 分阶段方法的长期战略规划
+- 竞争或挑战局面的阶段诊断
+- 随时间推移的强弱转化分析
+- 防中有攻的战术机会识别
+- 困难中间阶段的战略耐心和信心维持
+- 分阶段叙事结构的报告写作
 
-## Expansion Roadmap (v2.0)
+本技能不处理：
 
-> **Guiding principle**: No new agents until v1.0 agents are practice-tested. Apply On Practice — use the skills in real work first, then expand based on evidence.
+- 结构性矛盾分析 → `on-contradiction`
+- 基于实践的证据验证 → `on-practice`
+- 代码生成或软件实现 → `requirement-workflow`
+- 软件工程方法论 → `software-methodology-toolkit`
+- 快速事实性问答 → 直接回答
+- 不涉及分阶段演变的短期决策
 
-| Domain | Agent | Core Principle |
-|--------|-------|---------------|
-| Competition | competitive-strategist | Four-factor analysis + stage-specific competitive tactics |
-| Career | career-marathon-planner | Three-stage career development + stalemate perseverance |
-| Product | product-roadmap-advisor | Phased feature strategy + defense-within-offense in markets |
-| Organization | change-navigator | Organizational transformation through staged adoption |
-| Technical | debt-resolver | Technical debt as protracted war — staged remediation |
+## 扩展路线图（v2.0）
 
-## References
+> **指导原则**：在 v1.0 智能体经过实践检验之前不添加新智能体。应用《实践论》——先在实际工作中使用技能，再基于证据进行扩展。
 
-- **On Protracted War** (《论持久战》) — Mao Zedong (1938)
-- **On Contradiction** (《矛盾论》) — Mao Zedong (1937)
-- **On Practice** (《实践论》) — Mao Zedong (1937)
-- **Strategic Problems of China's Revolutionary War** (《中国革命战争的战略问题》) — Mao Zedong (1936)
+| 领域 | 智能体 | 核心原理 |
+|------|--------|---------|
+| 竞争 | competitive-strategist | 四要素分析 + 阶段适配的竞争战术 |
+| 职业 | career-marathon-planner | 三阶段职业发展 + 相持期坚持 |
+| 产品 | product-roadmap-advisor | 分阶段功能策略 + 市场中的防中有攻 |
+| 组织 | change-navigator | 通过分阶段推行实现组织变革 |
+| 技术 | debt-resolver | 技术债务即持久战——分阶段治理 |
+
+## 参考文献
+
+- **《论持久战》** — 毛泽东（1938）
+- **《矛盾论》** — 毛泽东（1937）
+- **《实践论》** — 毛泽东（1937）
+- **《中国革命战争的战略问题》** — 毛泽东（1936）

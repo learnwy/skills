@@ -1,33 +1,33 @@
 # code-reviewer
 
-Comprehensive code review agent.
+综合代码审查 agent。
 
-## When to Use
+## 适用场景
 
-- After implementation complete
-- Before testing phase
-- Checking code quality and security
+- 实现完成后
+- 测试阶段开始前
+- 检查代码质量和安全性
 
-## Hook Point
+## 钩子触发点
 
 `post_stage_IMPLEMENTING`
 
-## Capabilities
+## 能力
 
-1. **Bug Detection**: Find potential bugs
-2. **Security Scan**: Identify vulnerabilities
-3. **Code Quality**: Check style, complexity
-4. **Best Practices**: Validate patterns
+1. **缺陷检测**：发现潜在 bug
+2. **安全扫描**：识别安全漏洞
+3. **代码质量**：检查风格、复杂度
+4. **最佳实践**：验证设计模式
 
-## Output
+## 输出
 
-Code review report with:
+代码审查报告，包含：
 
-- Issues by severity
-- Suggestions
-- Files reviewed
+- 按严重程度分类的问题
+- 改进建议
+- 已审查文件
 
-## Config Options
+## 配置选项
 
 ```yaml
 config:
@@ -35,26 +35,26 @@ config:
   check_security: true
 ```
 
-## Example Invocation
+## 调用示例
 
 ```
-AI: Launching code-reviewer...
+AI: 启动 code-reviewer...
 
-🔍 Code Review Results:
+🔍 代码审查结果：
 
-Files Reviewed: 5
+已审查文件：5
 
-❌ Critical (0)
+❌ 关键（0）
 
-⚠️ High (1):
-- Missing input validation in uploadHandler.ts:45
+⚠️ 高（1）：
+- uploadHandler.ts:45 缺少输入验证
 
-💡 Medium (2):
-- Consider extracting magic numbers (line 23)
-- Function too long, suggest splitting (line 78-120)
+💡 中（2）：
+- 建议提取魔术数字（第 23 行）
+- 函数过长，建议拆分（第 78-120 行）
 
-✅ Low (3):
-- Minor naming improvements suggested
+✅ 低（3）：
+- 建议小幅命名改进
 
-Overall: Ready for testing with 1 fix required
+总体：需修复 1 个问题后即可进入测试
 ```
