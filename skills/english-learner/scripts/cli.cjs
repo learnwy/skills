@@ -258,6 +258,8 @@ const LEVEL_RANK = {
     warn: 2,
     error: 3
 };
+const DEFAULT_MAX_BYTES = 5 * 1024 * 1024;
+const KEEP_GENERATIONS = 3;
 function logRoot() {
     return external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'logs');
 }
@@ -269,6 +271,29 @@ function envLevel() {
 function teeStderr() {
     return process.env.LEARNWY_LOG_STDERR === '1';
 }
+function maxBytes() {
+    const raw = process.env.LEARNWY_LOG_MAX_BYTES;
+    if (!raw) return DEFAULT_MAX_BYTES;
+    const n = Number.parseInt(raw, 10);
+    return Number.isFinite(n) && n > 0 ? n : DEFAULT_MAX_BYTES;
+}
+function rotateIfNeeded(file, threshold) {
+    let size = 0;
+    try {
+        size = external_node_fs_namespaceObject.statSync(file).size;
+    } catch  {
+        return;
+    }
+    if (size < threshold) return;
+    for(let i = KEEP_GENERATIONS; i >= 1; i--){
+        const src = i === 1 ? file : `${file}.${i - 1}`;
+        const dst = `${file}.${i}`;
+        try {
+            if (external_node_fs_namespaceObject.existsSync(src)) external_node_fs_namespaceObject.renameSync(src, dst);
+        } catch  {
+        /* swallow — best-effort rotation */ }
+    }
+}
 function createLogger(skill) {
     function write(level, body) {
         if (LEVEL_RANK[level] < LEVEL_RANK[envLevel()]) return;
@@ -277,6 +302,7 @@ function createLogger(skill) {
         const line = `${nowIso()} [${level}] ${skill}: ${body}\n`;
         try {
             ensureDir(root);
+            rotateIfNeeded(file, maxBytes());
             external_node_fs_namespaceObject.appendFileSync(file, line);
         } catch  {
         /* never break the caller on disk error */ }
@@ -352,8 +378,27 @@ const external_node_sqlite_namespaceObject = require("node:sqlite");
 
 
 
-const DATA_ROOT = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.english-learner');
+const DATA_ROOT = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'english-learner');
 const DB_PATH = external_node_path_namespaceObject.join(DATA_ROOT, 'data.db');
+const LEGACY_DATA_ROOT = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.english-learner');
+function migrateLegacyRoot() {
+    if (external_node_fs_namespaceObject.existsSync(DATA_ROOT)) return;
+    if (!external_node_fs_namespaceObject.existsSync(LEGACY_DATA_ROOT)) return;
+    external_node_fs_namespaceObject.mkdirSync(external_node_path_namespaceObject.dirname(DATA_ROOT), {
+        recursive: true
+    });
+    try {
+        external_node_fs_namespaceObject.renameSync(LEGACY_DATA_ROOT, DATA_ROOT);
+    } catch  {
+        external_node_fs_namespaceObject.cpSync(LEGACY_DATA_ROOT, DATA_ROOT, {
+            recursive: true
+        });
+        external_node_fs_namespaceObject.rmSync(LEGACY_DATA_ROOT, {
+            recursive: true,
+            force: true
+        });
+    }
+}
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS words (
   word TEXT PRIMARY KEY,
@@ -395,6 +440,7 @@ CREATE TABLE IF NOT EXISTS meta (
 let _db = null;
 function db_getDb() {
     if (_db) return _db;
+    migrateLegacyRoot();
     external_node_fs_namespaceObject.mkdirSync(DATA_ROOT, {
         recursive: true
     });
@@ -1171,7 +1217,126 @@ const migrate_command = {
     }
 };
 
+;// CONCATENATED MODULE: ./src/english-learner/cmd/link-wiki.ts
+
+
+
+
+
+const WIKI_TOPICS = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'llm-wiki', 'wiki', 'topics.txt');
+const LINKS_FILE = external_node_path_namespaceObject.join(DATA_ROOT, 'wiki-links.json');
+const MIN_TERM_LEN = 4;
+const MAX_LINKS_PER_TERM = 3;
+function loadTopicSegments() {
+    const lines = [];
+    const segmentIndex = new Map();
+    if (!external_node_fs_namespaceObject.existsSync(WIKI_TOPICS)) return {
+        lines,
+        segmentIndex
+    };
+    const raw = external_node_fs_namespaceObject.readFileSync(WIKI_TOPICS, 'utf8');
+    for (const line of raw.split('\n')){
+        const t = line.trim();
+        if (!t || t.startsWith('#')) continue;
+        lines.push(t);
+        for (const seg of t.split('-')){
+            if (seg.length < MIN_TERM_LEN) continue;
+            const arr = segmentIndex.get(seg) ?? [];
+            arr.push(t);
+            segmentIndex.set(seg, arr);
+        }
+    }
+    return {
+        lines,
+        segmentIndex
+    };
+}
+function matchTerm(term, segmentIndex, topicLines) {
+    const lower = term.toLowerCase();
+    if (lower.length < MIN_TERM_LEN) return [];
+    const exact = segmentIndex.get(lower);
+    if (exact && exact.length) return exact.slice(0, MAX_LINKS_PER_TERM);
+    const tokens = lower.split(/[^a-z0-9]+/).filter((t)=>t.length >= MIN_TERM_LEN);
+    if (tokens.length === 0) return [];
+    const hits = new Set();
+    for (const tok of tokens){
+        const matches = segmentIndex.get(tok);
+        if (matches) {
+            for (const m of matches)hits.add(m);
+        }
+    }
+    if (hits.size === 0) {
+        for (const line of topicLines){
+            if (line.includes(lower)) hits.add(line);
+            if (hits.size >= MAX_LINKS_PER_TERM) break;
+        }
+    }
+    return Array.from(hits).slice(0, MAX_LINKS_PER_TERM);
+}
+function buildLinks() {
+    const { lines, segmentIndex } = loadTopicSegments();
+    const db = db_getDb();
+    const wordRows = db.prepare('SELECT word FROM words').all();
+    const phraseRows = db.prepare('SELECT phrase FROM phrases').all();
+    const links = [];
+    for (const r of wordRows){
+        const topics = matchTerm(r.word, segmentIndex, lines);
+        if (topics.length) links.push({
+            term: r.word,
+            type: 'word',
+            topics
+        });
+    }
+    for (const r of phraseRows){
+        const topics = matchTerm(r.phrase, segmentIndex, lines);
+        if (topics.length) links.push({
+            term: r.phrase,
+            type: 'phrase',
+            topics
+        });
+    }
+    return {
+        generated_at: new Date().toISOString(),
+        source: WIKI_TOPICS,
+        total_terms_scanned: wordRows.length + phraseRows.length,
+        total_terms_linked: links.length,
+        links
+    };
+}
+const link_wiki_command = {
+    description: 'Match vocab terms to llm-wiki topics; write ~/.learnwy/english-learner/wiki-links.json',
+    run: (args)=>{
+        const { flags } = parseArgs(args);
+        if (!external_node_fs_namespaceObject.existsSync(WIKI_TOPICS)) {
+            console.error(`llm-wiki topics file not found: ${WIKI_TOPICS}`);
+            console.error("Skipping link-wiki \u2014 initialize llm-wiki first.");
+            process.exit(0);
+        }
+        const result = buildLinks();
+        if (flags['dry-run']) {
+            console.log(JSON.stringify(result, null, 2));
+            return;
+        }
+        if (!external_node_fs_namespaceObject.existsSync(DATA_ROOT)) external_node_fs_namespaceObject.mkdirSync(DATA_ROOT, {
+            recursive: true
+        });
+        external_node_fs_namespaceObject.writeFileSync(LINKS_FILE, JSON.stringify(result, null, 2) + '\n');
+        console.log(`Wrote ${result.total_terms_linked} link(s) (of ${result.total_terms_scanned} terms) to ${LINKS_FILE}`);
+    }
+};
+function readLinksMap() {
+    const map = new Map();
+    if (!fs.existsSync(LINKS_FILE)) return map;
+    try {
+        const f = JSON.parse(fs.readFileSync(LINKS_FILE, 'utf8'));
+        for (const l of f.links)map.set(l.term, l.topics);
+    } catch  {
+    /* ignore malformed file */ }
+    return map;
+}
+
 ;// CONCATENATED MODULE: ./src/english-learner/cli.ts
+
 
 
 
@@ -1185,6 +1350,7 @@ dispatch({
         quiz: quiz_command,
         sentence: sentence_command,
         migrate: migrate_command,
+        'link-wiki': link_wiki_command,
         install: installCommand,
         uninstall: uninstallCommand
     }

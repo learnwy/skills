@@ -190,7 +190,53 @@ function looksLikeChineseLearnIntent(text) {
     return chineseRatio(text) > 0.3 || CHINESE_LEARN_RE.test(text);
 }
 
+;// CONCATENATED MODULE: external "node:os"
+const external_node_os_namespaceObject = require("node:os");
+;// CONCATENATED MODULE: ./src/prompt-optimizer/lib/events.ts
+
+
+
+const DATA_ROOT = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'prompt-optimizer');
+const EVENTS_FILE = external_node_path_namespaceObject.join(DATA_ROOT, 'events.jsonl');
+const MAX_EVENTS_BYTES = 5 * 1024 * 1024;
+function appendEvent(event) {
+    try {
+        if (!external_node_fs_namespaceObject.existsSync(DATA_ROOT)) external_node_fs_namespaceObject.mkdirSync(DATA_ROOT, {
+            recursive: true
+        });
+        let size = 0;
+        try {
+            size = external_node_fs_namespaceObject.statSync(EVENTS_FILE).size;
+        } catch  {
+        /* missing file — fine */ }
+        if (size > MAX_EVENTS_BYTES) {
+            try {
+                external_node_fs_namespaceObject.renameSync(EVENTS_FILE, `${EVENTS_FILE}.1`);
+            } catch  {
+            /* swallow */ }
+        }
+        external_node_fs_namespaceObject.appendFileSync(EVENTS_FILE, `${JSON.stringify(event)}\n`);
+    } catch  {
+    /* never break the caller */ }
+}
+function readEvents(sinceMs) {
+    if (!fs.existsSync(EVENTS_FILE)) return [];
+    const out = [];
+    const cutoff = Date.now() - sinceMs;
+    const raw = fs.readFileSync(EVENTS_FILE, 'utf8');
+    for (const line of raw.split('\n')){
+        if (!line) continue;
+        try {
+            const e = JSON.parse(line);
+            if (Date.parse(e.ts) >= cutoff) out.push(e);
+        } catch  {
+        /* skip malformed line */ }
+    }
+    return out;
+}
+
 ;// CONCATENATED MODULE: ./src/prompt-optimizer/hooks/user-prompt-scan.ts
+
 
 
 const EXPLICIT_TRIGGERS = [
@@ -236,6 +282,15 @@ async function main() {
     const structured = looksLikeStructuredPrompt(trimmed);
     if (!explicit && !structured) return;
     const reason = explicit ? 'The user explicitly asked to optimize/improve a prompt.' : 'The user submitted a long, structured prompt-shaped instruction.';
+    const shapeMarkers = PROMPT_SHAPE_MARKERS.filter((re)=>re.test(trimmed)).length;
+    appendEvent({
+        ts: new Date().toISOString(),
+        trigger: explicit ? 'explicit' : 'structured',
+        length: trimmed.length,
+        lines: trimmed.split('\n').length,
+        shape_markers: shapeMarkers,
+        excerpt: trimmed.slice(0, 120).replace(/\s+/g, ' ')
+    });
     injectContext([
         '[prompt-optimizer hook]',
         reason,

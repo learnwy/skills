@@ -7,6 +7,9 @@ export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 const LEVEL_RANK: Record<LogLevel, number> = { debug: 0, info: 1, warn: 2, error: 3 };
 
+const DEFAULT_MAX_BYTES = 5 * 1024 * 1024;
+const KEEP_GENERATIONS = 3;
+
 export function logRoot(): string {
   return path.join(os.homedir(), '.learnwy', 'logs');
 }
@@ -19,6 +22,32 @@ function envLevel(): LogLevel {
 
 function teeStderr(): boolean {
   return process.env.LEARNWY_LOG_STDERR === '1';
+}
+
+function maxBytes(): number {
+  const raw = process.env.LEARNWY_LOG_MAX_BYTES;
+  if (!raw) return DEFAULT_MAX_BYTES;
+  const n = Number.parseInt(raw, 10);
+  return Number.isFinite(n) && n > 0 ? n : DEFAULT_MAX_BYTES;
+}
+
+function rotateIfNeeded(file: string, threshold: number): void {
+  let size = 0;
+  try {
+    size = fs.statSync(file).size;
+  } catch {
+    return;
+  }
+  if (size < threshold) return;
+  for (let i = KEEP_GENERATIONS; i >= 1; i--) {
+    const src = i === 1 ? file : `${file}.${i - 1}`;
+    const dst = `${file}.${i}`;
+    try {
+      if (fs.existsSync(src)) fs.renameSync(src, dst);
+    } catch {
+      /* swallow — best-effort rotation */
+    }
+  }
 }
 
 export interface Logger {
@@ -36,6 +65,7 @@ export function createLogger(skill: string): Logger {
     const line = `${nowIso()} [${level}] ${skill}: ${body}\n`;
     try {
       ensureDir(root);
+      rotateIfNeeded(file, maxBytes());
       fs.appendFileSync(file, line);
     } catch {
       /* never break the caller on disk error */

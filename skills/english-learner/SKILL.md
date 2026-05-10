@@ -1,6 +1,6 @@
 ---
 name: english-learner
-description: "对用户发送的每条英文消息自动检测语法、用词和表达问题——先教学纠正，再处理实际任务。对中文消息自动附加中译英练习——完成主任务后给出英文翻译和关键词汇。也适用于查单词、查短语（如 'break the ice'）、翻译请求或复习测验。触发词：任何英文消息、任何中文消息、单个英文单词、习语、'查单词'、'学英语'、'what does X mean'、词汇复习等。词汇数据存储在 ~/.english-learner/，支持掌握度追踪和间隔复习。"
+description: "对用户发送的每条英文消息自动检测语法、用词和表达问题——先教学纠正，再处理实际任务。对中文消息自动附加中译英练习——完成主任务后给出英文翻译和关键词汇。也适用于查单词、查短语（如 'break the ice'）、翻译请求或复习测验。每日首次会话启动时自动推送 3 个待复习词条。触发词：任何英文消息、任何中文消息、单个英文单词、习语、'查单词'、'学英语'、'what does X mean'、词汇复习等。词汇数据存储在 ~/.learnwy/english-learner/，支持掌握度追踪和间隔复习；自 v1.1 起从旧路径 ~/.english-learner/ 自动迁移。"
 metadata:
   author: "learnwy"
   version: "3.1"
@@ -168,9 +168,11 @@ metadata:
 ## 前置条件
 
 - Node.js >= 24（使用内置 `node:sqlite`）
-- 主目录可写，用于存储 `~/.english-learner/data.db`
+- 主目录可写，用于存储 `~/.learnwy/english-learner/data.db`
 
-如果 `~/.english-learner/{words,phrases,history}/` 下存在旧版 JSON 数据，运行一次导入：
+**自动迁移**：自 v1.1 起，首次访问数据库时若发现旧路径 `~/.english-learner/` 而新路径 `~/.learnwy/english-learner/` 不存在，会原子重命名（同卷 `rename`，跨卷回退到递归拷贝 + 删除）。无需手动操作。
+
+如果 `~/.learnwy/english-learner/{words,phrases,history}/` 下存在旧版 JSON 数据，运行一次导入：
 
 ```bash
 node scripts/cli.cjs migrate              # 导入到 data.db
@@ -239,7 +241,7 @@ node scripts/cli.cjs migrate --dry-run    # 仅预览行数
 
 ## 脚本
 
-单入口 `{skill_root}/scripts/cli.cjs`。数据存储在 `~/.english-learner/`。
+单入口 `{skill_root}/scripts/cli.cjs`。数据存储在 `~/.learnwy/english-learner/`。
 
 ```bash
 # vocab — 单词/短语的增删改查 + 批量操作
@@ -394,10 +396,10 @@ node cli.cjs uninstall    # 移除本技能的 hook 条目
 
 ## 数据结构
 
-存储为 SQLite 数据库 `~/.english-learner/data.db`。记忆文件（Markdown）独立存储。
+存储为 SQLite 数据库 `~/.learnwy/english-learner/data.db`。记忆文件（Markdown）独立存储。
 
 ```
-~/.english-learner/
+~/.learnwy/english-learner/
 ├── data.db              # SQLite — 单词、短语、历史
 └── memory/
     ├── SOUL.md
@@ -465,7 +467,8 @@ CREATE INDEX idx_history_ts ON history(ts);
 
 | 问题 | 解决方案 |
 |------|----------|
-| `~/.english-learner/` 不可写 | 报告错误，建议 `mkdir -p ~/.english-learner` |
+| `~/.learnwy/english-learner/` 不可写 | 报告错误，建议 `mkdir -p ~/.learnwy/english-learner` |
+| 旧路径 `~/.english-learner/` 仍存在但新路径已就绪 | 自动迁移仅在新路径不存在时触发；如确认新数据库可用，可手动 `rm -rf ~/.english-learner/` |
 | `node:sqlite` 不可用 | 升级 Node.js 到 >= 24 |
 | `batch_get` 全部返回 `not_found` | AI 生成所有释义，然后 `batch_save` |
 | 测验返回空列表 | 展示"词库为空"消息及使用提示 |
@@ -495,7 +498,7 @@ CREATE INDEX idx_history_ts ON history(ts);
 
 ### 作用域
 
-**全局** — 安装到 `~/.claude/settings.json` 和 `~/.trae/hooks.json`，因为词汇数据存储在 `~/.english-learner/`。
+**全局** — 安装到 `~/.claude/settings.json` 和 `~/.trae/hooks.json`，因为词汇数据存储在 `~/.learnwy/english-learner/`。
 
 ### 事件
 

@@ -3,8 +3,21 @@ import * as path from 'node:path';
 import * as os from 'node:os';
 import { DatabaseSync } from 'node:sqlite';
 
-export const DATA_ROOT = path.join(os.homedir(), '.english-learner');
+export const DATA_ROOT = path.join(os.homedir(), '.learnwy', 'english-learner');
 export const DB_PATH = path.join(DATA_ROOT, 'data.db');
+export const LEGACY_DATA_ROOT = path.join(os.homedir(), '.english-learner');
+
+function migrateLegacyRoot(): void {
+  if (fs.existsSync(DATA_ROOT)) return;
+  if (!fs.existsSync(LEGACY_DATA_ROOT)) return;
+  fs.mkdirSync(path.dirname(DATA_ROOT), { recursive: true });
+  try {
+    fs.renameSync(LEGACY_DATA_ROOT, DATA_ROOT);
+  } catch {
+    fs.cpSync(LEGACY_DATA_ROOT, DATA_ROOT, { recursive: true });
+    fs.rmSync(LEGACY_DATA_ROOT, { recursive: true, force: true });
+  }
+}
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS words (
@@ -49,6 +62,7 @@ let _db: DatabaseSync | null = null;
 
 export function getDb(): DatabaseSync {
   if (_db) return _db;
+  migrateLegacyRoot();
   fs.mkdirSync(DATA_ROOT, { recursive: true });
   _db = new DatabaseSync(DB_PATH);
   _db.exec('PRAGMA journal_mode = WAL;');

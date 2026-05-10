@@ -258,6 +258,8 @@ const LEVEL_RANK = {
     warn: 2,
     error: 3
 };
+const DEFAULT_MAX_BYTES = 5 * 1024 * 1024;
+const KEEP_GENERATIONS = 3;
 function logRoot() {
     return external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'logs');
 }
@@ -269,6 +271,29 @@ function envLevel() {
 function teeStderr() {
     return process.env.LEARNWY_LOG_STDERR === '1';
 }
+function maxBytes() {
+    const raw = process.env.LEARNWY_LOG_MAX_BYTES;
+    if (!raw) return DEFAULT_MAX_BYTES;
+    const n = Number.parseInt(raw, 10);
+    return Number.isFinite(n) && n > 0 ? n : DEFAULT_MAX_BYTES;
+}
+function rotateIfNeeded(file, threshold) {
+    let size = 0;
+    try {
+        size = external_node_fs_namespaceObject.statSync(file).size;
+    } catch  {
+        return;
+    }
+    if (size < threshold) return;
+    for(let i = KEEP_GENERATIONS; i >= 1; i--){
+        const src = i === 1 ? file : `${file}.${i - 1}`;
+        const dst = `${file}.${i}`;
+        try {
+            if (external_node_fs_namespaceObject.existsSync(src)) external_node_fs_namespaceObject.renameSync(src, dst);
+        } catch  {
+        /* swallow — best-effort rotation */ }
+    }
+}
 function createLogger(skill) {
     function write(level, body) {
         if (LEVEL_RANK[level] < LEVEL_RANK[envLevel()]) return;
@@ -277,6 +302,7 @@ function createLogger(skill) {
         const line = `${nowIso()} [${level}] ${skill}: ${body}\n`;
         try {
             ensureDir(root);
+            rotateIfNeeded(file, maxBytes());
             external_node_fs_namespaceObject.appendFileSync(file, line);
         } catch  {
         /* never break the caller on disk error */ }

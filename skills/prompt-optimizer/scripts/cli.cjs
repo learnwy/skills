@@ -258,6 +258,8 @@ const LEVEL_RANK = {
     warn: 2,
     error: 3
 };
+const DEFAULT_MAX_BYTES = 5 * 1024 * 1024;
+const KEEP_GENERATIONS = 3;
 function logRoot() {
     return external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'logs');
 }
@@ -269,6 +271,29 @@ function envLevel() {
 function teeStderr() {
     return process.env.LEARNWY_LOG_STDERR === '1';
 }
+function maxBytes() {
+    const raw = process.env.LEARNWY_LOG_MAX_BYTES;
+    if (!raw) return DEFAULT_MAX_BYTES;
+    const n = Number.parseInt(raw, 10);
+    return Number.isFinite(n) && n > 0 ? n : DEFAULT_MAX_BYTES;
+}
+function rotateIfNeeded(file, threshold) {
+    let size = 0;
+    try {
+        size = external_node_fs_namespaceObject.statSync(file).size;
+    } catch  {
+        return;
+    }
+    if (size < threshold) return;
+    for(let i = KEEP_GENERATIONS; i >= 1; i--){
+        const src = i === 1 ? file : `${file}.${i - 1}`;
+        const dst = `${file}.${i}`;
+        try {
+            if (external_node_fs_namespaceObject.existsSync(src)) external_node_fs_namespaceObject.renameSync(src, dst);
+        } catch  {
+        /* swallow — best-effort rotation */ }
+    }
+}
 function createLogger(skill) {
     function write(level, body) {
         if (LEVEL_RANK[level] < LEVEL_RANK[envLevel()]) return;
@@ -277,6 +302,7 @@ function createLogger(skill) {
         const line = `${nowIso()} [${level}] ${skill}: ${body}\n`;
         try {
             ensureDir(root);
+            rotateIfNeeded(file, maxBytes());
             external_node_fs_namespaceObject.appendFileSync(file, line);
         } catch  {
         /* never break the caller on disk error */ }
@@ -345,14 +371,151 @@ const uninstallCommand = {
     }
 };
 
+;// CONCATENATED MODULE: ./src/prompt-optimizer/lib/events.ts
+
+
+
+const DATA_ROOT = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'prompt-optimizer');
+const EVENTS_FILE = external_node_path_namespaceObject.join(DATA_ROOT, 'events.jsonl');
+const MAX_EVENTS_BYTES = (/* unused pure expression or super */ null && (5 * 1024 * 1024));
+function appendEvent(event) {
+    try {
+        if (!fs.existsSync(DATA_ROOT)) fs.mkdirSync(DATA_ROOT, {
+            recursive: true
+        });
+        let size = 0;
+        try {
+            size = fs.statSync(EVENTS_FILE).size;
+        } catch  {
+        /* missing file — fine */ }
+        if (size > MAX_EVENTS_BYTES) {
+            try {
+                fs.renameSync(EVENTS_FILE, `${EVENTS_FILE}.1`);
+            } catch  {
+            /* swallow */ }
+        }
+        fs.appendFileSync(EVENTS_FILE, `${JSON.stringify(event)}\n`);
+    } catch  {
+    /* never break the caller */ }
+}
+function readEvents(sinceMs) {
+    if (!external_node_fs_namespaceObject.existsSync(EVENTS_FILE)) return [];
+    const out = [];
+    const cutoff = Date.now() - sinceMs;
+    const raw = external_node_fs_namespaceObject.readFileSync(EVENTS_FILE, 'utf8');
+    for (const line of raw.split('\n')){
+        if (!line) continue;
+        try {
+            const e = JSON.parse(line);
+            if (Date.parse(e.ts) >= cutoff) out.push(e);
+        } catch  {
+        /* skip malformed line */ }
+    }
+    return out;
+}
+
+;// CONCATENATED MODULE: ./src/prompt-optimizer/cmd/trends.ts
+
+
+const DOW = [
+    'Sun',
+    'Mon',
+    'Tue',
+    'Wed',
+    'Thu',
+    'Fri',
+    'Sat'
+];
+function aggregate(events) {
+    const byTrigger = {};
+    const byDow = {};
+    let lengthSum = 0;
+    let linesSum = 0;
+    let markersSum = 0;
+    for (const e of events){
+        byTrigger[e.trigger] = (byTrigger[e.trigger] || 0) + 1;
+        const dow = DOW[new Date(e.ts).getDay()];
+        byDow[dow] = (byDow[dow] || 0) + 1;
+        lengthSum += e.length;
+        linesSum += e.lines;
+        markersSum += e.shape_markers;
+    }
+    const total = events.length;
+    const recent = events.slice(-5).reverse().map((e)=>({
+            ts: e.ts,
+            trigger: e.trigger,
+            excerpt: e.excerpt
+        }));
+    return {
+        total,
+        byTrigger,
+        byDow,
+        avgLength: total ? Math.round(lengthSum / total) : 0,
+        avgLines: total ? Math.round(linesSum / total) : 0,
+        avgShapeMarkers: total ? Number((markersSum / total).toFixed(1)) : 0,
+        recentExcerpts: recent
+    };
+}
+function formatHuman(days, agg) {
+    if (agg.total === 0) {
+        return `No prompt-optimizer events recorded in the last ${days} day(s).\nFile: ${EVENTS_FILE}`;
+    }
+    const lines = [];
+    lines.push(`prompt-optimizer trends \u{2014} last ${days} day(s)`);
+    lines.push('');
+    lines.push(`Total triggered: ${agg.total}`);
+    lines.push(`Average length: ${agg.avgLength} chars, ${agg.avgLines} lines, ${agg.avgShapeMarkers} shape markers/event`);
+    lines.push('');
+    lines.push('By trigger:');
+    for (const [k, v] of Object.entries(agg.byTrigger).sort((a, b)=>b[1] - a[1])){
+        lines.push(`  ${k.padEnd(12)} ${v}`);
+    }
+    lines.push('');
+    lines.push('By day of week:');
+    for (const d of DOW){
+        const v = agg.byDow[d] || 0;
+        if (v) lines.push(`  ${d}  ${v}`);
+    }
+    lines.push('');
+    lines.push('Recent excerpts:');
+    for (const e of agg.recentExcerpts){
+        lines.push(`  [${e.ts.slice(0, 16)}] (${e.trigger}) ${e.excerpt}`);
+    }
+    return lines.join('\n');
+}
+const command = {
+    description: 'Aggregate prompt-optimizer trigger events over a time window',
+    run: (args)=>{
+        const { flags } = parseArgs(args);
+        const days = flags.days ? Number.parseInt(String(flags.days), 10) : 30;
+        if (!Number.isFinite(days) || days <= 0) {
+            console.error('--days must be a positive integer');
+            process.exit(1);
+        }
+        const json = flags.json === true;
+        const events = readEvents(days * 24 * 60 * 60 * 1000);
+        const agg = aggregate(events);
+        if (json) {
+            console.log(JSON.stringify({
+                window_days: days,
+                ...agg
+            }, null, 2));
+        } else {
+            console.log(formatHuman(days, agg));
+        }
+    }
+};
+
 ;// CONCATENATED MODULE: ./src/prompt-optimizer/cli.ts
+
 
 
 dispatch({
     name: 'prompt-optimizer',
     commands: {
         install: installCommand,
-        uninstall: uninstallCommand
+        uninstall: uninstallCommand,
+        trends: command
     }
 });
 

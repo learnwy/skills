@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { readStdin, injectContext } from '../../shared/hooks-lib.js';
 import { looksLikeNonProse } from '../../shared/text-classifiers.js';
+import { appendEvent } from '../lib/events.js';
 
 const EXPLICIT_TRIGGERS: RegExp[] = [
   /\boptimi[sz]e\s+(my|this|the|that)?\s*prompt\b/i,
@@ -55,6 +56,16 @@ async function main(): Promise<void> {
   const reason = explicit
     ? 'The user explicitly asked to optimize/improve a prompt.'
     : 'The user submitted a long, structured prompt-shaped instruction.';
+
+  const shapeMarkers = PROMPT_SHAPE_MARKERS.filter((re) => re.test(trimmed)).length;
+  appendEvent({
+    ts: new Date().toISOString(),
+    trigger: explicit ? 'explicit' : 'structured',
+    length: trimmed.length,
+    lines: trimmed.split('\n').length,
+    shape_markers: shapeMarkers,
+    excerpt: trimmed.slice(0, 120).replace(/\s+/g, ' '),
+  });
 
   injectContext(
     [
