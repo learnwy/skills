@@ -190,29 +190,37 @@ function looksLikeChineseLearnIntent(text) {
     return chineseRatio(text) > 0.3 || CHINESE_LEARN_RE.test(text);
 }
 
-;// CONCATENATED MODULE: ./src/llm-wiki/hooks/auto-query.ts
-
+;// CONCATENATED MODULE: ./src/llm-wiki/lib/prompt-scan.ts
 
 
 
 const WIKI_ROOT = external_node_path_namespaceObject.join(process.env.HOME || '', '.learnwy', 'llm-wiki');
-async function main() {
-    const payload = await readStdin();
-    const userMessage = (payload.user_message || payload.prompt || '').toLowerCase();
-    if (!userMessage || userMessage.length < 15) return;
-    if (looksLikeNonProse(userMessage)) return;
+function scanPrompt(message) {
+    const lower = (message || '').toLowerCase();
+    if (lower.length < 15) return null;
+    if (looksLikeNonProse(message)) return null;
     const topicsFile = external_node_path_namespaceObject.join(WIKI_ROOT, 'wiki', 'topics.txt');
-    if (!external_node_fs_namespaceObject.existsSync(topicsFile)) return;
+    if (!external_node_fs_namespaceObject.existsSync(topicsFile)) return null;
     const topics = external_node_fs_namespaceObject.readFileSync(topicsFile, 'utf8').split('\n').map((t)=>t.trim().toLowerCase()).filter(Boolean);
-    const words = userMessage.split(/\s+/).filter((w)=>w.length > 3);
+    const words = lower.split(/\s+/).filter((w)=>w.length > 3);
     const matches = topics.filter((topic)=>words.some((word)=>topic.includes(word)));
-    if (matches.length === 0) return;
+    if (matches.length === 0) return null;
     const topMatches = matches.slice(0, 5);
-    injectContext([
+    return [
         `[llm-wiki] Relevant wiki topics found: ${topMatches.join(', ')}`,
         'Consider reading these wiki pages before answering.',
         `Wiki path: ${WIKI_ROOT}/wiki/`
-    ].join('\n'));
+    ].join('\n');
+}
+
+;// CONCATENATED MODULE: ./src/llm-wiki/hooks/auto-query.ts
+
+
+async function main() {
+    const payload = await readStdin();
+    const message = payload.user_message || payload.prompt || '';
+    const out = scanPrompt(message);
+    if (out) injectContext(out);
 }
 main().catch(()=>process.exit(0));
 

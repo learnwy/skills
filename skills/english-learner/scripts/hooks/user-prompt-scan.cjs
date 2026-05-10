@@ -190,45 +190,47 @@ function looksLikeChineseLearnIntent(text) {
     return chineseRatio(text) > 0.3 || CHINESE_LEARN_RE.test(text);
 }
 
+;// CONCATENATED MODULE: ./src/english-learner/lib/prompt-scan.ts
+
+const ENGLISH_BLOCK = [
+    '[english-learner hook] The user wrote in English.',
+    'Before responding, scan for grammar/word-choice/expression issues (max 3).',
+    'If found, prepend a brief "\uD83D\uDCA1 English Tip" table, then proceed with the task.',
+    'Save any corrected words via batch_save. Skip if English is fluent/natural.'
+].join(' ');
+const CHINESE_BLOCK = [
+    '[english-learner hook] The user wrote in Chinese.',
+    'Before responding to the task, prepend a "\uD83C\uDF10 \u4E2D\u8BD1\u82F1" section:',
+    "1. Check the Chinese for grammar errors, typos, or awkward phrasing \u2014 if found, show corrections in a table.",
+    "2. Translate the user's Chinese into natural English (provide 2-3 alternative expressions).",
+    '3. Extract 2-3 key vocabulary/phrases from the translation, show phonetic + brief usage note.',
+    "4. Auto-save all new words/phrases via batch_save (no need to ask \u2014 just save them).",
+    "5. Then proceed with the user's actual task.",
+    'Format: "\uD83C\uDF10 \u4E2D\u8BD1\u82F1" header, corrections table (if any), English translations, vocab table, then separator and task response.'
+].join(' ');
+function scanPrompt(message) {
+    if (!message || message.length < 4) return null;
+    if (looksLikeNonProse(message)) return null;
+    if (/^Use Skill:/i.test(message.trim())) return null;
+    const enRatio = englishRatio(message);
+    const cnRatio = chineseRatio(message);
+    if (enRatio >= 0.6) return ENGLISH_BLOCK;
+    if (cnRatio >= 0.3 || looksLikeChineseLearnIntent(message)) {
+        if (/代码|编程|bug|修复|重构|编译|部署|配置文件/.test(message)) return null;
+        if (message.length > 500) return null;
+        return CHINESE_BLOCK;
+    }
+    return null;
+}
+
 ;// CONCATENATED MODULE: ./src/english-learner/hooks/user-prompt-scan.ts
 
 
 async function main() {
     const payload = await readStdin();
-    const userMessage = payload.user_message || payload.prompt || '';
-    if (!userMessage || userMessage.length < 4) return;
-    if (looksLikeNonProse(userMessage)) return;
-    // Skip skill invocation commands early (before ratio checks)
-    if (/^Use Skill:/i.test(userMessage.trim())) return;
-    const enRatio = englishRatio(userMessage);
-    const cnRatio = chineseRatio(userMessage);
-    // Case 1: English input — original grammar-check interception
-    if (enRatio >= 0.6) {
-        injectContext([
-            '[english-learner hook] The user wrote in English.',
-            'Before responding, scan for grammar/word-choice/expression issues (max 3).',
-            'If found, prepend a brief "\uD83D\uDCA1 English Tip" table, then proceed with the task.',
-            'Save any corrected words via batch_save. Skip if English is fluent/natural.'
-        ].join(' '));
-        return;
-    }
-    // Case 2: Chinese input — translate to English + correct Chinese errors
-    if (cnRatio >= 0.3 || looksLikeChineseLearnIntent(userMessage)) {
-        // Skip if clearly a coding/technical task context
-        if (/代码|编程|bug|修复|重构|编译|部署|配置文件/.test(userMessage)) return;
-        // Skip very long messages (likely task descriptions, not learning requests)
-        if (userMessage.length > 500) return;
-        injectContext([
-            '[english-learner hook] The user wrote in Chinese.',
-            'Before responding to the task, prepend a "\uD83C\uDF10 \u4E2D\u8BD1\u82F1" section:',
-            "1. Check the Chinese for grammar errors, typos, or awkward phrasing \u2014 if found, show corrections in a table.",
-            '2. Translate the user\'s Chinese into natural English (provide 2-3 alternative expressions).',
-            '3. Extract 2-3 key vocabulary/phrases from the translation, show phonetic + brief usage note.',
-            "4. Auto-save all new words/phrases via batch_save (no need to ask \u2014 just save them).",
-            '5. Then proceed with the user\'s actual task.',
-            'Format: "\uD83C\uDF10 \u4E2D\u8BD1\u82F1" header, corrections table (if any), English translations, vocab table, then separator and task response.'
-        ].join(' '));
-    }
+    const message = payload.user_message || payload.prompt || '';
+    const out = scanPrompt(message);
+    if (out) injectContext(out);
 }
 main().catch(()=>process.exit(0));
 

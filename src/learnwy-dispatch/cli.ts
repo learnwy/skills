@@ -1,12 +1,10 @@
 #!/usr/bin/env node
 import { dispatch } from '../shared/cli.js';
 import { installCommand, uninstallCommand } from '../shared/install-entry.js';
-import { command as path } from './cmd/path.js';
 
 dispatch({
-  name: 'knowledge-consolidation',
+  name: 'learnwy-dispatch',
   commands: {
-    path,
     install: installCommand,
     uninstall: uninstallCommand,
   },

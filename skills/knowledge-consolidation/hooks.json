@@ -1,12 +1,12 @@
 {
   "version": 1,
   "hooks": {
-    "SessionStart": [
+    "Stop": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "node ~/.agents/skills/llm-wiki/scripts/hooks/session-context.cjs",
+            "command": "node ~/.agents/skills/knowledge-consolidation/scripts/hooks/post-resolution-nudge.cjs",
             "timeout": 5
           }
         ]

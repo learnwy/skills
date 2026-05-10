@@ -13,6 +13,8 @@ var __webpack_exports__ = {};
 const external_node_fs_namespaceObject = require("node:fs");
 ;// CONCATENATED MODULE: external "node:path"
 const external_node_path_namespaceObject = require("node:path");
+;// CONCATENATED MODULE: external "node:os"
+const external_node_os_namespaceObject = require("node:os");
 ;// CONCATENATED MODULE: ./src/shared/hooks-lib.ts
 
 
@@ -158,153 +160,78 @@ function uninstallHooks(skillId, options = {}) {
     }
 }
 
-;// CONCATENATED MODULE: ./src/shared/text-classifiers.ts
-const CODE_PREFIX_RE = /^(import |const |let |var |function |class |\/\/|#!|{|}|\[|\])/;
-const PATH_RE = /^[\/~.].*\.[a-z]{1,4}$/i;
-const COMMAND_PREFIX_RE = /^(git |npm |pnpm |yarn |node |cd |ls |cat |mkdir |rm |touch |cp |mv |grep |find |echo |sed |awk |curl |wget |ssh |docker |kubectl )/;
-function looksLikeCode(text) {
-    return CODE_PREFIX_RE.test(text.trim());
-}
-function looksLikePath(text) {
-    return PATH_RE.test(text.trim());
-}
-function looksLikeCommand(text) {
-    return COMMAND_PREFIX_RE.test(text.trim());
-}
-function looksLikeNonProse(text) {
-    const t = text.trim();
-    return CODE_PREFIX_RE.test(t) || PATH_RE.test(t) || COMMAND_PREFIX_RE.test(t);
-}
-function englishRatio(text) {
-    const alpha = (text.match(/[a-zA-Z]/g) || []).length;
-    const total = text.replace(/\s/g, '').length;
-    return total > 0 ? alpha / total : 0;
-}
-function chineseRatio(text) {
-    const cjk = (text.match(/[\u4e00-\u9fff]/g) || []).length;
-    const total = text.replace(/\s/g, '').length;
-    return total > 0 ? cjk / total : 0;
-}
-const CHINESE_LEARN_RE = /翻译|怎么说|用英[语文]|英文怎么|translate|how.*say|in english/i;
-function looksLikeChineseLearnIntent(text) {
-    return chineseRatio(text) > 0.3 || CHINESE_LEARN_RE.test(text);
-}
-
-;// CONCATENATED MODULE: external "node:os"
-const external_node_os_namespaceObject = require("node:os");
-;// CONCATENATED MODULE: ./src/prompt-optimizer/lib/events.ts
+;// CONCATENATED MODULE: ./src/knowledge-consolidation/hooks/post-resolution-nudge.ts
 
 
 
-const DATA_ROOT = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'prompt-optimizer');
-const EVENTS_FILE = external_node_path_namespaceObject.join(DATA_ROOT, 'events.jsonl');
-const MAX_EVENTS_BYTES = 5 * 1024 * 1024;
-function appendEvent(event) {
+
+const STATE_FILE = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'knowledge-consolidation', 'last-nudge.json');
+const DEBOUNCE_MS = 60 * 60 * 1000;
+const MIN_RESPONSE_LEN = 800;
+const RESOLUTION_SIGNALS = [
+    /\bthe (?:root[- ]cause|bug|issue|problem)\s+(?:was|is|turned out)\b/i,
+    /\bfixed it\b/i,
+    /\bgot it (?:working|to work)\b/i,
+    /\bnow (?:it|the .{1,30})\s+works?\b/i,
+    /\b(?:resolved|solved)[—:.]\s/i,
+    /^##\s+(?:solution|resolution|root[- ]cause|fix|takeaway)s?\b/im
+];
+const SKILL_OUTPUT_MARKERS = [
+    '[english-learner',
+    '[llm-wiki]',
+    '[prompt-optimizer',
+    '[knowledge-consolidation]',
+    "\u8BCD\u4E49 Definitions",
+    "\u638C\u63E1\u5EA6:"
+];
+function readState() {
+    if (!external_node_fs_namespaceObject.existsSync(STATE_FILE)) return null;
     try {
-        if (!external_node_fs_namespaceObject.existsSync(DATA_ROOT)) external_node_fs_namespaceObject.mkdirSync(DATA_ROOT, {
+        return JSON.parse(external_node_fs_namespaceObject.readFileSync(STATE_FILE, 'utf8'));
+    } catch  {
+        return null;
+    }
+}
+function writeState(state) {
+    try {
+        external_node_fs_namespaceObject.mkdirSync(external_node_path_namespaceObject.dirname(STATE_FILE), {
             recursive: true
         });
-        let size = 0;
-        try {
-            size = external_node_fs_namespaceObject.statSync(EVENTS_FILE).size;
-        } catch  {
-        /* missing file — fine */ }
-        if (size > MAX_EVENTS_BYTES) {
-            try {
-                external_node_fs_namespaceObject.renameSync(EVENTS_FILE, `${EVENTS_FILE}.1`);
-            } catch  {
-            /* swallow */ }
-        }
-        external_node_fs_namespaceObject.appendFileSync(EVENTS_FILE, `${JSON.stringify(event)}\n`);
+        external_node_fs_namespaceObject.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
     } catch  {
-    /* never break the caller */ }
+    /* swallow */ }
 }
-function readEvents(sinceMs) {
-    if (!fs.existsSync(EVENTS_FILE)) return [];
-    const out = [];
-    const cutoff = Date.now() - sinceMs;
-    const raw = fs.readFileSync(EVENTS_FILE, 'utf8');
-    for (const line of raw.split('\n')){
-        if (!line) continue;
-        try {
-            const e = JSON.parse(line);
-            if (Date.parse(e.ts) >= cutoff) out.push(e);
-        } catch  {
-        /* skip malformed line */ }
-    }
-    return out;
+function isSkillOutput(text) {
+    return SKILL_OUTPUT_MARKERS.some((m)=>text.includes(m));
 }
-
-;// CONCATENATED MODULE: ./src/prompt-optimizer/lib/prompt-scan.ts
-
-
-const EXPLICIT_TRIGGERS = [
-    /\boptimi[sz]e\s+(my|this|the|that)?\s*prompt\b/i,
-    /\bimprove\s+(my|this|the|that)?\s*prompt\b/i,
-    /\breview\s+(my|this|the|that)?\s*prompt\b/i,
-    /\brewrite\s+(my|this|the|that)?\s*prompt\b/i,
-    /\bcheck\s+(my|this|the|that)?\s*prompt\b/i,
-    /\brefine\s+(my|this|the|that)?\s*prompt\b/i,
-    /\bmake\s+(this|the|my)\s+prompt\s+(more|better)\b/i,
-    /\bis\s+this\s+prompt\s+good\b/i,
-    /优化\s*(我的|这段|这个)?\s*提示词/,
-    /改进\s*(我的|这段|这个)?\s*提示词/,
-    /重写\s*(我的|这段|这个)?\s*提示词/,
-    /帮我.*?(改|优化).*?prompt/i
-];
-const PROMPT_SHAPE_MARKERS = [
-    /\byou are (a|an|the)\b/i,
-    /\byour (task|job|role|goal) is\b/i,
-    /\bact as (a|an|the)\b/i,
-    /\bgenerate (a|an|the)\b/i,
-    /\b(analyze|summarize|translate|classify)\b.*\b(the|this|following)\b/i,
-    /\binstructions?\s*[:：]/i,
-    /\bconstraints?\s*[:：]/i,
-    /\brequirements?\s*[:：]/i,
-    /\boutput format\s*[:：]/i
-];
-const looksLikeExplicitAsk = (text)=>EXPLICIT_TRIGGERS.some((re)=>re.test(text));
-function looksLikeStructuredPrompt(text) {
-    if (text.length < 400) return false;
-    const lineCount = text.split('\n').length;
-    if (lineCount < 4) return false;
-    const matches = PROMPT_SHAPE_MARKERS.filter((re)=>re.test(text)).length;
-    return matches >= 2;
+function countSignals(text) {
+    return RESOLUTION_SIGNALS.filter((re)=>re.test(text)).length;
 }
-function scanPrompt(message) {
-    if (!message) return null;
-    const trimmed = message.trim();
-    if (looksLikeNonProse(message)) return null;
-    const explicit = looksLikeExplicitAsk(trimmed);
-    const structured = looksLikeStructuredPrompt(trimmed);
-    if (!explicit && !structured) return null;
-    const reason = explicit ? 'The user explicitly asked to optimize/improve a prompt.' : 'The user submitted a long, structured prompt-shaped instruction.';
-    const shapeMarkers = PROMPT_SHAPE_MARKERS.filter((re)=>re.test(trimmed)).length;
-    appendEvent({
-        ts: new Date().toISOString(),
-        trigger: explicit ? 'explicit' : 'structured',
-        length: trimmed.length,
-        lines: trimmed.split('\n').length,
-        shape_markers: shapeMarkers,
-        excerpt: trimmed.slice(0, 120).replace(/\s+/g, ' ')
-    });
-    return [
-        '[prompt-optimizer hook]',
-        reason,
-        'Before executing, run a 7-dimension pre-flight analysis (Clarity, Specificity, Context, Structure, Examples, Constraints, Completeness),',
-        'show the critique table + an Optimized Prompt block, then ask: "Use original / Use optimized / Edit manually?".',
-        'Skip silently if the user is in mid-conversation and clearly does NOT want a review.'
-    ].join(' ');
-}
-
-;// CONCATENATED MODULE: ./src/prompt-optimizer/hooks/user-prompt-scan.ts
-
-
 async function main() {
     const payload = await readStdin();
-    const message = payload.user_message || payload.prompt || '';
-    const out = scanPrompt(message);
-    if (out) injectContext(out);
+    const transcript = payload.assistant_message || payload.last_response || payload.transcript || '';
+    if (transcript.length < MIN_RESPONSE_LEN) return;
+    if (isSkillOutput(transcript)) return;
+    const signals = countSignals(transcript);
+    if (signals === 0) return;
+    const sessionId = payload.session_id || payload.sessionId;
+    const prev = readState();
+    const now = Date.now();
+    if (prev) {
+        const prevTs = Date.parse(prev.ts);
+        if (sessionId && prev.session_id === sessionId) return;
+        if (!sessionId && Number.isFinite(prevTs) && now - prevTs < DEBOUNCE_MS) return;
+    }
+    injectContext([
+        '[knowledge-consolidation] This turn looks like it resolved a non-trivial problem',
+        `(${signals} resolution signal${signals > 1 ? 's' : ''} matched).`,
+        "If the insight is reusable across future sessions, suggest invoking knowledge-consolidation to persist it \u2014",
+        'do NOT auto-write; only nudge once per session.'
+    ].join(' '));
+    writeState({
+        session_id: sessionId,
+        ts: new Date(now).toISOString()
+    });
 }
 main().catch(()=>process.exit(0));
 

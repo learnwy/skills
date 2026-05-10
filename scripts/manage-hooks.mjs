@@ -25,21 +25,34 @@ if (hookSkills.length === 0) {
   process.exit(0);
 }
 
-let failures = 0;
-for (const skill of hookSkills) {
+function runForSkill(skill, op) {
   const cli = join(SKILLS_DIR, skill, 'scripts', 'cli.cjs');
   const hooksJson = join(SKILLS_DIR, skill, 'hooks.json');
   const args =
-    action === 'install'
-      ? [action, '--config', hooksJson, '--scope', 'global', '--target', 'both']
-      : [action, '--skill-id', skill, '--scope', 'global', '--target', 'both'];
-
-  console.log(`▶ ${skill}: ${action}`);
+    op === 'install'
+      ? [op, '--config', hooksJson, '--scope', 'global', '--target', 'both']
+      : [op, '--skill-id', skill, '--scope', 'global', '--target', 'both'];
+  console.log(`▶ ${skill}: ${op}`);
   const result = spawnSync('node', [cli, ...args], { stdio: 'inherit' });
-  if (result.status !== 0) {
-    console.error(`✗ ${skill}: failed with exit code ${result.status}`);
-    failures++;
+  return result.status === 0;
+}
+
+let failures = 0;
+
+if (action === 'install') {
+  console.log('— sweep: uninstalling stale entries before re-install (idempotent) —');
+  for (const skill of hookSkills) {
+    if (!runForSkill(skill, 'uninstall')) failures++;
+  }
+  console.log('— install pass —');
+  for (const skill of hookSkills) {
+    if (!runForSkill(skill, 'install')) failures++;
+  }
+} else {
+  for (const skill of hookSkills) {
+    if (!runForSkill(skill, 'uninstall')) failures++;
   }
 }
 
+if (failures > 0) console.error(`Completed with ${failures} failure(s).`);
 process.exit(failures > 0 ? 1 : 0);

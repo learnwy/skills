@@ -2023,6 +2023,223 @@ const freshness_check_command = {
     run: ()=>freshnessCheck()
 };
 
+;// CONCATENATED MODULE: ./src/llm-wiki/cmd/health-check.ts
+
+
+
+
+
+const HEALTH_FILE = (0,external_node_path_namespaceObject.join)(WIKI_ROOT, 'health.json');
+const health_check_DEEP_SCAN_TYPES = new Set([
+    'concepts'
+]);
+async function listAllPages() {
+    const pages = [];
+    for (const dir of PAGE_DIRS){
+        const dirPath = (0,external_node_path_namespaceObject.join)(WIKI_DIR, dir);
+        if (health_check_DEEP_SCAN_TYPES.has(dir)) {
+            const entries = await readMdFilesDeep(dirPath);
+            for (const { file, subdir } of entries){
+                const relPath = subdir ? `${dir}/${subdir}/${file}` : `${dir}/${file}`;
+                const fullPath = subdir ? (0,external_node_path_namespaceObject.join)(dirPath, subdir, file) : (0,external_node_path_namespaceObject.join)(dirPath, file);
+                pages.push({
+                    dir,
+                    relPath,
+                    fullPath
+                });
+            }
+        } else {
+            const files = await readMdFiles(dirPath);
+            for (const file of files){
+                pages.push({
+                    dir,
+                    relPath: `${dir}/${file}`,
+                    fullPath: (0,external_node_path_namespaceObject.join)(dirPath, file)
+                });
+            }
+        }
+    }
+    return pages;
+}
+function health_check_buildInventory(pages) {
+    const inv = new Set([
+        'index.md',
+        'overview.md'
+    ]);
+    for (const p of pages){
+        const noMd = p.relPath.replace(/\.md$/, '');
+        inv.add(p.relPath);
+        inv.add(noMd);
+    }
+    return inv;
+}
+function scanWikilinks(content, inventory) {
+    const broken = [];
+    const resolved = [];
+    for (const match of content.matchAll(/\[\[([^\]]+)\]\]/g)){
+        const link = match[1].replace(/\.md$/, '');
+        const normalized = link.replace(/^raw\//, '').replace(/^wiki\//, '');
+        const isWikiLink = PAGE_DIRS.some((d)=>normalized.startsWith(`${d}/`));
+        if (!isWikiLink) continue;
+        const withMd = normalized.endsWith('.md') ? normalized : `${normalized}.md`;
+        const withoutMd = normalized.replace(/\.md$/, '');
+        if (!inventory.has(withMd) && !inventory.has(withoutMd)) {
+            broken.push(match[1]);
+        } else {
+            resolved.push(withoutMd);
+        }
+    }
+    return {
+        broken,
+        resolved
+    };
+}
+async function findRawSource(sourceField) {
+    const cleaned = sourceField.replace(/^\s*\[+/, '').replace(/\]+\s*$/, '').trim();
+    if (!cleaned) return true;
+    if (/^https?:\/\//i.test(cleaned)) return true;
+    const candidates = [
+        cleaned,
+        `${cleaned}.md`,
+        cleaned.replace(/\s+/g, '-').toLowerCase(),
+        `${cleaned.replace(/\s+/g, '-').toLowerCase()}.md`
+    ];
+    for (const c of candidates){
+        if ((0,external_node_fs_namespaceObject.existsSync)((0,external_node_path_namespaceObject.join)(RAW_DIR, c))) return true;
+    }
+    for (const subdir of [
+        'books',
+        'articles',
+        'papers',
+        'notes',
+        'transcripts',
+        'specs'
+    ]){
+        for (const c of candidates){
+            if ((0,external_node_fs_namespaceObject.existsSync)((0,external_node_path_namespaceObject.join)(RAW_DIR, subdir, c))) return true;
+        }
+    }
+    return false;
+}
+async function extractSourceField(filePath) {
+    try {
+        const content = await (0,promises_namespaceObject.readFile)(filePath, 'utf-8');
+        const lines = content.split('\n').slice(0, 25);
+        for (const line of lines){
+            if (line.startsWith('**Source**:')) {
+                const value = line.split(':').slice(1).join(':').trim();
+                return value || null;
+            }
+        }
+        return null;
+    } catch  {
+        return null;
+    }
+}
+async function buildReport() {
+    const pages = await listAllPages();
+    const inventory = health_check_buildInventory(pages);
+    const brokenLinks = [];
+    const incomingByTarget = {};
+    const brokenSources = [];
+    let totalWikilinks = 0;
+    for (const p of pages){
+        const content = await (0,promises_namespaceObject.readFile)(p.fullPath, 'utf-8');
+        const { broken, resolved } = scanWikilinks(content, inventory);
+        totalWikilinks += broken.length + resolved.length;
+        for (const link of broken)brokenLinks.push({
+            page: p.relPath,
+            link
+        });
+        for (const target of resolved){
+            incomingByTarget[target] = (incomingByTarget[target] || 0) + 1;
+        }
+        if (p.dir === 'summaries') {
+            const src = await extractSourceField(p.fullPath);
+            if (src) {
+                const found = await findRawSource(src);
+                if (!found) brokenSources.push({
+                    page: p.relPath,
+                    source: src
+                });
+            }
+        }
+    }
+    const orphans = [];
+    for (const p of pages){
+        if (p.dir === 'entities' || p.dir === 'comparisons') continue;
+        const noMd = p.relPath.replace(/\.md$/, '');
+        if (!incomingByTarget[noMd] && !incomingByTarget[p.relPath]) {
+            orphans.push(p.relPath);
+        }
+    }
+    return {
+        generated_at: new Date().toISOString(),
+        wiki_root: WIKI_ROOT,
+        totals: {
+            pages: pages.length,
+            wikilinks: totalWikilinks,
+            broken_links: brokenLinks.length,
+            orphans: orphans.length,
+            broken_sources: brokenSources.length
+        },
+        broken_links: brokenLinks,
+        orphans,
+        broken_sources: brokenSources
+    };
+}
+function printSummary(report) {
+    console.log(`llm-wiki health \u{2014} ${report.generated_at}`);
+    console.log(`Wiki root: ${report.wiki_root}`);
+    console.log('');
+    console.log(`Pages: ${report.totals.pages}`);
+    console.log(`Wikilinks scanned: ${report.totals.wikilinks}`);
+    console.log(`Broken wikilinks: ${report.totals.broken_links}`);
+    console.log(`Orphan pages: ${report.totals.orphans}`);
+    console.log(`Broken **Source** refs in summaries: ${report.totals.broken_sources}`);
+    if (report.broken_sources.length) {
+        console.log('');
+        console.log(`Broken sources (${report.broken_sources.length}):`);
+        for (const b of report.broken_sources.slice(0, 20)){
+            console.log(`  ${b.page} \u{2192} ${b.source}`);
+        }
+        if (report.broken_sources.length > 20) {
+            console.log(`  ... and ${report.broken_sources.length - 20} more`);
+        }
+    }
+    if (report.broken_links.length) {
+        console.log('');
+        console.log(`Broken wikilinks (${report.broken_links.length}, top 10):`);
+        for (const b of report.broken_links.slice(0, 10)){
+            console.log(`  ${b.page} \u{2192} [[${b.link}]]`);
+        }
+    }
+    console.log('');
+    console.log(`Full report: ${HEALTH_FILE}`);
+}
+const health_check_command = {
+    description: 'Aggregate wiki health: broken links, orphans, broken **Source** refs; writes health.json',
+    run: async (args)=>{
+        const { flags } = parseArgs(args);
+        if (!(0,external_node_fs_namespaceObject.existsSync)(WIKI_DIR)) {
+            console.error(`Wiki not initialized at ${WIKI_ROOT}.`);
+            process.exit(1);
+        }
+        const report = await buildReport();
+        if (flags.json) {
+            console.log(JSON.stringify(report, null, 2));
+        } else {
+            printSummary(report);
+        }
+        if (!flags['dry-run']) {
+            await (0,promises_namespaceObject.mkdir)((0,external_node_path_namespaceObject.dirname)(HEALTH_FILE), {
+                recursive: true
+            });
+            await (0,promises_namespaceObject.writeFile)(HEALTH_FILE, JSON.stringify(report, null, 2) + '\n');
+        }
+    }
+};
+
 ;// CONCATENATED MODULE: ./src/llm-wiki/cmd/stats.ts
 
 
@@ -2076,6 +2293,7 @@ const stats_command = {
 
 
 
+
 dispatch({
     name: 'llm-wiki',
     commands: {
@@ -2084,6 +2302,7 @@ dispatch({
         'generate-topics': generate_topics_command,
         reorganize: reorganize_command,
         'freshness-check': freshness_check_command,
+        'health-check': health_check_command,
         stats: stats_command,
         install: installCommand,
         uninstall: uninstallCommand
