@@ -18,4 +18,10 @@ if ! git diff --quiet -- ':(glob)skills/*/scripts/**'; then
   exit 1
 fi
 
-echo "[pre-commit] OK — typecheck + build clean, skills/*/scripts/ in sync"
+if ! node scripts/lint-skill-docs.mjs; then
+  echo
+  echo "❌  SKILL.md ↔ cli.ts drift. Update the doc or add the subcommand."
+  exit 1
+fi
+
+echo "[pre-commit] OK — typecheck + build clean, skills/*/scripts/ in sync, docs in sync"
