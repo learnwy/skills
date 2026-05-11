@@ -1,34 +1,49 @@
 ---
 name: learnwy-dispatch
-description: "Internal coordinator that runs english-learner, llm-wiki, and prompt-optimizer UserPromptSubmit scans in a single Node process and emits one consolidated system reminder. Not user-invokable — installed automatically alongside the underlying skills. Triggers on every UserPromptSubmit event in Claude Code / Trae."
+description: "Internal single-process coordinator for the three IDE-hook events used by the learnwy-* skills. UserPromptSubmit aggregates english-learner + llm-wiki + prompt-optimizer scans; Stop aggregates english-learner + knowledge-consolidation scans; SessionStart aggregates llm-wiki + english-learner + learnwy-status scans. Not user-invokable — installed automatically alongside the underlying skills. Triggers on every UserPromptSubmit / Stop / SessionStart event in Claude Code / Trae."
 metadata:
   author: "learnwy"
-  version: "1.0"
+  version: "2.0"
 ---
 
 # learnwy-dispatch
 
-Single-process coordinator for the three UserPromptSubmit hooks shipped by this repo.
+Single-process coordinator for the three IDE-hook events shared by the learnwy-* skills.
 
 ## Why
 
-Before this skill, every user prompt fired three separate hook commands — one Node process per skill — and the user saw three back-to-back `<system-reminder>` blocks per turn (one for each skill that had something to say). That triples the per-turn hook startup cost (~150 ms vs. ~50 ms) and clutters context.
+Before this skill, every event fired N separate hook commands — one Node process per skill — and the user saw N back-to-back `<system-reminder>` blocks per turn. That multiplies the per-turn hook startup cost (~50 ms × N vs ~50 ms) and clutters context.
 
-This skill replaces those three entries with **one** UserPromptSubmit hook that imports each skill's `scanPrompt(message)` function, runs them in-process, and emits a single combined reminder.
+This skill replaces those entries with **one hook per event** that imports each skill's pure scanner function, runs them in-process, and emits a single combined reminder.
 
-## What runs
+## What runs per event
 
-The dispatcher invokes, in order:
+### UserPromptSubmit (`hooks/user-prompt-submit.cjs`)
 
 | Order | Module | Returns reminder when |
 |---|---|---|
-| 1 | `english-learner/hooks/user-prompt-scan.scanPrompt` | English ratio ≥ 0.6 OR Chinese learn-intent OR Chinese ratio ≥ 0.3 |
-| 2 | `llm-wiki/hooks/auto-query.scanPrompt` | wiki/topics.txt has any keyword overlapping a 4+ char word in the message |
-| 3 | `prompt-optimizer/hooks/user-prompt-scan.scanPrompt` | explicit "optimize my prompt" trigger OR long structured prompt-shape |
+| 1 | `english-learner/lib/prompt-scan.scanPrompt` | English ratio ≥ 0.6 OR Chinese learn-intent OR Chinese ratio ≥ 0.3 |
+| 2 | `llm-wiki/lib/prompt-scan.scanPrompt` | wiki/topics.txt has any keyword overlapping a 4+ char word in the message |
+| 3 | `prompt-optimizer/lib/prompt-scan.scanPrompt` | explicit "optimize my prompt" trigger OR long structured prompt-shape |
 
-Each scanner is a pure `(message) => string | null` function (the prompt-optimizer scanner has one side effect: appending to `~/.learnwy/prompt-optimizer/events.jsonl`).
+### Stop (`hooks/stop.cjs`)
 
-If a scanner throws, the failure is swallowed and the others still run.
+| Order | Module | Returns reminder when |
+|---|---|---|
+| 1 | `english-learner/lib/stop-scan.scanStop` | Assistant response has 2–4 advanced English words worth surfacing |
+| 2 | `knowledge-consolidation/lib/stop-scan.scanStop` | Response shows substantive resolution signals (race condition / regression / "subtle"), not session-local trivia |
+
+### SessionStart (`hooks/session-start.cjs`)
+
+| Order | Module | Returns reminder when |
+|---|---|---|
+| 1 | `llm-wiki/lib/session-scan.scanSession` | wiki/topics.txt exists — inject ≤30 topics |
+| 2 | `english-learner/lib/session-scan.scanSession` | First session of the day — push 3 due-for-review cards |
+| 3 | `learnwy-status/lib/session-scan.scanSession` | First session of the ISO week — prepend a compact cross-skill digest |
+
+Each scanner is a pure `(message | payload) => string | null` (a couple have minor side effects: prompt-optimizer appends to `~/.learnwy/prompt-optimizer/events.jsonl`; KC writes a debounce stamp).
+
+If any scanner throws, the failure is swallowed and the others still run.
 
 ## Installation
 

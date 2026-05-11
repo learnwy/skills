@@ -10,6 +10,8 @@ metadata:
 
 **设计理念**：用户不知道"技能"是什么或如何描述。他们只知道自己的**问题**。此技能将问题描述转化为可运行的技能。
 
+> **共享原则：** 本技能与 `project-agent-writer` / `project-skill-installer` / `trae-rules-writer` 共享 5 条 writer 通用纪律（理解→分析→确认→项目相对路径→验证）。详见 [references/writer-discipline.md](references/writer-discipline.md)。
+
 ## 适用场景
 
 **适合调用：**

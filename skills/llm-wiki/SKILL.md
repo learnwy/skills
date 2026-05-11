@@ -33,7 +33,7 @@ metadata:
 | "建一个新wiki"、"初始化知识库" | 初始化 |
 | "从这些文件构建wiki" | 初始化 → 批量收录 |
 
-**不应调用的场景：** 单次对话洞察（→ `knowledge-consolidation`），结构分析（→ `on-contradiction`），实践验证（→ `on-practice`），长期战略（→ `on-protracted-war`），代码实现（→ `requirement-workflow`）。
+**不应调用的场景：** 单次对话洞察（→ `knowledge-consolidation`），方法论分析（矛盾/实践/持久战 → `mao-methodology`），代码实现（→ `requirement-workflow`）。
 
 ## 自动模式
 
@@ -160,7 +160,7 @@ node scripts/cli.cjs install / uninstall       # 注册/移除 IDE 钩子
 
 本技能处理：wiki 初始化、收录、查询、检查、交叉引用、索引维护。
 
-不处理：单次洞察（→ `knowledge-consolidation`），矛盾分析（→ `on-contradiction`），实践验证（→ `on-practice`），分阶段战略（→ `on-protracted-war`），代码实现（→ `requirement-workflow`）。
+不处理：单次洞察（→ `knowledge-consolidation`），方法论分析（→ `mao-methodology`），代码实现（→ `requirement-workflow`）。
 
 ## 参考文档（按需加载）
 
@@ -169,35 +169,15 @@ node scripts/cli.cjs install / uninstall       # 注册/移除 IDE 钩子
 
 ## 钩子
 
-本技能注册 IDE 钩子以实现**确定性自动查询**——wiki 在相关时自动被查阅，无需依赖 AI 记忆。
+通过 `learnwy-dispatch` 注册 **全局** 钩子（`~/.claude/settings.json` + `~/.trae/hooks.json`），因为 wiki 位于 `~/.learnwy/llm-wiki/`。
 
-### 作用域
+| 事件 | Lib 函数 | 用途 |
+|------|----------|------|
+| `SessionStart` | `lib/session-scan.ts` | 注入最多 30 个 wiki 主题到会话上下文 |
+| `UserPromptSubmit` | `lib/prompt-scan.ts` | 用户问题 ↔ topics 关键词匹配 → 注入相关页面提示 |
 
-**全局** — 安装到 `~/.claude/settings.json` 和 `~/.trae/hooks.json`，因为 wiki 位于 `~/.learnwy/llm-wiki/`。
+安装/卸载：`node scripts/cli.cjs install|uninstall --scope global --target both` （由 `src/shared/install-entry.ts` 提供，所有 hook 类技能共用）。
 
-### 事件
+## 来自 knowledge-consolidation
 
-| 事件 | 脚本 | 用途 |
-|------|------|------|
-| `SessionStart` | `scripts/hooks/session-context.cjs` | 将 wiki 主题加载到会话上下文（最多30个主题） |
-| `UserPromptSubmit` | `scripts/hooks/auto-query.cjs` | 将用户问题与 wiki 主题匹配，注入阅读提示 |
-
-### 安装
-
-```bash
-# 全局安装钩子（同时支持 Trae 和 Claude Code）
-node scripts/cli.cjs install --scope global --target both
-```
-
-### 卸载
-
-```bash
-node scripts/cli.cjs uninstall --scope global --target both
-```
-
-### 工作原理
-
-1. **SessionStart**: 加载 `wiki/topics.txt` 并注入最多30个主题关键词到会话上下文
-2. **UserPromptSubmit**: 对每条超过15字符的用户消息，检查与 wiki 主题的关键词重叠
-3. 若匹配 → 注入主题名称 + wiki 路径供 AI 阅读相关页面
-4. 若不匹配或 wiki 不存在 → 静默退出
+KC 的 `promote` 子命令把项目级知识文档复制到 `raw/notes/<date>-<slug>.md`，附带 frontmatter 反向指针。下次收录时把它们当作普通原始来源处理（往往合并成 `wiki/troubleshooting/` 或 `wiki/snippets/` 页面，并和原 KC 文档建立 `[[link]]`）。这是从"项目本地修复日志"到"全局复利知识库"的单向流入通道。

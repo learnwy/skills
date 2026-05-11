@@ -12,6 +12,8 @@ metadata:
 
 > **核心原则**：先理解问题，再分析项目，然后设计智能体，仅在用户确认后才生成。
 
+> **共享原则：** 本技能与 `project-skill-writer` / `project-skill-installer` / `trae-rules-writer` 共享 5 条 writer 通用纪律。详见 [../project-skill-writer/references/writer-discipline.md](../project-skill-writer/references/writer-discipline.md)。
+
 ## 使用场景
 
 **触发条件：**
