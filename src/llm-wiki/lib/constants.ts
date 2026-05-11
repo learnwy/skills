@@ -1,7 +1,7 @@
 import { join } from 'node:path';
-import { homedir } from 'node:os';
+import { envOr, learnwyPath } from '../../shared/learnwy-paths.js';
 
-export const WIKI_ROOT = process.env.LLM_WIKI_ROOT || join(homedir(), '.learnwy', 'llm-wiki');
+export const WIKI_ROOT = envOr('LLM_WIKI_ROOT', learnwyPath('llm-wiki'));
 export const WIKI_DIR = join(WIKI_ROOT, 'wiki');
 export const RAW_DIR = join(WIKI_ROOT, 'raw');
 

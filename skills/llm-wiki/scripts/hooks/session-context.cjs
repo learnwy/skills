@@ -160,10 +160,32 @@ function uninstallHooks(skillId, options = {}) {
 
 ;// CONCATENATED MODULE: external "node:os"
 const external_node_os_namespaceObject = require("node:os");
+;// CONCATENATED MODULE: ./src/shared/learnwy-paths.ts
+
+
+const LEARNWY_ROOT = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy');
+function learnwyPath(...segments) {
+    return external_node_path_namespaceObject.join(LEARNWY_ROOT, ...segments);
+}
+function skillRoot(skill) {
+    return learnwyPath(skill);
+}
+const PATHS = {
+    englishLearner: skillRoot('english-learner'),
+    llmWiki: skillRoot('llm-wiki'),
+    promptOptimizer: skillRoot('prompt-optimizer'),
+    knowledgeConsolidation: skillRoot('knowledge-consolidation'),
+    learnwyStatus: skillRoot('learnwy-status')
+};
+function envOr(envVar, fallback) {
+    const v = process.env[envVar];
+    return v && v.length > 0 ? v : fallback;
+}
+
 ;// CONCATENATED MODULE: ./src/llm-wiki/lib/constants.ts
 
 
-const WIKI_ROOT = process.env.LLM_WIKI_ROOT || (0,external_node_path_namespaceObject.join)((0,external_node_os_namespaceObject.homedir)(), '.learnwy', 'llm-wiki');
+const WIKI_ROOT = envOr('LLM_WIKI_ROOT', learnwyPath('llm-wiki'));
 const WIKI_DIR = (0,external_node_path_namespaceObject.join)(WIKI_ROOT, 'wiki');
 const RAW_DIR = (0,external_node_path_namespaceObject.join)(WIKI_ROOT, 'raw');
 const PAGE_TYPES = [

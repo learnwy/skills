@@ -1,9 +1,9 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import * as os from 'node:os';
 import type { Command } from '../../shared/cli.js';
 import { render, type TemplateMapping } from '../../shared/template.js';
 import { ensureDir } from '../../shared/fs-utils.js';
+import { isInsideHomeIdeDir } from '../../shared/ide-markers.js';
 
 const STOP_WORDS = new Set([
   'a', 'an', 'the', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
@@ -139,18 +139,10 @@ function defaults(skillName: string, summary: string): Mapping {
 }
 
 function validateOutputPath(resolved: string): void {
-  const home = os.homedir();
-  const globalDirs = [
-    path.join(home, '.trae'),
-    path.join(home, '.trae-cn'),
-    path.join(home, '.claude'),
-    path.join(home, '.cursor'),
-  ];
-  for (const gd of globalDirs) {
-    if (resolved.startsWith(gd)) {
-      console.error('ERROR: Output path ' + resolved + ' is inside global directory ' + gd + '. Use a project-relative path.');
-      process.exit(1);
-    }
+  const inside = isInsideHomeIdeDir(resolved);
+  if (inside) {
+    console.error('ERROR: Output path ' + resolved + ' is inside global directory ' + inside + '. Use a project-relative path.');
+    process.exit(1);
   }
 }
 

@@ -192,12 +192,34 @@ function looksLikeChineseLearnIntent(text) {
 
 ;// CONCATENATED MODULE: external "node:os"
 const external_node_os_namespaceObject = require("node:os");
+;// CONCATENATED MODULE: ./src/shared/learnwy-paths.ts
+
+
+const LEARNWY_ROOT = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy');
+function learnwyPath(...segments) {
+    return external_node_path_namespaceObject.join(LEARNWY_ROOT, ...segments);
+}
+function skillRoot(skill) {
+    return learnwyPath(skill);
+}
+const PATHS = {
+    englishLearner: skillRoot('english-learner'),
+    llmWiki: skillRoot('llm-wiki'),
+    promptOptimizer: skillRoot('prompt-optimizer'),
+    knowledgeConsolidation: skillRoot('knowledge-consolidation'),
+    learnwyStatus: skillRoot('learnwy-status')
+};
+function envOr(envVar, fallback) {
+    const v = process.env[envVar];
+    return v && v.length > 0 ? v : fallback;
+}
+
 ;// CONCATENATED MODULE: ./src/prompt-optimizer/lib/events.ts
 
 
 
 function dataRoot() {
-    return process.env.LEARNWY_PROMPT_OPTIMIZER_ROOT || external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'prompt-optimizer');
+    return envOr('LEARNWY_PROMPT_OPTIMIZER_ROOT', learnwyPath('prompt-optimizer'));
 }
 function eventsFile() {
     return external_node_path_namespaceObject.join(dataRoot(), 'events.jsonl');

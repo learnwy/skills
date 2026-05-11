@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
-import * as os from 'node:os';
 import * as path from 'node:path';
 import type { Command } from '../../shared/cli.js';
+import { envOr, learnwyPath } from '../../shared/learnwy-paths.js';
 import { sanitizeFilename } from '../lib/path-builder.js';
 
 function showHelp(): void {
@@ -28,7 +28,7 @@ function isoDate(): string {
 }
 
 function defaultWikiRoot(): string {
-  return process.env.LLM_WIKI_ROOT || path.join(os.homedir(), '.learnwy', 'llm-wiki');
+  return envOr('LLM_WIKI_ROOT', learnwyPath('llm-wiki'));
 }
 
 function deriveSlug(filePath: string): string {

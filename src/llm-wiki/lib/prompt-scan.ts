@@ -1,10 +1,9 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { looksLikeNonProse } from '../../shared/text-classifiers.js';
+import { WIKI_ROOT } from './constants.js';
 
-const DEFAULT_WIKI_ROOT = path.join(process.env.HOME || '', '.learnwy', 'llm-wiki');
-
-export function scanPrompt(message: string, wikiRoot: string = DEFAULT_WIKI_ROOT): string | null {
+export function scanPrompt(message: string, wikiRoot: string = WIKI_ROOT): string | null {
   const lower = (message || '').toLowerCase();
   if (lower.length < 15) return null;
   if (looksLikeNonProse(message)) return null;

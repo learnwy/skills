@@ -76,8 +76,6 @@ function parseArgs(args, aliases = {}) {
 const external_node_fs_namespaceObject = require("node:fs");
 ;// CONCATENATED MODULE: external "node:path"
 const external_node_path_namespaceObject = require("node:path");
-;// CONCATENATED MODULE: external "node:os"
-const external_node_os_namespaceObject = require("node:os");
 ;// CONCATENATED MODULE: ./src/shared/template.ts
 const PLACEHOLDER_RE = /\{\{(\w+)\}\}/g;
 function render(template, mapping) {
@@ -106,6 +104,57 @@ function readJsonSafe(file, fallback) {
 function writeJson(file, value) {
     ensureDir(path.dirname(file));
     fs.writeFileSync(file, JSON.stringify(value, null, 2) + '\n');
+}
+
+;// CONCATENATED MODULE: external "node:os"
+const external_node_os_namespaceObject = require("node:os");
+;// CONCATENATED MODULE: ./src/shared/ide-markers.ts
+
+
+
+const IDE_MARKER_DIRS = (/* unused pure expression or super */ null && ([
+    '.trae',
+    '.claude',
+    '.cursor',
+    '.windsurf'
+]));
+const AI_TYPE_MAP = (/* unused pure expression or super */ null && ({
+    trae: '.trae',
+    'trae-cn': '.trae',
+    TraeAI: '.trae',
+    TraeCN: '.trae',
+    'claude-code': '.claude',
+    claude: '.claude',
+    ClaudeCode: '.claude',
+    cursor: '.cursor',
+    Cursor: '.cursor',
+    windsurf: '.windsurf',
+    Windsurf: '.windsurf'
+}));
+function resolveMarker(aiType) {
+    return AI_TYPE_MAP[aiType] ?? null;
+}
+function detectIdeMarkers(projectRoot) {
+    const found = [];
+    for (const m of IDE_MARKER_DIRS){
+        if (fs.existsSync(path.join(projectRoot, m))) found.push(m);
+    }
+    return found;
+}
+function homeIdeDirs() {
+    const home = external_node_os_namespaceObject.homedir();
+    return [
+        '.trae',
+        '.trae-cn',
+        '.claude',
+        '.cursor'
+    ].map((d)=>external_node_path_namespaceObject.join(home, d));
+}
+function isInsideHomeIdeDir(absPath) {
+    for (const d of homeIdeDirs()){
+        if (absPath === d || absPath.startsWith(d + external_node_path_namespaceObject.sep)) return d;
+    }
+    return null;
 }
 
 ;// CONCATENATED MODULE: ./src/project-skill-writer/cmd/init.ts
@@ -373,18 +422,10 @@ function defaults(skillName, summary) {
     };
 }
 function validateOutputPath(resolved) {
-    const home = external_node_os_namespaceObject.homedir();
-    const globalDirs = [
-        external_node_path_namespaceObject.join(home, '.trae'),
-        external_node_path_namespaceObject.join(home, '.trae-cn'),
-        external_node_path_namespaceObject.join(home, '.claude'),
-        external_node_path_namespaceObject.join(home, '.cursor')
-    ];
-    for (const gd of globalDirs){
-        if (resolved.startsWith(gd)) {
-            console.error('ERROR: Output path ' + resolved + ' is inside global directory ' + gd + '. Use a project-relative path.');
-            process.exit(1);
-        }
+    const inside = isInsideHomeIdeDir(resolved);
+    if (inside) {
+        console.error('ERROR: Output path ' + resolved + ' is inside global directory ' + inside + '. Use a project-relative path.');
+        process.exit(1);
     }
 }
 function init_showHelp() {

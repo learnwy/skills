@@ -1,10 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import * as os from 'node:os';
 import { DB_PATH, getDb } from '../../shared/db.js';
-
-const HOME = os.homedir();
-const LEARNWY_ROOT = path.join(HOME, '.learnwy');
+import { LEARNWY_ROOT } from '../../shared/learnwy-paths.js';
 
 export interface VocabSection {
   total: number;

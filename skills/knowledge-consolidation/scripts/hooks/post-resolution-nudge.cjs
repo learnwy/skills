@@ -160,11 +160,33 @@ function uninstallHooks(skillId, options = {}) {
 
 ;// CONCATENATED MODULE: external "node:os"
 const external_node_os_namespaceObject = require("node:os");
+;// CONCATENATED MODULE: ./src/shared/learnwy-paths.ts
+
+
+const LEARNWY_ROOT = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy');
+function learnwyPath(...segments) {
+    return external_node_path_namespaceObject.join(LEARNWY_ROOT, ...segments);
+}
+function skillRoot(skill) {
+    return learnwyPath(skill);
+}
+const PATHS = {
+    englishLearner: skillRoot('english-learner'),
+    llmWiki: skillRoot('llm-wiki'),
+    promptOptimizer: skillRoot('prompt-optimizer'),
+    knowledgeConsolidation: skillRoot('knowledge-consolidation'),
+    learnwyStatus: skillRoot('learnwy-status')
+};
+function envOr(envVar, fallback) {
+    const v = process.env[envVar];
+    return v && v.length > 0 ? v : fallback;
+}
+
 ;// CONCATENATED MODULE: ./src/knowledge-consolidation/lib/stop-scan.ts
 
 
 
-const STATE_FILE = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'knowledge-consolidation', 'last-nudge.json');
+const STATE_FILE = learnwyPath('knowledge-consolidation', 'last-nudge.json');
 const DEBOUNCE_MS = 60 * 60 * 1000;
 const MIN_RESPONSE_LEN = 1500;
 const RESOLUTION_SIGNALS = [

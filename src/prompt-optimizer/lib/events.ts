@@ -1,9 +1,9 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import * as os from 'node:os';
+import { envOr, learnwyPath } from '../../shared/learnwy-paths.js';
 
 export function dataRoot(): string {
-  return process.env.LEARNWY_PROMPT_OPTIMIZER_ROOT || path.join(os.homedir(), '.learnwy', 'prompt-optimizer');
+  return envOr('LEARNWY_PROMPT_OPTIMIZER_ROOT', learnwyPath('prompt-optimizer'));
 }
 
 export function eventsFile(): string {

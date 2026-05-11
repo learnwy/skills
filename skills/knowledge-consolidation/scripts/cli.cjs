@@ -371,15 +371,16 @@ const uninstallCommand = {
     }
 };
 
-;// CONCATENATED MODULE: ./src/knowledge-consolidation/lib/path-builder.ts
+;// CONCATENATED MODULE: ./src/shared/ide-markers.ts
 
 
-const VALID_TYPES = [
-    'debug',
-    'config',
-    'workflow',
-    'lesson'
-];
+
+const IDE_MARKER_DIRS = (/* unused pure expression or super */ null && ([
+    '.trae',
+    '.claude',
+    '.cursor',
+    '.windsurf'
+]));
 const AI_TYPE_MAP = {
     trae: '.trae',
     'trae-cn': '.trae',
@@ -393,6 +394,43 @@ const AI_TYPE_MAP = {
     windsurf: '.windsurf',
     Windsurf: '.windsurf'
 };
+function resolveMarker(aiType) {
+    return AI_TYPE_MAP[aiType] ?? null;
+}
+function detectIdeMarkers(projectRoot) {
+    const found = [];
+    for (const m of IDE_MARKER_DIRS){
+        if (fs.existsSync(path.join(projectRoot, m))) found.push(m);
+    }
+    return found;
+}
+function homeIdeDirs() {
+    const home = os.homedir();
+    return [
+        '.trae',
+        '.trae-cn',
+        '.claude',
+        '.cursor'
+    ].map((d)=>path.join(home, d));
+}
+function isInsideHomeIdeDir(absPath) {
+    for (const d of homeIdeDirs()){
+        if (absPath === d || absPath.startsWith(d + path.sep)) return d;
+    }
+    return null;
+}
+
+;// CONCATENATED MODULE: ./src/knowledge-consolidation/lib/path-builder.ts
+
+
+
+const VALID_TYPES = [
+    'debug',
+    'config',
+    'workflow',
+    'lesson'
+];
+
 function getToday() {
     const now = new Date();
     return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
@@ -412,7 +450,7 @@ function buildPath(input) {
     if (!external_node_fs_namespaceObject.existsSync(input.root) || !external_node_fs_namespaceObject.statSync(input.root).isDirectory()) {
         throw new Error(`Project root does not exist: ${input.root}`);
     }
-    const aiPath = AI_TYPE_MAP[input.aiType];
+    const aiPath = resolveMarker(input.aiType);
     if (!aiPath) {
         throw new Error(`Unknown AI type: ${input.aiType}. Supported: ${Object.keys(AI_TYPE_MAP).join(', ')}`);
     }
@@ -671,6 +709,28 @@ const save_command = {
     run: save_run
 };
 
+;// CONCATENATED MODULE: ./src/shared/learnwy-paths.ts
+
+
+const LEARNWY_ROOT = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy');
+function learnwyPath(...segments) {
+    return external_node_path_namespaceObject.join(LEARNWY_ROOT, ...segments);
+}
+function learnwy_paths_skillRoot(skill) {
+    return learnwyPath(skill);
+}
+const PATHS = {
+    englishLearner: learnwy_paths_skillRoot('english-learner'),
+    llmWiki: learnwy_paths_skillRoot('llm-wiki'),
+    promptOptimizer: learnwy_paths_skillRoot('prompt-optimizer'),
+    knowledgeConsolidation: learnwy_paths_skillRoot('knowledge-consolidation'),
+    learnwyStatus: learnwy_paths_skillRoot('learnwy-status')
+};
+function envOr(envVar, fallback) {
+    const v = process.env[envVar];
+    return v && v.length > 0 ? v : fallback;
+}
+
 ;// CONCATENATED MODULE: ./src/knowledge-consolidation/cmd/promote.ts
 
 
@@ -698,7 +758,7 @@ function promote_isoDate() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 function defaultWikiRoot() {
-    return process.env.LLM_WIKI_ROOT || external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'llm-wiki');
+    return envOr('LLM_WIKI_ROOT', learnwyPath('llm-wiki'));
 }
 function deriveSlug(filePath) {
     const base = external_node_path_namespaceObject.basename(filePath, '.md');

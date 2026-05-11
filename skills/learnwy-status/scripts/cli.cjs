@@ -531,13 +531,33 @@ function withTransaction(fn) {
     }
 }
 
+;// CONCATENATED MODULE: ./src/shared/learnwy-paths.ts
+
+
+const LEARNWY_ROOT = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy');
+function learnwyPath(...segments) {
+    return external_node_path_namespaceObject.join(LEARNWY_ROOT, ...segments);
+}
+function learnwy_paths_skillRoot(skill) {
+    return learnwyPath(skill);
+}
+const PATHS = {
+    englishLearner: learnwy_paths_skillRoot('english-learner'),
+    llmWiki: learnwy_paths_skillRoot('llm-wiki'),
+    promptOptimizer: learnwy_paths_skillRoot('prompt-optimizer'),
+    knowledgeConsolidation: learnwy_paths_skillRoot('knowledge-consolidation'),
+    learnwyStatus: learnwy_paths_skillRoot('learnwy-status')
+};
+function envOr(envVar, fallback) {
+    const v = process.env[envVar];
+    return v && v.length > 0 ? v : fallback;
+}
+
 ;// CONCATENATED MODULE: ./src/learnwy-status/lib/digest.ts
 
 
 
 
-const HOME = external_node_os_namespaceObject.homedir();
-const LEARNWY_ROOT = external_node_path_namespaceObject.join(HOME, '.learnwy');
 function readVocabSection() {
     if (!external_node_fs_namespaceObject.existsSync(DB_PATH)) return null;
     const db = getDb();
@@ -765,11 +785,11 @@ const command = {
 
 
 
-const doctor_HOME = external_node_os_namespaceObject.homedir();
-const doctor_LEARNWY_ROOT = external_node_path_namespaceObject.join(doctor_HOME, '.learnwy');
-const LEGACY_ROOT = external_node_path_namespaceObject.join(doctor_HOME, '.english-learner');
-const CLAUDE_SETTINGS = external_node_path_namespaceObject.join(doctor_HOME, '.claude', 'settings.json');
-const TRAE_HOOKS = external_node_path_namespaceObject.join(doctor_HOME, '.trae', 'hooks.json');
+const HOME = external_node_os_namespaceObject.homedir();
+const doctor_LEARNWY_ROOT = external_node_path_namespaceObject.join(HOME, '.learnwy');
+const LEGACY_ROOT = external_node_path_namespaceObject.join(HOME, '.english-learner');
+const CLAUDE_SETTINGS = external_node_path_namespaceObject.join(HOME, '.claude', 'settings.json');
+const TRAE_HOOKS = external_node_path_namespaceObject.join(HOME, '.trae', 'hooks.json');
 const REQUIRED_DISPATCHER_HOOKS = [
     'UserPromptSubmit',
     'Stop',
@@ -921,7 +941,7 @@ function checkPathLayout() {
     return checks;
 }
 function checkBundles() {
-    const agents = external_node_path_namespaceObject.join(doctor_HOME, '.agents', 'skills');
+    const agents = external_node_path_namespaceObject.join(HOME, '.agents', 'skills');
     if (!external_node_fs_namespaceObject.existsSync(agents)) {
         return [
             {

@@ -322,13 +322,33 @@ function withTransaction(fn) {
     }
 }
 
+;// CONCATENATED MODULE: ./src/shared/learnwy-paths.ts
+
+
+const LEARNWY_ROOT = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy');
+function learnwyPath(...segments) {
+    return external_node_path_namespaceObject.join(LEARNWY_ROOT, ...segments);
+}
+function skillRoot(skill) {
+    return learnwyPath(skill);
+}
+const PATHS = {
+    englishLearner: skillRoot('english-learner'),
+    llmWiki: skillRoot('llm-wiki'),
+    promptOptimizer: skillRoot('prompt-optimizer'),
+    knowledgeConsolidation: skillRoot('knowledge-consolidation'),
+    learnwyStatus: skillRoot('learnwy-status')
+};
+function envOr(envVar, fallback) {
+    const v = process.env[envVar];
+    return v && v.length > 0 ? v : fallback;
+}
+
 ;// CONCATENATED MODULE: ./src/learnwy-status/lib/digest.ts
 
 
 
 
-const HOME = external_node_os_namespaceObject.homedir();
-const LEARNWY_ROOT = external_node_path_namespaceObject.join(HOME, '.learnwy');
 function readVocabSection() {
     if (!external_node_fs_namespaceObject.existsSync(DB_PATH)) return null;
     const db = getDb();
@@ -540,20 +560,20 @@ function formatCompact(d) {
 
 const STATE_FILE = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'learnwy-status', 'state.json');
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
-const session_scan_HOME = external_node_os_namespaceObject.homedir();
-const AGENTS_ROOT = external_node_path_namespaceObject.join(session_scan_HOME, '.agents', 'skills');
+const HOME = external_node_os_namespaceObject.homedir();
+const AGENTS_ROOT = external_node_path_namespaceObject.join(HOME, '.agents', 'skills');
 const REFRESH_TARGETS = [
     {
-        artifact: external_node_path_namespaceObject.join(session_scan_HOME, '.learnwy', 'llm-wiki', 'health.json'),
-        precondition: ()=>external_node_fs_namespaceObject.existsSync(external_node_path_namespaceObject.join(session_scan_HOME, '.learnwy', 'llm-wiki', 'wiki', 'topics.txt')),
+        artifact: external_node_path_namespaceObject.join(HOME, '.learnwy', 'llm-wiki', 'health.json'),
+        precondition: ()=>external_node_fs_namespaceObject.existsSync(external_node_path_namespaceObject.join(HOME, '.learnwy', 'llm-wiki', 'wiki', 'topics.txt')),
         cli: external_node_path_namespaceObject.join(AGENTS_ROOT, 'llm-wiki', 'scripts', 'cli.cjs'),
         args: [
             'health-check'
         ]
     },
     {
-        artifact: external_node_path_namespaceObject.join(session_scan_HOME, '.learnwy', 'english-learner', 'wiki-links.json'),
-        precondition: ()=>external_node_fs_namespaceObject.existsSync(external_node_path_namespaceObject.join(session_scan_HOME, '.learnwy', 'english-learner', 'data.db')),
+        artifact: external_node_path_namespaceObject.join(HOME, '.learnwy', 'english-learner', 'wiki-links.json'),
+        precondition: ()=>external_node_fs_namespaceObject.existsSync(external_node_path_namespaceObject.join(HOME, '.learnwy', 'english-learner', 'data.db')),
         cli: external_node_path_namespaceObject.join(AGENTS_ROOT, 'english-learner', 'scripts', 'cli.cjs'),
         args: [
             'link-wiki'

@@ -1,22 +1,11 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { AI_TYPE_MAP, resolveMarker } from '../../shared/ide-markers.js';
 
 export const VALID_TYPES = ['debug', 'config', 'workflow', 'lesson'] as const;
 export type KnowledgeType = (typeof VALID_TYPES)[number];
 
-export const AI_TYPE_MAP: Record<string, string> = {
-  trae: '.trae',
-  'trae-cn': '.trae',
-  TraeAI: '.trae',
-  TraeCN: '.trae',
-  'claude-code': '.claude',
-  claude: '.claude',
-  ClaudeCode: '.claude',
-  cursor: '.cursor',
-  Cursor: '.cursor',
-  windsurf: '.windsurf',
-  Windsurf: '.windsurf',
-};
+export { AI_TYPE_MAP };
 
 export interface PathInput {
   root: string;
@@ -60,7 +49,7 @@ export function buildPath(input: PathInput): ResolvedPath {
   if (!fs.existsSync(input.root) || !fs.statSync(input.root).isDirectory()) {
     throw new Error(`Project root does not exist: ${input.root}`);
   }
-  const aiPath = AI_TYPE_MAP[input.aiType];
+  const aiPath = resolveMarker(input.aiType);
   if (!aiPath) {
     throw new Error(`Unknown AI type: ${input.aiType}. Supported: ${Object.keys(AI_TYPE_MAP).join(', ')}`);
   }
