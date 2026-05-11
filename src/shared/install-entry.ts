@@ -30,7 +30,7 @@ function resolveOptions(flags: Record<string, string | boolean>): InstallOptions
 }
 
 export const installCommand: Command = {
-  description: 'Install IDE hooks from this skill into ~/.claude/ and ~/.trae/',
+  description: 'Install IDE hooks from this skill into ~/.claude/, ~/.trae/, ~/.trae-cn/, and ~/.codex/',
   run: (args) => {
     const log = createLogger(defaultSkillId());
     const { flags } = parseArgs(args);

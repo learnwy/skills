@@ -69,10 +69,22 @@ export interface HooksConfig {
   hooks: Record<string, HookGroup[]>;
 }
 
+export type InstallTarget = 'trae' | 'claude' | 'codex' | 'both' | 'all';
+
 export interface InstallOptions {
-  target?: 'trae' | 'claude' | 'both';
+  target?: InstallTarget;
   scope?: 'global' | 'project';
   projectRoot?: string;
+}
+
+function wantsTrae(t: InstallTarget): boolean {
+  return t === 'trae' || t === 'both' || t === 'all';
+}
+function wantsClaude(t: InstallTarget): boolean {
+  return t === 'claude' || t === 'both' || t === 'all';
+}
+function wantsCodex(t: InstallTarget): boolean {
+  return t === 'codex' || t === 'both' || t === 'all';
 }
 
 export function installHooks(config: HooksConfig, options: InstallOptions = {}): string[] {
@@ -81,29 +93,39 @@ export function installHooks(config: HooksConfig, options: InstallOptions = {}):
   const homeDir = process.env.HOME || process.env.USERPROFILE || '';
 
   if (scope === 'global') {
-    if (target === 'trae' || target === 'both') {
+    if (wantsTrae(target)) {
       for (const dir of ['.trae', '.trae-cn']) {
         const traeFile = path.join(homeDir, dir, 'hooks.json');
         mergeAndWrite(traeFile, config, 'standalone');
         results.push(traeFile);
       }
     }
-    if (target === 'claude' || target === 'both') {
+    if (wantsClaude(target)) {
       const claudeFile = path.join(homeDir, '.claude', 'settings.json');
       mergeAndWrite(claudeFile, config, 'nested');
       results.push(claudeFile);
     }
+    if (wantsCodex(target)) {
+      const codexFile = path.join(homeDir, '.codex', 'hooks.json');
+      mergeAndWrite(codexFile, config, 'standalone');
+      results.push(codexFile);
+    }
   } else {
     const root = projectRoot || getProjectDir();
-    if (target === 'trae' || target === 'both') {
+    if (wantsTrae(target)) {
       const traeFile = path.join(root, '.trae', 'hooks.json');
       mergeAndWrite(traeFile, config, 'standalone');
       results.push(traeFile);
     }
-    if (target === 'claude' || target === 'both') {
+    if (wantsClaude(target)) {
       const claudeFile = path.join(root, '.claude', 'settings.json');
       mergeAndWrite(claudeFile, config, 'nested');
       results.push(claudeFile);
+    }
+    if (wantsCodex(target)) {
+      const codexFile = path.join(root, '.codex', 'hooks.json');
+      mergeAndWrite(codexFile, config, 'standalone');
+      results.push(codexFile);
     }
   }
 
@@ -148,19 +170,25 @@ export function uninstallHooks(skillId: string, options: InstallOptions = {}): v
 
   const files: string[] = [];
   if (scope === 'global') {
-    if (target === 'trae' || target === 'both') {
+    if (wantsTrae(target)) {
       files.push(path.join(homeDir, '.trae', 'hooks.json'));
       files.push(path.join(homeDir, '.trae-cn', 'hooks.json'));
     }
-    if (target === 'claude' || target === 'both') {
+    if (wantsClaude(target)) {
       files.push(path.join(homeDir, '.claude', 'settings.json'));
     }
+    if (wantsCodex(target)) {
+      files.push(path.join(homeDir, '.codex', 'hooks.json'));
+    }
   } else {
-    if (target === 'trae' || target === 'both') {
+    if (wantsTrae(target)) {
       files.push(path.join(root, '.trae', 'hooks.json'));
     }
-    if (target === 'claude' || target === 'both') {
+    if (wantsClaude(target)) {
       files.push(path.join(root, '.claude', 'settings.json'));
+    }
+    if (wantsCodex(target)) {
+      files.push(path.join(root, '.codex', 'hooks.json'));
     }
   }
 

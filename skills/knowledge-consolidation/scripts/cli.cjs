@@ -120,12 +120,21 @@ function deny(reason) {
         }
     });
 }
+function wantsTrae(t) {
+    return t === 'trae' || t === 'both' || t === 'all';
+}
+function wantsClaude(t) {
+    return t === 'claude' || t === 'both' || t === 'all';
+}
+function wantsCodex(t) {
+    return t === 'codex' || t === 'both' || t === 'all';
+}
 function installHooks(config, options = {}) {
     const { target = 'both', scope = 'global', projectRoot } = options;
     const results = [];
     const homeDir = process.env.HOME || process.env.USERPROFILE || '';
     if (scope === 'global') {
-        if (target === 'trae' || target === 'both') {
+        if (wantsTrae(target)) {
             for (const dir of [
                 '.trae',
                 '.trae-cn'
@@ -135,22 +144,32 @@ function installHooks(config, options = {}) {
                 results.push(traeFile);
             }
         }
-        if (target === 'claude' || target === 'both') {
+        if (wantsClaude(target)) {
             const claudeFile = external_node_path_namespaceObject.join(homeDir, '.claude', 'settings.json');
             mergeAndWrite(claudeFile, config, 'nested');
             results.push(claudeFile);
         }
+        if (wantsCodex(target)) {
+            const codexFile = external_node_path_namespaceObject.join(homeDir, '.codex', 'hooks.json');
+            mergeAndWrite(codexFile, config, 'standalone');
+            results.push(codexFile);
+        }
     } else {
         const root = projectRoot || getProjectDir();
-        if (target === 'trae' || target === 'both') {
+        if (wantsTrae(target)) {
             const traeFile = external_node_path_namespaceObject.join(root, '.trae', 'hooks.json');
             mergeAndWrite(traeFile, config, 'standalone');
             results.push(traeFile);
         }
-        if (target === 'claude' || target === 'both') {
+        if (wantsClaude(target)) {
             const claudeFile = external_node_path_namespaceObject.join(root, '.claude', 'settings.json');
             mergeAndWrite(claudeFile, config, 'nested');
             results.push(claudeFile);
+        }
+        if (wantsCodex(target)) {
+            const codexFile = external_node_path_namespaceObject.join(root, '.codex', 'hooks.json');
+            mergeAndWrite(codexFile, config, 'standalone');
+            results.push(codexFile);
         }
     }
     return results;
@@ -187,19 +206,25 @@ function uninstallHooks(skillId, options = {}) {
     const root = projectRoot || getProjectDir();
     const files = [];
     if (scope === 'global') {
-        if (target === 'trae' || target === 'both') {
+        if (wantsTrae(target)) {
             files.push(external_node_path_namespaceObject.join(homeDir, '.trae', 'hooks.json'));
             files.push(external_node_path_namespaceObject.join(homeDir, '.trae-cn', 'hooks.json'));
         }
-        if (target === 'claude' || target === 'both') {
+        if (wantsClaude(target)) {
             files.push(external_node_path_namespaceObject.join(homeDir, '.claude', 'settings.json'));
         }
+        if (wantsCodex(target)) {
+            files.push(external_node_path_namespaceObject.join(homeDir, '.codex', 'hooks.json'));
+        }
     } else {
-        if (target === 'trae' || target === 'both') {
+        if (wantsTrae(target)) {
             files.push(external_node_path_namespaceObject.join(root, '.trae', 'hooks.json'));
         }
-        if (target === 'claude' || target === 'both') {
+        if (wantsClaude(target)) {
             files.push(external_node_path_namespaceObject.join(root, '.claude', 'settings.json'));
+        }
+        if (wantsCodex(target)) {
+            files.push(external_node_path_namespaceObject.join(root, '.codex', 'hooks.json'));
         }
     }
     for (const filePath of files){
@@ -343,7 +368,7 @@ function resolveOptions(flags) {
     };
 }
 const installCommand = {
-    description: 'Install IDE hooks from this skill into ~/.claude/ and ~/.trae/',
+    description: 'Install IDE hooks from this skill into ~/.claude/, ~/.trae/, ~/.trae-cn/, and ~/.codex/',
     run: (args)=>{
         const log = createLogger(defaultSkillId());
         const { flags } = parseArgs(args);
