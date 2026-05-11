@@ -2,10 +2,10 @@
 
 This file is the single source of truth for the discipline shared by:
 
-- `project-skill-writer` — creates `.trae/skills/*/SKILL.md`
-- `project-agent-writer` — creates agent definitions
-- `project-skill-installer` — installs an existing skill into a project
-- `trae-rules-writer` — creates `.trae/rules/*.md`
+- `project-skill-writer` — creates `.agents/skills/*/SKILL.md`
+- `project-agent-writer` — creates `.agents/agents/*.md`
+- `project-skill-installer` — installs an existing skill into `.agents/skills/`
+- `project-rules-writer` — creates `.agents/rules/*.md` (Trae-format rules at a tool-neutral location)
 
 Each writer skill has its **own** workflow (different artefact, different validation), but they share the same operating principles. This file is referenced from each writer's SKILL.md so the rules don't drift across copies.
 
@@ -20,8 +20,8 @@ Each writer skill has its **own** workflow (different artefact, different valida
 3. **Confirm before generating**
    Use `AskUserQuestion` to present the design (name, scope, output path, key choices) **before** writing any file. The user must explicitly approve. Always offer "create / adjust / skip".
 
-4. **Generate to project-relative paths only**
-   Never write to `~/.trae/`, `~/.claude/`, `~/.cursor/` from a project writer — those are global IDE dirs. Project artefacts belong under `<project>/.trae/...` or wherever the project keeps them. The shared `isInsideHomeIdeDir()` helper in `src/shared/ide-markers.ts` enforces this.
+4. **Generate to project-relative paths only — and to `<project>/.agents/`**
+   Never write to `~/.trae/`, `~/.claude/`, `~/.cursor/` from a project writer — those are global IDE dirs. Equally, do **not** write into the project's own `.trae/`, `.claude/`, or `.cursor/` — those are owned by the IDE. Project-level writer outputs belong under `<project>/.agents/{skills,agents,rules}/`, which is tool-neutral and survives IDE switches. The shared `isInsideHomeIdeDir()` helper in `src/shared/ide-markers.ts` still blocks home-IDE escapes.
 
 5. **Validate after generating**
    Run a short post-write checklist before reporting success: required frontmatter fields present, no absolute paths in content, no conflict with existing same-type artefacts, content in English (or the project language convention).
@@ -60,6 +60,6 @@ If the user request doesn't match the writer you're in, delegate:
 | A skill | `project-skill-writer` |
 | An agent / subagent | `project-agent-writer` |
 | To install an existing published skill | `project-skill-installer` |
-| A rule (`.trae/rules/*.md`) | `trae-rules-writer` |
+| A rule (`.agents/rules/*.md`) | `project-rules-writer` |
 | Personal-knowledge writer (project-local) | `knowledge-consolidation` |
 | Global wiki author / curator | `llm-wiki` |

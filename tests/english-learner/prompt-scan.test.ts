@@ -26,7 +26,7 @@ describe('english-learner scanPrompt', () => {
   });
 
   it('returns null for explicit Skill invocation prefix', () => {
-    expect(scanPrompt('Use Skill: trae-rules-writer with args')).toBeNull();
+    expect(scanPrompt('Use Skill: project-rules-writer with args')).toBeNull();
   });
 
   it('skips Chinese branch when message looks like coding context', () => {

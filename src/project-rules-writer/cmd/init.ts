@@ -14,7 +14,7 @@ interface Args {
 }
 
 function parseLocal(argv: string[]): Args {
-  const args: Args = { mode: 'intelligent', description: '', globs: '', outputDir: '.trae/rules' };
+  const args: Args = { mode: 'intelligent', description: '', globs: '', outputDir: '.agents/rules' };
   const required = new Set(['skillDir', 'name']);
   const modeChoices = ['always', 'file', 'intelligent', 'manual'] as const;
   const keyMap: Record<string, keyof Args> = {

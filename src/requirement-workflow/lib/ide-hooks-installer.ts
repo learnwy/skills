@@ -10,7 +10,8 @@ export interface HooksConfig {
 
 const SESSION_INIT = `bash -c '
 ROOT="\${TRAE_PROJECT_DIR:-\${CLAUDE_PROJECT_DIR:-$PWD}}"
-ACTIVE="$ROOT/.trae/active_workflow"
+ACTIVE="$ROOT/.agents/active_workflow"
+[ -f "$ACTIVE" ] || ACTIVE="$ROOT/.trae/active_workflow"
 [ -f "$ACTIVE" ] || exit 0
 WF=$(cat "$ACTIVE")
 STATE="$WF/state.json"
@@ -30,7 +31,8 @@ echo "Run \\\`node scripts/cli.cjs status -r .\\\` for full status."
 
 const QUALITY_GATE = `bash -c '
 ROOT="\${TRAE_PROJECT_DIR:-\${CLAUDE_PROJECT_DIR:-$PWD}}"
-ACTIVE="$ROOT/.trae/active_workflow"
+ACTIVE="$ROOT/.agents/active_workflow"
+[ -f "$ACTIVE" ] || ACTIVE="$ROOT/.trae/active_workflow"
 [ -f "$ACTIVE" ] || exit 0
 WF=$(cat "$ACTIVE")
 STATE="$WF/state.json"

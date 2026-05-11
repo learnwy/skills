@@ -78,7 +78,7 @@ This skill **does not**:
 - Generate or modify code → use the IDE directly
 - Project-specific orchestration → delegate to `requirement-workflow`
 - Run commands or do file I/O → no runtime dependency
-- Create agents / skills / rules → delegate to `project-agent-writer` / `project-skill-writer` / `trae-rules-writer`
+- Create agents / skills / rules → delegate to `project-agent-writer` / `project-skill-writer` / `project-rules-writer`
 
 ## See also (loaded on demand)
 

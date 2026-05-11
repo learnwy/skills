@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import { ensureDir } from '../../shared/fs-utils.js';
 import type { Command } from '../../shared/cli.js';
 import { isValidLifecycle, type Lifecycle } from '../lib/phases.js';
-import { createState, saveState, setActiveWorkflow, workflowBase } from '../lib/state.js';
+import { createState, migrateLegacyTraeLayout, saveState, setActiveWorkflow, workflowBase } from '../lib/state.js';
 
 function showHelp(): void {
   console.log(`Usage: cli.cjs init -r <root> -n <name> [OPTIONS]
@@ -117,6 +117,7 @@ function run(args: string[]): void {
     process.exit(1);
   }
 
+  migrateLegacyTraeLayout(projectRoot);
   ensureDir(workflowBase(projectRoot));
 
   const state = createState({

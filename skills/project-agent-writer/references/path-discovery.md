@@ -17,31 +17,37 @@
 5. 最后才：加载 path-discovery 确定输出位置
 ```
 
-### 运行时标记检测
+### 输出契约：`.agents/agents/`
 
-检测项目根目录中的运行时/工具标记：
+项目级智能体统一落到项目根目录的 `.agents/agents/<name>.md`。这是 tool-neutral 的目录——和 IDE 自己管理的 `.trae/`、`.claude/`、`.cursor/` 解耦，避免 writer 与 IDE 互相覆盖。
 
-- Trae: `{project_dir}/.trae/`
-- Trae-CN: `{project_dir}/.trae/`
-- Claude Code: `{project_dir}/.claude/`
-- Cursor: `{project_dir}/.cursor/`
+兄弟产物：
+- 技能 → `<project>/.agents/skills/<name>/`
+- 规则 → `<project>/.agents/rules/<name>.md`
 
-如果存在多个标记，按以下优先级判断：
-1. 用户明确指定的目标
-2. 工作区标记证据
-3. 从文档和文件树中获取的现有项目规范证据
+### IDE 标记检测（仅作上下文判断，不改变输出位置）
 
-如果仍有歧义，选择最保守的可写路径并报告原因。
+继续扫描以下标记，用于了解项目使用哪种 AI IDE，从而调整智能体的接入说明（例如"用 Trae 的 Task 工具调用"）：
+
+| 标记 | 工具 |
+|---|---|
+| `{project_dir}/.trae/` | Trae / Trae-CN |
+| `{project_dir}/.claude/` | Claude Code |
+| `{project_dir}/.cursor/` | Cursor |
+| `{project_dir}/.windsurf/` | Windsurf |
+
+无论检测到哪个 IDE，**输出路径仍然是 `.agents/agents/`**。
 
 ### 发现优先级
 
-1. 运行时特定的项目智能体路径（从标记中检测）
-2. 项目管理的共享智能体路径
-3. 默认的本地 `agents/` 路径
+1. 用户明确指定（`--output-dir` 或对话中说明）→ 必须是项目相对路径
+2. 项目已存在 `.agents/agents/` → 直接使用
+3. 默认 → 在项目根创建 `.agents/agents/`
 
 ### 验证规则
 
 - 路径必须存在或可在项目工作区内创建
 - 路径必须可写
 - 路径选择必须在最终输出中报告
-- 使用项目相对路径，绝不使用 `~/.trae/agents` 这样的全局路径
+- 使用项目相对路径，绝不使用 `~/.trae/agents`、`~/.claude/agents` 等全局路径
+- 不要写入项目自身的 `.trae/`、`.claude/`、`.cursor/`——那是 IDE 拥有的目录

@@ -10,13 +10,13 @@
     {
       "id": 2,
       "prompt": "Create a project-level skill for iOS crash attribution, and make sure the output path stays inside the current repo.",
-      "expected_output": "Generate a project-level skill draft with triggers, workflow, and boundary constraints. Output path must be project-relative (e.g., .trae/skills/), reject any global path.",
+      "expected_output": "Generate a project-level skill draft with triggers, workflow, and boundary constraints. Output path must be project-relative (default `.agents/skills/`); reject any global path or any path inside IDE-owned dirs (.trae/, .claude/, .cursor/).",
       "files": []
     },
     {
       "id": 3,
       "prompt": "Also help me write a project rule and an agent alongside the skill, and put the skill in ~/.trae/skills.",
-      "expected_output": "Enforce skill boundary: only handle the skill portion or explicitly route to project-agent-writer and trae-rules-writer. Reject the global path ~/.trae/skills and propose a project-relative alternative.",
+      "expected_output": "Enforce skill boundary: only handle the skill portion or explicitly route to project-agent-writer and project-rules-writer. Reject the global path ~/.trae/skills and propose `<project>/.agents/skills/` instead.",
       "files": []
     },
     {

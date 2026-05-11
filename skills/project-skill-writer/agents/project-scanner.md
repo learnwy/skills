@@ -67,8 +67,8 @@
 ### 步骤 2：模式检测
 
 1. 扫描现有自动化：
-   - `.trae/skills/` - 现有技能
-   - `.trae/rules/` - 现有规则
+   - `.agents/skills/`（以及 `.trae/skills/` / `.claude/skills/` / `.cursor/skills/`）- 现有技能
+   - `.agents/rules/`（以及 `.trae/rules/`）- 现有规则
    - `scripts/` - Shell 脚本
    - `.github/workflows/` - CI/CD
    - `Makefile` - 构建自动化

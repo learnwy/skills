@@ -156,7 +156,7 @@ Options:
     --name NAME           Skill name (use --problem instead for auto-detection)
     --summary TEXT        Brief summary (used with --name)
     --problem TEXT        Problem description - auto-generate skill metadata
-    --output-root DIR     Project-relative output root (default: .trae/skills)
+    --output-root DIR     Project-relative output root (default: .agents/skills)
     -h, --help            Show help`);
 }
 
@@ -165,7 +165,7 @@ function run(args: string[]): void {
   let name = '';
   let summary = '';
   let problem = '';
-  let outputRoot = '.trae/skills';
+  let outputRoot = '.agents/skills';
 
   for (let i = 0; i < args.length; i++) {
     switch (args[i]) {

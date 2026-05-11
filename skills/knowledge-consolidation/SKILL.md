@@ -24,7 +24,7 @@ Project-local fix journal. One conversation → one structured Markdown file in 
 | Established an ops procedure (deploy / rollback) | `--type workflow` |
 | Post-mortem / retrospective takeaway | `--type lesson` |
 
-**Do not use** for: cross-project knowledge (→ `llm-wiki`), reusable skills (→ `project-skill-writer`), AI rules (→ `trae-rules-writer`), updating a previously saved doc (KC is write-once).
+**Do not use** for: cross-project knowledge (→ `llm-wiki`), reusable skills (→ `project-skill-writer`), AI rules (→ `project-rules-writer`), updating a previously saved doc (KC is write-once).
 
 ## Prerequisites
 

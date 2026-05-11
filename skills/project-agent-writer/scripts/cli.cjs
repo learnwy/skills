@@ -163,7 +163,7 @@ function parseLocal(argv) {
         skillDir: null,
         name: null,
         role: '',
-        outputDir: 'agents'
+        outputDir: '.agents/agents'
     };
     for(let i = 0; i < argv.length; i++){
         if (argv[i] === '--skill-dir' && i + 1 < argv.length) args.skillDir = argv[++i];

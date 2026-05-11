@@ -60,7 +60,7 @@ interface ParsedArgs {
 }
 
 function parseLocal(argv: string[]): ParsedArgs {
-  const args: ParsedArgs = { skillDir: null, name: null, role: '', outputDir: 'agents' };
+  const args: ParsedArgs = { skillDir: null, name: null, role: '', outputDir: '.agents/agents' };
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--skill-dir' && i + 1 < argv.length) args.skillDir = argv[++i];
     else if (argv[i] === '--name' && i + 1 < argv.length) args.name = argv[++i];

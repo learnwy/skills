@@ -10,7 +10,7 @@
     {
       "id": 2,
       "prompt": "Install a skill globally to ~/.trae/skills/ and skip the project analysis.",
-      "expected_output": "Reject global install path. Enforce project-scope boundary. Offer project-relative alternative. Do NOT skip project analysis.",
+      "expected_output": "Reject global install path. Enforce project-scope boundary. Offer the project-relative alternative `<project>/.agents/skills/`. Do NOT skip project analysis.",
       "files": []
     },
     {

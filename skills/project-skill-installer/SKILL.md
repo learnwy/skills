@@ -12,7 +12,7 @@ metadata:
 
 > **核心原则**：先理解项目，再推荐，仅在用户确认后安装。
 
-> **共享原则：** 本技能与 `project-skill-writer` / `project-agent-writer` / `trae-rules-writer` 共享 5 条 writer 通用纪律。详见 [../project-skill-writer/references/writer-discipline.md](../project-skill-writer/references/writer-discipline.md)。
+> **共享原则：** 本技能与 `project-skill-writer` / `project-agent-writer` / `project-rules-writer` 共享 5 条 writer 通用纪律。详见 [../project-skill-writer/references/writer-discipline.md](../project-skill-writer/references/writer-discipline.md)。
 
 ## 使用场景
 
@@ -26,7 +26,7 @@ metadata:
 
 - 用户想**创建**新技能（委托给 `project-skill-writer`）
 - 用户想**创建**智能体（委托给 `project-agent-writer`）
-- 用户想**创建**规则（委托给 `trae-rules-writer`）
+- 用户想**创建**规则（委托给 `project-rules-writer`）
 
 ## 前置条件
 
@@ -74,8 +74,8 @@ metadata:
 | 构建工具 | Makefile、webpack.config、vite.config、Bazel | Glob |
 | 测试 | jest.config、pytest.ini、XCTest、go test | Glob |
 | CI/CD | .github/workflows/、Jenkinsfile、.gitlab-ci.yml | Glob |
-| 现有技能 | .trae/skills/、.cursor/skills/ | Glob |
-| 现有规则 | .trae/rules/ | Glob |
+| 现有技能 | .agents/skills/、.trae/skills/、.cursor/skills/ | Glob |
+| 现有规则 | .agents/rules/、.trae/rules/ | Glob |
 
 ### 技术画像输出
 
@@ -172,23 +172,23 @@ CI: GitHub Actions
 
 使用[路径发现](references/path-discovery.md)确定项目相对安装路径：
 
-1. 检查项目根目录是否存在 `.trae/skills/`
-2. 检查 `.cursor/skills/` 或 `.claude/skills/`
-3. 默认使用 `.trae/skills/`
+1. 检查项目根目录是否存在 `.agents/skills/`
+2. 否则默认创建 `.agents/skills/`（不再写入 `.trae/`、`.cursor/`、`.claude/` —— 那些目录归 IDE 管）
 
 ### 安装命令
 
 ```bash
 # 社区技能 (skills.sh)
-npx skills add <package-name> --path <project-root>/.trae/skills/
+npx skills add <package-name> --path <project-root>/.agents/skills/
 
 # 字节跳动内部技能
-npx @tiktok-fe/skills add <package-name> --agent trae-cn --path <project-root>/.trae/skills/
+npx @tiktok-fe/skills add <package-name> --path <project-root>/.agents/skills/
 ```
 
 ### 安装规则
 
-- **始终**使用项目相对路径 — 绝不使用 `~/.trae/skills/` 或其他全局路径
+- **始终**使用项目相对路径 — 绝不使用 `~/.trae/skills/`、`~/.claude/skills/` 或其他全局路径
+- 不要安装到项目的 `.trae/`、`.claude/`、`.cursor/` —— 那是 IDE 自己写入的目录
 - 逐个安装技能，每个验证后再继续下一个
 - 如果安装失败，报告错误并建议手动安装步骤
 
@@ -218,7 +218,7 @@ npx @tiktok-fe/skills add <package-name> --agent trae-cn --path <project-root>/.
 | `find-skills` 不可用 | 提示：`npx skills add find-skills -g -y` |
 | 未找到匹配查询的技能 | 建议通过 `project-skill-writer` 创建自定义技能 |
 | 用户请求全局安装 | 拒绝，解释项目范围限制，提供项目相对路径替代方案 |
-| 用户请求创建智能体/规则 | 路由到 `project-agent-writer` 或 `trae-rules-writer` |
+| 用户请求创建智能体/规则 | 路由到 `project-agent-writer` 或 `project-rules-writer` |
 | 安装命令失败 | 显示错误，建议手动 `npx skills add <name> --path <path>` |
 | 技能与现有的冲突 | 展示对比，询问用户保留哪个 |
 
@@ -234,7 +234,7 @@ npx @tiktok-fe/skills add <package-name> --agent trae-cn --path <project-root>/.
 此技能**不**处理：
 - ❌ 创建新技能 → `project-skill-writer`
 - ❌ 创建智能体 → `project-agent-writer`
-- ❌ 创建规则 → `trae-rules-writer`
+- ❌ 创建规则 → `project-rules-writer`
 - ❌ 全局安装（始终限定在项目范围内）
 
 ## 参考资料

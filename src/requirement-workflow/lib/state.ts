@@ -47,11 +47,63 @@ export interface WorkflowState {
 }
 
 export function workflowBase(projectRoot: string): string {
-  return path.join(projectRoot, '.trae', 'workflow');
+  return path.join(projectRoot, '.agents', 'workflow');
 }
 
 export function activePointerFile(projectRoot: string): string {
+  return path.join(projectRoot, '.agents', 'active_workflow');
+}
+
+function legacyWorkflowBase(projectRoot: string): string {
+  return path.join(projectRoot, '.trae', 'workflow');
+}
+
+function legacyActivePointerFile(projectRoot: string): string {
   return path.join(projectRoot, '.trae', 'active_workflow');
+}
+
+export function migrateLegacyTraeLayout(projectRoot: string): { migrated: boolean; notes: string[] } {
+  const notes: string[] = [];
+  const legacyBase = legacyWorkflowBase(projectRoot);
+  const legacyPointer = legacyActivePointerFile(projectRoot);
+  const newBase = workflowBase(projectRoot);
+  const newPointer = activePointerFile(projectRoot);
+
+  let migrated = false;
+
+  if (fs.existsSync(legacyBase) && !fs.existsSync(newBase)) {
+    ensureDir(path.dirname(newBase));
+    fs.renameSync(legacyBase, newBase);
+    notes.push(`moved ${path.relative(projectRoot, legacyBase)} → ${path.relative(projectRoot, newBase)}`);
+    migrated = true;
+  }
+
+  if (fs.existsSync(legacyPointer) && !fs.existsSync(newPointer)) {
+    const contents = fs.readFileSync(legacyPointer, 'utf8').trim();
+    const remapped = contents.replace(
+      legacyBase + path.sep,
+      newBase + path.sep,
+    );
+    ensureDir(path.dirname(newPointer));
+    fs.writeFileSync(newPointer, remapped);
+    fs.unlinkSync(legacyPointer);
+    notes.push(`moved ${path.relative(projectRoot, legacyPointer)} → ${path.relative(projectRoot, newPointer)}`);
+    migrated = true;
+  } else if (fs.existsSync(newPointer)) {
+    const contents = fs.readFileSync(newPointer, 'utf8').trim();
+    if (contents.includes(legacyBase + path.sep)) {
+      const remapped = contents.replace(legacyBase + path.sep, newBase + path.sep);
+      fs.writeFileSync(newPointer, remapped);
+      notes.push(`updated active_workflow pointer to .agents/ path`);
+      migrated = true;
+    }
+  }
+
+  if (migrated) {
+    console.error(`[requirement-workflow] migrated legacy .trae/ layout → .agents/: ${notes.join(', ')}`);
+  }
+
+  return { migrated, notes };
 }
 
 export function stateFile(workflowDir: string): string {
@@ -122,6 +174,7 @@ export function setActiveWorkflow(projectRoot: string, workflowDir: string): voi
 }
 
 export function getActiveWorkflowDir(projectRoot: string): string | null {
+  migrateLegacyTraeLayout(projectRoot);
   const file = activePointerFile(projectRoot);
   if (!fs.existsSync(file)) return null;
   const dir = fs.readFileSync(file, 'utf8').trim();

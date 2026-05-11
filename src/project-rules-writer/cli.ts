@@ -3,6 +3,6 @@ import { dispatch } from '../shared/cli.js';
 import { command as init } from './cmd/init.js';
 
 dispatch({
-  name: 'trae-rules-writer',
+  name: 'project-rules-writer',
   commands: { init },
 });

@@ -1,12 +1,12 @@
 ---
-name: trae-rules-writer
-description: "Use when the user wants to create or update Trae IDE rules (.trae/rules/*.md) that constrain AI behaviour. Good for: code-style enforcement, naming conventions, commit-message format, or making the AI consistently follow a project pattern. NOT for skills (use project-skill-writer) or agents (use project-agent-writer). Triggers: '创建规则', '添加规则', '设置代码风格', '强制约定', '配置 AI 行为', 'AI 规则', '始终做 X', or any 'always do X' / 'never do Y' AI-behaviour request that should persist across sessions."
+name: project-rules-writer
+description: "Use when the user wants to create or update project-level AI rules (written to .agents/rules/*.md) that constrain AI behaviour. The rule format is the common frontmatter+markdown convention used by Trae / Cursor / Windsurf — not Trae-specific. Good for: code-style enforcement, naming conventions, commit-message format, or making the AI consistently follow a project pattern. NOT for skills (use project-skill-writer) or agents (use project-agent-writer). Triggers: '创建规则', '添加规则', '设置代码风格', '强制约定', '配置 AI 行为', 'AI 规则', '始终做 X', or any 'always do X' / 'never do Y' AI-behaviour request that should persist across sessions."
 metadata:
   author: "learnwy"
-  version: "4.0"
+  version: "5.0"
 ---
 
-# Trae Rules Writer
+# Project Rules Writer
 
 Create rules that solve a *specific* problem in a *specific* project — never generic ones. Analyse the project first, design, **confirm with `AskUserQuestion`**, then generate.
 
@@ -18,7 +18,7 @@ Shared writing-discipline rules across this and the other writer skills (project
 
 - "create a rule", "for X create a rule", "set the code style"
 - "make the AI always …", "enforce naming convention", "configure AI behaviour"
-- User references `.trae/rules/...` or `#RuleName` syntax
+- User references `.agents/rules/...`, `.trae/rules/...`, or `#RuleName` syntax
 - Constrain AI behaviour for a specific project or file pattern
 
 ## When NOT to use
@@ -28,12 +28,12 @@ Shared writing-discipline rules across this and the other writer skills (project
 | A skill | `project-skill-writer` |
 | An agent / subagent | `project-agent-writer` |
 | Install an existing skill | `project-skill-installer` |
-| Documentation about Trae rules | Just answer; don't generate |
+| Documentation about how rules work | Just answer; don't generate |
 
 ## Prerequisites
 
 - Node.js ≥ 18
-- A project that uses Trae or any IDE that reads `.trae/rules/`
+- A project where an AI assistant reads project rules (Trae, Cursor, Windsurf, Claude Code, etc.). This writer emits to `<project>/.agents/rules/`; symlink or sync to `.trae/rules/` / `.cursor/rules/` if your IDE needs that exact path.
 
 ## Workflow (5 steps)
 
@@ -61,7 +61,7 @@ Run two agents in parallel via the Task tool:
 - [project-scanner](agents/project-scanner.md) — structure, existing rules, patterns
 - [convention-detector](agents/convention-detector.md) — naming / style / architecture conventions
 
-Detect: language(s), framework, existing `.trae/rules/*.md`, lint/format configs (ESLint, Prettier, EditorConfig, Ruff), naming patterns, layering.
+Detect: language(s), framework, existing rule files (`.agents/rules/*.md` first, then `.trae/rules/*.md` if present), lint/format configs (ESLint, Prettier, EditorConfig, Ruff), naming patterns, layering.
 
 ### L3 — Design the rule
 
@@ -97,7 +97,7 @@ node scripts/cli.cjs init \
   --skill-dir <this-skill-dir> \
   --name <rule-name> \
   --description "<when-this-rule-applies>" \
-  --output-dir <project>/.trae/rules/
+  --output-dir <project>/.agents/rules/
 ```
 
 Fallback: if `init` doesn't fit, write the `.md` file directly using [assets/rule.md.template](assets/rule.md.template).
@@ -134,7 +134,7 @@ Usage: {one-line note on how it fires}
 |---|---|
 | User's ask is too vague | Infer the most likely rule type from context, confirm in L4 |
 | Multiple valid apply modes | Surface the choice in L4 |
-| `.trae/rules/` doesn't exist | Create it under the project root |
+| `.agents/rules/` doesn't exist | Create it under the project root |
 | User wants a skill / agent / install | Route to the right writer skill |
 | User says "adjust design" in L4 | Loop back to L3 with feedback |
 | Rule contains an absolute path | Reject; convert to project-relative |
@@ -144,9 +144,9 @@ Usage: {one-line note on how it fires}
 
 ## Boundaries
 
-This skill **only**: analyses project context, designs a rule, confirms with the user, generates `.trae/rules/*.md` at a project-relative path, validates the result.
+This skill **only**: analyses project context, designs a rule, confirms with the user, generates a frontmatter+markdown `.md` at `<project>/.agents/rules/` (project-relative, IDE-neutral), validates the result.
 
-This skill **does not**: create skills (→ `project-skill-writer`), create agents (→ `project-agent-writer`), install skills (→ `project-skill-installer`), edit Trae IDE settings, or install rules globally.
+This skill **does not**: create skills (→ `project-skill-writer`), create agents (→ `project-agent-writer`), install skills (→ `project-skill-installer`), edit any IDE's own settings, or install rules globally.
 
 ## Agents and references
 
@@ -154,4 +154,4 @@ This skill **does not**: create skills (→ `project-skill-writer`), create agen
 - [references/rule-types.md](references/rule-types.md) — pick the right rule type from a problem
 - [examples/application-modes.md](examples/application-modes.md) — all four apply modes with frontmatter examples
 - [assets/rule.md.template](assets/rule.md.template) — scaffold
-- [assets/trae-rules-docs.md](assets/trae-rules-docs.md) — official Trae rules doc snapshot
+- [assets/trae-rules-docs.md](assets/trae-rules-docs.md) — vendored frontmatter format reference (originally from Trae's rules doc; format is shared across Trae / Cursor / Windsurf)

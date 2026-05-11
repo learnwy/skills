@@ -96,11 +96,11 @@ describe('generators write to disk', () => {
     expect(existsSync(join(tmp, 'skills', 'foo-bar', 'SKILL.md'))).toBe(true);
   });
 
-  it('trae-rules-writer init → writes rule .md', () => {
+  it('project-rules-writer init → writes rule .md', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'smoke-'));
     const r = spawnSync('node', [
-      join(SKILLS, 'trae-rules-writer', 'scripts', 'cli.cjs'),
-      'init', '--skill-dir', join(SKILLS, 'trae-rules-writer'),
+      join(SKILLS, 'project-rules-writer', 'scripts', 'cli.cjs'),
+      'init', '--skill-dir', join(SKILLS, 'project-rules-writer'),
       '--name', 'no-foo', '--mode', 'always', '--output-dir', join(tmp, 'rules'),
     ], { encoding: 'utf8' });
     expect(r.status).toBe(0);

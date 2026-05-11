@@ -59,7 +59,7 @@ node scripts/cli.cjs trace -r .                  # rebuild traceability.md
 ## Workflow loop
 
 ```
-1. cli.cjs init -r . -n "..."                     ← scaffolds .trae/workflow/<id>/
+1. cli.cjs init -r . -n "..."                     ← scaffolds .agents/workflow/<id>/
 2. cli.cjs advance -r .                           ← runs gate, writes next brief
 3. AI reads briefs/<NEW PHASE>.md                 ← single context source
 4. AI edits the artifact named in the brief       (spec.md / tasks.md / design.md / code / checklist.md)
@@ -97,7 +97,7 @@ Each phase has one **default agent** (run first) and a list of **optional agents
 
 ```bash
 node scripts/cli.cjs hooks generate -r .         # print hooks.json
-node scripts/cli.cjs hooks install  -r .         # write to .trae/ and .claude/
+node scripts/cli.cjs hooks install  -r .         # write hooks.json to .trae/ and .claude/ (IDE-owned config). Workflow state itself lives in `.agents/`.
 ```
 
 Installs a `SessionStart` hook that surfaces the active workflow + brief path, and a `Stop` quality gate that blocks premature stopping in IMPLEMENTING/TESTING.

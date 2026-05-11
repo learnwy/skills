@@ -106,7 +106,7 @@ function writeJson(file, value) {
     fs.writeFileSync(file, JSON.stringify(value, null, 2) + '\n');
 }
 
-;// CONCATENATED MODULE: ./src/trae-rules-writer/cmd/init.ts
+;// CONCATENATED MODULE: ./src/project-rules-writer/cmd/init.ts
 
 
 
@@ -116,7 +116,7 @@ function parseLocal(argv) {
         mode: 'intelligent',
         description: '',
         globs: '',
-        outputDir: '.trae/rules'
+        outputDir: '.agents/rules'
     };
     const required = new Set([
         'skillDir',
@@ -206,11 +206,11 @@ const command = {
     run
 };
 
-;// CONCATENATED MODULE: ./src/trae-rules-writer/cli.ts
+;// CONCATENATED MODULE: ./src/project-rules-writer/cli.ts
 
 
 dispatch({
-    name: 'trae-rules-writer',
+    name: 'project-rules-writer',
     commands: {
         init: command
     }

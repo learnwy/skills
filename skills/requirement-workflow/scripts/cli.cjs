@@ -318,10 +318,54 @@ function isPhaseInLifecycle(lifecycle, phase) {
 
 const SCHEMA_VERSION = 5;
 function workflowBase(projectRoot) {
-    return external_node_path_namespaceObject.join(projectRoot, '.trae', 'workflow');
+    return external_node_path_namespaceObject.join(projectRoot, '.agents', 'workflow');
 }
 function activePointerFile(projectRoot) {
+    return external_node_path_namespaceObject.join(projectRoot, '.agents', 'active_workflow');
+}
+function legacyWorkflowBase(projectRoot) {
+    return external_node_path_namespaceObject.join(projectRoot, '.trae', 'workflow');
+}
+function legacyActivePointerFile(projectRoot) {
     return external_node_path_namespaceObject.join(projectRoot, '.trae', 'active_workflow');
+}
+function migrateLegacyTraeLayout(projectRoot) {
+    const notes = [];
+    const legacyBase = legacyWorkflowBase(projectRoot);
+    const legacyPointer = legacyActivePointerFile(projectRoot);
+    const newBase = workflowBase(projectRoot);
+    const newPointer = activePointerFile(projectRoot);
+    let migrated = false;
+    if (external_node_fs_namespaceObject.existsSync(legacyBase) && !external_node_fs_namespaceObject.existsSync(newBase)) {
+        ensureDir(external_node_path_namespaceObject.dirname(newBase));
+        external_node_fs_namespaceObject.renameSync(legacyBase, newBase);
+        notes.push(`moved ${external_node_path_namespaceObject.relative(projectRoot, legacyBase)} \u{2192} ${external_node_path_namespaceObject.relative(projectRoot, newBase)}`);
+        migrated = true;
+    }
+    if (external_node_fs_namespaceObject.existsSync(legacyPointer) && !external_node_fs_namespaceObject.existsSync(newPointer)) {
+        const contents = external_node_fs_namespaceObject.readFileSync(legacyPointer, 'utf8').trim();
+        const remapped = contents.replace(legacyBase + external_node_path_namespaceObject.sep, newBase + external_node_path_namespaceObject.sep);
+        ensureDir(external_node_path_namespaceObject.dirname(newPointer));
+        external_node_fs_namespaceObject.writeFileSync(newPointer, remapped);
+        external_node_fs_namespaceObject.unlinkSync(legacyPointer);
+        notes.push(`moved ${external_node_path_namespaceObject.relative(projectRoot, legacyPointer)} \u{2192} ${external_node_path_namespaceObject.relative(projectRoot, newPointer)}`);
+        migrated = true;
+    } else if (external_node_fs_namespaceObject.existsSync(newPointer)) {
+        const contents = external_node_fs_namespaceObject.readFileSync(newPointer, 'utf8').trim();
+        if (contents.includes(legacyBase + external_node_path_namespaceObject.sep)) {
+            const remapped = contents.replace(legacyBase + external_node_path_namespaceObject.sep, newBase + external_node_path_namespaceObject.sep);
+            external_node_fs_namespaceObject.writeFileSync(newPointer, remapped);
+            notes.push(`updated active_workflow pointer to .agents/ path`);
+            migrated = true;
+        }
+    }
+    if (migrated) {
+        console.error(`[requirement-workflow] migrated legacy .trae/ layout \u{2192} .agents/: ${notes.join(', ')}`);
+    }
+    return {
+        migrated,
+        notes
+    };
 }
 function stateFile(workflowDir) {
     return external_node_path_namespaceObject.join(workflowDir, 'state.json');
@@ -385,6 +429,7 @@ function setActiveWorkflow(projectRoot, workflowDir) {
     external_node_fs_namespaceObject.writeFileSync(file, workflowDir);
 }
 function getActiveWorkflowDir(projectRoot) {
+    migrateLegacyTraeLayout(projectRoot);
     const file = activePointerFile(projectRoot);
     if (!external_node_fs_namespaceObject.existsSync(file)) return null;
     const dir = external_node_fs_namespaceObject.readFileSync(file, 'utf8').trim();
@@ -560,6 +605,7 @@ function run(args) {
         console.error(`Error: Directory not found: ${projectRoot}`);
         process.exit(1);
     }
+    migrateLegacyTraeLayout(projectRoot);
     ensureDir(workflowBase(projectRoot));
     const state = createState({
         projectRoot,
@@ -2134,7 +2180,8 @@ const brief_command = {
 
 const SESSION_INIT = `bash -c '
 ROOT="\${TRAE_PROJECT_DIR:-\${CLAUDE_PROJECT_DIR:-$PWD}}"
-ACTIVE="$ROOT/.trae/active_workflow"
+ACTIVE="$ROOT/.agents/active_workflow"
+[ -f "$ACTIVE" ] || ACTIVE="$ROOT/.trae/active_workflow"
 [ -f "$ACTIVE" ] || exit 0
 WF=$(cat "$ACTIVE")
 STATE="$WF/state.json"
@@ -2153,7 +2200,8 @@ echo "Run \\\`node scripts/cli.cjs status -r .\\\` for full status."
 '`;
 const QUALITY_GATE = `bash -c '
 ROOT="\${TRAE_PROJECT_DIR:-\${CLAUDE_PROJECT_DIR:-$PWD}}"
-ACTIVE="$ROOT/.trae/active_workflow"
+ACTIVE="$ROOT/.agents/active_workflow"
+[ -f "$ACTIVE" ] || ACTIVE="$ROOT/.trae/active_workflow"
 [ -f "$ACTIVE" ] || exit 0
 WF=$(cat "$ACTIVE")
 STATE="$WF/state.json"

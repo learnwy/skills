@@ -1,6 +1,6 @@
 ---
 name: project-skill-writer
-description: "当用户需要创建、更新或设计项目级技能（.trae/skills/*/SKILL.md）时使用此技能。分析用户问题和项目上下文，设计可复用的技能方案。触发词：'创建技能'、'编写技能'、'构建技能'、'添加技能'、'更新技能'、'项目技能'、'新建技能'、'设计技能'，或当用户描述需要捕获为可复用 AI 技能的重复性工作流时。"
+description: "当用户需要创建、更新或设计项目级技能（.agents/skills/*/SKILL.md）时使用此技能。分析用户问题和项目上下文，设计可复用的技能方案。触发词：'创建技能'、'编写技能'、'构建技能'、'添加技能'、'更新技能'、'项目技能'、'新建技能'、'设计技能'，或当用户描述需要捕获为可复用 AI 技能的重复性工作流时。"
 metadata:
   author: "learnwy"
   version: "3.1"
@@ -10,7 +10,7 @@ metadata:
 
 **设计理念**：用户不知道"技能"是什么或如何描述。他们只知道自己的**问题**。此技能将问题描述转化为可运行的技能。
 
-> **共享原则：** 本技能与 `project-agent-writer` / `project-skill-installer` / `trae-rules-writer` 共享 5 条 writer 通用纪律（理解→分析→确认→项目相对路径→验证）。详见 [references/writer-discipline.md](references/writer-discipline.md)。
+> **共享原则：** 本技能与 `project-agent-writer` / `project-skill-installer` / `project-rules-writer` 共享 5 条 writer 通用纪律（理解→分析→确认→项目相对路径→验证）。详见 [references/writer-discipline.md](references/writer-discipline.md)。
 
 ## 适用场景
 
@@ -24,13 +24,13 @@ metadata:
 
 - 用户想要智能体（请转交 `project-agent-writer`）
 - 用户想安装现有技能（请转交 `project-skill-installer`）
-- 用户想要规则而非技能（请转交 `trae-rules-writer`）
+- 用户想要规则而非技能（请转交 `project-rules-writer`）
 - 没有复用潜力的一次性请求
 
 ## 前置条件
 
 - Node.js >= 18
-- 目标项目必须有可写目录（默认为 `.trae/skills/`）
+- 目标项目必须有可写目录（默认为 `.agents/skills/`）
 
 ## 工作流
 
@@ -163,7 +163,7 @@ metadata:
 | 项目过大（>500 个顶层条目） | 在项目扫描器中使用 `focus_folders` 参数 |
 | 发现冲突的现有技能 | 展示对比，询问用户：扩展现有还是创建新的？ |
 | 用户问题映射到多种技能类型 | 展示前 2 个候选方案及权衡，让用户选择 |
-| 路径发现未找到标记 | 默认使用项目根目录的 `.trae/skills/` |
+| 路径发现未找到标记 | 默认使用项目根目录的 `.agents/skills/` |
 | 生成的技能未通过质量验证 | 展示失败项，自动修复可修复的，标记其余 |
 
 ## 输出合约

@@ -1,6 +1,6 @@
 ---
 name: project-agent-writer
-description: "当用户想要创建、更新或设计项目级智能体（.trae/agents/*.md 或 agents/*.md）时使用此技能。分析用户问题和项目上下文来设计工作方案。触发词：'create agent'、'build an agent'、'add agent'、'design agent'、'update agent'、'project agent'、'subagent'、'worker agent'、'automated worker'，或当用户描述应由自治智能体处理的重复性任务时触发。"
+description: "当用户想要创建、更新或设计项目级智能体（.agents/agents/*.md）时使用此技能。分析用户问题和项目上下文来设计工作方案。触发词：'create agent'、'build an agent'、'add agent'、'design agent'、'update agent'、'project agent'、'subagent'、'worker agent'、'automated worker'，或当用户描述应由自治智能体处理的重复性任务时触发。"
 metadata:
   author: "learnwy"
   version: "4.0"
@@ -12,7 +12,7 @@ metadata:
 
 > **核心原则**：先理解问题，再分析项目，然后设计智能体，仅在用户确认后才生成。
 
-> **共享原则：** 本技能与 `project-skill-writer` / `project-skill-installer` / `trae-rules-writer` 共享 5 条 writer 通用纪律。详见 [../project-skill-writer/references/writer-discipline.md](../project-skill-writer/references/writer-discipline.md)。
+> **共享原则：** 本技能与 `project-skill-writer` / `project-skill-installer` / `project-rules-writer` 共享 5 条 writer 通用纪律。详见 [../project-skill-writer/references/writer-discipline.md](../project-skill-writer/references/writer-discipline.md)。
 
 ## 使用场景
 
@@ -26,7 +26,7 @@ metadata:
 
 - 用户想**安装**技能 → 委托给 `project-skill-installer`
 - 用户想**创建**技能 → 委托给 `project-skill-writer`
-- 用户想**创建**规则 → 委托给 `trae-rules-writer`
+- 用户想**创建**规则 → 委托给 `project-rules-writer`
 
 ## 前置条件
 
@@ -82,8 +82,8 @@ metadata:
 |------|----------|------|
 | 语言 | 文件扩展名（`.ts`、`.py`、`.swift`、`.go`） | Glob |
 | 框架 | package.json 依赖、Podfile、go.mod、Cargo.toml | Read |
-| 现有智能体 | `.trae/agents/`、`.claude/agents/`、`.cursor/agents/` | Glob |
-| 现有技能 | `.trae/skills/`、`.cursor/skills/` | Glob |
+| 现有智能体 | `.agents/agents/`、`.trae/agents/`、`.claude/agents/`、`.cursor/agents/` | Glob |
+| 现有技能 | `.agents/skills/`、`.trae/skills/`、`.cursor/skills/` | Glob |
 | 自动化脚本 | `scripts/`、`tools/`、`Makefile` 目标 | Glob |
 | API 接口 | REST 端点、GraphQL schema、gRPC protos | Grep |
 | 规范 | 命名模式、输出格式、目录结构 | LS |
@@ -201,7 +201,7 @@ node scripts/cli.cjs init \
   --skill-dir <this-skill-dir> \
   --name <agent-name> \
   --role "<one-sentence-role>" \
-  --output-dir <project>/.trae/agents/
+  --output-dir <project>/.agents/agents/
 ```
 
 ## L6: 验证
@@ -232,8 +232,8 @@ node scripts/cli.cjs init \
 |------|----------|
 | 用户问题太模糊 | 从上下文推断最可能的智能体类型，在 L4 确认 |
 | 多种有效的智能体类型 | 在 AskUserQuestion 中展示备选方案，让用户选择 |
-| 不存在智能体目录 | 创建 `.trae/agents/`（或检测到的 IDE 规范） |
-| 用户请求创建技能/规则 | 路由到 `project-skill-writer` 或 `trae-rules-writer` |
+| 不存在智能体目录 | 创建 `.agents/agents/` |
+| 用户请求创建技能/规则 | 路由到 `project-skill-writer` 或 `project-rules-writer` |
 | 用户在 L4 说"调整设计" | 回到 L3，纳入反馈 |
 | 输出路径是全局的 | 拒绝，强制使用项目相对路径 |
 | 智能体与现有的冲突 | 展示对比，询问用户是替换还是重命名 |
@@ -250,7 +250,7 @@ node scripts/cli.cjs init \
 此技能**不**处理：
 - 创建技能 → `project-skill-writer`
 - 安装技能 → `project-skill-installer`
-- 创建规则 → `trae-rules-writer`
+- 创建规则 → `project-rules-writer`
 - 全局智能体安装（始终限定在项目范围内）
 
 ## 参考资料

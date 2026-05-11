@@ -9,7 +9,7 @@
 ### 步骤 1：创建规则文件
 
 ```bash
-# 创建：.trae/rules/security.md
+# 创建：.agents/rules/security.md
 ```
 
 ### 步骤 2：编写规则
@@ -50,7 +50,7 @@ alwaysApply: true
 ### 步骤 1：创建规则文件
 
 ```bash
-# 创建：.trae/rules/typescript.md
+# 创建：.agents/rules/typescript.md
 ```
 
 ### 步骤 2：编写规则
@@ -98,7 +98,7 @@ alwaysApply: false
 ### 步骤 1：创建规则文件
 
 ```bash
-# 创建：.trae/rules/testing.md
+# 创建：.agents/rules/testing.md
 ```
 
 ### 步骤 2：编写规则
@@ -154,7 +154,7 @@ AI 判断相关性：
 ### 步骤 1：创建规则文件
 
 ```bash
-# 创建：.trae/rules/experimental-patterns.md
+# 创建：.agents/rules/experimental-patterns.md
 ```
 
 ### 步骤 2：编写规则
@@ -216,7 +216,7 @@ alwaysApply: false
 │ 仅按需？        → 手动                  │
 └─────────────────────────────────────────┘
        ↓
-[创建 .trae/rules/<name>.md]
+[创建 .agents/rules/<name>.md]
        ↓
 [配置 frontmatter]
        ↓

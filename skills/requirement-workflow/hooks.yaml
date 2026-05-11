@@ -5,7 +5,8 @@
 #
 # v5 ships TWO hooks (down from three in v4 — the no-op PostToolUse was dropped):
 #
-#   SessionStart  → reads .trae/active_workflow + state.json,
+#   SessionStart  → reads .agents/active_workflow (falls back to .trae/active_workflow
+#                   for not-yet-migrated installs) + state.json,
 #                   prints active phase + brief path so the AI starts
 #                   each session with the right context.
 #

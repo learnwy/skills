@@ -63,7 +63,7 @@
 创建的技能目录：
 
 ```
-.trae/skills/react-component-generator/
+.agents/skills/react-component-generator/
 ├── SKILL.md
 ├── assets/
 │   ├── component.tsx.template
@@ -90,7 +90,7 @@ SKILL.md 包含：
   "status": "pass",
   "checks": {
     "triggers": "3 个独立、具体的触发词",
-    "output_path": ".trae/skills/（项目相对路径） ✓",
+    "output_path": ".agents/skills/（项目相对路径） ✓",
     "frontmatter": "name + description ✓",
     "workflow": "4 步，原子化，已验证 ✓"
   }
