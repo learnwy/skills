@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach, afterEach } from '@rstest/core';
-import { mkdtempSync, rmSync, readFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync, readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { generateHooksJson, installIdeHooks } from '../../src/requirement-workflow/lib/ide-hooks-installer.js';
 
 describe('generateHooksJson', () => {
-  it('emits exactly 3 lifecycle events', () => {
+  it('emits SessionStart and Stop events only', () => {
     const j = generateHooksJson('/tmp/x');
-    expect(Object.keys(j.hooks).sort()).toEqual(['PostToolUse', 'SessionStart', 'Stop']);
+    expect(Object.keys(j.hooks).sort()).toEqual(['SessionStart', 'Stop']);
   });
 
   it('Stop hook has loop_limit set', () => {
@@ -16,10 +16,12 @@ describe('generateHooksJson', () => {
     expect(stop.loop_limit).toBe(3);
   });
 
-  it('PostToolUse only matches Edit|Write', () => {
+  it('SessionStart references the active workflow + brief path', () => {
     const j = generateHooksJson('/tmp/x');
-    const pe = j.hooks.PostToolUse[0] as { matcher?: string };
-    expect(pe.matcher).toBe('Edit|Write');
+    const ss = j.hooks.SessionStart[0] as { hooks: { command: string }[] };
+    const cmd = ss.hooks[0].command;
+    expect(cmd).toContain('active_workflow');
+    expect(cmd).toContain('briefs/');
   });
 });
 
@@ -28,18 +30,18 @@ describe('installIdeHooks', () => {
   beforeEach(() => { tmp = mkdtempSync(join(tmpdir(), 'rw-ide-')); });
   afterEach(() => { rmSync(tmp, { recursive: true, force: true }); });
 
-  it('writes .trae/hooks.json with version + 3 events', () => {
+  it('writes .trae/hooks.json with version + 2 events', () => {
     installIdeHooks(tmp, 'trae');
     const f = join(tmp, '.trae', 'hooks.json');
     expect(existsSync(f)).toBe(true);
     const j = JSON.parse(readFileSync(f, 'utf8'));
     expect(j.version).toBe(1);
-    expect(Object.keys(j.hooks).sort()).toEqual(['PostToolUse', 'SessionStart', 'Stop']);
+    expect(Object.keys(j.hooks).sort()).toEqual(['SessionStart', 'Stop']);
   });
 
   it('writes .claude/settings.json without overwriting existing keys', () => {
-    require('node:fs').mkdirSync(join(tmp, '.claude'));
-    require('node:fs').writeFileSync(join(tmp, '.claude', 'settings.json'), JSON.stringify({ theme: 'dark' }));
+    mkdirSync(join(tmp, '.claude'));
+    writeFileSync(join(tmp, '.claude', 'settings.json'), JSON.stringify({ theme: 'dark' }));
     installIdeHooks(tmp, 'claude');
     const j = JSON.parse(readFileSync(join(tmp, '.claude', 'settings.json'), 'utf8'));
     expect(j.theme).toBe('dark');

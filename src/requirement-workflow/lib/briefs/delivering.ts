@@ -1,0 +1,56 @@
+import * as path from 'node:path';
+import { extractAcceptanceCriteria, extractTasks, readFileOrEmpty } from '../markdown.js';
+import { PHASES } from '../phases.js';
+import type { WorkflowState } from '../state.js';
+
+export function generateDeliveringBrief(state: WorkflowState): string {
+  const spec = readFileOrEmpty(path.join(state.workflowDir, 'spec.md'));
+  const tasksMd = readFileOrEmpty(path.join(state.workflowDir, 'tasks.md'));
+  const checklist = readFileOrEmpty(path.join(state.workflowDir, 'checklist.md'));
+  const trace = readFileOrEmpty(path.join(state.workflowDir, 'traceability.md'));
+  const acs = extractAcceptanceCriteria(spec);
+  const tasks = extractTasks(tasksMd);
+  const doneTasks = tasks.filter((t) => t.checked);
+
+  const lines: string[] = [];
+  lines.push('# Brief: DELIVERING');
+  lines.push('');
+  lines.push(`**Workflow:** ${state.id}  •  **Lifecycle:** ${state.lifecycle}`);
+  lines.push('');
+  lines.push('## Goal');
+  lines.push(PHASES.DELIVERING.purpose);
+  lines.push('');
+  lines.push('## Final Verification Checklist');
+  lines.push('');
+  lines.push(`- ACs in spec: ${acs.length}`);
+  lines.push(`- Tasks completed: ${doneTasks.length} / ${tasks.length}`);
+  lines.push(`- traceability.md present: ${trace ? 'yes' : 'no'}`);
+  lines.push(`- checklist.md present: ${checklist ? 'yes' : 'no'}`);
+  lines.push('');
+  lines.push('## What to Produce');
+  lines.push('');
+  lines.push('Write `summary.md` with:');
+  lines.push('1. **What shipped** — one paragraph anchored to the original user request.');
+  lines.push('2. **Files changed** — bullet list grouped by area.');
+  lines.push('3. **AC verification** — table of AC → status → evidence (test name / manual step).');
+  lines.push('4. **Open issues / follow-ups** — explicit, even if "none".');
+  lines.push('5. **How to demo** — 3 steps a reviewer can run.');
+  lines.push('');
+  lines.push('## Gate Criteria');
+  lines.push('');
+  lines.push('- summary.md exists with all five sections.');
+  lines.push('- traceability.md shows every AC with `AC done: ✓`.');
+  lines.push('- No unmapped tasks in traceability.md.');
+  lines.push('');
+  lines.push('## Default Agent');
+  lines.push('');
+  lines.push(`Run \`${PHASES.DELIVERING.defaultAgent}\` for the final review.`);
+  lines.push('');
+  lines.push('---');
+  lines.push('## Original Spec (for reference)');
+  lines.push('');
+  lines.push('```markdown');
+  lines.push(spec.trim() || '_(empty)_');
+  lines.push('```');
+  return lines.join('\n');
+}

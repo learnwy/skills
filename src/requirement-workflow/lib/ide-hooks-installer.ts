@@ -8,30 +8,56 @@ export interface HooksConfig {
   hooks: Record<string, unknown[]>;
 }
 
-function buildSessionInitCommand(_projectRoot: string): string {
-  return `bash -c 'WF=".trae/workflow/workflow.yaml"; if [ -f "$WF" ]; then echo "## Active Workflow"; echo ""; cat "$WF" | head -20; else echo "No active workflow."; fi'`;
-}
+const SESSION_INIT = `bash -c '
+ROOT="\${TRAE_PROJECT_DIR:-\${CLAUDE_PROJECT_DIR:-$PWD}}"
+ACTIVE="$ROOT/.trae/active_workflow"
+[ -f "$ACTIVE" ] || exit 0
+WF=$(cat "$ACTIVE")
+STATE="$WF/state.json"
+[ -f "$STATE" ] || exit 0
+echo "## Active requirement workflow"
+echo ""
+PHASE=$(grep -o "\\"phase\\":\\"[^\\"]*\\"" "$STATE" | head -1 | cut -d\\" -f4)
+LIFE=$(grep -o "\\"lifecycle\\":\\"[^\\"]*\\"" "$STATE" | head -1 | cut -d\\" -f4)
+NAME=$(grep -o "\\"name\\":\\"[^\\"]*\\"" "$STATE" | head -1 | cut -d\\" -f4)
+echo "- Workflow: $NAME"
+echo "- Phase:    $PHASE  (lifecycle: $LIFE)"
+BRIEF="$WF/briefs/$PHASE.md"
+[ -f "$BRIEF" ] && echo "- Brief:    $BRIEF (read this before working on the phase)"
+echo ""
+echo "Run \\\`node scripts/cli.cjs status -r .\\\` for full status."
+'`;
 
-function buildQualityGateCommand(_projectRoot: string): string {
-  return `bash -c 'WF=".trae/workflow/workflow.yaml"; if [ ! -f "$WF" ]; then exit 0; fi; STAGE=$(grep "^stage:" "$WF" | cut -d\\\" -f2 2>/dev/null || grep "^stage:" "$WF" | awk "{print \\$2}"); case "$STAGE" in IMPLEMENTING) if [ ! -f ".trae/workflow/tasks.md" ]; then echo "{\\"decision\\":\\"block\\",\\"reason\\":\\"tasks.md not found. Please create task decomposition before stopping.\\"}" ; exit 0; fi ;; TESTING) echo "{\\"decision\\":\\"block\\",\\"reason\\":\\"Please verify tests pass before stopping.\\"}" ; exit 0 ;; esac; exit 0'`;
-}
+const QUALITY_GATE = `bash -c '
+ROOT="\${TRAE_PROJECT_DIR:-\${CLAUDE_PROJECT_DIR:-$PWD}}"
+ACTIVE="$ROOT/.trae/active_workflow"
+[ -f "$ACTIVE" ] || exit 0
+WF=$(cat "$ACTIVE")
+STATE="$WF/state.json"
+[ -f "$STATE" ] || exit 0
+PHASE=$(grep -o "\\"phase\\":\\"[^\\"]*\\"" "$STATE" | head -1 | cut -d\\" -f4)
+case "$PHASE" in
+  IMPLEMENTING)
+    if [ ! -s "$WF/tasks.md" ]; then
+      printf "{\\"decision\\":\\"block\\",\\"reason\\":\\"tasks.md is empty. Plan tasks before stopping.\\"}"
+    fi
+    ;;
+  TESTING)
+    printf "{\\"decision\\":\\"block\\",\\"reason\\":\\"In TESTING phase — run gate (cli.cjs advance) or confirm checklist.md is complete before stopping.\\"}"
+    ;;
+esac
+exit 0
+'`;
 
-function buildPostEditCommand(_projectRoot: string): string {
-  return `bash -c 'exit 0'`;
-}
-
-export function generateHooksJson(projectRoot: string): HooksConfig {
+export function generateHooksJson(_projectRoot: string): HooksConfig {
   return {
     version: 1,
     hooks: {
       SessionStart: [
-        { hooks: [{ type: 'command', command: buildSessionInitCommand(projectRoot), timeout: 10 }] },
+        { hooks: [{ type: 'command', command: SESSION_INIT, timeout: 5 }] },
       ],
       Stop: [
-        { loop_limit: 3, hooks: [{ type: 'command', command: buildQualityGateCommand(projectRoot), timeout: 30 }] },
-      ],
-      PostToolUse: [
-        { matcher: 'Edit|Write', hooks: [{ type: 'command', command: buildPostEditCommand(projectRoot), timeout: 10 }] },
+        { loop_limit: 3, hooks: [{ type: 'command', command: QUALITY_GATE, timeout: 10 }] },
       ],
     },
   };

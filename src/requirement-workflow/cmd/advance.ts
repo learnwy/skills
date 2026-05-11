@@ -1,194 +1,118 @@
-import * as fs from 'node:fs';
 import * as path from 'node:path';
-import * as readline from 'node:readline';
-import { yamlRead, yamlWrite, yamlAppendHistory, getActiveWorkflow } from '../lib/common.js';
 import type { Command } from '../../shared/cli.js';
-
-const FULL_STAGES = ['INIT', 'DEFINING', 'PLANNING', 'DESIGNING', 'IMPLEMENTING', 'TESTING', 'DELIVERING', 'DONE'];
+import { generateBrief } from '../lib/briefs/index.js';
+import { runGate } from '../lib/gates/index.js';
+import { PHASES, nextPhase } from '../lib/phases.js';
+import {
+  appendHistory,
+  getActiveWorkflowDir,
+  loadState,
+  recordGate,
+  saveState,
+} from '../lib/state.js';
 
 function showHelp(): void {
   console.log(`Usage: cli.cjs advance -r <root> [OPTIONS]
 
-Advance workflow to the next stage.
+Run the current-phase gate; if it passes, generate the next brief and transition.
 
 Options:
-    -r, --root DIR      Project root (REQUIRED)
-    -p, --path DIR      Specific workflow path
-    -t, --to STAGE      Target stage (auto if not specified)
-    --auto              Skip confirmation prompts (for auto mode)
-    --force             Force transition despite validation
-    -h, --help          Show help`);
-}
-
-function validateTransition(current: string, target: string, stages: string[]): boolean {
-  const currentIdx = stages.indexOf(current);
-  const targetIdx = stages.indexOf(target);
-  if (targetIdx === -1) return false;
-  return targetIdx === currentIdx + 1 || target === current;
-}
-
-function needsCheckpoint(stage: string, checkpoints: Record<string, boolean>): boolean {
-  const key = stage.toLowerCase();
-  return Boolean(checkpoints && checkpoints[key]);
-}
-
-interface ConfirmResult {
-  action: 'continue' | 'skip' | 'cancel';
-  nextStage?: string;
-}
-
-function askUserConfirm(stage: string, type: string, size: string, risk: string): Promise<ConfirmResult> {
-  return new Promise((resolve) => {
-    const questions: Record<string, { header: string; question: string }> = {
-      DEFINING: { header: '📋 Requirements Definition Complete?', question: 'Is spec.md complete with clear scope and acceptance criteria? (yes/skip/cancel)' },
-      PLANNING: { header: '📋 Planning Complete?', question: 'Are tasks.md and estimate approved? (yes/skip/cancel)' },
-      DESIGNING: { header: '📋 Design Review?', question: 'Is design.md approved? (yes/skip/cancel)' },
-      TESTING: { header: '📋 Ready for Delivery?', question: 'Is checklist.md verified and tests pass? (yes/skip/cancel)' },
-    };
-
-    if (!questions[stage]) {
-      resolve({ action: 'continue', nextStage: stage });
-      return;
-    }
-
-    const q = questions[stage];
-    console.log(`\n${q.header}`);
-    console.log(`Type: ${type} | Size: ${size} | Risk: ${risk}`);
-    console.log('─'.repeat(40));
-
-    const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-    rl.question(q.question + ' ', (answer: string) => {
-      rl.close();
-      const a = answer.toLowerCase().trim();
-      if (a === 'yes' || a === 'y') resolve({ action: 'continue', nextStage: stage });
-      else if (a === 'skip' || a === 's') resolve({ action: 'skip', nextStage: stage });
-      else if (a === 'cancel' || a === 'c') resolve({ action: 'cancel' });
-      else {
-        console.log('Please answer: yes (y), skip (s), or cancel (c)');
-        askUserConfirm(stage, type, size, risk).then(resolve);
-      }
-    });
-  });
-}
-
-function updateWorkflowState(workflowFile: string, newState: string): void {
-  const timestamp = new Date().toISOString();
-  yamlWrite(workflowFile, 'status', newState);
-  yamlWrite(workflowFile, 'updated_at', timestamp);
-  yamlAppendHistory(workflowFile, newState, timestamp, true);
+    -r, --root DIR    Project root (REQUIRED)
+    -p, --path DIR    Specific workflow path (default: active workflow)
+    --force           Skip gate failures and advance anyway
+    --skip-brief      Do not regenerate the next-phase brief
+    -h, --help        Show help
+`);
 }
 
 async function run(args: string[]): Promise<void> {
   let projectRoot = '';
   let workflowDir = '';
-  let targetStage = '';
-  let autoMode = false;
   let force = false;
+  let skipBrief = false;
 
   for (let i = 0; i < args.length; i++) {
     switch (args[i]) {
       case '-r': case '--root': projectRoot = args[++i]; break;
       case '-p': case '--path': workflowDir = args[++i]; break;
-      case '-t': case '--to': targetStage = args[++i]; break;
-      case '--auto': autoMode = true; break;
       case '--force': force = true; break;
+      case '--skip-brief': skipBrief = true; break;
       case '-h': case '--help': showHelp(); process.exit(0);
     }
   }
-
   if (!projectRoot) {
     console.error('Error: --root is required');
     process.exit(1);
   }
-
   projectRoot = path.resolve(projectRoot);
-
   if (!workflowDir) {
-    workflowDir = getActiveWorkflow(projectRoot);
-  }
-
-  if (!workflowDir || !fs.existsSync(workflowDir)) {
-    console.error('Error: No active workflow. Run cli.cjs init first.');
-    process.exit(1);
-  }
-
-  const workflowFile = path.join(workflowDir, 'workflow.yaml');
-  if (!fs.existsSync(workflowFile)) {
-    console.error('Error: workflow.yaml not found');
-    process.exit(1);
-  }
-
-  const currentStatus = yamlRead(workflowFile, 'status');
-  const type = yamlRead(workflowFile, 'type');
-  const size = yamlRead(workflowFile, 'size');
-  const risk = yamlRead(workflowFile, 'risk');
-  const stagesStr = yamlRead(workflowFile, 'stages');
-
-  let stages: string[];
-  try {
-    stages = JSON.parse(stagesStr.replace(/'/g, '"'));
-  } catch {
-    stages = FULL_STAGES;
-  }
-
-  const checkpoints = {
-    defining: yamlRead(workflowFile, 'checkpoints_defining') === 'true',
-    planning: yamlRead(workflowFile, 'checkpoints_planning') === 'true',
-    designing: yamlRead(workflowFile, 'checkpoints_designing') === 'true',
-    testing: yamlRead(workflowFile, 'checkpoints_testing') === 'true',
-  };
-
-  const workflowId = path.basename(workflowDir);
-
-  if (!targetStage) {
-    const currentIdx = stages.indexOf(currentStatus);
-    if (currentIdx === -1 || currentIdx >= stages.length - 1) {
-      console.log('Workflow is at final stage');
-      process.exit(0);
-    }
-    targetStage = stages[currentIdx + 1];
-  }
-
-  console.log(`Workflow: ${workflowId}`);
-  console.log(`Type: ${type} | Size: ${size} | Risk: ${risk}`);
-  console.log(`Transition: ${currentStatus} → ${targetStage}`);
-
-  if (!validateTransition(currentStatus, targetStage, stages)) {
-    if (!force) {
-      console.error(`❌ Invalid transition. Valid stages: ${stages.join(', ')}`);
+    const dir = getActiveWorkflowDir(projectRoot);
+    if (!dir) {
+      console.error('Error: no active workflow. Run `cli.cjs init` first.');
       process.exit(1);
     }
-    console.log('⚠️ Forced transition');
+    workflowDir = dir;
   }
 
-  if (needsCheckpoint(targetStage, checkpoints) && !autoMode) {
-    const result = await askUserConfirm(targetStage, type, size, risk);
-    if (result.action === 'cancel') {
-      console.log('❌ Transition cancelled');
-      process.exit(0);
+  const state = loadState(workflowDir);
+  if (!state) {
+    console.error(`Error: state.json not found or unreadable in ${workflowDir}`);
+    process.exit(1);
+  }
+
+  const next = nextPhase(state.lifecycle, state.phase);
+  if (!next) {
+    console.log(`Workflow already at terminal phase: ${state.phase}`);
+    return;
+  }
+
+  console.log(`Workflow: ${state.id}`);
+  console.log(`Lifecycle: ${state.lifecycle}`);
+  console.log(`Transition: ${state.phase} → ${next}`);
+  console.log('');
+
+  const gate = runGate(state, state.phase);
+  recordGate(state, gate);
+  if (!gate.ok) {
+    console.error(`✘ Gate failed for ${state.phase}:`);
+    for (const f of gate.failures) console.error(`  - ${f}`);
+    if (!force) {
+      saveState(state);
+      console.error('');
+      console.error('Fix and retry, or rerun with --force.');
+      process.exit(2);
     }
-    if (result.action === 'skip') {
-      console.log('⏭️  Skipped');
+    console.error('⚠ Forcing advance despite gate failures.');
+  } else {
+    console.log(`✓ Gate passed for ${state.phase}`);
+  }
+
+  const from = state.phase;
+  state.phase = next;
+  appendHistory(state, { event: 'advance', from, to: next });
+
+  if (!skipBrief) {
+    const brief = generateBrief(state, next);
+    if (brief) {
+      state.briefs[next] = brief.path;
+      appendHistory(state, { event: 'brief-regen', to: next });
+      console.log(`📝 Brief written: ${path.relative(projectRoot, brief.path)}`);
     }
   }
 
-  updateWorkflowState(workflowFile, targetStage);
-  console.log(`✅ Transitioned to ${targetStage}`);
+  saveState(state);
 
-  const hints: Record<string, string> = {
-    DEFINING: '→ Edit spec.md',
-    PLANNING: '→ Edit tasks.md',
-    DESIGNING: '→ Edit design.md',
-    IMPLEMENTING: '→ Implement tasks',
-    TESTING: '→ Run tests',
-    DELIVERING: '→ Verify checklist',
-    DONE: '🎉 Complete!',
-  };
-
-  console.log(`\n${hints[targetStage] || ''}`);
+  console.log('');
+  console.log(`→ ${PHASES[next].hint}`);
+  if (PHASES[next].defaultAgent) {
+    console.log(`→ Default agent: ${PHASES[next].defaultAgent}`);
+  }
+  if (PHASES[next].checkpoint === 'always') {
+    console.log('⏸  Checkpoint phase — review the brief with the user before continuing.');
+  }
 }
 
 export const command: Command = {
-  description: 'Advance the active workflow to the next stage',
+  description: 'Run the current-phase gate and transition to the next phase',
   run,
 };
