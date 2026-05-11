@@ -430,6 +430,24 @@ const MIGRATIONS = [
       CREATE INDEX IF NOT EXISTS idx_words_next_review ON words(next_review_at);
       CREATE INDEX IF NOT EXISTS idx_phrases_next_review ON phrases(next_review_at);
     `
+    },
+    {
+        version: 3,
+        up: `
+      CREATE TABLE IF NOT EXISTS corrections (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        original TEXT NOT NULL,
+        corrected TEXT NOT NULL,
+        reason TEXT,
+        count INTEGER NOT NULL DEFAULT 1,
+        first_seen TEXT NOT NULL,
+        last_seen TEXT NOT NULL,
+        UNIQUE(original, corrected)
+      );
+      CREATE INDEX IF NOT EXISTS idx_corrections_count ON corrections(count DESC);
+      CREATE INDEX IF NOT EXISTS idx_corrections_last_seen ON corrections(last_seen);
+      CREATE INDEX IF NOT EXISTS idx_corrections_original ON corrections(original);
+    `
     }
 ];
 function intervalDaysForMastery(mastery) {
@@ -739,7 +757,91 @@ function batchSaveWords(wordsData) {
     };
 }
 
+;// CONCATENATED MODULE: ./src/english-learner/lib/corrections-store.ts
+
+
+
+function recordCorrection(input) {
+    const db = db_getDb();
+    const now = nowIso();
+    const original = input.original.trim();
+    const corrected = input.corrected.trim();
+    if (!original || !corrected) {
+        throw new Error('original and corrected are required');
+    }
+    const upsert = db.prepare(`
+    INSERT INTO corrections (original, corrected, reason, count, first_seen, last_seen)
+    VALUES (?, ?, ?, 1, ?, ?)
+    ON CONFLICT(original, corrected) DO UPDATE SET
+      count = count + 1,
+      last_seen = excluded.last_seen,
+      reason = COALESCE(excluded.reason, corrections.reason)
+  `);
+    upsert.run(original, corrected, input.reason ?? null, now, now);
+    const row = db.prepare('SELECT id, count FROM corrections WHERE original = ? AND corrected = ?').get(original, corrected);
+    return row;
+}
+function batchRecordCorrections(items) {
+    const result = {
+        recorded: 0,
+        skipped: 0,
+        word_saves: 0,
+        details: []
+    };
+    const wordItems = [];
+    withTransaction(()=>{
+        for (const item of items){
+            try {
+                const r = recordCorrection(item);
+                result.recorded += 1;
+                result.details.push({
+                    original: item.original,
+                    corrected: item.corrected,
+                    count: r.count
+                });
+                if (item.words && item.words.length) {
+                    for (const w of item.words)wordItems.push(w);
+                }
+            } catch  {
+                result.skipped += 1;
+            }
+        }
+    });
+    if (wordItems.length) {
+        const saved = batchSaveWords(wordItems);
+        result.word_saves = saved.count;
+    }
+    return result;
+}
+function getTopCorrections(limit = 5, sinceIso) {
+    const db = db_getDb();
+    const stmt = sinceIso ? db.prepare(`SELECT original, corrected, reason, count, last_seen FROM corrections
+         WHERE last_seen >= ? ORDER BY count DESC, last_seen DESC LIMIT ?`) : db.prepare(`SELECT original, corrected, reason, count, last_seen FROM corrections
+         ORDER BY count DESC, last_seen DESC LIMIT ?`);
+    const rows = sinceIso ? stmt.all(sinceIso, limit) : stmt.all(limit);
+    return rows.map((r)=>({
+            original: r.original,
+            corrected: r.corrected,
+            reason: r.reason,
+            count: r.count,
+            last_seen: r.last_seen
+        }));
+}
+function getCorrectionStats() {
+    const db = db_getDb();
+    const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const total = db.prepare('SELECT COALESCE(SUM(count),0) AS s FROM corrections').get().s;
+    const uniquePairs = db.prepare('SELECT COUNT(*) AS c FROM corrections').get().c;
+    const recent = db.prepare('SELECT COALESCE(SUM(count),0) AS s FROM corrections WHERE last_seen >= ?').get(cutoff).s;
+    return {
+        total,
+        unique_pairs: uniquePairs,
+        recent_count: recent
+    };
+}
+
 ;// CONCATENATED MODULE: ./src/english-learner/cmd/vocab.ts
+
 
 const actions = {
     get_word: (args)=>{
@@ -800,6 +902,17 @@ const actions = {
     batch_save: (args)=>{
         const wordsData = JSON.parse(args[0]);
         console.log(JSON.stringify(batchSaveWords(wordsData), null, 2));
+    },
+    'record-correction': (args)=>{
+        const items = JSON.parse(args[0]);
+        console.log(JSON.stringify(batchRecordCorrections(items), null, 2));
+    },
+    'top-corrections': (args)=>{
+        const limit = args[0] ? Number.parseInt(args[0], 10) : 5;
+        console.log(JSON.stringify(getTopCorrections(limit), null, 2));
+    },
+    'corrections-stats': ()=>{
+        console.log(JSON.stringify(getCorrectionStats(), null, 2));
     }
 };
 const minArgs = {
@@ -810,7 +923,8 @@ const minArgs = {
     log_query: 2,
     update_mastery: 3,
     batch_get: 1,
-    batch_save: 1
+    batch_save: 1,
+    'record-correction': 1
 };
 const command = {
     description: 'Word/phrase CRUD + batch operations + stats',

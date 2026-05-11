@@ -57,6 +57,11 @@ node scripts/cli.cjs vocab batch_get '["word1","word2"]'
 node scripts/cli.cjs vocab batch_save '[{"word":"...","definition":"...","phonetic":"...","examples":[]}]'
 node scripts/cli.cjs vocab get_word|save_word|get_phrase|save_phrase|log_query|stats|update_mastery ...
 
+# corrections — persist usage tips from the English intercept
+node scripts/cli.cjs vocab record-correction '[{"original":"imrpove","corrected":"improve","reason":"typo","words":[{"word":"improve","definition":"改进；改善","phonetic":"/ɪmˈpruːv/"}]}]'
+node scripts/cli.cjs vocab top-corrections [limit=5]
+node scripts/cli.cjs vocab corrections-stats
+
 # sentence — input classification + word extraction
 node scripts/cli.cjs sentence classify <text>
 node scripts/cli.cjs sentence parse <sentence>

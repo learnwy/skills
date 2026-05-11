@@ -62,6 +62,24 @@ const MIGRATIONS: Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_phrases_next_review ON phrases(next_review_at);
     `,
   },
+  {
+    version: 3,
+    up: `
+      CREATE TABLE IF NOT EXISTS corrections (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        original TEXT NOT NULL,
+        corrected TEXT NOT NULL,
+        reason TEXT,
+        count INTEGER NOT NULL DEFAULT 1,
+        first_seen TEXT NOT NULL,
+        last_seen TEXT NOT NULL,
+        UNIQUE(original, corrected)
+      );
+      CREATE INDEX IF NOT EXISTS idx_corrections_count ON corrections(count DESC);
+      CREATE INDEX IF NOT EXISTS idx_corrections_last_seen ON corrections(last_seen);
+      CREATE INDEX IF NOT EXISTS idx_corrections_original ON corrections(original);
+    `,
+  },
 ];
 
 export function intervalDaysForMastery(mastery: number): number {
@@ -175,6 +193,16 @@ interface PhraseRow {
   next_review_at: string | null;
 }
 
+export interface CorrectionRow {
+  id: number;
+  original: string;
+  corrected: string;
+  reason: string | null;
+  count: number;
+  first_seen: string;
+  last_seen: string;
+}
+
 export function rowToWord(row: WordRow | undefined): WordRecord | null {
   if (!row) return null;
   const inner = JSON.parse(row.data) as Partial<WordRecord>;
@@ -227,3 +255,4 @@ export function withTransaction<T>(fn: (db: DatabaseSync) => T): T {
 }
 
 export type { WordRow, PhraseRow };
+

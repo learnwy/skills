@@ -3,6 +3,10 @@ import {
   logQuery, getStats, updateMastery, batchGetWords, batchSaveWords,
   type BatchWordItem,
 } from '../lib/vocab-store.js';
+import {
+  batchRecordCorrections, getTopCorrections, getCorrectionStats,
+  type CorrectionInput,
+} from '../lib/corrections-store.js';
 import type { Command } from '../../shared/cli.js';
 
 const actions: Record<string, (args: string[]) => void> = {
@@ -49,11 +53,23 @@ const actions: Record<string, (args: string[]) => void> = {
     const wordsData = JSON.parse(args[0]) as BatchWordItem[];
     console.log(JSON.stringify(batchSaveWords(wordsData), null, 2));
   },
+  'record-correction': (args) => {
+    const items = JSON.parse(args[0]) as CorrectionInput[];
+    console.log(JSON.stringify(batchRecordCorrections(items), null, 2));
+  },
+  'top-corrections': (args) => {
+    const limit = args[0] ? Number.parseInt(args[0], 10) : 5;
+    console.log(JSON.stringify(getTopCorrections(limit), null, 2));
+  },
+  'corrections-stats': () => {
+    console.log(JSON.stringify(getCorrectionStats(), null, 2));
+  },
 };
 
 const minArgs: Record<string, number> = {
   get_word: 1, get_phrase: 1, save_word: 2, save_phrase: 2,
   log_query: 2, update_mastery: 3, batch_get: 1, batch_save: 1,
+  'record-correction': 1,
 };
 
 export const command: Command = {

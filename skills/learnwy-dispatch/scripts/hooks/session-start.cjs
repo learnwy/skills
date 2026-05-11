@@ -312,6 +312,24 @@ const MIGRATIONS = [
       CREATE INDEX IF NOT EXISTS idx_words_next_review ON words(next_review_at);
       CREATE INDEX IF NOT EXISTS idx_phrases_next_review ON phrases(next_review_at);
     `
+    },
+    {
+        version: 3,
+        up: `
+      CREATE TABLE IF NOT EXISTS corrections (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        original TEXT NOT NULL,
+        corrected TEXT NOT NULL,
+        reason TEXT,
+        count INTEGER NOT NULL DEFAULT 1,
+        first_seen TEXT NOT NULL,
+        last_seen TEXT NOT NULL,
+        UNIQUE(original, corrected)
+      );
+      CREATE INDEX IF NOT EXISTS idx_corrections_count ON corrections(count DESC);
+      CREATE INDEX IF NOT EXISTS idx_corrections_last_seen ON corrections(last_seen);
+      CREATE INDEX IF NOT EXISTS idx_corrections_original ON corrections(original);
+    `
     }
 ];
 function intervalDaysForMastery(mastery) {
@@ -900,10 +918,34 @@ function readLogsSection() {
         rotated_count: rotated
     };
 }
+function readCorrectionsSection() {
+    if (!external_node_fs_namespaceObject.existsSync(DB_PATH)) return null;
+    try {
+        const db = db_getDb();
+        const hasTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='corrections'").get();
+        if (!hasTable) return null;
+        const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+        const total = db.prepare('SELECT COALESCE(SUM(count),0) AS s FROM corrections').get().s;
+        const uniquePairs = db.prepare('SELECT COUNT(*) AS c FROM corrections').get().c;
+        const recent = db.prepare('SELECT COALESCE(SUM(count),0) AS s FROM corrections WHERE last_seen >= ?').get(cutoff).s;
+        const top = db.prepare(`SELECT original, corrected, count FROM corrections
+         ORDER BY count DESC, last_seen DESC LIMIT 5`).all();
+        if (total === 0) return null;
+        return {
+            total,
+            unique_pairs: uniquePairs,
+            recent_30d: recent,
+            top
+        };
+    } catch  {
+        return null;
+    }
+}
 function buildDigest() {
     return {
         generated_at: new Date().toISOString(),
         vocab: readVocabSection(),
+        corrections: readCorrectionsSection(),
         wiki: readWikiSection(),
         optimizer: readOptimizerSection(),
         consolidation: readConsolidationSection(),
@@ -922,6 +964,18 @@ function formatHuman(d) {
         }
     } else {
         lines.push("Vocab: (empty \u2014 run english-learner to start collecting)");
+    }
+    lines.push('');
+    if (d.corrections) {
+        lines.push(`English corrections: ${d.corrections.total} total, ${d.corrections.unique_pairs} unique pairs, ${d.corrections.recent_30d} in last 30d`);
+        if (d.corrections.top.length) {
+            lines.push('  Top recurring:');
+            for (const t of d.corrections.top){
+                lines.push(`    ${t.count}\xd7 "${t.original}" \u{2192} "${t.corrected}"`);
+            }
+        }
+    } else {
+        lines.push("English corrections: (none recorded \u2014 schema v3+)");
     }
     lines.push('');
     if (d.wiki) {
@@ -964,6 +1018,9 @@ function formatCompact(d) {
     }
     if (d.optimizer) {
         parts.push(`optimizer=${d.optimizer.last_7d}/7d ${d.optimizer.last_30d}/30d`);
+    }
+    if (d.corrections) {
+        parts.push(`corrections=${d.corrections.recent_30d}/30d (${d.corrections.unique_pairs}u)`);
     }
     if (d.consolidation) {
         parts.push(`kc-nudge=${d.consolidation.hours_ago}h-ago`);

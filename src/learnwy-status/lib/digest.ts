@@ -38,9 +38,17 @@ export interface LogsSection {
   rotated_count: number;
 }
 
+export interface CorrectionsSection {
+  total: number;
+  unique_pairs: number;
+  recent_30d: number;
+  top: Array<{ original: string; corrected: string; count: number }>;
+}
+
 export interface Digest {
   generated_at: string;
   vocab: VocabSection | null;
+  corrections: CorrectionsSection | null;
   wiki: WikiSection | null;
   optimizer: OptimizerSection | null;
   consolidation: ConsolidationSection | null;
@@ -206,10 +214,40 @@ export function readLogsSection(): LogsSection {
   return { largest_file: largestName, largest_size_bytes: largestSize, rotated_count: rotated };
 }
 
+export function readCorrectionsSection(): CorrectionsSection | null {
+  if (!fs.existsSync(DB_PATH)) return null;
+  try {
+    const db = getDb();
+    const hasTable = db
+      .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='corrections'")
+      .get();
+    if (!hasTable) return null;
+    const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const total = (db.prepare('SELECT COALESCE(SUM(count),0) AS s FROM corrections').get() as { s: number }).s;
+    const uniquePairs = (db.prepare('SELECT COUNT(*) AS c FROM corrections').get() as { c: number }).c;
+    const recent = (
+      db
+        .prepare('SELECT COALESCE(SUM(count),0) AS s FROM corrections WHERE last_seen >= ?')
+        .get(cutoff) as { s: number }
+    ).s;
+    const top = db
+      .prepare(
+        `SELECT original, corrected, count FROM corrections
+         ORDER BY count DESC, last_seen DESC LIMIT 5`,
+      )
+      .all() as Array<{ original: string; corrected: string; count: number }>;
+    if (total === 0) return null;
+    return { total, unique_pairs: uniquePairs, recent_30d: recent, top };
+  } catch {
+    return null;
+  }
+}
+
 export function buildDigest(): Digest {
   return {
     generated_at: new Date().toISOString(),
     vocab: readVocabSection(),
+    corrections: readCorrectionsSection(),
     wiki: readWikiSection(),
     optimizer: readOptimizerSection(),
     consolidation: readConsolidationSection(),
@@ -230,6 +268,19 @@ export function formatHuman(d: Digest): string {
     }
   } else {
     lines.push('Vocab: (empty — run english-learner to start collecting)');
+  }
+  lines.push('');
+
+  if (d.corrections) {
+    lines.push(`English corrections: ${d.corrections.total} total, ${d.corrections.unique_pairs} unique pairs, ${d.corrections.recent_30d} in last 30d`);
+    if (d.corrections.top.length) {
+      lines.push('  Top recurring:');
+      for (const t of d.corrections.top) {
+        lines.push(`    ${t.count}× "${t.original}" → "${t.corrected}"`);
+      }
+    }
+  } else {
+    lines.push('English corrections: (none recorded — schema v3+)');
   }
   lines.push('');
 
@@ -278,6 +329,9 @@ export function formatCompact(d: Digest): string {
   }
   if (d.optimizer) {
     parts.push(`optimizer=${d.optimizer.last_7d}/7d ${d.optimizer.last_30d}/30d`);
+  }
+  if (d.corrections) {
+    parts.push(`corrections=${d.corrections.recent_30d}/30d (${d.corrections.unique_pairs}u)`);
   }
   if (d.consolidation) {
     parts.push(`kc-nudge=${d.consolidation.hours_ago}h-ago`);

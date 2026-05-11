@@ -219,6 +219,24 @@ const MIGRATIONS = [
       CREATE INDEX IF NOT EXISTS idx_words_next_review ON words(next_review_at);
       CREATE INDEX IF NOT EXISTS idx_phrases_next_review ON phrases(next_review_at);
     `
+    },
+    {
+        version: 3,
+        up: `
+      CREATE TABLE IF NOT EXISTS corrections (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        original TEXT NOT NULL,
+        corrected TEXT NOT NULL,
+        reason TEXT,
+        count INTEGER NOT NULL DEFAULT 1,
+        first_seen TEXT NOT NULL,
+        last_seen TEXT NOT NULL,
+        UNIQUE(original, corrected)
+      );
+      CREATE INDEX IF NOT EXISTS idx_corrections_count ON corrections(count DESC);
+      CREATE INDEX IF NOT EXISTS idx_corrections_last_seen ON corrections(last_seen);
+      CREATE INDEX IF NOT EXISTS idx_corrections_original ON corrections(original);
+    `
     }
 ];
 function intervalDaysForMastery(mastery) {

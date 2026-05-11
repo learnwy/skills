@@ -37,7 +37,18 @@ Triggered when the user message has English ratio ≥ 60% AND non-prose ratio is
 3. **Encourage, don't lecture** — frame as tips not errors
 4. **Skip trivia** — informal style, contractions, intentional slang
 5. **Skip pasted content** — code, quotes, output blocks
-6. **Auto-save corrected items** — corrected words/phrases go to `vocab batch_save`
+6. **Persist via `vocab record-correction`** — after rendering the tip table, call:
+
+   ```bash
+   node scripts/cli.cjs vocab record-correction '[
+     {"original":"imrpove","corrected":"improve","reason":"typo"},
+     {"original":"things","corrected":"corrections","reason":"vague noun","words":[
+       {"word":"corrections","definition":"...","phonetic":"..."}
+     ]}
+   ]'
+   ```
+
+   The `corrections` table tracks the *patterns* (with a `count` that increments on repeat); the optional `words[]` array also feeds the existing `words` table for genuinely new vocabulary. Omit `words[]` for typo→correct cases where the corrected form is already known.
 7. **Per-session de-duplication** — don't repeat the same correction in one session
 
 ### Issue categories

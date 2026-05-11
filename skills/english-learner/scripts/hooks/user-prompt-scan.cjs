@@ -196,7 +196,10 @@ const ENGLISH_BLOCK = [
     '[english-learner hook] The user wrote in English.',
     'Before responding, scan for grammar/word-choice/expression issues (max 3).',
     'If found, prepend a brief "\uD83D\uDCA1 English Tip" table, then proceed with the task.',
-    'Save any corrected words via batch_save. Skip if English is fluent/natural.'
+    'After rendering the table, persist the corrections by calling:',
+    '`node {english-learner-skill}/scripts/cli.cjs vocab record-correction \'[{"original":"X","corrected":"Y","reason":"Z","words":[{"word":"...","definition":"...","phonetic":"..."}]}]\'`.',
+    "The optional `words[]` field also feeds the words table \u2014 include it for genuinely new vocabulary, omit for typo\u2192correct cases.",
+    'Skip silently if English is fluent/natural.'
 ].join(' ');
 const CHINESE_BLOCK = [
     '[english-learner hook] The user wrote in Chinese.',
