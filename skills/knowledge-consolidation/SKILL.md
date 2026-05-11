@@ -1,294 +1,105 @@
 ---
 name: knowledge-consolidation
-description: "当用户想要从当前 AI 对话中保存、总结或持久化知识为结构化文档时使用此技能。捕获调试突破、架构决策、模式和经验教训。触发词：'总结一下'、'记录下来'、'save this knowledge'、'document this'、'we figured it out'、'that was hard to solve'、'remember this'、'write this down'，或当某个来之不易的洞察值得为未来会话保留时触发。保存到 .trae/knowledges/、.claude/knowledges/ 或 .cursor/knowledges/（根据 AI IDE 决定）。"
+description: "Use when the user wants to persist a single insight from the current chat as a structured, project-local doc — debugging breakthroughs, hard-won config, workflow steps, or post-mortem lessons. Triggers: 'save this', 'document this', 'we figured it out', '记录下来', '总结一下'. Writes to <project>/.{trae,claude,cursor,windsurf}/knowledges/. For global compounding knowledge (architecture, patterns, APIs), use llm-wiki instead."
 metadata:
   author: "learnwy"
-  version: "2.0"
+  version: "3.0"
 ---
 
-# 知识沉淀
+# Knowledge Consolidation
 
-将 AI 对话中的有价值知识持久化为结构化、可复用的文档。捕获调试突破、架构决策、模式和经验教训——让你和 AI 都不必重复发现它们。
+Project-local fix journal. One conversation → one structured Markdown file in this repo's IDE folder. Stays with the codebase; ships in the repo; future sessions on this project can find it.
 
-> **核心原则**：停留在聊天线程中的知识就是丢失的知识。此技能将其提取、分类，并写入项目中可发现的位置。
+> **Boundary:** project-local debugging/config/workflow/lesson notes belong here.
+> Global, reusable knowledge (architectures, design patterns, API integrations, references) belongs in [llm-wiki](../llm-wiki/SKILL.md). KC's `promote` command moves a doc across the seam when it earns its way into the wiki.
 
-## 使用场景
+## When to use
 
-**触发条件：**
+| Trigger | Action |
+|---|---|
+| User says "save this", "记录下来", "we solved it" | Run `cli.cjs save …` |
+| Stop nudge fired ("looks like you resolved a non-trivial problem") | Offer to save |
+| Solved a bug specific to this codebase | `--type debug` |
+| Locked in a non-obvious config / build setting | `--type config` |
+| Established an ops procedure (deploy / rollback) | `--type workflow` |
+| Post-mortem / retrospective takeaway | `--type lesson` |
 
-- 用户说"save this knowledge"、"document this"、"记录下来"、"总结一下"
-- 用户说"we figured it out"、"that was hard to solve"、"let's not forget this"
-- 调试会话达成结论——根因已知且修复已应用
-- 做出了架构决策且讨论了明确的权衡取舍
-- 开发过程中发现了可复用的模式或变通方案
-- 需要非显而易见的配置才能让某些东西正常工作
-- 用户要求总结、整合或保留对话中的学习成果
+**Do not use** for: cross-project knowledge (→ `llm-wiki`), reusable skills (→ `project-skill-writer`), AI rules (→ `trae-rules-writer`), updating a previously saved doc (KC is write-once).
 
-**不触发条件：**
+## Prerequisites
 
-- 用户想保存跨会话的 AI 记忆/身份 → 委托给 `ai-brain`
-- 用户想创建可复用的技能 → 委托给 `project-skill-writer`
-- 用户想创建规则 → 委托给 `trae-rules-writer`
-- 知识内容琐碎或已在官方文档中充分记录
-- 对话中没有值得保留的可操作洞察
+- Node.js ≥ 18
+- Project root contains an IDE marker dir: `.trae/`, `.claude/`, `.cursor/`, or `.windsurf/`
 
-## 前置条件
-
-- Node.js >= 18
-- 目标项目需有受支持的 AI IDE 标记目录（`.trae/`、`.claude/`、`.cursor/`、`.windsurf/`）
-
-## 工作流
-
-```
-[L1: 检测 AI IDE]
-         ↓
-[L2: 识别知识候选]
-         ↓
-[L3: 分类知识类型]
-         ↓
-[L4: 生成输出路径]  ← cli.cjs path
-         ↓
-[L5: 编写文档]      ← knowledge.md.template
-         ↓
-[L6: 验证并交付]
-```
-
-## L1: 检测 AI IDE
-
-扫描项目根目录的 AI IDE 标记，确定正确的存储路径。按优先级检查：
-
-| 标识 | AI 类型 | 存储路径 |
-|------|---------|----------|
-| `.trae/` 目录 | trae | `.trae/knowledges/` |
-| `.claude/` 目录 | claude-code | `.claude/knowledges/` |
-| `.cursor/` 目录 | cursor | `.cursor/knowledges/` |
-| `.windsurf/` 目录 | windsurf | `.windsurf/knowledges/` |
-
-**检测方法**：使用 `LS` 或 `Glob` 在项目根目录查找这些标记目录。如果存在多个标记，优先选择与当前 AI IDE 环境匹配的那个。如果未找到任何标记，停止并告知用户需要受支持的 AI IDE 标记目录。
-
-## L2: 识别知识候选
-
-回顾对话中值得保留的知识。不要问用户"我应该保存什么？"——从对话中推断。
-
-### 候选信号
-
-| 信号 | 表示 | 优先级 |
-|------|------|--------|
-| 经过调查后识别出根因 | 调试知识 | 高 |
-| 权衡讨论后做出决策 | 架构知识 | 高 |
-| "X 应该总是这样做" | 模式知识 | 高 |
-| 花了不少功夫才找到的非显而易见配置 | 配置知识 | 中 |
-| 发现了有坑的 API 集成 | API 知识 | 中 |
-| 建立了多步骤流程 | 工作流知识 | 中 |
-| "要是早知道这个就好了" | 经验教训 | 中 |
-
-### 提取规则
-
-1. 提取**核心洞察**，而非整个对话
-2. 包含使洞察可操作的**上下文**（什么项目、什么版本、什么约束）
-3. 仅当代码片段能说明关键点时才保留
-4. 捕获**为什么**，而不只是**是什么**——未来读者需要推理过程
-
-如果用户明确要求沉淀，捕获他们提到的所有内容。如果是自动检测，先关注最高价值的候选，然后询问是否需要保存其他项目。
-
-## L3: 分类知识类型
-
-从参考指南中选择合适的类型。每种类型有特定的结构要求：
-
-| 类型 | 使用时机 | 关键要素 |
-|------|----------|----------|
-| `debug` | Bug 修复、崩溃分析、错误解决 | 症状、调查步骤、根因、修复 |
-| `architecture` | 系统设计、模块结构决策 | 背景、决策、权衡、未来考量 |
-| `pattern` | 可复用的代码模式、最佳实践 | 问题背景、模式描述、代码示例 |
-| `config` | 构建设置、环境配置 | 配置背景、设置项、理由 |
-| `api` | API 设计、集成详情 | 用途、端点、使用示例、错误处理 |
-| `workflow` | 开发流程、操作步骤 | 步骤、使用的工具、最佳实践 |
-| `lesson` | 事后复盘、回顾总结 | 发生了什么、学到了什么、建议 |
-| `reference` | 技术参考、规格说明 | 范围、规格、示例 |
-
-详见 [knowledge-types.md](references/knowledge-types.md) 了解每种类型的详细描述和关键要素。
-
-**类型选择规则**：如果知识跨越多个类型（例如调试会话同时揭示了架构模式），选择**主要**类型并在关键收获部分提及次要洞察。
-
-## L4: 生成输出路径
-
-运行路径生成器获取唯一的、带日期序号的文件名：
+## The one command you usually want
 
 ```bash
-node {skill_root}/scripts/cli.cjs path \
+node scripts/cli.cjs save \
   -r <project_root> \
   -a <ai_type> \
   -t <type> \
-  -n <filename>
+  -n <kebab-slug> \
+  --title "Short, specific title" \
+  --summary "2-3 sentences readers can stop at" \
+  --details "Body in Markdown." \
+  --takeaways "First actionable insight\nSecond insight" \
+  [--background "<one-line problem context>"] \
+  [--context "<project / version / component>"] \
+  [--related "<links / files>"]
 ```
 
-### 参数
+Returns the absolute path of the new file. Atomically resolves a date-sequenced name, creates the directory, fills the template, validates required fields.
 
-| 标志 | 必填 | 说明 | 示例 |
-|------|------|------|------|
-| `-r, --root` | 是 | 项目根目录 | `/Users/me/my-project` |
-| `-a, --ai-type` | 是 | AI IDE 类型 | `trae`、`trae-cn`、`claude-code`、`cursor`、`windsurf` |
-| `-t, --type` | 是 | 知识类型 | `debug`、`architecture`、`pattern` 等 |
-| `-n, --name` | 是 | 描述性文件名（无扩展名） | `memory-leak-fix`、`singleton-impl` |
+| `-a, --ai-type` | `trae`, `trae-cn`, `claude-code` (or `claude`), `cursor`, `windsurf` |
+|---|---|
+| `-t, --type` | `debug`, `config`, `workflow`, `lesson` only — see [knowledge-types.md](references/knowledge-types.md) |
+| `-n, --name` | kebab-case slug, ≤50 chars, specific (`react-18-hydration-mismatch`, not `bug-fix`) |
 
-### 输出格式
+Output filename: `{YYYYMMDD}_{NNN}_{type}_{slug}.md` under `<root>/<ide>/knowledges/`.
 
-```
-{project_root}/{ai_path}/knowledges/{YYYYMMDD}_{daily_seq}_{type}_{filename}.md
-```
+## Promote to global wiki
 
-**示例**：`/project/.trae/knowledges/20260325_001_debug_memory-leak-fix.md`
+When a doc turns out to be reusable across projects, push it into `llm-wiki`'s ingestion queue:
 
-脚本会自动创建 `knowledges/` 目录（如不存在）并自动递增每日序号。
-
-### 文件名规范
-
-- 使用小写 kebab-case：`memory-leak-fix`，而非 `MemoryLeakFix`
-- 要具体：`react-18-hydration-mismatch`，而非 `bug-fix`
-- 控制在 50 个字符以内
-
-## L5: 编写文档
-
-使用 [knowledge.md.template](assets/knowledge.md.template) 编写文档。填写所有部分：
-
-```markdown
-# {标题}
-
-> **类型:** {type}
-> **日期:** {YYYY-MM-DD}
-> **上下文:** {简要背景——项目名称、组件、技术}
-
-## 摘要
-
-{2-3 句话总结。读者仅阅读此部分即可判断本文档是否相关。}
-
-## 背景
-
-{导致此知识产生的情况、问题或背景。包含足够的细节，让不了解对话的人也能理解。}
-
-## 详情
-
-{技术内容：代码片段、配置、分析、逐步说明。这是文档的核心。}
-
-## 关键收获
-
-{可操作洞察的要点。每个收获都应独立有用。}
-
-## 相关
-
-{相关文件、文档、Issue 或其他知识文档的链接。无则留空。}
+```bash
+node scripts/cli.cjs promote -p <project>/.trae/knowledges/20260511_001_debug_x.md
 ```
 
-### 写作质量规则
+Copies into `~/.learnwy/llm-wiki/raw/notes/<date>-<slug>.md` with a frontmatter pointer back to the original. No-op if the wiki isn't initialised. Run llm-wiki's ingestion next.
 
-1. **标题**：使用描述性标题回答"我能从中学到什么？"——不是"调试会话"而是"WebSocket 重连处理器中的内存泄漏"
-2. **摘要**：必须自包含——读者据此决定是否继续阅读
-3. **背景**：包含"为什么"——是什么触发了这次调查或决策
-4. **详情**：代码块使用语言标签，内容较长时使用子标题
-5. **关键收获**：每条都是可操作的——"总是在 Y 之前检查 X"而非"X 很重要"
-6. **相关**：可用时链接到源文件、PR 或其他知识文档
+## Other commands
 
-## L6: 验证并交付
-
-响应用户前，执行检查清单。
-
-### 执行检查清单
-
-- [ ] AI IDE 已检测且存储路径正确
-- [ ] 知识类型与内容匹配（不是通用回退）
-- [ ] `cli.cjs path` 运行成功并返回有效路径
-- [ ] 文档遵循模板结构，所有部分已填写
-- [ ] 标题具有描述性和针对性（不是"Bug 修复"这样的通用标题）
-- [ ] 摘要自包含（不读其余内容也能理解）
-- [ ] 代码片段有语言标签且精简（仅展示关键点）
-- [ ] 关键收获是可操作的要点
-- [ ] 文件已写入正确的项目相对路径
-
-### 交付报告
-
-写入文档后，向用户报告：
-
-```
-知识已保存:
-  类型:  {type}
-  标题:  {title}
-  路径:  {项目相对路径}
-  
-关键收获:
-  - {收获 1}
-  - {收获 2}
+```bash
+node scripts/cli.cjs path -r <root> -a <ai> -t <type> -n <name>
+# → just prints the resolved path; useful for scripts that want to write the file themselves.
 ```
 
-### L7: 英语学习联动
+## Stop hook (auto-nudge)
 
-交付完成后，自动触发 english-learner 技能的中译英：
+A `Stop` hook scans the assistant's last response for **resolution signals** ("the bug was…", "fixed it", "## Solution"). If it fires AND the response shows substantive markers (race condition, regression, design decision, "subtle", etc.) AND no session-local trivia markers (typo, missing semicolon, wrong env var), it injects a one-time per-session nudge: *"consider running knowledge-consolidation save"*.
 
-1. 从知识文档的**标题**和**关键收获**中提取核心概念
-2. 翻译成英文，给出 2-3 个关键词/短语（含音标）
-3. 通过 `batch_save` 自动保存到词库
+The hook never auto-writes. It nudges; the AI asks the user.
 
-**格式：**
+The hook is wired through `learnwy-dispatch` (single Node process, no per-skill spawn).
 
-```
-🌐 **中译英**
+## Writing-quality rules
 
-**知识关键词：**
-| English | 音标 | 中文概念 | 用法 |
-|---------|------|----------|------|
-| {word} | {phonetic} | {概念} | {用法提示} |
+1. **Title** answers "what can I learn from this?" — not "Debug session" but "Memory leak in WebSocket reconnect handler".
+2. **Summary** is self-contained — readers decide whether to keep going.
+3. **Details** code blocks have language tags; long content uses sub-headers.
+4. **Takeaways** are imperative — "Always check X before Y", not "X is important".
+5. **Related** links to source files, PRs, or `[[wiki-page]]` references where applicable.
 
-📊 已保存 {N} 个新词汇
-```
+## Boundaries
 
-**规则：**
-- 仅提取有英语学习价值的技术/概念词汇
-- 跳过太通用或太专业的词（如 `bug`、`API` 等已是英文的词）
-- 直接保存，无需用户确认
+This skill **only**:
+- Detects the IDE marker and resolves a unique knowledge-doc path
+- Atomically writes a structured doc from CLI args
+- Promotes a doc into the global llm-wiki ingestion queue
+- Surfaces a Stop nudge once per session when a non-trivial problem is resolved
 
-## 错误处理
-
-| 问题 | 解决方案 |
-|------|----------|
-| 未找到 AI IDE 标记目录 | 告知用户，询问使用哪个 IDE，创建标记目录 |
-| 检测到多个 AI IDE 标记 | 优先匹配当前环境的标记；如不确定，询问用户 |
-| `cli.cjs path` 失败 | 检查参数是否正确；验证项目根目录存在且可写 |
-| 知识类型不确定 | 选择主要类型，在关键收获中提及次要方面 |
-| 对话中没有明确的知识可提取 | 诚实告知用户——不要生成填充内容 |
-| 文件名冲突（同日同名） | 脚本自动递增每日序号；无需手动干预 |
-| 项目根目录不可写 | 告知用户权限问题；建议替代路径 |
-| 用户请求的类型不在有效列表中 | 映射到最接近的有效类型，解释映射关系 |
-
-## 边界限定
-
-此技能**仅**处理：
-
-- 检测 AI IDE 并确定存储路径
-- 从对话中识别值得保留的知识
-- 将知识分类到已定义的类型体系中
-- 通过 `cli.cjs path` 生成唯一文件路径
-- 使用模板编写结构化知识文档
-- 交付前验证文档质量
-
-此技能**不**处理：
-
-- 从原始资源构建完整知识库 → `llm-wiki`
-- 跨会话的持久 AI 记忆 → `ai-brain`
-- 创建可复用技能 → `project-skill-writer`
-- 创建项目规则 → `trae-rules-writer`
-- 创建智能体 → `project-agent-writer`
-- 搜索或索引现有知识文档（只读检索不在范围内）
-- 修改或更新之前编写的知识文档
-
-## 脚本
-
-| 子命令 | 用途 | 调用方式 |
-|--------|------|----------|
-| `path` | 生成唯一的带日期序号的文件路径 | `node scripts/cli.cjs path -r <root> -a <ai_type> -t <type> -n <name>` |
-
-## 资源
-
-| 资源 | 用途 |
-|------|------|
-| [cli.cjs](scripts/cli.cjs) | 路径生成 CLI，支持自动序号和目录创建 |
-| [knowledge-types.md](references/knowledge-types.md) | 详细的类型选择指南，含每种类型的关键要素 |
-| [knowledge.md.template](assets/knowledge.md.template) | 文档模板，含所有必需部分 |
+This skill **does not**:
+- Update existing docs (write-once on purpose)
+- Index / lint / curate (that's llm-wiki)
+- Save AI memory across sessions
+- Search past knowledge docs

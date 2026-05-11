@@ -371,9 +371,15 @@ const uninstallCommand = {
     }
 };
 
-;// CONCATENATED MODULE: ./src/knowledge-consolidation/cmd/path.ts
+;// CONCATENATED MODULE: ./src/knowledge-consolidation/lib/path-builder.ts
 
 
+const VALID_TYPES = [
+    'debug',
+    'config',
+    'workflow',
+    'lesson'
+];
 const AI_TYPE_MAP = {
     trae: '.trae',
     'trae-cn': '.trae',
@@ -387,126 +393,374 @@ const AI_TYPE_MAP = {
     windsurf: '.windsurf',
     Windsurf: '.windsurf'
 };
-const VALID_TYPES = [
-    'debug',
-    'architecture',
-    'pattern',
-    'config',
-    'api',
-    'workflow',
-    'lesson',
-    'reference'
-];
-function path_showHelp() {
-    console.log(`Usage: cli.cjs path -r <project_root> -a <ai_type> -t <type> -n <filename>
-
-Generate a knowledge document path based on project and AI IDE context.
-
-Arguments:
-  -r, --root      Project root directory (required)
-  -a, --ai-type   AI/LLM type: trae, trae-cn, claude-code, cursor, windsurf (required)
-  -t, --type      Knowledge type: debug, architecture, pattern, config, api, workflow, lesson, reference (required)
-  -n, --name      Filename (without extension, required)
-  -h, --help      Show this help message`);
-}
-function parseLocal(argv) {
-    const args = {
-        root: '',
-        aiType: '',
-        type: '',
-        name: ''
-    };
-    let i = 0;
-    while(i < argv.length){
-        switch(argv[i]){
-            case '-r':
-            case '--root':
-                args.root = argv[++i] || '';
-                break;
-            case '-a':
-            case '--ai-type':
-                args.aiType = argv[++i] || '';
-                break;
-            case '-t':
-            case '--type':
-                args.type = argv[++i] || '';
-                break;
-            case '-n':
-            case '--name':
-                args.name = argv[++i] || '';
-                break;
-            case '-h':
-            case '--help':
-                path_showHelp();
-                process.exit(0);
-                break;
-            default:
-                process.stderr.write(`Error: Unknown option: ${argv[i]}\n`);
-                path_showHelp();
-                process.exit(1);
-        }
-        i++;
-    }
-    return args;
-}
 function getToday() {
     const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, '0');
-    const d = String(now.getDate()).padStart(2, '0');
-    return `${y}${m}${d}`;
+    return `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
 }
 function sanitizeFilename(name) {
     return name.toLowerCase().replace(/[^a-z0-9_-]/g, '-').replace(/-{2,}/g, '-').replace(/^-/, '').replace(/-$/, '');
 }
 function countExisting(dir, datePrefix) {
     if (!external_node_fs_namespaceObject.existsSync(dir)) return 0;
-    const entries = external_node_fs_namespaceObject.readdirSync(dir);
-    return entries.filter((e)=>{
-        if (!e.startsWith(`${datePrefix}_`)) return false;
-        const full = external_node_path_namespaceObject.join(dir, e);
-        return external_node_fs_namespaceObject.statSync(full).isFile();
+    return external_node_fs_namespaceObject.readdirSync(dir).filter((entry)=>{
+        if (!entry.startsWith(`${datePrefix}_`)) return false;
+        return external_node_fs_namespaceObject.statSync(external_node_path_namespaceObject.join(dir, entry)).isFile();
     }).length;
 }
-function run(rawArgs) {
-    const args = parseLocal(rawArgs);
-    if (!args.root || !args.aiType || !args.type || !args.name) {
-        process.stderr.write('Error: Missing required arguments\n');
-        path_showHelp();
-        process.exit(1);
+function buildPath(input) {
+    if (!input.root) throw new Error('root is required');
+    if (!external_node_fs_namespaceObject.existsSync(input.root) || !external_node_fs_namespaceObject.statSync(input.root).isDirectory()) {
+        throw new Error(`Project root does not exist: ${input.root}`);
     }
-    if (!external_node_fs_namespaceObject.existsSync(args.root) || !external_node_fs_namespaceObject.statSync(args.root).isDirectory()) {
-        process.stderr.write(`Error: Project root does not exist: ${args.root}\n`);
-        process.exit(1);
-    }
-    const aiPath = AI_TYPE_MAP[args.aiType];
+    const aiPath = AI_TYPE_MAP[input.aiType];
     if (!aiPath) {
-        process.stderr.write(`Error: Unknown AI type: ${args.aiType}\n`);
-        process.stderr.write(`Supported types: trae, trae-cn, claude-code, cursor, windsurf\n`);
-        process.exit(1);
+        throw new Error(`Unknown AI type: ${input.aiType}. Supported: ${Object.keys(AI_TYPE_MAP).join(', ')}`);
     }
-    if (!VALID_TYPES.includes(args.type)) {
-        process.stderr.write(`Error: Unknown knowledge type: ${args.type}\n`);
-        process.stderr.write(`Supported types: ${VALID_TYPES.join(' ')}\n`);
-        process.exit(1);
+    if (!VALID_TYPES.includes(input.type)) {
+        throw new Error(`Unknown knowledge type: ${input.type}. Supported: ${VALID_TYPES.join(', ')}. ` + `For architecture / pattern / api / reference, use the llm-wiki skill instead.`);
     }
-    const knowledgeDir = external_node_path_namespaceObject.join(args.root, aiPath, 'knowledges');
+    if (!input.name) throw new Error('name is required');
+    const knowledgeDir = external_node_path_namespaceObject.join(input.root, aiPath, 'knowledges');
     external_node_fs_namespaceObject.mkdirSync(knowledgeDir, {
         recursive: true
     });
-    const today = getToday();
-    const existingCount = countExisting(knowledgeDir, today);
-    const dailySeq = String(existingCount + 1).padStart(3, '0');
-    const safeName = sanitizeFilename(args.name);
-    const outputPath = external_node_path_namespaceObject.join(knowledgeDir, `${today}_${dailySeq}_${args.type}_${safeName}.md`);
-    process.stdout.write(outputPath + '\n');
+    const date = getToday();
+    const seq = String(countExisting(knowledgeDir, date) + 1).padStart(3, '0');
+    const safeName = sanitizeFilename(input.name);
+    const outputPath = external_node_path_namespaceObject.join(knowledgeDir, `${date}_${seq}_${input.type}_${safeName}.md`);
+    return {
+        knowledgeDir,
+        outputPath,
+        date,
+        seq,
+        safeName
+    };
+}
+
+;// CONCATENATED MODULE: ./src/knowledge-consolidation/cmd/path.ts
+
+function path_showHelp() {
+    console.log(`Usage: cli.cjs path -r <project_root> -a <ai_type> -t <type> -n <filename>
+
+Generate a unique date-sequenced knowledge document path.
+
+Arguments:
+  -r, --root      Project root directory (required)
+  -a, --ai-type   AI/LLM type: ${Object.keys(AI_TYPE_MAP).join(', ')}
+  -t, --type      Knowledge type: ${VALID_TYPES.join(', ')}
+                  (For architecture / pattern / api / reference, use llm-wiki instead.)
+  -n, --name      Filename (without extension, kebab-case)
+  -h, --help      Show this help message
+
+Output: prints the resolved path to stdout (the directory is created if missing).
+`);
+}
+function run(rawArgs) {
+    const args = {
+        root: '',
+        aiType: '',
+        type: '',
+        name: ''
+    };
+    for(let i = 0; i < rawArgs.length; i++){
+        switch(rawArgs[i]){
+            case '-r':
+            case '--root':
+                args.root = rawArgs[++i] || '';
+                break;
+            case '-a':
+            case '--ai-type':
+                args.aiType = rawArgs[++i] || '';
+                break;
+            case '-t':
+            case '--type':
+                args.type = rawArgs[++i] || '';
+                break;
+            case '-n':
+            case '--name':
+                args.name = rawArgs[++i] || '';
+                break;
+            case '-h':
+            case '--help':
+                path_showHelp();
+                process.exit(0);
+            default:
+                process.stderr.write(`Error: Unknown option: ${rawArgs[i]}\n`);
+                path_showHelp();
+                process.exit(1);
+        }
+    }
+    if (!args.root || !args.aiType || !args.type || !args.name) {
+        process.stderr.write('Error: --root, --ai-type, --type, --name are all required\n');
+        path_showHelp();
+        process.exit(1);
+    }
+    try {
+        const resolved = buildPath(args);
+        process.stdout.write(resolved.outputPath + '\n');
+    } catch (err) {
+        process.stderr.write(`Error: ${err.message}\n`);
+        process.exit(1);
+    }
 }
 const command = {
     description: 'Generate a unique date-sequenced knowledge document path',
     run
 };
 
+;// CONCATENATED MODULE: ./src/knowledge-consolidation/cmd/save.ts
+
+
+function save_showHelp() {
+    console.log(`Usage: cli.cjs save -r <root> -a <ai> -t <type> -n <name> --title T --summary S --details D --takeaways K [--context C] [--related R]
+
+Atomically write a structured knowledge document. Removes the prior 3-step dance
+(path \u{2192} template fill \u{2192} validate) \u{2014} one call, validated.
+
+Arguments:
+  -r, --root        Project root (required)
+  -a, --ai-type     AI/LLM type: ${Object.keys(AI_TYPE_MAP).join(', ')}
+  -t, --type        Knowledge type: ${VALID_TYPES.join(', ')}
+  -n, --name        Filename slug (kebab-case)
+      --title       Document title (the H1)
+      --summary     2-3 sentence self-contained summary
+      --details     The technical body (Markdown)
+      --takeaways   Newline-separated bullets (we add the "- " prefix)
+      --background  One-line problem context (optional)
+      --context     One-line metadata: project / component / version (optional)
+      --related     Related links / files / issues (optional)
+  -h, --help        Show help
+
+Note: \\n in --summary / --background / --details / --takeaways / --related is
+expanded to a real newline for shell ergonomics.
+`);
+}
+function expandEscapes(s) {
+    return s.replace(/\\n/g, '\n').replace(/\\t/g, '\t');
+}
+function parse(rawArgs) {
+    const a = {
+        root: '',
+        aiType: '',
+        type: '',
+        name: '',
+        title: '',
+        summary: '',
+        background: '',
+        details: '',
+        takeaways: '',
+        context: '',
+        related: ''
+    };
+    for(let i = 0; i < rawArgs.length; i++){
+        switch(rawArgs[i]){
+            case '-r':
+            case '--root':
+                a.root = rawArgs[++i] || '';
+                break;
+            case '-a':
+            case '--ai-type':
+                a.aiType = rawArgs[++i] || '';
+                break;
+            case '-t':
+            case '--type':
+                a.type = rawArgs[++i] || '';
+                break;
+            case '-n':
+            case '--name':
+                a.name = rawArgs[++i] || '';
+                break;
+            case '--title':
+                a.title = rawArgs[++i] || '';
+                break;
+            case '--summary':
+                a.summary = expandEscapes(rawArgs[++i] || '');
+                break;
+            case '--background':
+                a.background = expandEscapes(rawArgs[++i] || '');
+                break;
+            case '--details':
+                a.details = expandEscapes(rawArgs[++i] || '');
+                break;
+            case '--takeaways':
+                a.takeaways = expandEscapes(rawArgs[++i] || '');
+                break;
+            case '--context':
+                a.context = rawArgs[++i] || '';
+                break;
+            case '--related':
+                a.related = expandEscapes(rawArgs[++i] || '');
+                break;
+            case '-h':
+            case '--help':
+                save_showHelp();
+                process.exit(0);
+            default:
+                process.stderr.write(`Error: Unknown option: ${rawArgs[i]}\n`);
+                save_showHelp();
+                process.exit(1);
+        }
+    }
+    return a;
+}
+function formatTakeaways(raw) {
+    if (!raw) return '- ';
+    return raw.split(/\r?\n/).map((l)=>l.trim()).filter(Boolean).map((l)=>l.startsWith('-') || l.startsWith('*') ? l : `- ${l}`).join('\n');
+}
+function isoDate() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+function render(a) {
+    return `# ${a.title}
+
+> **Type:** ${a.type}
+> **Date:** ${isoDate()}
+> **Context:** ${a.context || '(unspecified)'}
+
+## Summary
+
+${a.summary}
+
+## Background
+
+${a.background || '_(none provided)_'}
+
+## Details
+
+${a.details}
+
+## Key Takeaways
+
+${formatTakeaways(a.takeaways)}
+
+## Related
+
+${a.related || '_(none)_'}
+`;
+}
+function save_run(rawArgs) {
+    const args = parse(rawArgs);
+    const required = [
+        'root',
+        'aiType',
+        'type',
+        'name',
+        'title',
+        'summary',
+        'details',
+        'takeaways'
+    ];
+    const missing = required.filter((k)=>!args[k]);
+    if (missing.length) {
+        process.stderr.write(`Error: missing required: ${missing.join(', ')}\n`);
+        save_showHelp();
+        process.exit(1);
+    }
+    try {
+        const resolved = buildPath(args);
+        external_node_fs_namespaceObject.writeFileSync(resolved.outputPath, render(args));
+        process.stdout.write(resolved.outputPath + '\n');
+    } catch (err) {
+        process.stderr.write(`Error: ${err.message}\n`);
+        process.exit(1);
+    }
+}
+const save_command = {
+    description: 'Atomically write a structured knowledge document (path + template in one call)',
+    run: save_run
+};
+
+;// CONCATENATED MODULE: ./src/knowledge-consolidation/cmd/promote.ts
+
+
+
+
+function promote_showHelp() {
+    console.log(`Usage: cli.cjs promote -p <kc-doc.md> [--wiki-root DIR]
+
+Promote a project-local knowledge doc into the global llm-wiki ingestion queue.
+
+Arguments:
+  -p, --path        Path to the KC doc to promote (required)
+      --wiki-root   llm-wiki root (default: $LLM_WIKI_ROOT or ~/.learnwy/llm-wiki)
+  -h, --help        Show help
+
+Behaviour:
+  - Copies the file into <wiki-root>/raw/notes/<date>-<slug>.md.
+  - Prepends a frontmatter pointer back to the original KC doc.
+  - No-op (warns and exits 0) if the wiki root is missing \u{2014} KC has no
+    obligation to require llm-wiki.
+`);
+}
+function promote_isoDate() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+function defaultWikiRoot() {
+    return process.env.LLM_WIKI_ROOT || external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'llm-wiki');
+}
+function deriveSlug(filePath) {
+    const base = external_node_path_namespaceObject.basename(filePath, '.md');
+    const trimmed = base.replace(/^\d{8}_\d{3}_(?:debug|config|workflow|lesson)_/, '');
+    return sanitizeFilename(trimmed) || sanitizeFilename(base) || 'note';
+}
+function promote_run(rawArgs) {
+    let docPath = '';
+    let wikiRoot = defaultWikiRoot();
+    for(let i = 0; i < rawArgs.length; i++){
+        switch(rawArgs[i]){
+            case '-p':
+            case '--path':
+                docPath = rawArgs[++i] || '';
+                break;
+            case '--wiki-root':
+                wikiRoot = rawArgs[++i] || '';
+                break;
+            case '-h':
+            case '--help':
+                promote_showHelp();
+                process.exit(0);
+            default:
+                process.stderr.write(`Error: Unknown option: ${rawArgs[i]}\n`);
+                promote_showHelp();
+                process.exit(1);
+        }
+    }
+    if (!docPath) {
+        process.stderr.write('Error: --path is required\n');
+        promote_showHelp();
+        process.exit(1);
+    }
+    docPath = external_node_path_namespaceObject.resolve(docPath);
+    if (!external_node_fs_namespaceObject.existsSync(docPath)) {
+        process.stderr.write(`Error: file not found: ${docPath}\n`);
+        process.exit(1);
+    }
+    const notesDir = external_node_path_namespaceObject.join(wikiRoot, 'raw', 'notes');
+    if (!external_node_fs_namespaceObject.existsSync(wikiRoot)) {
+        process.stderr.write(`Skip: llm-wiki not initialised at ${wikiRoot}.\n`);
+        process.stderr.write('To enable promote, init the wiki first or pass --wiki-root.\n');
+        process.exit(0);
+    }
+    external_node_fs_namespaceObject.mkdirSync(notesDir, {
+        recursive: true
+    });
+    const slug = deriveSlug(docPath);
+    const target = external_node_path_namespaceObject.join(notesDir, `${promote_isoDate()}-${slug}.md`);
+    const original = external_node_fs_namespaceObject.readFileSync(docPath, 'utf8');
+    const frontmatter = `<!-- promoted from knowledge-consolidation\n` + `source: ${docPath}\n` + `promoted_at: ${new Date().toISOString()}\n` + `-->\n\n`;
+    external_node_fs_namespaceObject.writeFileSync(target, frontmatter + original);
+    process.stdout.write(target + '\n');
+}
+const promote_command = {
+    description: 'Promote a KC doc into the global llm-wiki raw/notes/ queue',
+    run: promote_run
+};
+
 ;// CONCATENATED MODULE: ./src/knowledge-consolidation/cli.ts
+
+
 
 
 
@@ -514,6 +768,8 @@ dispatch({
     name: 'knowledge-consolidation',
     commands: {
         path: command,
+        save: save_command,
+        promote: promote_command,
         install: installCommand,
         uninstall: uninstallCommand
     }

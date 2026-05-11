@@ -1,108 +1,52 @@
-# 知识类型参考
+# Knowledge Types
 
-## 类型选择指南
+KC owns four types — all **project-local**, write-once. For global / reusable types (architecture, pattern, api, reference), use [llm-wiki](../../llm-wiki/SKILL.md).
 
-| 类型 | 使用时机 | 示例主题 |
-|------|----------|----------|
-| `debug` | 解决 bug、错误、崩溃 | 内存泄漏、竞态条件、崩溃修复 |
-| `architecture` | 系统设计、组件结构 | 模块组织、依赖模式 |
-| `pattern` | 可复用代码模式、最佳实践 | 单例、工厂、异步模式 |
-| `config` | 配置、环境搭建 | 构建设置、CI/CD、环境变量 |
-| `api` | API 设计、集成详情 | REST 端点、SDK 用法、协议 |
-| `workflow` | 开发流程、操作步骤 | Git 流程、评审流程、部署 |
-| `lesson` | 经验教训、回顾总结 | 事故复盘、项目洞察 |
-| `reference` | 技术参考、规格说明 | Schema 文档、协议规范、标准 |
+| Type | Use when | Required elements |
+|---|---|---|
+| `debug` | A bug specific to this codebase was diagnosed and fixed | symptom, investigation, root cause, fix, prevention |
+| `config` | Non-obvious config / build / env setting was locked in | what was configured, why, how to validate |
+| `workflow` | An ops or dev procedure was established for this repo | when to run, steps, tools used, gotchas |
+| `lesson` | Post-mortem / retro / "I wish I'd known this earlier" | what happened, what we learned, recommendation |
 
-## 类型详细说明
+## Type selection rule
 
-### debug
+If the knowledge spans multiple types (debug session that exposed a workflow gap), pick the **primary** type and mention the secondary insight in `Key Takeaways`.
 
-技术调试知识——根因分析、修复方案和预防策略。
+If it's actually a reusable pattern / architecture decision, **don't pick a KC type** — write it as a wiki page via `llm-wiki` so other projects benefit.
 
-**关键要素：**
+## debug
 
-- 问题症状
-- 调查步骤
-- 根因
-- 应用的解决方案
-- 预防措施
+| Element | Notes |
+|---|---|
+| Symptom | What was observed; how did it surface |
+| Investigation | Steps tried, dead ends pruned (briefly) |
+| Root cause | The actual cause — not a guess |
+| Fix | What changed, with code excerpt if illustrative |
+| Prevention | Lint rule? test? code-review checklist? |
 
-### architecture
+## config
 
-系统架构决策和设计理由。
+| Element | Notes |
+|---|---|
+| What | The setting, the value |
+| Why | Why this value; what the alternatives were |
+| Validate | How to confirm it's still doing the right thing |
 
-**关键要素：**
+## workflow
 
-- 背景和约束
-- 设计决策
-- 考虑的权衡
-- 实施方案
-- 未来考量
+| Element | Notes |
+|---|---|
+| When | The trigger condition |
+| Steps | Numbered, copy-paste-able |
+| Tools | Versions matter — pin them |
+| Gotchas | Things that go wrong if you skip a step |
 
-### pattern
+## lesson
 
-发现或建立的可复用代码模式、惯用法和最佳实践。
-
-**关键要素：**
-
-- 问题背景
-- 模式描述
-- 代码示例
-- 适用场景
-- 注意事项
-
-### config
-
-配置知识，包括构建设置、环境搭建和工具配置。
-
-**关键要素：**
-
-- 配置背景
-- 应用的设置
-- 理由
-- 验证步骤
-
-### api
-
-API 设计决策、集成知识和协议规范。
-
-**关键要素：**
-
-- API 用途
-- 端点/方法详情
-- 使用示例
-- 错误处理
-- 速率限制/约束
-
-### workflow
-
-开发工作流程和操作步骤。
-
-**关键要素：**
-
-- 工作流用途
-- 涉及的步骤
-- 使用的工具
-- 最佳实践
-
-### lesson
-
-从项目、事故或开发经历中学到的教训。
-
-**关键要素：**
-
-- 背景/起因
-- 发生了什么
-- 学到了什么
-- 建议
-
-### reference
-
-技术参考文档和规格说明。
-
-**关键要素：**
-
-- 范围
-- 详细规格
-- 示例
-- 相关资源
+| Element | Notes |
+|---|---|
+| Context | What we were doing, what we expected |
+| What happened | The surprise, in plain language |
+| What we learned | The model that's now updated |
+| Recommendation | What we'd do differently next time |
