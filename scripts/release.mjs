@@ -57,30 +57,39 @@ function preflight() {
 }
 
 function main() {
+  const r0 = run('Step 1/4: sync shared docs into skills/*/references/', 'node', [
+    'scripts/sync-shared-docs.mjs',
+  ]);
+  if (r0.status !== 0) {
+    console.error('✗ sync-shared-docs failed; aborting before preflight.');
+    process.exit(1);
+  }
+  console.log('');
+
   const { ahead } = preflight();
   if (dryRun) console.log('=== DRY RUN — no commands will execute ===\n');
 
   const failures = [];
 
   if (ahead) {
-    const r = run('Step 1/3: git push origin main', 'git', ['push', 'origin', 'main']);
+    const r = run('Step 2/4: git push origin main', 'git', ['push', 'origin', 'main']);
     if (r.status !== 0) failures.push('git push');
   } else {
-    console.log('▶ Step 1/3: git push origin main');
+    console.log('▶ Step 2/4: git push origin main');
     console.log('    (skipped — already in sync)');
   }
   console.log('');
 
   const r2 = run(
-    'Step 2/3: pull latest skills into ~/.agents/',
+    'Step 3/4: pull latest skills into ~/.agents/',
     'pnpm',
-    ['dlx', 'skills', 'install', '-g', '-y', 'learnwy/skills'],
+    ['dlx', 'skills@1.4.5-rc.18', 'install', '-g', '-y', 'learnwy/skills'],
   );
   if (r2.status !== 0) failures.push('skills install');
   console.log('');
 
   const r3 = run(
-    'Step 3/3: register hooks (idempotent uninstall+install sweep)',
+    'Step 4/4: register hooks (idempotent uninstall+install sweep)',
     'pnpm',
     ['run', 'install:hooks'],
   );

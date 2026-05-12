@@ -6,6 +6,10 @@
 
 个人技能仓库，遵循 [Agent Skills Specification](https://agentskills.io/specification) 规范，包含可复用的 AI 能力。每个技能是一个独立目录，通过 `SKILL.md` 文件定义其功能、触发条件和使用模式。
 
+> **设计哲学**：所有 skill 均按"条件反射（Conditional Reflection）"范式组织——明确刺激 → 确定响应。三级反射强度模型、各级最佳实践、强/弱模型适配方案见 [.agents/docs/conditional-reflection.md](.agents/docs/conditional-reflection.md)。新增 skill 前请先对照该文档第 7 节的检查表。
+>
+> 该目录下所有 `.md` 文档为"共享文档"，会通过 `pnpm run sync-docs` 自动复制到每个 `skills/*/references/` 下，确保 skill 单独发布安装后仍可访问。`pnpm run release` 在 push 前会自动执行同步并由 preflight 检测漂移。**只编辑 `.agents/docs/` 下的源文件**，不要直接编辑 `references/` 下带 AUTO-GENERATED 头的副本。
+
 ## 仓库结构
 
 ```
