@@ -105,7 +105,7 @@ function injectContext(text) {
 function respond(output) {
     process.stdout.write(JSON.stringify(output));
 }
-function block(reason) {
+function hooks_lib_block(reason) {
     respond({
         decision: 'block',
         reason
@@ -472,6 +472,41 @@ const MIGRATIONS = [
       CREATE INDEX IF NOT EXISTS idx_corrections_count ON corrections(count DESC);
       CREATE INDEX IF NOT EXISTS idx_corrections_last_seen ON corrections(last_seen);
       CREATE INDEX IF NOT EXISTS idx_corrections_original ON corrections(original);
+    `
+    },
+    {
+        version: 4,
+        up: `
+      CREATE TABLE IF NOT EXISTS materials (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        source_path TEXT NOT NULL UNIQUE,
+        source_type TEXT NOT NULL,
+        date TEXT NOT NULL,
+        hour TEXT,
+        title TEXT,
+        topics TEXT,
+        level TEXT,
+        word_count INTEGER DEFAULT 0,
+        imported_at TEXT NOT NULL,
+        checksum TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_materials_type ON materials(source_type);
+      CREATE INDEX IF NOT EXISTS idx_materials_date ON materials(date);
+
+      CREATE TABLE IF NOT EXISTS material_words (
+        material_id INTEGER NOT NULL REFERENCES materials(id) ON DELETE CASCADE,
+        word TEXT NOT NULL,
+        position INTEGER,
+        phonetic TEXT,
+        pos TEXT,
+        meaning_en TEXT,
+        meaning_zh TEXT,
+        examples TEXT,
+        synonyms TEXT,
+        raw_entry TEXT,
+        PRIMARY KEY (material_id, word)
+      );
+      CREATE INDEX IF NOT EXISTS idx_material_words_word ON material_words(word);
     `
     }
 ];
@@ -1574,7 +1609,28 @@ function collectReportData(now = new Date()) {
         words_truncated: allWordRows.length > ALL_ITEMS_CAP,
         phrases_truncated: allPhraseRows.length > ALL_ITEMS_CAP,
         top_corrections: getTopCorrections(TOP_CORRECTIONS_LIMIT),
-        activity: denseActivity(activityRows, now)
+        activity: denseActivity(activityRows, now),
+        materials: collectMaterialsReport(db)
+    };
+}
+function collectMaterialsReport(db) {
+    const totalRow = db.prepare('SELECT COUNT(*) as c FROM materials').get();
+    if (!totalRow || totalRow.c === 0) return undefined;
+    const byTypeRows = db.prepare('SELECT source_type, COUNT(*) as count FROM materials GROUP BY source_type').all();
+    const byType = {};
+    for (const row of byTypeRows)byType[row.source_type] = row.count;
+    const dateRange = db.prepare('SELECT MIN(date) as min_date, MAX(date) as max_date FROM materials').get();
+    const wordsPerSource = db.prepare('SELECT m.source_type, COUNT(DISTINCT mw.word) as unique_words FROM material_words mw JOIN materials m ON mw.material_id = m.id GROUP BY m.source_type').all();
+    const recentMaterials = db.prepare('SELECT date, source_type, word_count FROM materials ORDER BY date DESC LIMIT 10').all();
+    return {
+        total_materials: totalRow.c,
+        by_type: byType,
+        date_range: dateRange.min_date ? {
+            from: dateRange.min_date,
+            to: dateRange.max_date
+        } : null,
+        words_per_source: wordsPerSource,
+        recent_materials: recentMaterials
     };
 }
 
@@ -2156,7 +2212,8 @@ function renderReport(data) {
     <a href="#activity">Activity <span class="count">${totalActivity}</span></a>
     <a href="#words">Words <span class="count">${data.all_words.length}</span></a>
     <a href="#phrases">Phrases <span class="count">${data.all_phrases.length}</span></a>
-    <a href="#corrections">Corrections <span class="count">${data.top_corrections.length}</span></a>
+    <a href="#corrections">Corrections <span class="count">${data.top_corrections.length}</span></a>${data.materials ? `
+    <a href="#materials">Materials <span class="count">${data.materials.total_materials}</span></a>` : ''}
   </nav>
   <div class="legend">
     Mastery
@@ -2277,6 +2334,28 @@ function renderReport(data) {
     </table>
     ${emptyCorrections ? `<div class="empty-runtime" style="display:none">${emptyState('No matches.', 'Clear filters to see all corrections.')}</div>${emptyCorrections}` : '<div class="empty-runtime" style="display:none">' + emptyState('No matches.', 'Clear filters to see all corrections.') + '</div>'}
   </section>
+${data.materials ? `
+  <section id="materials">
+    <header><h2>Materials <span class="badge">(${data.materials.total_materials})</span></h2></header>
+    <div class="cards">
+      <div class="card"><div class="label">Total materials</div><div class="value">${data.materials.total_materials}</div></div>
+      ${data.materials.date_range ? `<div class="card"><div class="label">Date range</div><div class="value" style="font-size:16px">${escapeHtml(data.materials.date_range.from)}</div><div class="delta">\u{2192} ${escapeHtml(data.materials.date_range.to)}</div></div>` : ''}
+      ${Object.entries(data.materials.by_type).map(([t, c])=>`<div class="card"><div class="label">${escapeHtml(t)}</div><div class="value">${c}</div></div>`).join('')}
+    </div>
+    ${data.materials.words_per_source.length > 0 ? `
+    <h3 style="margin: 20px 0 8px; font-size: 14px; color: var(--muted);">Words per source type</h3>
+    <table>
+      <thead><tr><th>Source type</th><th>Unique words</th></tr></thead>
+      <tbody>${data.materials.words_per_source.map((s)=>`<tr><td>${escapeHtml(s.source_type)}</td><td>${s.unique_words}</td></tr>`).join('')}</tbody>
+    </table>` : ''}
+    ${data.materials.recent_materials.length > 0 ? `
+    <h3 style="margin: 20px 0 8px; font-size: 14px; color: var(--muted);">Recent imports</h3>
+    <table>
+      <thead><tr><th>Date</th><th>Type</th><th>Words</th></tr></thead>
+      <tbody>${data.materials.recent_materials.map((m)=>`<tr><td>${escapeHtml(m.date)}</td><td>${escapeHtml(m.source_type)}</td><td>${m.word_count}</td></tr>`).join('')}</tbody>
+    </table>` : ''}
+  </section>
+` : ''}
 </main>
 
 <button id="back-to-top" type="button" title="Back to top">\u{2191}</button>
@@ -2397,7 +2476,556 @@ const report_command = {
     }
 };
 
+;// CONCATENATED MODULE: external "node:crypto"
+const external_node_crypto_namespaceObject = require("node:crypto");
+;// CONCATENATED MODULE: ./src/english-learner/lib/lexicon-parsers.ts
+// Format A — Fallback 编号列表
+const ENTRY_RE = /^\d+\.\s+\*\*(.+?)\*\*\s*\[(.+?)\]\s*\((.+?)\)\s*-\s*(.+)$/;
+const SCENARIO_RE = /^\s+-\s+\*\*Scenario\s+\d+.*?\*\*:\s*(.+)$/;
+function parseFormatA(content) {
+    const lines = content.split('\n');
+    const entries = [];
+    let current = null;
+    for (const line of lines){
+        const entryMatch = line.match(ENTRY_RE);
+        if (entryMatch) {
+            if (current) entries.push(current);
+            current = {
+                word: entryMatch[1].trim(),
+                phonetic: entryMatch[2].trim(),
+                pos: entryMatch[3].trim(),
+                meaning_en: '',
+                meaning_zh: entryMatch[4].trim(),
+                examples: [],
+                synonyms: '',
+                raw_entry: line
+            };
+            continue;
+        }
+        if (current) {
+            const scenarioMatch = line.match(SCENARIO_RE);
+            if (scenarioMatch) {
+                const text = scenarioMatch[1];
+                const enPart = text.replace(/\s*\(.*?\)\s*$/, '').trim();
+                current.examples.push(enPart);
+                current.raw_entry += '\n' + line;
+            }
+        }
+    }
+    if (current) entries.push(current);
+    return entries;
+}
+// Format B — Daily 标题+列表
+function parseFormatB(content) {
+    const blocks = content.split(/^### Study \d+\.\s*/m).filter(Boolean);
+    const entries = [];
+    for (const block of blocks){
+        const lines = block.split('\n');
+        const word = lines[0]?.trim() || '';
+        if (!word) continue;
+        let phonetic = '';
+        let pos = '';
+        let meaning_en = '';
+        let meaning_zh = '';
+        const examples = [];
+        let inExamples = false;
+        for (const line of lines.slice(1)){
+            const trimmed = line.trim();
+            if (trimmed.startsWith('* **IPA**:')) {
+                phonetic = trimmed.replace('* **IPA**:', '').replace(/[\[\]]/g, '').trim();
+            } else if (trimmed.startsWith('* **Part of speech**:')) {
+                pos = trimmed.replace('* **Part of speech**:', '').trim();
+            } else if (trimmed.startsWith('* **Meaning**:')) {
+                meaning_en = trimmed.replace('* **Meaning**:', '').trim();
+            } else if (trimmed.startsWith("* **\u4E2D\u6587**:")) {
+                meaning_zh = trimmed.replace("* **\u4E2D\u6587**:", '').trim();
+            } else if (trimmed.startsWith('* **Example sentences**:')) {
+                inExamples = true;
+            } else if (inExamples && trimmed.startsWith('*')) {
+                examples.push(trimmed.replace(/^\*\s*/, '').replace(/\*\*/g, '').trim());
+            } else if (!trimmed.startsWith('*')) {
+                inExamples = false;
+            }
+        }
+        entries.push({
+            word,
+            phonetic,
+            pos,
+            meaning_en,
+            meaning_zh,
+            examples,
+            synonyms: '',
+            raw_entry: `### Study. ${word}\n${block}`
+        });
+    }
+    return entries;
+}
+// Format C — Weeks 表格（技术词汇）
+// | Word | IPA | POS | Chinese | English Definition | Example Sentence | Derived/Synonyms |
+function parseFormatC(content) {
+    const lines = content.split('\n');
+    const entries = [];
+    for (const line of lines){
+        if (!line.trim().startsWith('|')) continue;
+        if (/^\|\s*-+/.test(line) || /^\|\s*:?-+/.test(line)) continue;
+        const cells = line.split('|').map((c)=>c.trim()).filter(Boolean);
+        if (cells.length < 6) continue;
+        if (cells[0].toLowerCase() === 'word') continue; // header
+        entries.push({
+            word: cells[0].replace(/\*\*/g, '').trim(),
+            phonetic: cells[1].replace(/^\/|\/$/g, '').trim(),
+            pos: cells[2].trim(),
+            meaning_en: cells[4]?.trim() || '',
+            meaning_zh: cells[3]?.trim() || '',
+            examples: cells[5] ? [
+                cells[5].trim()
+            ] : [],
+            synonyms: cells[6]?.trim() || '',
+            raw_entry: line
+        });
+    }
+    return entries;
+}
+// Format D — Weekly 表格（课程词汇）
+// | Term | Part of Speech | Meaning | Example |
+function parseFormatD(content) {
+    const lines = content.split('\n');
+    const entries = [];
+    for (const line of lines){
+        if (!line.trim().startsWith('|')) continue;
+        if (/^\|\s*-+/.test(line) || /^\|\s*:?-+/.test(line)) continue;
+        const cells = line.split('|').map((c)=>c.trim()).filter(Boolean);
+        if (cells.length < 4) continue;
+        if (cells[0].toLowerCase() === 'term') continue; // header
+        const meaningRaw = cells[2] || '';
+        let meaning_en = meaningRaw;
+        let meaning_zh = '';
+        const semicolonIdx = meaningRaw.indexOf(';');
+        if (semicolonIdx > 0) {
+            meaning_en = meaningRaw.slice(0, semicolonIdx).trim();
+            meaning_zh = meaningRaw.slice(semicolonIdx + 1).trim();
+        }
+        entries.push({
+            word: cells[0].replace(/\*\*/g, '').trim(),
+            phonetic: '',
+            pos: cells[1]?.trim() || '',
+            meaning_en,
+            meaning_zh,
+            examples: cells[3] ? [
+                cells[3].trim()
+            ] : [],
+            synonyms: '',
+            raw_entry: line
+        });
+    }
+    return entries;
+}
+// Format E — Weeks 扩展表格 + Collocations + Idioms
+// Vocabulary Matrix: | Word | IPA | Meaning | Example | Analysis/Root | Synonyms | Antonyms |
+// Collocations: numbered list with **collocation**: definition
+// Idioms: numbered list with **idiom**: definition + Example
+function parseFormatE(content) {
+    const entries = [];
+    // Split by sections
+    const vocabSection = extractSection(content, 'Vocabulary Matrix');
+    const collocSection = extractSection(content, 'Collocations');
+    const idiomSection = extractSection(content, 'Idioms');
+    // Parse vocabulary matrix table
+    if (vocabSection) {
+        for (const line of vocabSection.split('\n')){
+            if (!line.trim().startsWith('|')) continue;
+            if (/^\|\s*:?-/.test(line)) continue;
+            const cells = line.split('|').map((c)=>c.trim()).filter(Boolean);
+            if (cells.length < 5) continue;
+            if (cells[0].toLowerCase() === 'word' || cells[0].toLowerCase() === ':---') continue;
+            const meaningRaw = cells[2] || '';
+            let meaning_zh = meaningRaw;
+            let meaning_en = '';
+            const parenMatch = meaningRaw.match(/^(.+?)\s*\((.+)\)$/);
+            if (parenMatch) {
+                meaning_zh = parenMatch[1].trim();
+                meaning_en = parenMatch[2].trim();
+            }
+            const synonymsRaw = cells[5] || '';
+            const antonymsRaw = cells[6] || '';
+            const allSyns = [
+                synonymsRaw,
+                antonymsRaw
+            ].filter(Boolean).join('; ');
+            entries.push({
+                word: cells[0].replace(/\*\*/g, '').trim(),
+                phonetic: cells[1].replace(/^\/|\/$/g, '').trim(),
+                pos: '',
+                meaning_en,
+                meaning_zh,
+                examples: cells[3] ? [
+                    cells[3].replace(/\*\*/g, '').trim()
+                ] : [],
+                synonyms: allSyns,
+                raw_entry: line
+            });
+        }
+    }
+    // Parse collocations
+    if (collocSection) {
+        const collocRE = /^\d+\.\s+\*\*(.+?)\*\*:\s*(.+)/;
+        for (const line of collocSection.split('\n')){
+            const m = line.match(collocRE);
+            if (m) {
+                entries.push({
+                    word: m[1].trim(),
+                    phonetic: '',
+                    pos: 'collocation',
+                    meaning_en: m[2].trim(),
+                    meaning_zh: '',
+                    examples: [],
+                    synonyms: '',
+                    raw_entry: line
+                });
+            }
+        }
+    }
+    // Parse idioms
+    if (idiomSection) {
+        const idiomRE = /^\d+\.\s+\*\*(.+?)\*\*:\s*(.+)/;
+        const exampleRE = /^\s+\*\s+\*(.+?)\*/;
+        let current = null;
+        for (const line of idiomSection.split('\n')){
+            const m = line.match(idiomRE);
+            if (m) {
+                if (current) entries.push(current);
+                current = {
+                    word: m[1].trim(),
+                    phonetic: '',
+                    pos: 'idiom',
+                    meaning_en: m[2].trim(),
+                    meaning_zh: '',
+                    examples: [],
+                    synonyms: '',
+                    raw_entry: line
+                };
+            } else if (current) {
+                const ex = line.match(exampleRE);
+                if (ex) {
+                    current.examples.push(ex[1].replace(/^\s*Example:\s*/, '').trim());
+                    current.raw_entry += '\n' + line;
+                }
+            }
+        }
+        if (current) entries.push(current);
+    }
+    return entries;
+}
+function extractSection(content, heading) {
+    const re = new RegExp(`^##\\s+.*${heading}.*$`, 'mi');
+    const match = content.match(re);
+    if (!match || match.index === undefined) return null;
+    const start = match.index + match[0].length;
+    const nextSection = content.slice(start).match(/^##\s+/m);
+    const end = nextSection?.index !== undefined ? start + nextSection.index : content.length;
+    return content.slice(start, end);
+}
+function detectFormat(content, sourceType) {
+    if (sourceType === 'fallback') return 'A';
+    if (sourceType === 'daily') return 'B';
+    if (sourceType === 'weekly') return 'D';
+    // weeks can be C or E
+    if (/## Vocabulary Matrix/i.test(content) || /## Collocations/i.test(content)) return 'E';
+    if (/\|\s*Word\s*\|\s*IPA\s*\|\s*POS\s*\|/i.test(content)) return 'C';
+    if (/\|\s*Word\s*\|\s*IPA\s*\|\s*Meaning\s*\|/i.test(content)) return 'E';
+    return 'C';
+}
+function parseContent(content, sourceType) {
+    const format = detectFormat(content, sourceType);
+    switch(format){
+        case 'A':
+            return parseFormatA(content);
+        case 'B':
+            return parseFormatB(content);
+        case 'C':
+            return parseFormatC(content);
+        case 'D':
+            return parseFormatD(content);
+        case 'E':
+            return parseFormatE(content);
+    }
+}
+
+;// CONCATENATED MODULE: ./src/english-learner/lib/import-engine.ts
+
+
+
+
+
+
+
+const DATE_RE = /(\d{4}-\d{2}-\d{2})/;
+const FALLBACK_DIR_RE = /(\d{4}-\d{2}-\d{2})-(\d{2})/;
+const WEEK_RE = /week-(\d+)/;
+function inferSourceType(dirPath) {
+    if (/english-fallback/.test(dirPath)) return 'fallback';
+    if (/\/daily\//.test(dirPath)) {
+        if (/\/weeks\//.test(dirPath)) return 'weeks';
+        return 'daily';
+    }
+    if (/\/weekly\//.test(dirPath)) return 'weekly';
+    if (/oral-course|oral/.test(dirPath)) return 'oral';
+    if (/\/weeks\//.test(dirPath)) return 'weeks';
+    return 'daily';
+}
+function inferDate(dirPath, sourceType) {
+    if (sourceType === 'fallback') {
+        const m = dirPath.match(FALLBACK_DIR_RE);
+        if (m) return {
+            date: m[1],
+            hour: m[2]
+        };
+    }
+    const dateMatch = dirPath.match(DATE_RE);
+    if (dateMatch) return {
+        date: dateMatch[1]
+    };
+    const weekMatch = dirPath.match(WEEK_RE);
+    if (weekMatch) {
+        const weekNum = parseInt(weekMatch[1], 10);
+        const year = new Date().getFullYear();
+        const jan4 = new Date(year, 0, 4);
+        const dayOffset = (weekNum - 1) * 7;
+        const d = new Date(jan4.getTime() + dayOffset * 86400000);
+        return {
+            date: d.toISOString().slice(0, 10)
+        };
+    }
+    return {
+        date: new Date().toISOString().slice(0, 10)
+    };
+}
+function scanDirectory(baseDir) {
+    const results = [];
+    function walk(dir) {
+        let entries;
+        try {
+            entries = external_node_fs_namespaceObject.readdirSync(dir, {
+                withFileTypes: true
+            });
+        } catch  {
+            return;
+        }
+        const hasLexicon = entries.some((e)=>e.isFile() && e.name === 'LEXICON.md');
+        if (hasLexicon) {
+            const lexiconPath = external_node_path_namespaceObject.join(dir, 'LEXICON.md');
+            const sourceType = inferSourceType(dir);
+            const { date, hour } = inferDate(dir, sourceType);
+            const relativePath = external_node_path_namespaceObject.relative(baseDir, dir);
+            results.push({
+                dirPath: dir,
+                lexiconPath,
+                sourceType,
+                date,
+                hour,
+                relativePath
+            });
+        }
+        for (const entry of entries){
+            if (entry.isDirectory() && !entry.name.startsWith('.')) {
+                walk(external_node_path_namespaceObject.join(dir, entry.name));
+            }
+        }
+    }
+    walk(baseDir);
+    return results.sort((a, b)=>a.date.localeCompare(b.date));
+}
+function md5(content) {
+    return external_node_crypto_namespaceObject.createHash('md5').update(content).digest('hex');
+}
+function runImport(baseDir, options = {}) {
+    const resolvedDir = external_node_path_namespaceObject.resolve(baseDir);
+    if (!external_node_fs_namespaceObject.existsSync(resolvedDir)) {
+        throw new Error(`Directory not found: ${resolvedDir}`);
+    }
+    const materials = scanDirectory(resolvedDir);
+    const result = {
+        total_materials: materials.length,
+        imported: 0,
+        skipped: 0,
+        total_words_extracted: 0,
+        unique_words: 0,
+        by_type: {}
+    };
+    if (options.dryRun) {
+        for (const mat of materials){
+            const type = options.type && options.type !== 'auto' ? options.type : mat.sourceType;
+            result.by_type[type] = (result.by_type[type] || 0) + 1;
+            const content = external_node_fs_namespaceObject.readFileSync(mat.lexiconPath, 'utf-8');
+            const entries = parseContent(content, type);
+            result.total_words_extracted += entries.length;
+        }
+        return result;
+    }
+    const db = db_getDb();
+    const allWords = new Set();
+    for (const mat of materials){
+        const type = options.type && options.type !== 'auto' ? options.type : mat.sourceType;
+        if (options.since && mat.date < options.since) {
+            result.skipped++;
+            continue;
+        }
+        const content = external_node_fs_namespaceObject.readFileSync(mat.lexiconPath, 'utf-8');
+        const checksum = md5(content);
+        // Check existing
+        if (!options.force) {
+            const existing = db.prepare('SELECT checksum FROM materials WHERE source_path = ?').get(mat.relativePath);
+            if (existing?.checksum === checksum) {
+                result.skipped++;
+                continue;
+            }
+        }
+        const entries = parseContent(content, type);
+        if (entries.length === 0) {
+            result.skipped++;
+            continue;
+        }
+        result.by_type[type] = (result.by_type[type] || 0) + 1;
+        result.total_words_extracted += entries.length;
+        // Write materials + material_words in a transaction
+        db.exec('BEGIN');
+        try {
+            // Upsert material
+            db.prepare(`
+        INSERT INTO materials (source_path, source_type, date, hour, word_count, imported_at, checksum)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(source_path) DO UPDATE SET
+          source_type = excluded.source_type,
+          date = excluded.date,
+          hour = excluded.hour,
+          word_count = excluded.word_count,
+          imported_at = excluded.imported_at,
+          checksum = excluded.checksum
+      `).run(mat.relativePath, type, mat.date, mat.hour || null, entries.length, fs_utils_nowIso(), checksum);
+            const matRow = db.prepare('SELECT id FROM materials WHERE source_path = ?').get(mat.relativePath);
+            const materialId = matRow.id;
+            // Delete old material_words for this material
+            db.prepare('DELETE FROM material_words WHERE material_id = ?').run(materialId);
+            // Insert material_words (dedupe by lowercase word within same material)
+            const insertMW = db.prepare(`
+        INSERT INTO material_words (material_id, word, position, phonetic, pos, meaning_en, meaning_zh, examples, synonyms, raw_entry)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+            const seenInMaterial = new Set();
+            entries.forEach((entry, idx)=>{
+                const wordLower = entry.word.toLowerCase();
+                allWords.add(wordLower);
+                if (seenInMaterial.has(wordLower)) return;
+                seenInMaterial.add(wordLower);
+                insertMW.run(materialId, wordLower, idx + 1, entry.phonetic || null, entry.pos || null, entry.meaning_en || null, entry.meaning_zh || null, entry.examples.length > 0 ? JSON.stringify(entry.examples) : null, entry.synonyms || null, entry.raw_entry || null);
+            });
+            db.exec('COMMIT');
+        } catch (err) {
+            db.exec('ROLLBACK');
+            throw err;
+        }
+        // Batch save to words table (has its own transaction)
+        const batchItems = entries.map((e)=>({
+                word: e.word,
+                phonetic: e.phonetic,
+                definitions: [
+                    {
+                        pos: e.pos,
+                        meaning: e.meaning_zh || e.meaning_en,
+                        examples: e.examples
+                    }
+                ],
+                synonyms: e.synonyms ? e.synonyms.split(/[,;]/).map((s)=>s.trim()).filter(Boolean) : undefined
+            }));
+        batchSaveWords(batchItems);
+        result.imported++;
+        if (options.verbose) {
+            process.stderr.write(`\u{2713} ${mat.relativePath} \u{2192} ${entries.length} words\n`);
+        }
+    }
+    result.unique_words = allWords.size;
+    return result;
+}
+
+;// CONCATENATED MODULE: ./src/english-learner/cmd/import.ts
+
+const import_command = {
+    description: 'Import vocabulary from LEXICON.md files in a directory',
+    run (args) {
+        const dir = args.find((a)=>!a.startsWith('-'));
+        if (!dir) {
+            console.error('Usage: import <dir> [options]');
+            process.exit(1);
+        }
+        const options = {
+            type: getFlag(args, '--type') || 'auto',
+            dryRun: args.includes('--dry-run'),
+            force: args.includes('--force'),
+            since: getFlag(args, '--since'),
+            verbose: args.includes('--verbose')
+        };
+        try {
+            const result = runImport(dir, options);
+            if (options.dryRun) {
+                console.log("\uD83D\uDD0D Dry run results:");
+            } else {
+                console.log("\u2705 Import complete:");
+            }
+            console.log(JSON.stringify(result, null, 2));
+        } catch (err) {
+            console.error(`\u{274C} ${err.message}`);
+            process.exit(1);
+        }
+    }
+};
+function getFlag(args, flag) {
+    const idx = args.indexOf(flag);
+    return idx >= 0 && idx + 1 < args.length ? args[idx + 1] : undefined;
+}
+
+;// CONCATENATED MODULE: ./src/english-learner/cmd/import-status.ts
+
+const import_status_command = {
+    description: 'Show import statistics',
+    run (args) {
+        const db = db_getDb();
+        const typeFilter = import_status_getFlag(args, '--type');
+        const totalMaterials = db.prepare(typeFilter ? 'SELECT COUNT(*) as c FROM materials WHERE source_type = ?' : 'SELECT COUNT(*) as c FROM materials').get(...typeFilter ? [
+            typeFilter
+        ] : []).c;
+        const totalWordsExtracted = db.prepare(typeFilter ? 'SELECT COUNT(*) as c FROM material_words mw JOIN materials m ON mw.material_id = m.id WHERE m.source_type = ?' : 'SELECT COUNT(*) as c FROM material_words').get(...typeFilter ? [
+            typeFilter
+        ] : []).c;
+        const uniqueWords = db.prepare(typeFilter ? 'SELECT COUNT(DISTINCT mw.word) as c FROM material_words mw JOIN materials m ON mw.material_id = m.id WHERE m.source_type = ?' : 'SELECT COUNT(DISTINCT word) as c FROM material_words').get(...typeFilter ? [
+            typeFilter
+        ] : []).c;
+        const byType = db.prepare('SELECT source_type, COUNT(*) as count FROM materials GROUP BY source_type').all();
+        const byTypeObj = {};
+        for (const row of byType){
+            byTypeObj[row.source_type] = row.count;
+        }
+        const dateRange = db.prepare('SELECT MIN(date) as min_date, MAX(date) as max_date FROM materials').get();
+        const result = {
+            total_materials: totalMaterials,
+            total_words_extracted: totalWordsExtracted,
+            unique_words: uniqueWords,
+            by_type: byTypeObj,
+            date_range: dateRange.min_date ? {
+                from: dateRange.min_date,
+                to: dateRange.max_date
+            } : null
+        };
+        console.log(JSON.stringify(result, null, 2));
+    }
+};
+function import_status_getFlag(args, flag) {
+    const idx = args.indexOf(flag);
+    return idx >= 0 && idx + 1 < args.length ? args[idx + 1] : undefined;
+}
+
 ;// CONCATENATED MODULE: ./src/english-learner/cli.ts
+
+
 
 
 
@@ -2415,6 +3043,8 @@ dispatch({
         migrate: migrate_command,
         'link-wiki': link_wiki_command,
         report: report_command,
+        import: import_command,
+        'import-status': import_status_command,
         install: installCommand,
         uninstall: uninstallCommand
     }

@@ -16,6 +16,14 @@ export interface ActivityBucket {
   by_type: Record<string, number>;
 }
 
+export interface MaterialsReport {
+  total_materials: number;
+  by_type: Record<string, number>;
+  date_range: { from: string; to: string } | null;
+  words_per_source: Array<{ source_type: string; unique_words: number }>;
+  recent_materials: Array<{ date: string; source_type: string; word_count: number }>;
+}
+
 export interface ReportData {
   generated_at: string;
   stats: Stats;
@@ -28,6 +36,7 @@ export interface ReportData {
   phrases_truncated: boolean;
   top_corrections: TopCorrection[];
   activity: ActivityBucket[];
+  materials?: MaterialsReport;
 }
 
 function dayKey(date: Date): string {
@@ -94,5 +103,37 @@ export function collectReportData(now: Date = new Date()): ReportData {
     phrases_truncated: allPhraseRows.length > ALL_ITEMS_CAP,
     top_corrections: getTopCorrections(TOP_CORRECTIONS_LIMIT),
     activity: denseActivity(activityRows, now),
+    materials: collectMaterialsReport(db),
+  };
+}
+
+function collectMaterialsReport(db: ReturnType<typeof getDb>): MaterialsReport | undefined {
+  const totalRow = db.prepare('SELECT COUNT(*) as c FROM materials').get() as { c: number } | undefined;
+  if (!totalRow || totalRow.c === 0) return undefined;
+
+  const byTypeRows = db.prepare(
+    'SELECT source_type, COUNT(*) as count FROM materials GROUP BY source_type',
+  ).all() as Array<{ source_type: string; count: number }>;
+  const byType: Record<string, number> = {};
+  for (const row of byTypeRows) byType[row.source_type] = row.count;
+
+  const dateRange = db.prepare(
+    'SELECT MIN(date) as min_date, MAX(date) as max_date FROM materials',
+  ).get() as { min_date: string | null; max_date: string | null };
+
+  const wordsPerSource = db.prepare(
+    'SELECT m.source_type, COUNT(DISTINCT mw.word) as unique_words FROM material_words mw JOIN materials m ON mw.material_id = m.id GROUP BY m.source_type',
+  ).all() as Array<{ source_type: string; unique_words: number }>;
+
+  const recentMaterials = db.prepare(
+    'SELECT date, source_type, word_count FROM materials ORDER BY date DESC LIMIT 10',
+  ).all() as Array<{ date: string; source_type: string; word_count: number }>;
+
+  return {
+    total_materials: totalRow.c,
+    by_type: byType,
+    date_range: dateRange.min_date ? { from: dateRange.min_date, to: dateRange.max_date! } : null,
+    words_per_source: wordsPerSource,
+    recent_materials: recentMaterials,
   };
 }

@@ -473,6 +473,41 @@ const MIGRATIONS = [
       CREATE INDEX IF NOT EXISTS idx_corrections_last_seen ON corrections(last_seen);
       CREATE INDEX IF NOT EXISTS idx_corrections_original ON corrections(original);
     `
+    },
+    {
+        version: 4,
+        up: `
+      CREATE TABLE IF NOT EXISTS materials (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        source_path TEXT NOT NULL UNIQUE,
+        source_type TEXT NOT NULL,
+        date TEXT NOT NULL,
+        hour TEXT,
+        title TEXT,
+        topics TEXT,
+        level TEXT,
+        word_count INTEGER DEFAULT 0,
+        imported_at TEXT NOT NULL,
+        checksum TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_materials_type ON materials(source_type);
+      CREATE INDEX IF NOT EXISTS idx_materials_date ON materials(date);
+
+      CREATE TABLE IF NOT EXISTS material_words (
+        material_id INTEGER NOT NULL REFERENCES materials(id) ON DELETE CASCADE,
+        word TEXT NOT NULL,
+        position INTEGER,
+        phonetic TEXT,
+        pos TEXT,
+        meaning_en TEXT,
+        meaning_zh TEXT,
+        examples TEXT,
+        synonyms TEXT,
+        raw_entry TEXT,
+        PRIMARY KEY (material_id, word)
+      );
+      CREATE INDEX IF NOT EXISTS idx_material_words_word ON material_words(word);
+    `
     }
 ];
 function intervalDaysForMastery(mastery) {

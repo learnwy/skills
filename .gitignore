@@ -31,3 +31,10 @@ node_modules/
 dist/
 .rslib/
 *.tsbuildinfo
+
+# Workflow state (local dev tracking, not shared)
+.agents/workflow/
+.agents/active_workflow
+
+# Lark CLI scratch outputs (vc +notes downloads transcripts here by default)
+minutes/

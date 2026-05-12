@@ -595,7 +595,8 @@ export function renderReport(data: ReportData): string {
     <a href="#activity">Activity <span class="count">${totalActivity}</span></a>
     <a href="#words">Words <span class="count">${data.all_words.length}</span></a>
     <a href="#phrases">Phrases <span class="count">${data.all_phrases.length}</span></a>
-    <a href="#corrections">Corrections <span class="count">${data.top_corrections.length}</span></a>
+    <a href="#corrections">Corrections <span class="count">${data.top_corrections.length}</span></a>${data.materials ? `
+    <a href="#materials">Materials <span class="count">${data.materials.total_materials}</span></a>` : ''}
   </nav>
   <div class="legend">
     Mastery
@@ -716,6 +717,28 @@ export function renderReport(data: ReportData): string {
     </table>
     ${emptyCorrections ? `<div class="empty-runtime" style="display:none">${emptyState('No matches.', 'Clear filters to see all corrections.')}</div>${emptyCorrections}` : '<div class="empty-runtime" style="display:none">' + emptyState('No matches.', 'Clear filters to see all corrections.') + '</div>'}
   </section>
+${data.materials ? `
+  <section id="materials">
+    <header><h2>Materials <span class="badge">(${data.materials.total_materials})</span></h2></header>
+    <div class="cards">
+      <div class="card"><div class="label">Total materials</div><div class="value">${data.materials.total_materials}</div></div>
+      ${data.materials.date_range ? `<div class="card"><div class="label">Date range</div><div class="value" style="font-size:16px">${escapeHtml(data.materials.date_range.from)}</div><div class="delta">→ ${escapeHtml(data.materials.date_range.to)}</div></div>` : ''}
+      ${Object.entries(data.materials.by_type).map(([t, c]) => `<div class="card"><div class="label">${escapeHtml(t)}</div><div class="value">${c}</div></div>`).join('')}
+    </div>
+    ${data.materials.words_per_source.length > 0 ? `
+    <h3 style="margin: 20px 0 8px; font-size: 14px; color: var(--muted);">Words per source type</h3>
+    <table>
+      <thead><tr><th>Source type</th><th>Unique words</th></tr></thead>
+      <tbody>${data.materials.words_per_source.map(s => `<tr><td>${escapeHtml(s.source_type)}</td><td>${s.unique_words}</td></tr>`).join('')}</tbody>
+    </table>` : ''}
+    ${data.materials.recent_materials.length > 0 ? `
+    <h3 style="margin: 20px 0 8px; font-size: 14px; color: var(--muted);">Recent imports</h3>
+    <table>
+      <thead><tr><th>Date</th><th>Type</th><th>Words</th></tr></thead>
+      <tbody>${data.materials.recent_materials.map(m => `<tr><td>${escapeHtml(m.date)}</td><td>${escapeHtml(m.source_type)}</td><td>${m.word_count}</td></tr>`).join('')}</tbody>
+    </table>` : ''}
+  </section>
+` : ''}
 </main>
 
 <button id="back-to-top" type="button" title="Back to top">↑</button>
