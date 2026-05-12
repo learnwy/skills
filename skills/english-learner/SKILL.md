@@ -75,6 +75,12 @@ node scripts/cli.cjs quiz summary
 # spaced repetition + linking
 node scripts/cli.cjs link-wiki        # cross-link with llm-wiki
 
+# report — generate a self-contained static HTML dashboard from the SQLite DB
+node scripts/cli.cjs report                       # writes ~/.learnwy/english-learner/report.html
+node scripts/cli.cjs report --output <path>       # custom destination
+node scripts/cli.cjs report --json                # also dump intermediate report.html.json
+node scripts/cli.cjs report --open                # open in default browser after generation
+
 # install/uninstall hooks (registered with .claude/ + .trae/)
 node scripts/cli.cjs install   --scope global --target both
 node scripts/cli.cjs uninstall --scope global --target both

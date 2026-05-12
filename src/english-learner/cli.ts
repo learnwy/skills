@@ -6,6 +6,7 @@ import { command as quiz } from './cmd/quiz.js';
 import { command as sentence } from './cmd/sentence.js';
 import { command as migrate } from './cmd/migrate.js';
 import { command as linkWiki } from './cmd/link-wiki.js';
+import { command as report } from './cmd/report.js';
 
 dispatch({
   name: 'english-learner',
@@ -15,6 +16,7 @@ dispatch({
     sentence,
     migrate,
     'link-wiki': linkWiki,
+    report,
     install: installCommand,
     uninstall: uninstallCommand,
   },
