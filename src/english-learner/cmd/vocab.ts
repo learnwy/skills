@@ -7,6 +7,10 @@ import {
   batchRecordCorrections, getTopCorrections, getCorrectionStats,
   type CorrectionInput,
 } from '../lib/corrections-store.js';
+import {
+  recordProseInput, getProseStats, getRecentProse,
+  type ProseLogInput,
+} from '../lib/prose-store.js';
 import type { Command } from '../../shared/cli.js';
 
 const actions: Record<string, (args: string[]) => void> = {
@@ -64,12 +68,24 @@ const actions: Record<string, (args: string[]) => void> = {
   'corrections-stats': () => {
     console.log(JSON.stringify(getCorrectionStats(), null, 2));
   },
+  'record-input': (args) => {
+    const payload = JSON.parse(args[0]) as ProseLogInput;
+    console.log(JSON.stringify(recordProseInput(payload), null, 2));
+  },
+  'prose-stats': () => {
+    console.log(JSON.stringify(getProseStats(), null, 2));
+  },
+  'recent-prose': (args) => {
+    const limit = args[0] ? Number.parseInt(args[0], 10) : 20;
+    console.log(JSON.stringify(getRecentProse(limit), null, 2));
+  },
 };
 
 const minArgs: Record<string, number> = {
   get_word: 1, get_phrase: 1, save_word: 2, save_phrase: 2,
   log_query: 2, update_mastery: 3, batch_get: 1, batch_save: 1,
   'record-correction': 1,
+  'record-input': 1,
 };
 
 export const command: Command = {

@@ -217,6 +217,7 @@ function looksLikeChineseLearnIntent(text) {
 
 ;// CONCATENATED MODULE: ./src/english-learner/lib/prompt-scan.ts
 
+const RECORD_INPUT_HINT = 'Always log this turn via `node {english-learner-skill}/scripts/cli.cjs vocab record-input \'{"language":"<en|zh|ja|ko|other>","text":"<original message>","had_issues":<true|false>,"issue_count":<n>}\'` \u2014 even when no issues are found, so we can track fluency rate over time.';
 const ENGLISH_BLOCK = [
     '[english-learner hook] The user wrote in English.',
     'Before responding, scan for grammar/word-choice/expression issues (max 3).',
@@ -224,7 +225,8 @@ const ENGLISH_BLOCK = [
     'After rendering the table, persist the corrections by calling:',
     '`node {english-learner-skill}/scripts/cli.cjs vocab record-correction \'[{"original":"X","corrected":"Y","reason":"Z","words":[{"word":"...","definition":"...","phonetic":"..."}]}]\'`.',
     "The optional `words[]` field also feeds the words table \u2014 include it for genuinely new vocabulary, omit for typo\u2192correct cases.",
-    'Skip silently if English is fluent/natural.'
+    'If English is fluent/natural, do NOT render a tip table \u2014 instead render exactly one line: "\u2705 English looks fluent \u2014 no issues found." then proceed.',
+    RECORD_INPUT_HINT
 ].join(' ');
 const CHINESE_BLOCK = [
     '[english-learner hook] The user wrote in Chinese.',
@@ -234,21 +236,41 @@ const CHINESE_BLOCK = [
     '3. Extract 2-3 key vocabulary/phrases from the translation, show phonetic + brief usage note.',
     "4. Auto-save all new words/phrases via batch_save (no need to ask \u2014 just save them).",
     "5. Then proceed with the user's actual task.",
-    'Format: "\uD83C\uDF10 \u4E2D\u8BD1\u82F1" header, corrections table (if any), English translations, vocab table, then separator and task response.'
+    'Format: "\uD83C\uDF10 \u4E2D\u8BD1\u82F1" header, corrections table (if any), English translations, vocab table, then separator and task response.',
+    RECORD_INPUT_HINT
 ].join(' ');
+const OTHER_LANG_BLOCK = [
+    '[english-learner hook] The user wrote in a language other than English or Chinese.',
+    'Detect the language (likely Japanese, Korean, Spanish, French, German, Russian, Arabic, etc.) and prepend a "\uD83C\uDF10 Translate & Learn" section:',
+    "1. Name the detected language explicitly on the first line (e.g. \"Detected: Japanese\").",
+    "2. Translate the user's message into natural English (1-2 alternative expressions).",
+    '3. Extract 2-3 key English vocabulary/phrases from the translation, with phonetic + brief usage note.',
+    "4. Auto-save the new words via `vocab batch_save` (no need to ask \u2014 just save them).",
+    "5. Then proceed with the user's actual task in English.",
+    RECORD_INPUT_HINT
+].join(' ');
+function detectLanguage(message) {
+    const enRatio = englishRatio(message);
+    const cnRatio = chineseRatio(message);
+    if (enRatio >= 0.6) return 'en';
+    if (cnRatio >= 0.3 || looksLikeChineseLearnIntent(message)) return 'zh';
+    if (message.length >= 10) return 'other';
+    return null;
+}
 function scanPrompt(message) {
     if (!message || message.length < 4) return null;
     if (looksLikeNonProse(message)) return null;
     if (/^Use Skill:/i.test(message.trim())) return null;
-    const enRatio = englishRatio(message);
-    const cnRatio = chineseRatio(message);
-    if (enRatio >= 0.6) return ENGLISH_BLOCK;
-    if (cnRatio >= 0.3 || looksLikeChineseLearnIntent(message)) {
+    const lang = detectLanguage(message);
+    if (lang === null) return null;
+    if (lang === 'en') return ENGLISH_BLOCK;
+    if (lang === 'zh') {
         if (/代码|编程|bug|修复|重构|编译|部署|配置文件/.test(message)) return null;
         if (message.length > 500) return null;
         return CHINESE_BLOCK;
     }
-    return null;
+    if (message.length > 800) return null;
+    return OTHER_LANG_BLOCK;
 }
 
 ;// CONCATENATED MODULE: external "node:os"
@@ -444,19 +466,28 @@ function lib_prompt_scan_scanPrompt(message) {
     if (!message) return null;
     const trimmed = message.trim();
     if (looksLikeNonProse(message)) return null;
+    if (trimmed.length < 8) return null;
     const explicit = looksLikeExplicitAsk(trimmed);
     const structured = looksLikeStructuredPrompt(trimmed);
-    if (!explicit && !structured) return null;
-    const reason = explicit ? 'The user explicitly asked to optimize/improve a prompt.' : 'The user submitted a long, structured prompt-shaped instruction.';
+    const mode = explicit ? 'explicit' : structured ? 'structured' : 'light';
     const shapeMarkers = PROMPT_SHAPE_MARKERS.filter((re)=>re.test(trimmed)).length;
     appendEvent({
         ts: new Date().toISOString(),
-        trigger: explicit ? 'explicit' : 'structured',
+        trigger: mode,
         length: trimmed.length,
         lines: trimmed.split('\n').length,
         shape_markers: shapeMarkers,
         excerpt: trimmed.slice(0, 120).replace(/\s+/g, ' ')
     });
+    if (mode === 'light') {
+        return [
+            "[prompt-optimizer hook] Light mode \u2014 input is short / conversational, not a full prompt.",
+            'Do a 1-line sanity pass: pick the single weakest of the 7 dimensions (Clarity, Specificity, Context, Structure, Examples, Constraints, Completeness) and offer ONE concrete rewrite suggestion.',
+            'If all 7 dims are fine, render exactly: "\u2728 Prompt-opt: already clear, no rewrite needed." and move on.',
+            "Do NOT render the full 7-row table for short messages \u2014 that would be noise."
+        ].join(' ');
+    }
+    const reason = mode === 'explicit' ? 'The user explicitly asked to optimize/improve a prompt.' : 'The user submitted a long, structured prompt-shaped instruction.';
     return [
         '[prompt-optimizer hook]',
         reason,

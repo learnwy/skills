@@ -1,6 +1,6 @@
 ---
 name: english-learner
-description: "Auto-intercepts English messages for grammar / word-choice / expression issues (max 3 per message); auto-translates Chinese messages with vocabulary extraction. Also handles word lookups, phrase lookups (e.g. 'break the ice'), translation requests, and quiz/review. Pushes 3 due-for-review words at the first session of each day (spaced repetition: 1/3/7/14/30/90 days). Triggers: any English message, any Chinese message, single English word, idiom, '查单词', '学英语', 'what does X mean', vocabulary review. Data stored at ~/.learnwy/english-learner/ with mastery tracking."
+description: "Auto-intercepts English messages for grammar / word-choice / expression issues (max 3 per message); auto-translates Chinese / Japanese / Korean / Spanish / other-language messages with vocabulary extraction. Also handles word lookups, phrase lookups (e.g. 'break the ice'), translation requests, and quiz/review. Logs every prose input (clean OR with issues) to `prose_log` so fluency rate is tracked over time. Pushes 3 due-for-review words at the first session of each day (spaced repetition: 1/3/7/14/30/90 days). Triggers: any English message, any Chinese message, any non-English-non-Chinese prose, single English word, idiom, '查单词', '学英语', 'what does X mean', vocabulary review. Data stored at ~/.learnwy/english-learner/ with mastery + fluency tracking."
 metadata:
   author: "learnwy"
   version: "4.0"
@@ -11,14 +11,17 @@ metadata:
 
 Personal vocabulary assistant with persistent storage, mastery tracking, and spaced repetition.
 
-## Two auto-intercept modes (passive, hook-driven)
+## Three auto-intercept modes (passive, hook-driven)
 
 | Mode | Trigger | Action |
 |---|---|---|
-| **English intercept** | User writes in English with detectable grammar / word-choice issues | Show 1–3 corrections in a tip table FIRST, then handle the actual task |
-| **Chinese intercept** | User writes in Chinese (Chinese chars > 30%) | After completing the task, append a 中译英 practice block with corrections + 2–3 translations + key vocabulary |
+| **English intercept** | User writes in English (EN ratio ≥ 0.6) | If issues found: show 1–3 corrections in a "💡 English Tip" table. If clean: render exactly `"✅ English looks fluent — no issues found."` Always call `vocab record-input` with `had_issues` + `issue_count`. |
+| **Chinese intercept** | User writes in Chinese (CN ratio ≥ 0.3, < 500 chars, no coding keywords) | Prepend "🌐 中译英" block: corrections (if any) + 2–3 EN translations + 2–3 vocab. Auto-save via `batch_save`. Call `record-input` with `language: zh`. |
+| **Other-language intercept** | User writes prose in JA / KO / ES / FR / DE / RU / AR / etc. (low EN, low ZH ratios, < 800 chars) | Prepend "🌐 Translate & Learn" block: detect language explicitly, translate to English, extract 2–3 vocab, auto-save. Call `record-input` with `language: ja/ko/other`. |
 
-Both modes are wired through `learnwy-dispatch` (UserPromptSubmit + Stop hooks). They never block the user's actual task — corrections come first, work continues.
+All modes wired through `learnwy-dispatch` (UserPromptSubmit + Stop hooks). They never block the user's actual task — corrections come first, work continues.
+
+Every fired turn logs an entry to `prose_log` so we can compute fluency rate, by-language activity, and 30-day trend (`vocab prose-stats`).
 
 Detailed rules, exclusion filters, and Markdown formats: see [references/intercept-modes.md](references/intercept-modes.md).
 
@@ -62,6 +65,11 @@ node scripts/cli.cjs vocab record-correction '[{"original":"imrpove","corrected"
 node scripts/cli.cjs vocab top-corrections [limit=5]
 node scripts/cli.cjs vocab corrections-stats
 
+# prose log — log every prose input (clean or with issues), then aggregate fluency
+node scripts/cli.cjs vocab record-input '{"language":"en","text":"<original>","had_issues":false,"issue_count":0}'
+node scripts/cli.cjs vocab prose-stats          # totals, clean-rate, by-language, 30-day window
+node scripts/cli.cjs vocab recent-prose [limit=20]
+
 # sentence — input classification + word extraction
 node scripts/cli.cjs sentence classify <text>
 node scripts/cli.cjs sentence parse <sentence>
@@ -76,6 +84,8 @@ node scripts/cli.cjs quiz summary
 node scripts/cli.cjs link-wiki        # cross-link with llm-wiki
 
 # report — generate a self-contained static HTML dashboard from the SQLite DB
+#   sections: Overview · Due now · Activity · Words · Phrases · Corrections · Fluency · Materials
+#   Fluency section shows overall + 30-day clean rate, by-language breakdown, and 20 most-recent inputs.
 node scripts/cli.cjs report                       # writes ~/.learnwy/english-learner/report.html
 node scripts/cli.cjs report --output <path>       # custom destination
 node scripts/cli.cjs report --json                # also dump intermediate report.html.json

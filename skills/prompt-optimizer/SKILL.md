@@ -199,14 +199,15 @@ metadata:
 |------|------|------|
 | `UserPromptSubmit` | `scripts/hooks/user-prompt-scan.cjs` | 检测提示词形态的输入并注入 7 维度审查提醒 |
 
-### 检测（保守策略——避免噪音）
+### 触发策略（三级模式）
 
-hook 仅在以下条件之一满足时触发：
+hook 现在在**所有 prose 输入**上触发（仅跳过代码、文件路径、shell 命令和 ≤7 字符的极短输入）：
 
-1. **显式请求** — 消息包含 `optimize / improve / review / rewrite / check / refine my prompt`、`make this prompt more X`，或中文等效词 `优化提示词 / 改进提示词 / 重写提示词`。
-2. **结构化提示词形态** — 消息 ≥400 字符、≥4 行，且包含 ≥2 个标记如 `you are`、`your task is`、`act as`、`instructions:`、`constraints:`、`output format:`。
+1. **显式请求**（explicit） — 消息包含 `optimize / improve / review / rewrite / check / refine my prompt`、`make this prompt more X`，或中文等效词 `优化提示词 / 改进提示词 / 重写提示词`。**输出**：完整 7 维分析 + Optimized Prompt 块。
+2. **结构化提示词形态**（structured） — 消息 ≥400 字符、≥4 行，且包含 ≥2 个标记如 `you are`、`your task is`、`act as`、`instructions:`、`constraints:`、`output format:`。**输出**：完整 7 维分析 + Optimized Prompt 块。
+3. **轻量模式**（light） — 其他所有 prose 输入（短对话、闲聊式问题）。**输出**：仅 1 行——挑出 7 维里最弱的那个并给一条具体改写建议；若 7 维都过关，固定渲染 `"✨ Prompt-opt: already clear, no rewrite needed."` 然后继续任务。
 
-对代码、文件路径、shell 命令、普通聊天或短问题静默退出。
+事件日志（`~/.learnwy/prompt-optimizer/events.jsonl`）会记录 trigger 类型（explicit / structured / light），可用 `cli.cjs trends` 查看分布。
 
 ### 安装
 

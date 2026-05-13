@@ -297,6 +297,23 @@ const MIGRATIONS = [
       );
       CREATE INDEX IF NOT EXISTS idx_material_words_word ON material_words(word);
     `
+    },
+    {
+        version: 5,
+        up: `
+      CREATE TABLE IF NOT EXISTS prose_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ts TEXT NOT NULL,
+        language TEXT NOT NULL,
+        length INTEGER NOT NULL,
+        had_issues INTEGER NOT NULL DEFAULT 0,
+        issue_count INTEGER NOT NULL DEFAULT 0,
+        excerpt TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_prose_log_ts ON prose_log(ts);
+      CREATE INDEX IF NOT EXISTS idx_prose_log_lang ON prose_log(language);
+      CREATE INDEX IF NOT EXISTS idx_prose_log_had_issues ON prose_log(had_issues);
+    `
     }
 ];
 function intervalDaysForMastery(mastery) {

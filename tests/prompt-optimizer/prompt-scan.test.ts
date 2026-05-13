@@ -19,8 +19,15 @@ afterEach(() => {
 });
 
 describe('prompt-optimizer scanPrompt', () => {
-  it('returns null on bare conversational text', () => {
-    expect(scanPrompt('hey, can you help me think about this design?')).toBeNull();
+  it('returns light-mode block on bare conversational text', () => {
+    const out = scanPrompt('hey, can you help me think about this design?');
+    expect(out).not.toBeNull();
+    expect(out!).toMatch(/Light mode/);
+    expect(out!).toMatch(/already clear, no rewrite needed/);
+  });
+
+  it('returns null on too-short input', () => {
+    expect(scanPrompt('hi')).toBeNull();
   });
 
   it('returns block + writes event on explicit "optimize my prompt" trigger', () => {

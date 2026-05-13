@@ -553,6 +553,28 @@ function emptyState(message: string, hint: string): string {
   return `<div class="empty">${escapeHtml(message)}<br><small>${escapeHtml(hint)}</small></div>`;
 }
 
+const LANGUAGE_LABEL: Record<string, string> = {
+  en: 'English',
+  zh: 'Chinese',
+  ja: 'Japanese',
+  ko: 'Korean',
+  es: 'Spanish',
+  fr: 'French',
+  de: 'German',
+  ru: 'Russian',
+  ar: 'Arabic',
+  other: 'Other',
+};
+
+function langLabel(code: string): string {
+  return LANGUAGE_LABEL[code] || code.toUpperCase();
+}
+
+function pct(rate: number): string {
+  if (!Number.isFinite(rate) || rate < 0) return '0%';
+  return `${Math.round(rate * 100)}%`;
+}
+
 export function renderReport(data: ReportData): string {
   const title = `English-Learner Report — ${escapeHtml(data.generated_at.slice(0, 16).replace('T', ' '))} UTC`;
   const totalActivity = data.activity.reduce((sum, b) => sum + b.total, 0);
@@ -595,7 +617,8 @@ export function renderReport(data: ReportData): string {
     <a href="#activity">Activity <span class="count">${totalActivity}</span></a>
     <a href="#words">Words <span class="count">${data.all_words.length}</span></a>
     <a href="#phrases">Phrases <span class="count">${data.all_phrases.length}</span></a>
-    <a href="#corrections">Corrections <span class="count">${data.top_corrections.length}</span></a>${data.materials ? `
+    <a href="#corrections">Corrections <span class="count">${data.top_corrections.length}</span></a>
+    <a href="#fluency">Fluency <span class="count">${data.prose.total}</span></a>${data.materials ? `
     <a href="#materials">Materials <span class="count">${data.materials.total_materials}</span></a>` : ''}
   </nav>
   <div class="legend">
@@ -716,6 +739,45 @@ export function renderReport(data: ReportData): string {
       <tbody></tbody>
     </table>
     ${emptyCorrections ? `<div class="empty-runtime" style="display:none">${emptyState('No matches.', 'Clear filters to see all corrections.')}</div>${emptyCorrections}` : '<div class="empty-runtime" style="display:none">' + emptyState('No matches.', 'Clear filters to see all corrections.') + '</div>'}
+  </section>
+  <section id="fluency">
+    <header><h2>Fluency <span class="badge">(${data.prose.total} inputs logged)</span></h2></header>
+    ${data.prose.total === 0 ? emptyState(
+      'No prose inputs logged yet.',
+      'Every English / Chinese / other-language message you write in chat gets logged here. Type anything to start the counter.',
+    ) : `
+    <div class="cards">
+      <div class="card"><div class="label">Total inputs</div><div class="value">${data.prose.total}</div></div>
+      <div class="card"><div class="label">Clean rate</div><div class="value" style="color: var(--mastered)">${pct(data.prose.clean_rate)}</div><div class="delta">${data.prose.clean} clean · ${data.prose.with_issues} with issues</div></div>
+      <div class="card"><div class="label">Clean rate · 30d</div><div class="value" style="color: var(--accent)">${pct(data.prose.recent_30d.clean_rate)}</div><div class="delta">${data.prose.recent_30d.total} inputs in window</div></div>
+      <div class="card"><div class="label">Languages</div><div class="value">${data.prose.by_language.length}</div><div class="delta">distinct languages logged</div></div>
+    </div>
+    ${data.prose.by_language.length > 0 ? `
+    <h3 style="margin: 20px 0 8px; font-size: 14px; color: var(--muted);">By language</h3>
+    <table>
+      <thead><tr><th>Language</th><th>Total</th><th>Clean</th><th>With issues</th><th>Clean rate</th></tr></thead>
+      <tbody>${data.prose.by_language.map((l) => `<tr>
+        <td>${escapeHtml(langLabel(l.language))} <span class="meta-text" style="color: var(--muted)">(${escapeHtml(l.language)})</span></td>
+        <td>${l.total}</td>
+        <td>${l.clean}</td>
+        <td>${l.total - l.clean}</td>
+        <td>${pct(l.clean_rate)}</td>
+      </tr>`).join('')}</tbody>
+    </table>` : ''}
+    ${data.prose.recent_entries.length > 0 ? `
+    <h3 style="margin: 20px 0 8px; font-size: 14px; color: var(--muted);">Recent inputs (latest ${data.prose.recent_entries.length})</h3>
+    <table>
+      <thead><tr><th>Time</th><th>Lang</th><th>Status</th><th>Issues</th><th>Len</th><th>Excerpt</th></tr></thead>
+      <tbody>${data.prose.recent_entries.map((e) => `<tr>
+        <td class="mono">${escapeHtml(e.ts.slice(0, 16).replace('T', ' '))}</td>
+        <td>${escapeHtml(e.language)}</td>
+        <td>${e.had_issues ? '⚠️' : '✅'}</td>
+        <td>${e.issue_count}</td>
+        <td>${e.length}</td>
+        <td>${escapeHtml(e.excerpt || '').slice(0, 120)}</td>
+      </tr>`).join('')}</tbody>
+    </table>` : ''}
+    `}
   </section>
 ${data.materials ? `
   <section id="materials">

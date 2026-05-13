@@ -508,6 +508,23 @@ const MIGRATIONS = [
       );
       CREATE INDEX IF NOT EXISTS idx_material_words_word ON material_words(word);
     `
+    },
+    {
+        version: 5,
+        up: `
+      CREATE TABLE IF NOT EXISTS prose_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ts TEXT NOT NULL,
+        language TEXT NOT NULL,
+        length INTEGER NOT NULL,
+        had_issues INTEGER NOT NULL DEFAULT 0,
+        issue_count INTEGER NOT NULL DEFAULT 0,
+        excerpt TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_prose_log_ts ON prose_log(ts);
+      CREATE INDEX IF NOT EXISTS idx_prose_log_lang ON prose_log(language);
+      CREATE INDEX IF NOT EXISTS idx_prose_log_had_issues ON prose_log(had_issues);
+    `
     }
 ];
 function intervalDaysForMastery(mastery) {
@@ -900,7 +917,82 @@ function getCorrectionStats() {
     };
 }
 
+;// CONCATENATED MODULE: ./src/english-learner/lib/prose-store.ts
+
+
+const EXCERPT_MAX = 200;
+function recordProseInput(input) {
+    const db = db_getDb();
+    const text = input.text ?? '';
+    const length = input.length ?? text.length;
+    const excerpt = text ? text.slice(0, EXCERPT_MAX).replace(/\s+/g, ' ').trim() : null;
+    const hadIssues = input.had_issues ? 1 : 0;
+    const issueCount = input.issue_count ?? 0;
+    const stmt = db.prepare(`
+    INSERT INTO prose_log (ts, language, length, had_issues, issue_count, excerpt)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `);
+    const result = stmt.run(fs_utils_nowIso(), String(input.language), length, hadIssues, issueCount, excerpt);
+    return {
+        id: Number(result.lastInsertRowid)
+    };
+}
+function getProseStats() {
+    const db = db_getDb();
+    const totalRow = db.prepare('SELECT COUNT(*) AS c, SUM(CASE WHEN had_issues = 0 THEN 1 ELSE 0 END) AS clean FROM prose_log').get();
+    const total = totalRow.c;
+    const clean = totalRow.clean ?? 0;
+    const withIssues = total - clean;
+    const cleanRate = total > 0 ? clean / total : 0;
+    const byLangRows = db.prepare(`
+      SELECT language,
+             COUNT(*) AS total,
+             SUM(CASE WHEN had_issues = 0 THEN 1 ELSE 0 END) AS clean
+      FROM prose_log
+      GROUP BY language
+      ORDER BY total DESC
+    `).all();
+    const byLanguage = byLangRows.map((r)=>{
+        const t = r.total;
+        const c = r.clean ?? 0;
+        return {
+            language: r.language,
+            total: t,
+            clean: c,
+            clean_rate: t > 0 ? c / t : 0
+        };
+    });
+    const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const recentRow = db.prepare(`
+      SELECT COUNT(*) AS c, SUM(CASE WHEN had_issues = 0 THEN 1 ELSE 0 END) AS clean
+      FROM prose_log
+      WHERE ts >= ?
+    `).get(cutoff);
+    const recentTotal = recentRow.c;
+    const recentClean = recentRow.clean ?? 0;
+    const recentWithIssues = recentTotal - recentClean;
+    const recentCleanRate = recentTotal > 0 ? recentClean / recentTotal : 0;
+    return {
+        total,
+        clean,
+        with_issues: withIssues,
+        clean_rate: cleanRate,
+        by_language: byLanguage,
+        recent_30d: {
+            total: recentTotal,
+            clean: recentClean,
+            with_issues: recentWithIssues,
+            clean_rate: recentCleanRate
+        }
+    };
+}
+function getRecentProse(limit = 20) {
+    const db = db_getDb();
+    return db.prepare('SELECT id, ts, language, length, had_issues, issue_count, excerpt FROM prose_log ORDER BY ts DESC LIMIT ?').all(limit);
+}
+
 ;// CONCATENATED MODULE: ./src/english-learner/cmd/vocab.ts
+
 
 
 const actions = {
@@ -973,6 +1065,17 @@ const actions = {
     },
     'corrections-stats': ()=>{
         console.log(JSON.stringify(getCorrectionStats(), null, 2));
+    },
+    'record-input': (args)=>{
+        const payload = JSON.parse(args[0]);
+        console.log(JSON.stringify(recordProseInput(payload), null, 2));
+    },
+    'prose-stats': ()=>{
+        console.log(JSON.stringify(getProseStats(), null, 2));
+    },
+    'recent-prose': (args)=>{
+        const limit = args[0] ? Number.parseInt(args[0], 10) : 20;
+        console.log(JSON.stringify(getRecentProse(limit), null, 2));
     }
 };
 const minArgs = {
@@ -984,7 +1087,8 @@ const minArgs = {
     update_mastery: 3,
     batch_get: 1,
     batch_save: 1,
-    'record-correction': 1
+    'record-correction': 1,
+    'record-input': 1
 };
 const command = {
     description: 'Word/phrase CRUD + batch operations + stats',
@@ -1555,10 +1659,12 @@ const external_node_child_process_namespaceObject = require("node:child_process"
 
 
 
+
 const ALL_ITEMS_CAP = 5000;
 const TOP_CORRECTIONS_LIMIT = 50;
 const ACTIVITY_DAYS = 30;
 const DUE_LIMIT = 200;
+const RECENT_PROSE_LIMIT = 20;
 function dayKey(date) {
     const y = date.getUTCFullYear();
     const m = String(date.getUTCMonth() + 1).padStart(2, '0');
@@ -1610,7 +1716,28 @@ function collectReportData(now = new Date()) {
         phrases_truncated: allPhraseRows.length > ALL_ITEMS_CAP,
         top_corrections: getTopCorrections(TOP_CORRECTIONS_LIMIT),
         activity: denseActivity(activityRows, now),
+        prose: collectProseReport(),
         materials: collectMaterialsReport(db)
+    };
+}
+function collectProseReport() {
+    const stats = getProseStats();
+    const recent = getRecentProse(RECENT_PROSE_LIMIT);
+    return {
+        total: stats.total,
+        clean: stats.clean,
+        with_issues: stats.with_issues,
+        clean_rate: stats.clean_rate,
+        by_language: stats.by_language,
+        recent_30d: stats.recent_30d,
+        recent_entries: recent.map((r)=>({
+                ts: r.ts,
+                language: r.language,
+                length: r.length,
+                had_issues: r.had_issues === 1,
+                issue_count: r.issue_count,
+                excerpt: r.excerpt
+            }))
     };
 }
 function collectMaterialsReport(db) {
@@ -2179,6 +2306,25 @@ const SCRIPT = `
 function emptyState(message, hint) {
     return `<div class="empty">${escapeHtml(message)}<br><small>${escapeHtml(hint)}</small></div>`;
 }
+const LANGUAGE_LABEL = {
+    en: 'English',
+    zh: 'Chinese',
+    ja: 'Japanese',
+    ko: 'Korean',
+    es: 'Spanish',
+    fr: 'French',
+    de: 'German',
+    ru: 'Russian',
+    ar: 'Arabic',
+    other: 'Other'
+};
+function langLabel(code) {
+    return LANGUAGE_LABEL[code] || code.toUpperCase();
+}
+function pct(rate) {
+    if (!Number.isFinite(rate) || rate < 0) return '0%';
+    return `${Math.round(rate * 100)}%`;
+}
 function renderReport(data) {
     const title = `English-Learner Report \u{2014} ${escapeHtml(data.generated_at.slice(0, 16).replace('T', ' '))} UTC`;
     const totalActivity = data.activity.reduce((sum, b)=>sum + b.total, 0);
@@ -2212,7 +2358,8 @@ function renderReport(data) {
     <a href="#activity">Activity <span class="count">${totalActivity}</span></a>
     <a href="#words">Words <span class="count">${data.all_words.length}</span></a>
     <a href="#phrases">Phrases <span class="count">${data.all_phrases.length}</span></a>
-    <a href="#corrections">Corrections <span class="count">${data.top_corrections.length}</span></a>${data.materials ? `
+    <a href="#corrections">Corrections <span class="count">${data.top_corrections.length}</span></a>
+    <a href="#fluency">Fluency <span class="count">${data.prose.total}</span></a>${data.materials ? `
     <a href="#materials">Materials <span class="count">${data.materials.total_materials}</span></a>` : ''}
   </nav>
   <div class="legend">
@@ -2333,6 +2480,42 @@ function renderReport(data) {
       <tbody></tbody>
     </table>
     ${emptyCorrections ? `<div class="empty-runtime" style="display:none">${emptyState('No matches.', 'Clear filters to see all corrections.')}</div>${emptyCorrections}` : '<div class="empty-runtime" style="display:none">' + emptyState('No matches.', 'Clear filters to see all corrections.') + '</div>'}
+  </section>
+  <section id="fluency">
+    <header><h2>Fluency <span class="badge">(${data.prose.total} inputs logged)</span></h2></header>
+    ${data.prose.total === 0 ? emptyState('No prose inputs logged yet.', 'Every English / Chinese / other-language message you write in chat gets logged here. Type anything to start the counter.') : `
+    <div class="cards">
+      <div class="card"><div class="label">Total inputs</div><div class="value">${data.prose.total}</div></div>
+      <div class="card"><div class="label">Clean rate</div><div class="value" style="color: var(--mastered)">${pct(data.prose.clean_rate)}</div><div class="delta">${data.prose.clean} clean \xb7 ${data.prose.with_issues} with issues</div></div>
+      <div class="card"><div class="label">Clean rate \xb7 30d</div><div class="value" style="color: var(--accent)">${pct(data.prose.recent_30d.clean_rate)}</div><div class="delta">${data.prose.recent_30d.total} inputs in window</div></div>
+      <div class="card"><div class="label">Languages</div><div class="value">${data.prose.by_language.length}</div><div class="delta">distinct languages logged</div></div>
+    </div>
+    ${data.prose.by_language.length > 0 ? `
+    <h3 style="margin: 20px 0 8px; font-size: 14px; color: var(--muted);">By language</h3>
+    <table>
+      <thead><tr><th>Language</th><th>Total</th><th>Clean</th><th>With issues</th><th>Clean rate</th></tr></thead>
+      <tbody>${data.prose.by_language.map((l)=>`<tr>
+        <td>${escapeHtml(langLabel(l.language))} <span class="meta-text" style="color: var(--muted)">(${escapeHtml(l.language)})</span></td>
+        <td>${l.total}</td>
+        <td>${l.clean}</td>
+        <td>${l.total - l.clean}</td>
+        <td>${pct(l.clean_rate)}</td>
+      </tr>`).join('')}</tbody>
+    </table>` : ''}
+    ${data.prose.recent_entries.length > 0 ? `
+    <h3 style="margin: 20px 0 8px; font-size: 14px; color: var(--muted);">Recent inputs (latest ${data.prose.recent_entries.length})</h3>
+    <table>
+      <thead><tr><th>Time</th><th>Lang</th><th>Status</th><th>Issues</th><th>Len</th><th>Excerpt</th></tr></thead>
+      <tbody>${data.prose.recent_entries.map((e)=>`<tr>
+        <td class="mono">${escapeHtml(e.ts.slice(0, 16).replace('T', ' '))}</td>
+        <td>${escapeHtml(e.language)}</td>
+        <td>${e.had_issues ? "\u26A0\uFE0F" : "\u2705"}</td>
+        <td>${e.issue_count}</td>
+        <td>${e.length}</td>
+        <td>${escapeHtml(e.excerpt || '').slice(0, 120)}</td>
+      </tr>`).join('')}</tbody>
+    </table>` : ''}
+    `}
   </section>
 ${data.materials ? `
   <section id="materials">

@@ -50,6 +50,22 @@ const sampleData: ReportData = {
     { day: '2026-05-11', total: 0, by_type: {} },
     { day: '2026-05-12', total: 3, by_type: { lookup: 3 } },
   ],
+  prose: {
+    total: 10,
+    clean: 7,
+    with_issues: 3,
+    clean_rate: 0.7,
+    by_language: [
+      { language: 'en', total: 6, clean: 4, clean_rate: 4 / 6 },
+      { language: 'zh', total: 3, clean: 3, clean_rate: 1 },
+      { language: 'ja', total: 1, clean: 0, clean_rate: 0 },
+    ],
+    recent_30d: { total: 8, clean: 6, with_issues: 2, clean_rate: 0.75 },
+    recent_entries: [
+      { ts: '2026-05-12T10:00:00.000Z', language: 'en', length: 42, had_issues: false, issue_count: 0, excerpt: 'How are you today?' },
+      { ts: '2026-05-12T09:00:00.000Z', language: 'en', length: 30, had_issues: true, issue_count: 2, excerpt: 'i dont know what to do' },
+    ],
+  },
 };
 
 describe('escapeHtml', () => {
@@ -94,10 +110,37 @@ describe('renderReport', () => {
     expect(html).toContain('id="words"');
     expect(html).toContain('id="phrases"');
     expect(html).toContain('id="corrections"');
+    expect(html).toContain('id="fluency"');
     expect(html).toContain('id="back-to-top"');
     expect(html).toContain('id="global-search"');
     expect(html).toContain('id="shortcuts-modal"');
     expect(html).toContain('class="sidebar"');
+  });
+
+  it('renders fluency section with stats, by-language table, and recent entries', () => {
+    expect(html).toContain('Fluency');
+    expect(html).toContain('Clean rate');
+    expect(html).toContain('70%');           // overall clean_rate
+    expect(html).toContain('75%');           // recent_30d clean_rate
+    expect(html).toContain('English');       // language label for "en"
+    expect(html).toContain('Japanese');      // language label for "ja"
+    expect(html).toContain('How are you today?');
+    expect(html).toContain('✅');
+    expect(html).toContain('⚠️');
+  });
+
+  it('shows empty state for fluency when no prose inputs logged', () => {
+    const empty: ReportData = {
+      ...sampleData,
+      prose: {
+        total: 0, clean: 0, with_issues: 0, clean_rate: 0,
+        by_language: [],
+        recent_30d: { total: 0, clean: 0, with_issues: 0, clean_rate: 0 },
+        recent_entries: [],
+      },
+    };
+    const out = renderReport(empty);
+    expect(out).toContain('No prose inputs logged yet');
   });
 
   it('renders mastery filter chips with bucket data attributes', () => {

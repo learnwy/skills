@@ -4,11 +4,13 @@ import {
 } from '../../shared/db.js';
 import { getStats, type Stats } from './vocab-store.js';
 import { getTopCorrections, getCorrectionStats, type TopCorrection } from './corrections-store.js';
+import { getProseStats, getRecentProse, type ProseLogRow } from './prose-store.js';
 
 export const ALL_ITEMS_CAP = 5000;
 export const TOP_CORRECTIONS_LIMIT = 50;
 export const ACTIVITY_DAYS = 30;
 export const DUE_LIMIT = 200;
+export const RECENT_PROSE_LIMIT = 20;
 
 export interface ActivityBucket {
   day: string;
@@ -24,6 +26,23 @@ export interface MaterialsReport {
   recent_materials: Array<{ date: string; source_type: string; word_count: number }>;
 }
 
+export interface ProseReport {
+  total: number;
+  clean: number;
+  with_issues: number;
+  clean_rate: number;
+  by_language: Array<{ language: string; total: number; clean: number; clean_rate: number }>;
+  recent_30d: { total: number; clean: number; with_issues: number; clean_rate: number };
+  recent_entries: Array<{
+    ts: string;
+    language: string;
+    length: number;
+    had_issues: boolean;
+    issue_count: number;
+    excerpt: string | null;
+  }>;
+}
+
 export interface ReportData {
   generated_at: string;
   stats: Stats;
@@ -36,6 +55,7 @@ export interface ReportData {
   phrases_truncated: boolean;
   top_corrections: TopCorrection[];
   activity: ActivityBucket[];
+  prose: ProseReport;
   materials?: MaterialsReport;
 }
 
@@ -103,7 +123,29 @@ export function collectReportData(now: Date = new Date()): ReportData {
     phrases_truncated: allPhraseRows.length > ALL_ITEMS_CAP,
     top_corrections: getTopCorrections(TOP_CORRECTIONS_LIMIT),
     activity: denseActivity(activityRows, now),
+    prose: collectProseReport(),
     materials: collectMaterialsReport(db),
+  };
+}
+
+function collectProseReport(): ProseReport {
+  const stats = getProseStats();
+  const recent = getRecentProse(RECENT_PROSE_LIMIT);
+  return {
+    total: stats.total,
+    clean: stats.clean,
+    with_issues: stats.with_issues,
+    clean_rate: stats.clean_rate,
+    by_language: stats.by_language,
+    recent_30d: stats.recent_30d,
+    recent_entries: recent.map((r: ProseLogRow) => ({
+      ts: r.ts,
+      language: r.language,
+      length: r.length,
+      had_issues: r.had_issues === 1,
+      issue_count: r.issue_count,
+      excerpt: r.excerpt,
+    })),
   };
 }
 

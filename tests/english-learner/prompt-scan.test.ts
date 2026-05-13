@@ -37,6 +37,25 @@ describe('english-learner scanPrompt', () => {
     const long = '请帮我'.repeat(200);
     expect(scanPrompt(long)).toBeNull();
   });
+
+  it('returns OTHER block for Japanese input', () => {
+    const out = scanPrompt('こんにちは、今日の天気はとても良いですね');
+    expect(out).not.toBeNull();
+    expect(out!).toMatch(/language other than English or Chinese/);
+    expect(out!).toMatch(/Translate & Learn/);
+  });
+
+  it('returns OTHER block for Korean input', () => {
+    const out = scanPrompt('안녕하세요 오늘 날씨가 정말 좋네요');
+    expect(out).not.toBeNull();
+    expect(out!).toMatch(/Translate & Learn/);
+  });
+
+  it('reminder text tells the AI to call vocab record-input', () => {
+    const out = scanPrompt('Could you help me refactor this function for clarity?');
+    expect(out!).toMatch(/vocab record-input/);
+    expect(out!).toMatch(/had_issues/);
+  });
 });
 
 describe('english-learner scanStop', () => {

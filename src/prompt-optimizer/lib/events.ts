@@ -13,7 +13,7 @@ export function eventsFile(): string {
 export const DATA_ROOT = dataRoot();
 export const EVENTS_FILE = eventsFile();
 
-export type TriggerKind = 'explicit' | 'structured';
+export type TriggerKind = 'explicit' | 'structured' | 'light';
 
 export interface PromptEvent {
   ts: string;
