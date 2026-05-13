@@ -155,6 +155,17 @@ describe('renderReport', () => {
     expect(html.match(/class="row-limit"/g)!.length).toBeGreaterThanOrEqual(3);
   });
 
+  it('wires Web Speech API support for word / phrase / correction cells', () => {
+    expect(html).toContain('speechSynthesis');
+    expect(html).toContain('SpeechSynthesisUtterance');
+    expect(html).toContain('makeSpeakableCell');
+    expect(html).toContain('makeSpeakButton');
+    expect(html).toContain('.speak-btn');
+    expect(html).toContain("data.all_words, [\n    { cell: (r) => makeSpeakableCell(r.word");
+    expect(html).toContain("data.all_phrases, [\n    { cell: (r) => makeSpeakableCell(r.phrase");
+    expect(html).toContain('cell: (r) => makeSpeakableCell(r.corrected)');
+  });
+
   it('includes print stylesheet rules', () => {
     expect(html).toContain('@media print');
   });

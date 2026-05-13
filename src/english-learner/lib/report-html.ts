@@ -160,6 +160,22 @@ td.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size
 .due-row:last-child { border-bottom: none; }
 .due-row .term { font-weight: 600; }
 .due-row .meta-text { font-size: 12px; color: var(--muted); }
+.speak-btn {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 4px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  opacity: 0.4;
+  vertical-align: middle;
+  color: var(--fg);
+  transition: opacity 120ms ease, background 120ms ease;
+}
+.speak-btn:hover { opacity: 1; background: var(--card); border-color: var(--border); }
+.speak-btn.playing { opacity: 1; color: var(--accent); }
 .empty {
   background: var(--card);
   border: 1px dashed var(--border);
@@ -273,6 +289,49 @@ const SCRIPT = `
     if (opts.mono) td.className = 'mono';
     return td;
   }
+
+  const speechSupported = 'speechSynthesis' in window;
+
+  function speak(text, lang = 'en-US') {
+    if (!speechSupported || !text) return;
+    const u = new SpeechSynthesisUtterance(String(text));
+    u.lang = lang;
+    u.rate = 0.9;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+    return u;
+  }
+
+  function makeSpeakButton(text, lang = 'en-US') {
+    if (!speechSupported || !text) return null;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'speak-btn';
+    btn.title = 'Speak (' + lang + ')';
+    btn.textContent = '🔊';
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const u = speak(text, lang);
+      if (!u) return;
+      btn.classList.add('playing');
+      const off = () => btn.classList.remove('playing');
+      u.addEventListener('end', off);
+      u.addEventListener('error', off);
+    });
+    return btn;
+  }
+
+  function makeSpeakableCell(text, opts = {}) {
+    const td = document.createElement('td');
+    const span = document.createElement('span');
+    span.textContent = String(text == null ? '' : text);
+    if (opts.mono) span.className = 'mono';
+    td.appendChild(span);
+    const btn = makeSpeakButton(text, opts.lang);
+    if (btn) td.appendChild(btn);
+    return td;
+  }
   function masteryCell(value) {
     const td = document.createElement('td');
     const wrap = document.createElement('span');
@@ -381,7 +440,7 @@ const SCRIPT = `
   }
 
   tables.words = attachTable('words', data.all_words, [
-    { cell: (r) => makeCell(r.word, { mono: true }), search: (r) => r.word, key: 'word' },
+    { cell: (r) => makeSpeakableCell(r.word, { mono: true }), search: (r) => r.word, key: 'word' },
     { cell: (r) => makeCell(r.phonetic || ''), search: (r) => r.phonetic, key: 'phonetic' },
     { cell: (r) => makeCell(defOf(r)), search: (r) => defOf(r), key: 'definition' },
     { cell: (r) => masteryCell(r.mastery), key: 'mastery' },
@@ -394,7 +453,7 @@ const SCRIPT = `
   });
 
   tables.phrases = attachTable('phrases', data.all_phrases, [
-    { cell: (r) => makeCell(r.phrase, { mono: true }), search: (r) => r.phrase },
+    { cell: (r) => makeSpeakableCell(r.phrase, { mono: true }), search: (r) => r.phrase },
     { cell: (r) => makeCell(r.definition || ''), search: (r) => r.definition },
     { cell: (r) => masteryCell(r.mastery) },
     { cell: (r) => makeCell(r.lookup_count) },
@@ -407,7 +466,7 @@ const SCRIPT = `
 
   tables.corrections = attachTable('corrections', data.top_corrections, [
     { cell: (r) => makeCell(r.original), search: (r) => r.original },
-    { cell: (r) => makeCell(r.corrected), search: (r) => r.corrected },
+    { cell: (r) => makeSpeakableCell(r.corrected), search: (r) => r.corrected },
     { cell: (r) => makeCell(r.reason || ''), search: (r) => r.reason },
     { cell: (r) => makeCell(r.count) },
     { cell: (r) => makeCell((r.last_seen || '').slice(0, 10)) },
@@ -452,7 +511,11 @@ const SCRIPT = `
         const left = document.createElement('div');
         const term = document.createElement('div');
         term.className = 'term';
-        term.textContent = it.term;
+        const termText = document.createElement('span');
+        termText.textContent = it.term;
+        term.appendChild(termText);
+        const speakBtn = makeSpeakButton(it.term);
+        if (speakBtn) term.appendChild(speakBtn);
         const def = document.createElement('div');
         def.className = 'meta-text';
         def.textContent = (it.kind === 'phrase' ? '[phrase] ' : '') + (it.def || '');
