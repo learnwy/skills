@@ -29,13 +29,32 @@ describe('english-learner scanPrompt', () => {
     expect(scanPrompt('Use Skill: project-rules-writer with args')).toBeNull();
   });
 
-  it('skips Chinese branch when message looks like coding context', () => {
-    expect(scanPrompt('请帮我修复这个 bug，重构这段代码')).toBeNull();
+  it('falls into Chinese LIGHT mode for coding-context messages (never silent skip)', () => {
+    const out = scanPrompt('请帮我修复这个 bug，重构这段代码');
+    expect(out).not.toBeNull();
+    expect(out!).toMatch(/wrote in Chinese/);
+    expect(out!).toMatch(/light mode/i);
+    expect(out!).toMatch(/中译英 \(light\)/);
   });
 
-  it('skips Chinese branch for very long messages (likely task body, not learning)', () => {
+  it('falls into Chinese LIGHT mode for very long messages (never silent skip)', () => {
     const long = '请帮我'.repeat(200);
-    expect(scanPrompt(long)).toBeNull();
+    const out = scanPrompt(long);
+    expect(out).not.toBeNull();
+    expect(out!).toMatch(/light mode/i);
+  });
+
+  it('uses Chinese FULL mode for normal-length non-tech Chinese', () => {
+    const out = scanPrompt('今天天气不错，我想去公园散步');
+    expect(out).not.toBeNull();
+    expect(out!).not.toMatch(/light mode/i);
+    expect(out!).toMatch(/2-3 alternative expressions/);
+  });
+
+  it('fires for very short CJK (≥2 chars)', () => {
+    const out = scanPrompt('查单词');
+    expect(out).not.toBeNull();
+    expect(out!).toMatch(/中译英/);
   });
 
   it('returns OTHER block for Japanese input', () => {

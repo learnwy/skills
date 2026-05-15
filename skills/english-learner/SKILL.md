@@ -16,8 +16,8 @@ Personal vocabulary assistant with persistent storage, mastery tracking, and spa
 | Mode | Trigger | Action |
 |---|---|---|
 | **English intercept** | User writes in English (EN ratio ≥ 0.6) | If issues found: show 1–3 corrections in a "💡 English Tip" table. If clean: render exactly `"✅ English looks fluent — no issues found."` Always call `vocab record-input` with `had_issues` + `issue_count`. |
-| **Chinese intercept** | User writes in Chinese (CN ratio ≥ 0.3, < 500 chars, no coding keywords) | Prepend "🌐 中译英" block: corrections (if any) + 2–3 EN translations + 2–3 vocab. Auto-save via `batch_save`. Call `record-input` with `language: zh`. |
-| **Other-language intercept** | User writes prose in JA / KO / ES / FR / DE / RU / AR / etc. (low EN, low ZH ratios, < 800 chars) | Prepend "🌐 Translate & Learn" block: detect language explicitly, translate to English, extract 2–3 vocab, auto-save. Call `record-input` with `language: ja/ko/other`. |
+| **Chinese intercept** | User writes in Chinese (CN ratio ≥ 0.3, OR contains 翻译/怎么说/用英语 intent). **Always fires — never silently skipped.** Tiered output: full mode for normal messages; **light mode** when ≥ 500 chars OR contains code keywords (代码/编程/bug/修复/重构/编译/部署/配置文件). | Full: "🌐 中译英" block — corrections (if any) + 2–3 EN translations + 2–3 vocab + `batch_save`. Light: "🌐 中译英 (light)" — 1 EN translation + optional 1 vocab. Both call `record-input` with `language: zh`. |
+| **Other-language intercept** | User writes prose in JA / KO / ES / FR / DE / RU / AR / etc. (low EN, low ZH ratios). **Always fires.** Tiered: full mode for normal, **light mode** when ≥ 800 chars. | Full: "🌐 Translate & Learn" — detect language, translate, 2–3 vocab, auto-save. Light: 1 EN translation + optional 1 vocab. Both call `record-input` with `language: ja/ko/other`. |
 
 All modes wired through `learnwy-dispatch` (UserPromptSubmit + Stop hooks). They never block the user's actual task — corrections come first, work continues.
 
@@ -38,12 +38,15 @@ Response formats (word card, phrase card, sentence breakdown, quiz prompt, stats
 
 ## When NOT to fire
 
-- Code, programming, technical questions
-- Inputs that look like commands or file paths
-- English already fluent / natural (intercept silently skips)
-- Chinese > 500 chars (likely a task description, not a learning request)
-- Contains code keywords: `代码`, `编程`, `bug`, `修复`, `重构`, `编译`, `部署`, `配置文件`
-- Starts with `Use Skill:`
+The intercept skips entirely **only** for inputs that aren't prose at all:
+
+- Pure code / shell commands / file-path-only lines (matched by `looksLikeNonProse`)
+- Single-line `Use Skill:` directives
+- Anything shorter than 4 chars (or 2 chars if it contains CJK)
+
+**Tech-heavy or long Chinese is NOT skipped** — it falls into *light mode* instead (1-sentence translation, optional 1 vocab). See [feedback-learning-tools-fire-everywhere] in memory: silent gates hurt the long-term dataset, so we always fire, just adjust verbosity.
+
+English fluency check is special: if no issues, render the one-line `✅ English looks fluent` ack — that *is* the fire, not a skip.
 
 ## Prerequisites
 

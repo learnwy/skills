@@ -228,7 +228,7 @@ const ENGLISH_BLOCK = [
     'If English is fluent/natural, do NOT render a tip table \u2014 instead render exactly one line: "\u2705 English looks fluent \u2014 no issues found." then proceed.',
     RECORD_INPUT_HINT
 ].join(' ');
-const CHINESE_BLOCK = [
+const CHINESE_BLOCK_FULL = [
     '[english-learner hook] The user wrote in Chinese.',
     'Before responding to the task, prepend a "\uD83C\uDF10 \u4E2D\u8BD1\u82F1" section:',
     "1. Check the Chinese for grammar errors, typos, or awkward phrasing \u2014 if found, show corrections in a table.",
@@ -239,13 +239,34 @@ const CHINESE_BLOCK = [
     'Format: "\uD83C\uDF10 \u4E2D\u8BD1\u82F1" header, corrections table (if any), English translations, vocab table, then separator and task response.',
     RECORD_INPUT_HINT
 ].join(' ');
-const OTHER_LANG_BLOCK = [
+const CHINESE_BLOCK_LIGHT = [
+    "[english-learner hook] The user wrote in Chinese (long-form or tech-heavy \u2014 light mode, but DO NOT skip).",
+    'Prepend a brief "\uD83C\uDF10 \u4E2D\u8BD1\u82F1 (light)" section before tackling the task:',
+    "1. Translate the user's core ask into ONE natural English sentence (skip alternative phrasings).",
+    '2. Extract 1 key English vocabulary/phrase if something stands out (phonetic + 1-line usage); otherwise omit the vocab table.',
+    '3. Skip the corrections table unless an obvious typo exists.',
+    '4. Auto-save the vocab item via batch_save if extracted.',
+    "5. Then proceed with the user's actual task in normal flow.",
+    "Rationale: long task descriptions and tech contexts still get translation exposure \u2014 never silently skipped.",
+    RECORD_INPUT_HINT
+].join(' ');
+const OTHER_LANG_BLOCK_FULL = [
     '[english-learner hook] The user wrote in a language other than English or Chinese.',
     'Detect the language (likely Japanese, Korean, Spanish, French, German, Russian, Arabic, etc.) and prepend a "\uD83C\uDF10 Translate & Learn" section:',
     "1. Name the detected language explicitly on the first line (e.g. \"Detected: Japanese\").",
     "2. Translate the user's message into natural English (1-2 alternative expressions).",
     '3. Extract 2-3 key English vocabulary/phrases from the translation, with phonetic + brief usage note.',
     "4. Auto-save the new words via `vocab batch_save` (no need to ask \u2014 just save them).",
+    "5. Then proceed with the user's actual task in English.",
+    RECORD_INPUT_HINT
+].join(' ');
+const OTHER_LANG_BLOCK_LIGHT = [
+    '[english-learner hook] The user wrote a long message in a non-English/non-Chinese language (light mode, but DO NOT skip).',
+    'Prepend a brief "\uD83C\uDF10 Translate & Learn (light)" section:',
+    "1. Name the detected language on line one (e.g. \"Detected: Japanese\").",
+    "2. Translate the user's core ask into ONE natural English sentence.",
+    '3. Optionally extract 1 vocabulary item if notable; otherwise omit.',
+    '4. Auto-save via batch_save if extracted.',
     "5. Then proceed with the user's actual task in English.",
     RECORD_INPUT_HINT
 ].join(' ');
@@ -257,20 +278,24 @@ function detectLanguage(message) {
     if (message.length >= 10) return 'other';
     return null;
 }
+const CN_TECH_RE = /代码|编程|bug|修复|重构|编译|部署|配置文件/;
+const CN_FULL_MAX_LEN = 500;
+const OTHER_FULL_MAX_LEN = 800;
 function scanPrompt(message) {
-    if (!message || message.length < 4) return null;
+    if (!message) return null;
+    const minLen = chineseRatio(message) > 0 ? 2 : 4;
+    if (message.length < minLen) return null;
     if (looksLikeNonProse(message)) return null;
     if (/^Use Skill:/i.test(message.trim())) return null;
     const lang = detectLanguage(message);
     if (lang === null) return null;
     if (lang === 'en') return ENGLISH_BLOCK;
     if (lang === 'zh') {
-        if (/代码|编程|bug|修复|重构|编译|部署|配置文件/.test(message)) return null;
-        if (message.length > 500) return null;
-        return CHINESE_BLOCK;
+        const isTechHeavy = CN_TECH_RE.test(message);
+        const isLong = message.length > CN_FULL_MAX_LEN;
+        return isTechHeavy || isLong ? CHINESE_BLOCK_LIGHT : CHINESE_BLOCK_FULL;
     }
-    if (message.length > 800) return null;
-    return OTHER_LANG_BLOCK;
+    return message.length > OTHER_FULL_MAX_LEN ? OTHER_LANG_BLOCK_LIGHT : OTHER_LANG_BLOCK_FULL;
 }
 
 ;// CONCATENATED MODULE: external "node:os"
