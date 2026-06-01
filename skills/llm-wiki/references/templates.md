@@ -1,253 +1,202 @@
 # Wiki 页面模板
 
-llm-wiki 技能使用的所有 wiki 页面模板参考文档。
+llm-wiki 技能使用的所有 wiki 页面模板（实体优先布局）。
 
-## 摘要页面模板 (wiki/summaries/)
+> 约定：每页以 `# 标题` H1 开头；交叉引用用 `[[folder/slug]]`（上限 ~5，超出用"另见"）；
+> slug 用 kebab-case；来源页带 `**Source**:` / `**Ingested**:`。
 
-```markdown
-# {来源标题}
+---
 
-**来源**: [[raw/{path}]]
-**收录日期**: {date}
-**类型**: {article | paper | book | podcast | notes}
+## 实体类（wiki/people, organizations, places, products, events, concepts, other-entities）
 
-## 要点
-- {要点1}
-- {要点2}
-- {要点3}
-
-## 引用的概念
-- [[concepts/{concept1}]]
-- [[concepts/{concept2}]]
-
-## 提及的实体
-- [[entities/{entity1}]]
-
-## 与已有知识的矛盾
-- {与已有 wiki 页面的冲突，或"未检测到"}
-
-## 备注
-{额外上下文、质量评估、相关性说明}
-```
-
-## 概念页面模板 (wiki/concepts/)
+### 人物 (wiki/people/)
 
 ```markdown
-# {概念名称}
+# {姓名}
 
-## 定义
-{从所有来源综合的清晰、简洁定义}
-
-## 关键来源
-- [[summaries/{source1}]] — {该来源对此概念的阐述}
-- [[summaries/{source2}]] — {该来源的补充}
-
-## 相关概念
-- [[concepts/{related1}]] — {关系描述}
-- [[concepts/{related2}]] — {关系描述}
-
-## 开放问题
-- {关于此概念的未答问题}
-
-## 演进
-| 日期 | 更新 | 来源 |
-|------|------|------|
-| {date} | 从 {source} 创建 | [[summaries/{source}]] |
-| {date} | 用 {新信息} 更新 | [[summaries/{source}]] |
-```
-
-## 实体页面模板 (wiki/entities/)
-
-```markdown
-# {实体名称}
-
-**类型**: {person | organization | product | technology}
+**角色**: {一句话身份}
+**别名**: {可选}
 
 ## 概述
 {从所有来源综合的描述}
 
-## 出现记录
-- [[summaries/{source1}]] — {在该来源中的角色/上下文}
-- [[summaries/{source2}]] — {在该来源中的角色/上下文}
+## 关键事实
+- {date} {事实}（来源：[[threads/{src}]] / [[articles/{src}]]）
 
 ## 关系
-- {entity} → {关系} → [[entities/{other}]]
+- → {关系} → [[organizations/{org}]]、[[people/{other}]]
 
-## 关键主张
-| 主张 | 来源 | 置信度 |
-|------|------|--------|
-| {claim} | [[summaries/{source}]] | {高/中/低} |
+## 另见
+- [[products/{proj}]]
 ```
+
+### 组织 (wiki/organizations/)
+
+```markdown
+# {组织 / 团队名}
+
+**类型**: {company | team | community}
+
+## 概述
+{描述}
+
+## 成员 / 关联
+- [[people/{person}]] — {角色}
+
+## 关键事实
+- {date} {事实}（来源：[[...]]）
+```
+
+### 地点 (wiki/places/)
+
+```markdown
+# {地点名}
+
+**类型**: {city | venue | region}
+
+## 概述
+{描述}
+
+## 关联
+- [[events/{event}]]、[[organizations/{org}]]
+```
+
+### 产品 / 项目 (wiki/products/)
+
+```markdown
+# {产品 / 项目名}
+
+**类型**: {product | project | initiative}
+**状态**: {active | shipped | sunset}
+
+## 概述
+{它是什么、归谁}
+
+## 进展
+- {date} {里程碑 / 数字}（来源：[[threads/{src}]]）
+
+## 关联
+- 负责人 [[people/{owner}]]；所属 [[organizations/{org}]]
+```
+
+### 事件 / 决策 (wiki/events/)
+
+```markdown
+# {事件 / 决策标题}
+
+**日期**: {date}
+**类型**: {decision | launch | incident | milestone}
+**相关人**: [[people/{who}]]
+
+## 背景
+{是什么促成了此事 / 决策}
+
+## 内容
+{发生了什么 / 选择了什么及原因}
+
+## 后果
+- {正面 / 负面影响}
+
+## 另见
+- [[products/{proj}]]、[[concepts/{topic}]]
+```
+
+### 概念 / 术语 / 代码模式 (wiki/concepts/)
+
+```markdown
+# {概念名称}
+
+**Discipline**: {可选，用于 freshness 分类}
+**Verified**: {no — 易过时的技术内容}
+
+## 定义
+{从所有来源综合的清晰定义}
+
+## 关键来源
+- [[articles/{source1}]] — {该来源的阐述}
+- [[podcasts/{source2}]] — {补充}
+
+## 代码 / 用法（若是代码模式）
+{带语言标签的代码块 + 何时使用 + 常见坑}
+
+## 相关概念
+- [[concepts/{related}]] — {关系}
+
+## 演进
+| 日期 | 更新 | 来源 |
+|------|------|------|
+| {date} | 从 {source} 创建 | [[articles/{source}]] |
+```
+
+---
+
+## 来源类（wiki/articles, podcasts, vlogs, diaries, threads）
+
+### 文章 / 播客 / 视频 (wiki/articles · podcasts · vlogs/)
+
+```markdown
+# {来源标题}
+
+**Source**: [[raw/{articles|podcasts|vlogs}/{slug}]] 或 {URL}
+**Ingested**: {date}
+**Last verified**: {date}
+**Author**: {作者} | **Year**: {年份}
+
+## 要点
+- {要点1}
+- {要点2}
+
+## 引用的概念 / 实体
+- [[concepts/{c}]]、[[people/{p}]]
+
+## 与已有知识的矛盾
+- {冲突，或"未检测到"}
+```
+
+### 日记 / 编年流水 (wiki/diaries/)
+
+```markdown
+# {ISO-week，如 2026-W22}
+
+## 2026-MM-DD
+- **#{群名/场景}** {人} {时间}：{内容简述（关键数字 / 链接 / 决策保留）}（[[people/{p}]] / [[products/{proj}]]）
+```
+
+### 会话沉淀 (wiki/threads/)
+
+```markdown
+# {群 / 会话名}
+
+**Source**: [[raw/lark/{alias}-{date}]]
+**Chat**: {alias}
+
+## 概述
+{这个群在聊什么、长期主题}
+
+## 近期沉淀
+- {date} {议题 / 决策}（[[events/{e}]]、[[people/{p}]]）
+```
+
+---
 
 ## 索引模板 (wiki/index.md)
 
-> 注意：index.md 由 `scripts/generate-index` 自动生成。请勿手动编辑。
+> 由 `scripts/cli.cjs generate-index` 自动生成，请勿手动编辑。
 
 ```markdown
-# 知识库索引
-
-**最后更新**: {date}
-**总来源数**: {count}
-**总 wiki 页面数**: {count}
-
-## 按主题
-- [{topic}](concepts/{topic}.md) ({N} 个来源)
-
-## 按类型
-### 文章 ({N})
-- [{title}](summaries/{file}.md)
-
-### 论文 ({N})
-- [{title}](summaries/{file}.md)
-
-## 最近收录
-| 日期 | 来源 | 更新的页面 |
-|------|------|-----------|
-| {date} | {source} | {更新的页面列表} |
-```
-
-## 代码片段模板 (wiki/snippets/)
-
-```markdown
-# {标题}
-
-**语言**: {typescript | swift | go | kotlin | shell | css}
-**平台**: {web | ios | android | server | cross-platform}
-**来源**: [[raw/snippets/{source}]] 或 [[summaries/{book}]]
-**最后验证**: {date}
-
-## 代码
-
-{带语言标签的代码块}
-
-## 用法
-
-{何时以及如何使用此代码片段}
-
-## 注意事项
-
-- {常见错误或边界情况}
-
-## 交叉引用
-
-- 相关：[[concepts/...]], [[snippets/...]]
-```
-
-## 故障排除模板 (wiki/troubleshooting/)
-
-```markdown
-# {问题标题}
-
-**平台**: {web | ios | android | server}
-**严重程度**: {critical | moderate | minor}
-**首次出现**: {date}
-
-## 症状
-
-- {可观察的行为}
-
-## 根因
-
-{技术解释}
-
-## 解决方案
-
-{修复代码或步骤}
-
-## 预防
-
-- {未来如何避免}
-
-## 交叉引用
-
-- 相关：[[concepts/...]], [[troubleshooting/...]]
-```
-
-## 决策记录模板 (wiki/decisions/)
-
-```markdown
-# {决策标题}
-
-**日期**: {date}
-**状态**: {proposed | accepted | superseded}
-**决策者**: {who}
-
-## 背景
-
-{是什么促成了此决策}
-
-## 考虑的选项
-
-| 选项 | 优点 | 缺点 |
-|------|------|------|
-| {A} | ... | ... |
-| {B} | ... | ... |
-
-## 决策
-
-{选择了什么以及原因}
-
-## 后果
-
-- {正面和负面影响}
-
-## 交叉引用
-
-- 相关：[[concepts/...]], [[decisions/...]]
-```
-
-## 速查表模板 (wiki/cheatsheets/)
-
-```markdown
-# {主题} 速查表
-
-**平台**: {web | ios | android | server | all}
-**最后更新**: {date}
-
-## 快速参考
-
-| 命令/模式 | 描述 |
-|-----------|------|
-| {item} | {功能说明} |
-
-## 常用模式
-
-### {模式1}
-
-{带语言标签的代码块}
-
-## 交叉引用
-
-- 编译自：[[concepts/...]]
-```
-
-## 跨平台对比模板 (wiki/comparisons/)
-
-```markdown
-# {主题}: {平台A} vs {平台B} [vs {平台C}]
-
-**最后更新**: {date}
-
-## 概述
-
-{对比内容和原因}
-
-| 维度 | {平台A} | {平台B} | {平台C} |
-|------|---------|---------|---------|
-| {方面1} | ... | ... | ... |
-| {方面2} | ... | ... | ... |
-
-## 关键差异
-
-### {差异1}
-- **{平台A}**: {工作方式}
-- **{平台B}**: {工作方式}
-
-## 迁移说明
-
-{开发者在平台间切换的技巧}
-
-## 交叉引用
-
-- 相关：[[concepts/...]], [[comparisons/...]]
+# Knowledge Base Index
+
+**Last updated**: {date}
+**Total sources**: {count}
+**Total wiki pages**: {count} ({per-type counts})
+
+## Entities
+### People ({N})
+- [{title}](people/{file})
+...
+
+## Sources
+### Articles ({N})
+- [{title}](articles/{file})
+...
 ```

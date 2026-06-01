@@ -1,6 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { WIKI_DIR, PAGE_DIRS, readMdFiles, readMdFilesDeep } from '../lib/index.js';
+import { WIKI_DIR, PAGE_DIRS, readMdFiles } from '../lib/index.js';
 import type { Command } from '../../shared/cli.js';
 
 const STOP_WORDS = new Set([
@@ -11,12 +11,12 @@ const STOP_WORDS = new Set([
 ]);
 
 const MIN_WORD_LENGTH = 3;
-const DEEP_SCAN_TYPES = new Set(['concepts']);
+const META_SCAN_LINES = 15;
 
 async function extractDiscipline(filePath: string): Promise<string> {
   try {
     const content = await readFile(filePath, 'utf-8');
-    const lines = content.split('\n').slice(0, 15);
+    const lines = content.split('\n').slice(0, META_SCAN_LINES);
     for (const line of lines) {
       if (line.startsWith('**Discipline**:')) return line.split(':').slice(1).join(':').trim();
       if (line.startsWith('**Platform**:')) return line.split(':').slice(1).join(':').trim();
@@ -39,24 +39,14 @@ async function generateTopics(): Promise<void> {
 
   for (const dir of PAGE_DIRS) {
     const dirPath = join(WIKI_DIR, dir);
-    let entries: { file: string; fullPath: string }[];
-
-    if (DEEP_SCAN_TYPES.has(dir)) {
-      entries = (await readMdFilesDeep(dirPath)).map((e) => ({
-        file: e.file,
-        fullPath: join(dirPath, e.subdir ? `${e.subdir}/${e.file}` : e.file),
-      }));
-    } else {
-      const files = await readMdFiles(dirPath);
-      entries = files.map((f) => ({ file: f, fullPath: join(dirPath, f) }));
-    }
-
-    for (const { file, fullPath } of entries) {
+    const files = await readMdFiles(dirPath);
+    for (const file of files) {
+      if (file === 'index.md') continue;
       const slug = file.replace('.md', '');
       keywords.add(slug);
       for (const word of slugToWords(slug)) keywords.add(word.toLowerCase());
 
-      const disc = await extractDiscipline(fullPath);
+      const disc = await extractDiscipline(join(dirPath, file));
       if (disc) disciplines.add(disc);
     }
   }
@@ -77,8 +67,7 @@ async function generateTopics(): Promise<void> {
     lines.push(k);
   }
 
-  const outPath = join(WIKI_DIR, 'topics.txt');
-  await writeFile(outPath, lines.join('\n'));
+  await writeFile(join(WIKI_DIR, 'topics.txt'), lines.join('\n'));
   console.log(`Generated wiki/topics.txt (${keywords.size} keywords from ${disciplines.size} disciplines)`);
 }
 

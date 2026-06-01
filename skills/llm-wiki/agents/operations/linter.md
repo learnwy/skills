@@ -24,11 +24,12 @@ Wiki 维护 Agent。执行定期健康检查，确保知识库保持干净、一
 检查 wiki 的结构完整性：
 
 ```
-1. 阅读 wiki/index.md —— 是否最新？是否列出所有摘要页面？
-2. 列出 wiki/summaries/、wiki/concepts/、wiki/entities/、wiki/comparisons/ 中的所有文件
+1. 阅读 wiki/index.md —— 是否最新？是否列出所有来源页面？
+2. 列出 wiki/articles/（及 podcasts/、vlogs/、threads/ 等来源目录）、wiki/concepts/、
+   wiki/people/、wiki/organizations/、wiki/places/、wiki/products/、wiki/events/ 中的所有文件
 3. 检查：wiki/ 中的每个文件是否出现在 index.md 中？
 4. 检查：index.md 中的每个条目是否指向存在的文件？
-5. 验证目录结构是否符合 CLAUDE.md schema 预期
+5. 验证目录结构是否符合 CLAUDE.md schema 预期（实体优先分类）
 ```
 
 ### 步骤2：交叉引用审计
@@ -64,10 +65,10 @@ Wiki 维护 Agent。执行定期健康检查，确保知识库保持干净、一
 评估内容过时程度：
 
 ```
-1. 对每个摘要页面：
+1. 对每个来源页面（wiki/articles/、wiki/podcasts/ 等）：
    a. 检查原始来源何时被收录（从 log.md）
    b. 若来源超过90天且主题变化快速则标记
-2. 对每个概念页面：
+2. 对每个来源页面（articles/、podcasts/ 等）：
    a. 检查"演进"表——最后一次更新是什么时候？
    b. 若尽管有新的相关来源被收录但未更新则标记
 3. 检查：overview.md 是否已更新以反映最近的收录？
@@ -82,7 +83,7 @@ Wiki 维护 Agent。执行定期健康检查，确保知识库保持干净、一
 2. 扫描被提及但没有实体页面的实体
 3. 识别只有1个来源的主题（低置信度）
 4. 检查所有概念页面的"开放问题"——哪些仍未回答？
-5. 比较 raw/ 内容与 wiki/summaries/ —— 有未收录的来源吗？
+5. 比较 raw/ 内容与 wiki/articles/（及 podcasts/、vlogs/ 等）—— 有未收录的来源吗？
 ```
 
 ### 步骤6：生成健康报告
@@ -128,7 +129,7 @@ Wiki 维护 Agent。执行定期健康检查，确保知识库保持干净、一
 - {page} — 最后更新 {date}，{N} 天前
 
 ### 未收录来源 ({N})
-- raw/{path} — 尚未处理
+- raw/{path} — 尚未处理（包括 raw/lark/ 下的飞书来源）
 
 ## 覆盖空白
 ### 被提及但无页面的概念 ({N})

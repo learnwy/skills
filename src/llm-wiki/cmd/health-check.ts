@@ -1,12 +1,16 @@
-import { readFile, writeFile, mkdir, stat } from 'node:fs/promises';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
-import { WIKI_DIR, RAW_DIR, WIKI_ROOT, PAGE_DIRS, readMdFiles, readMdFilesDeep } from '../lib/index.js';
+import {
+  WIKI_DIR, RAW_DIR, WIKI_ROOT, PAGE_DIRS, PAGE_TYPES, ORPHAN_EXEMPT_DIRS,
+  RAW_SUBDIRS, readMdFiles,
+} from '../lib/index.js';
 import type { Command } from '../../shared/cli.js';
 import { parseArgs } from '../../shared/cli.js';
 
 const HEALTH_FILE = join(WIKI_ROOT, 'health.json');
-const DEEP_SCAN_TYPES = new Set(['concepts']);
+// Source-type dirs carry a **Source** ref that should resolve to raw material.
+const SOURCE_DIRS = new Set(PAGE_TYPES.filter((p) => p.group === 'source').map((p) => p.type));
 
 interface PageRef {
   dir: string;
@@ -43,25 +47,16 @@ async function listAllPages(): Promise<PageRef[]> {
   const pages: PageRef[] = [];
   for (const dir of PAGE_DIRS) {
     const dirPath = join(WIKI_DIR, dir);
-    if (DEEP_SCAN_TYPES.has(dir)) {
-      const entries = await readMdFilesDeep(dirPath);
-      for (const { file, subdir } of entries) {
-        const relPath = subdir ? `${dir}/${subdir}/${file}` : `${dir}/${file}`;
-        const fullPath = subdir ? join(dirPath, subdir, file) : join(dirPath, file);
-        pages.push({ dir, relPath, fullPath });
-      }
-    } else {
-      const files = await readMdFiles(dirPath);
-      for (const file of files) {
-        pages.push({ dir, relPath: `${dir}/${file}`, fullPath: join(dirPath, file) });
-      }
+    const files = (await readMdFiles(dirPath)).filter((f) => f !== 'index.md');
+    for (const file of files) {
+      pages.push({ dir, relPath: `${dir}/${file}`, fullPath: join(dirPath, file) });
     }
   }
   return pages;
 }
 
 function buildInventory(pages: PageRef[]): Set<string> {
-  const inv = new Set<string>(['index.md', 'overview.md']);
+  const inv = new Set<string>(['index.md']);
   for (const p of pages) {
     const noMd = p.relPath.replace(/\.md$/, '');
     inv.add(p.relPath);
@@ -103,7 +98,7 @@ async function findRawSource(sourceField: string): Promise<boolean> {
   for (const c of candidates) {
     if (existsSync(join(RAW_DIR, c))) return true;
   }
-  for (const subdir of ['books', 'articles', 'papers', 'notes', 'transcripts', 'specs']) {
+  for (const subdir of RAW_SUBDIRS) {
     for (const c of candidates) {
       if (existsSync(join(RAW_DIR, subdir, c))) return true;
     }
@@ -145,7 +140,7 @@ async function buildReport(): Promise<HealthReport> {
       incomingByTarget[target] = (incomingByTarget[target] || 0) + 1;
     }
 
-    if (p.dir === 'summaries') {
+    if (SOURCE_DIRS.has(p.dir)) {
       const src = await extractSourceField(p.fullPath);
       if (src) {
         const found = await findRawSource(src);
@@ -156,7 +151,7 @@ async function buildReport(): Promise<HealthReport> {
 
   const orphans: string[] = [];
   for (const p of pages) {
-    if (p.dir === 'entities' || p.dir === 'comparisons') continue;
+    if (ORPHAN_EXEMPT_DIRS.has(p.dir)) continue;
     const noMd = p.relPath.replace(/\.md$/, '');
     if (!incomingByTarget[noMd] && !incomingByTarget[p.relPath]) {
       orphans.push(p.relPath);
@@ -187,7 +182,7 @@ function printSummary(report: HealthReport): void {
   console.log(`Wikilinks scanned: ${report.totals.wikilinks}`);
   console.log(`Broken wikilinks: ${report.totals.broken_links}`);
   console.log(`Orphan pages: ${report.totals.orphans}`);
-  console.log(`Broken **Source** refs in summaries: ${report.totals.broken_sources}`);
+  console.log(`Broken **Source** refs in source pages: ${report.totals.broken_sources}`);
 
   if (report.broken_sources.length) {
     console.log('');

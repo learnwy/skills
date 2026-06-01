@@ -35,21 +35,23 @@ description: "知识收录 Agent。读取原始来源，提取关键信息，创
 ```
 1. 阅读 wiki/index.md —— 了解已有什么
 2. 搜索 wiki/concepts/ —— 本来源中哪些概念已有页面？
-3. 搜索 wiki/entities/ —— 哪些实体已有页面？
-4. 搜索 wiki/summaries/ —— 该来源（或类似来源）是否已被收录？
+3. 搜索 wiki/people/、wiki/organizations/ 等实体目录 —— 哪些实体已有页面？
+4. 搜索 wiki/articles/（或 wiki/podcasts/、wiki/vlogs/）—— 该来源（或类似来源）是否已被收录？
 5. 记录所有需要交叉引用更新的已有页面
 ```
 
 ### 步骤3：创建/更新 Wiki 页面
 
-#### 3a: 摘要页面
+#### 3a: 来源页面
 
-使用摘要模板创建 `wiki/summaries/{source-slug}.md`：
+根据来源类型选择目录：`wiki/articles/`（文章/论文/书摘，默认）、`wiki/podcasts/`（播客）、`wiki/vlogs/`（视频）、`wiki/threads/`（群聊摘要）、`wiki/diaries/`（日记/时间线）。创建 `wiki/{source-type}/{source-slug}.md`：
 
 - 从来源提取的要点
 - 链接到所有引用的概念和实体
 - 与已有 wiki 内容的矛盾检查
 - 质量/相关性评估
+
+> **Lark 来源**：若来源来自飞书群聊或飞书文档，参见 `references/ingest-lark.md` 了解完整摄取流程；编译输出通常写入 `wiki/threads/`、`wiki/people/` 或 `wiki/events/`。
 
 #### 3b: 概念页面
 
@@ -60,17 +62,21 @@ description: "知识收录 Agent。读取原始来源，提取关键信息，创
 
 #### 3c: 实体页面
 
-对每个重要实体（人物、组织、产品、技术）：
+对每个重要实体，根据类型写入对应目录：`wiki/people/`（人物）、`wiki/organizations/`（组织）、`wiki/places/`（地点）、`wiki/products/`（产品/技术）、`wiki/other-entities/`（其他）：
 
 - **若实体页面已存在**：将本来源添加到"出现记录"；如有新信息则更新主张
 - **若实体页面是新的**：使用实体模板创建；链接到相关实体
 
-#### 3d: 对比/分析页面（如有需要）
+#### 3d: 事件/决策页面（如有需要）
 
-若来源提供了概念或方法之间的直接对比：
+若来源记录了一个决策或重要事件：
 
-- 在 `wiki/comparisons/` 中创建或更新对比页面
-- 从被对比的两个概念页面链接过来
+- 在 `wiki/events/` 中创建或更新事件页面
+- 从相关实体和概念页面链接过来
+
+#### 3e: 对比/分析内容
+
+若来源提供了概念或方法之间的直接对比，将对比内容整合进 `wiki/concepts/` 下对应概念页面，或新建一个概念页面（对比页面现已并入 concepts/）。
 
 ### 步骤4：交叉引用维护
 
@@ -121,13 +127,13 @@ description: "知识收录 Agent。读取原始来源，提取关键信息，创
 **类型**: {分类}
 
 ### 新建页面 ({N})
-- wiki/summaries/{slug}.md
+- wiki/articles/{slug}.md（或 podcasts/、vlogs/、threads/ 等）
 - wiki/concepts/{new-concept}.md
-- wiki/entities/{new-entity}.md
+- wiki/people/{new-person}.md（或 organizations/、products/ 等）
 
 ### 更新页面 ({N})
 - wiki/concepts/{existing-concept}.md — 添加了新来源引用
-- wiki/entities/{existing-entity}.md — 更新了主张
+- wiki/people/{existing-person}.md — 更新了主张
 
 ### 新增交叉引用 ({N})
 - {页面A} ↔ {页面B}
@@ -173,12 +179,12 @@ description: "知识收录 Agent。读取原始来源，提取关键信息，创
 **步骤2**: 检查 wiki — 不存在"transformer"、"注意力机制"或"Vaswani"的页面。
 
 **步骤3**:
-- 创建 `wiki/summaries/attention-is-all-you-need.md`
+- 创建 `wiki/articles/attention-is-all-you-need.md`
 - 创建 `wiki/concepts/transformer-architecture.md`
 - 创建 `wiki/concepts/self-attention.md`
 - 创建 `wiki/concepts/multi-head-attention.md`
-- 创建 `wiki/entities/vaswani-ashish.md`
-- 创建 `wiki/entities/google-brain.md`
+- 创建 `wiki/people/vaswani-ashish.md`
+- 创建 `wiki/organizations/google-brain.md`
 - 链接：transformer-architecture ↔ self-attention ↔ multi-head-attention
 - 链接：vaswani-ashish → google-brain, transformer-architecture
 

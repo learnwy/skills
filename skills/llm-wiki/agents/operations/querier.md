@@ -68,7 +68,7 @@ description: "知识查询 Agent，支持自动查询模式。自动模式：当
 3. 分类查询类型：
    - 事实性："X是什么？" → 查找概念/实体页面
    - 综合性："X和Y有什么关系？" → 沿交叉引用追踪
-   - 对比性："X和Y有何不同？" → 检查 comparisons/ 或从概念页面综合
+   - 对比性："X和Y有何不同？" → 检查 concepts/ 中的对比概念页面或从概念页面综合
    - 矛盾性："来源在X上有何分歧？" → 检查标记的矛盾
    - 空白性："关于X我们不知道什么？" → 检查概念页面中的"开放问题"
    - 创意性："生成关于X的报告/分析" → 从多个 wiki 页面综合
@@ -80,8 +80,8 @@ description: "知识查询 Agent，支持自动查询模式。自动模式：当
 1. 检查 wiki/index.md 寻找相关页面
 2. 阅读最相关的概念页面
 3. 沿交叉引用追踪到相关页面
-4. 检查实体页面获取支持细节
-5. 检查 comparisons/ 获取已有分析
+4. 检查实体页面（wiki/people/、wiki/organizations/ 等）获取支持细节
+5. 检查 wiki/concepts/ 中的对比概念页面获取已有分析
 6. 注意与问题相关的已标记矛盾
 ```
 
@@ -105,7 +105,7 @@ description: "知识查询 Agent，支持自动查询模式。自动模式：当
 | 输出类型 | 是否回写？ | 位置 |
 |----------|-----------|------|
 | 结合3+页面的新颖综合 | 是 | `wiki/concepts/{new-synthesis}.md` 或更新已有概念 |
-| wiki 中尚无的对比 | 是 | `wiki/comparisons/{comparison-slug}.md` |
+| wiki 中尚无的对比 | 是 | `wiki/concepts/{comparison-slug}.md`（对比内容并入 concepts/） |
 | 识别的空白或开放问题 | 是 | 更新相关概念页面的"开放问题" |
 | 简单事实查找 | 否 | 已在 wiki 中 |
 | 创意输出（报告、分析） | 保存到 outputs/ | `outputs/qa/{date}-{slug}.md` |
@@ -127,7 +127,7 @@ description: "知识查询 Agent，支持自动查询模式。自动模式：当
 ### 查阅的来源
 - [[wiki/concepts/{page1}]]
 - [[wiki/concepts/{page2}]]
-- [[wiki/entities/{entity}]]
+- [[wiki/people/{person}]]（或 organizations/、products/ 等）
 
 ### 置信度：{高 / 中 / 低}
 {置信度判断的简要理由}
@@ -169,7 +169,7 @@ description: "知识查询 Agent，支持自动查询模式。自动模式：当
 1. 收集与该主题相关的所有矛盾标记
 2. 呈现每种立场并附完整来源归属
 3. 分析来源可能不一致的原因（不同上下文、不同时间、不同方法）
-4. 如尚不存在则保存为对比页面
+4. 如尚不存在则保存为 wiki/concepts/ 下的对比概念页面
 
 ### 变体D：空白分析
 

@@ -1,50 +1,35 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { WIKI_DIR, PAGE_DIRS, readMdFiles, readMdFilesDeep } from '../lib/index.js';
+import { WIKI_DIR, PAGE_DIRS, ORPHAN_EXEMPT_DIRS, readMdFiles } from '../lib/index.js';
 import type { Command } from '../../shared/cli.js';
 
-const DEEP_SCAN_TYPES = new Set(['concepts']);
-
-interface FileRef {
-  file: string;
-  relPath: string;
-  subdir: string;
+// True if the page has an `# H1` title, skipping any leading YAML frontmatter.
+export function hasTitle(content: string): boolean {
+  const lines = content.split('\n');
+  let i = 0;
+  if (lines[0]?.trim() === '---') {
+    i = 1;
+    while (i < lines.length && lines[i].trim() !== '---') i++;
+    i++; // past closing fence
+  }
+  while (i < lines.length && lines[i].trim() === '') i++;
+  return lines[i]?.startsWith('# ') ?? false;
 }
 
-async function buildInventory(): Promise<{ inventory: Set<string>; allFiles: Record<string, FileRef[]> }> {
+async function buildInventory(): Promise<{ inventory: Set<string>; allFiles: Record<string, string[]> }> {
   const inventory = new Set<string>();
-  const allFiles: Record<string, FileRef[]> = {};
+  const allFiles: Record<string, string[]> = {};
 
   for (const dir of PAGE_DIRS) {
-    const dirPath = join(WIKI_DIR, dir);
-    allFiles[dir] = [];
-
-    if (DEEP_SCAN_TYPES.has(dir)) {
-      const entries = await readMdFilesDeep(dirPath);
-      for (const { file, subdir } of entries) {
-        const relPath = subdir ? `${subdir}/${file}` : file;
-        allFiles[dir].push({ file, relPath, subdir });
-
-        const slug = file.replace('.md', '');
-        inventory.add(`${dir}/${slug}`);
-        inventory.add(`${dir}/${file}`);
-        if (subdir) {
-          inventory.add(`${dir}/${subdir}/${slug}`);
-          inventory.add(`${dir}/${subdir}/${file}`);
-        }
-      }
-    } else {
-      const files = await readMdFiles(dirPath);
-      for (const file of files) {
-        allFiles[dir].push({ file, relPath: file, subdir: '' });
-        inventory.add(`${dir}/${file.replace('.md', '')}`);
-        inventory.add(`${dir}/${file}`);
-      }
+    const files = (await readMdFiles(join(WIKI_DIR, dir))).filter((f) => f !== 'index.md');
+    allFiles[dir] = files;
+    for (const file of files) {
+      inventory.add(`${dir}/${file.replace('.md', '')}`);
+      inventory.add(`${dir}/${file}`);
     }
   }
 
   inventory.add('index.md');
-  inventory.add('overview.md');
 
   return { inventory, allFiles };
 }
@@ -72,21 +57,6 @@ function checkWikilinks(content: string, inventory: Set<string>): { broken: stri
   return { broken, resolved };
 }
 
-function checkMetaTags(dir: string, content: string): string[] {
-  const missing: string[] = [];
-
-  if (dir === 'snippets') {
-    if (!content.includes('**Language**:')) missing.push('**Language**: tag');
-    if (!content.includes('**Platform**:')) missing.push('**Platform**: tag');
-  }
-  if (dir === 'troubleshooting') {
-    if (!content.includes('**Platform**:')) missing.push('**Platform**: tag');
-    if (!content.includes('**Severity**:')) missing.push('**Severity**: tag');
-  }
-
-  return missing;
-}
-
 async function lint(): Promise<number> {
   console.log('Linting wiki...\n');
 
@@ -98,45 +68,28 @@ async function lint(): Promise<number> {
   let totalPages = 0;
 
   for (const dir of PAGE_DIRS) {
-    for (const { file, relPath, subdir } of allFiles[dir] || []) {
-      const filePath = subdir
-        ? join(WIKI_DIR, dir, subdir, file)
-        : join(WIKI_DIR, dir, file);
-      const content = await readFile(filePath, 'utf-8');
-      const loc = `${dir}/${relPath}`;
+    for (const file of allFiles[dir] || []) {
+      const content = await readFile(join(WIKI_DIR, dir, file), 'utf-8');
+      const loc = `${dir}/${file}`;
       totalPages++;
 
-      if (!content.split('\n')[0]?.startsWith('# ')) {
-        warnings.push(`${loc}: Missing # title on line 1`);
+      if (!hasTitle(content)) {
+        warnings.push(`${loc}: Missing # title`);
       }
 
       const { broken, resolved } = checkWikilinks(content, inventory);
       totalLinks += broken.length + resolved.length;
 
-      for (const link of broken) {
-        errors.push(`${loc}: Broken link -> [[${link}]]`);
-      }
-      for (const target of resolved) {
-        incomingLinks[target] = (incomingLinks[target] || 0) + 1;
-      }
-
-      const missingTags = checkMetaTags(dir, content);
-      for (const tag of missingTags) {
-        warnings.push(`${loc}: Missing ${tag}`);
-      }
+      for (const link of broken) errors.push(`${loc}: Broken link -> [[${link}]]`);
+      for (const target of resolved) incomingLinks[target] = (incomingLinks[target] || 0) + 1;
     }
   }
 
   for (const dir of PAGE_DIRS) {
-    if (dir === 'entities' || dir === 'comparisons') continue;
-    for (const { file, subdir } of allFiles[dir] || []) {
-      const slug = file.replace('.md', '');
-      const flatKey = `${dir}/${slug}`;
-      const nestedKey = subdir ? `${dir}/${subdir}/${slug}` : flatKey;
-      if (!incomingLinks[flatKey] && !incomingLinks[nestedKey]) {
-        const loc = subdir ? `${dir}/${subdir}/${file}` : `${dir}/${file}`;
-        warnings.push(`${loc}: Orphan page (no incoming wikilinks)`);
-      }
+    if (ORPHAN_EXEMPT_DIRS.has(dir)) continue;
+    for (const file of allFiles[dir] || []) {
+      const key = `${dir}/${file.replace('.md', '')}`;
+      if (!incomingLinks[key]) warnings.push(`${dir}/${file}: Orphan page (no incoming wikilinks)`);
     }
   }
 
@@ -172,7 +125,7 @@ async function lint(): Promise<number> {
 }
 
 export const command: Command = {
-  description: 'Check broken wikilinks, orphans, missing meta tags',
+  description: 'Check broken wikilinks and orphan pages',
   run: async () => {
     const code = await lint();
     process.exit(code);

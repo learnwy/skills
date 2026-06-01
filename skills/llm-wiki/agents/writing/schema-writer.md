@@ -43,7 +43,7 @@ Wiki 初始化和配置 Agent。创建初始目录结构和 CLAUDE.md schema 文
 
 ```bash
 WIKI_ROOT="$HOME/.learnwy/llm-wiki"   # 或 <project-root>/.trae/wikis/
-mkdir -p "$WIKI_ROOT"/{raw/{articles,papers,books,podcasts,notes,transcripts},wiki/{summaries,concepts,entities,comparisons},outputs/{qa,health}}
+mkdir -p "$WIKI_ROOT"/{raw/{articles,papers,books,podcasts,vlogs,notes,transcripts,snippets,specs,lark,docs},wiki/{articles,podcasts,vlogs,diaries,threads,inbox,archived,concepts,people,organizations,places,products,events,other-entities},outputs/{qa,health}}
 touch "$WIKI_ROOT"/wiki/index.md "$WIKI_ROOT"/wiki/overview.md "$WIKI_ROOT"/log.md
 ```
 
@@ -61,6 +61,13 @@ Schema 文件应包含以下章节：
 
 ## 目录结构
 {描述三层结构及路径}
+
+Wiki 目录采用实体优先分类：
+- **来源类型**: articles/、podcasts/、vlogs/、diaries/、threads/
+- **实体类型**: people/、organizations/、places/、products/、events/、concepts/、other-entities/
+- **生命周期**: inbox/（已拉取未编译）、archived/（已归档）
+
+Raw 子目录: books、articles、papers、notes、podcasts、vlogs、transcripts、snippets、specs、lark、docs
 
 ## 规则
 ### 不可变规则
@@ -82,27 +89,29 @@ Schema 文件应包含以下章节：
 - 格式：| {时间戳} | {操作} | {详情} | {影响的页面} |
 
 ## 模板
-### 摘要页面
-{wiki/summaries/ 页面的模板}
+### 来源页面
+{wiki/articles/（或 podcasts/、vlogs/、threads/ 等）页面的模板}
 
 ### 概念页面
-{wiki/concepts/ 页面的模板}
+{wiki/concepts/ 页面的模板（含对比、代码模式等内容，均在 concepts/ 下）}
 
 ### 实体页面
-{wiki/entities/ 页面的模板}
+{wiki/people/（或 organizations/、places/、products/、events/ 等）页面的模板}
+
+> **Lark 来源**: 飞书群聊/文档是第一类原始来源（raw/lark/）。摄取工作流见 `references/ingest-lark.md`；编译输出写入 wiki/threads/、wiki/people/ 或 wiki/events/。
 
 ## 命名约定
 - 文件名：小写，连字符代替空格（如 `attention-mechanism.md`）
-- 摘要文件匹配来源名：raw/papers/paper-title.pdf → wiki/summaries/paper-title.md
+- 来源文件匹配来源名：raw/papers/paper-title.pdf → wiki/articles/paper-title.md
 - 概念文件使用概念名：wiki/concepts/transformer-architecture.md
-- 实体文件使用实体名：wiki/entities/andrej-karpathy.md
+- 实体文件使用实体名：wiki/people/andrej-karpathy.md（或 organizations/、products/ 等）
 
 ## 工作流
 ### 收录工作流
 1. 阅读原始来源
-2. 创建摘要页面
+2. 创建来源页面（articles/、podcasts/、vlogs/ 或 threads/ 等，按来源类型）
 3. 创建/更新概念页面
-4. 创建/更新实体页面
+4. 创建/更新实体页面（people/、organizations/ 等）
 5. 维护交叉引用
 6. 检查矛盾
 7. 更新 index.md

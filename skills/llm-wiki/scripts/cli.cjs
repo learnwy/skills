@@ -129,6 +129,64 @@ function wantsClaude(t) {
 function wantsCodex(t) {
     return t === 'codex' || t === 'both' || t === 'all';
 }
+function enableCodexHooksFeatureToml(source) {
+    const normalized = source.replace(/\r\n/g, '\n');
+    const lines = normalized.endsWith('\n') ? normalized.slice(0, -1).split('\n') : normalized.split('\n');
+    const effectiveLines = lines.length === 1 && lines[0] === '' ? [] : lines;
+    let featuresStart = -1;
+    let featuresEnd = effectiveLines.length;
+    for(let i = 0; i < effectiveLines.length; i++){
+        if (/^\s*\[features\]\s*(?:#.*)?$/.test(effectiveLines[i])) {
+            featuresStart = i;
+            for(let j = i + 1; j < effectiveLines.length; j++){
+                if (/^\s*\[[^\]]+\]\s*(?:#.*)?$/.test(effectiveLines[j])) {
+                    featuresEnd = j;
+                    break;
+                }
+            }
+            break;
+        }
+    }
+    if (featuresStart === -1) {
+        const next = [
+            ...effectiveLines
+        ];
+        if (next.length > 0 && next.some((line)=>line.trim() !== '')) next.push('');
+        next.push('[features]', 'hooks = true');
+        return next.join('\n') + '\n';
+    }
+    const before = effectiveLines.slice(0, featuresStart + 1);
+    const section = effectiveLines.slice(featuresStart + 1, featuresEnd);
+    const after = effectiveLines.slice(featuresEnd);
+    let hasHooks = false;
+    const updatedSection = [];
+    for (const line of section){
+        if (/^\s*codex_hooks\s*=/.test(line)) continue;
+        if (/^\s*hooks\s*=/.test(line)) {
+            const indent = line.match(/^(\s*)/)?.[1] || '';
+            updatedSection.push(`${indent}hooks = true`);
+            hasHooks = true;
+        } else {
+            updatedSection.push(line);
+        }
+    }
+    if (!hasHooks) updatedSection.unshift('hooks = true');
+    return [
+        ...before,
+        ...updatedSection,
+        ...after
+    ].join('\n') + '\n';
+}
+function ensureCodexHooksFeature(codexDir) {
+    const configFile = external_node_path_namespaceObject.join(codexDir, 'config.toml');
+    if (!external_node_fs_namespaceObject.existsSync(codexDir)) external_node_fs_namespaceObject.mkdirSync(codexDir, {
+        recursive: true
+    });
+    const existing = external_node_fs_namespaceObject.existsSync(configFile) ? external_node_fs_namespaceObject.readFileSync(configFile, 'utf8') : '';
+    const next = enableCodexHooksFeatureToml(existing);
+    if (next !== existing) external_node_fs_namespaceObject.writeFileSync(configFile, next);
+    return configFile;
+}
 function installHooks(config, options = {}) {
     const { target = 'both', scope = 'global', projectRoot } = options;
     const results = [];
@@ -150,9 +208,11 @@ function installHooks(config, options = {}) {
             results.push(claudeFile);
         }
         if (wantsCodex(target)) {
-            const codexFile = external_node_path_namespaceObject.join(homeDir, '.codex', 'hooks.json');
+            const codexDir = external_node_path_namespaceObject.join(homeDir, '.codex');
+            const codexFile = external_node_path_namespaceObject.join(codexDir, 'hooks.json');
             mergeAndWrite(codexFile, config, 'standalone');
             results.push(codexFile);
+            results.push(ensureCodexHooksFeature(codexDir));
         }
     } else {
         const root = projectRoot || getProjectDir();
@@ -167,9 +227,11 @@ function installHooks(config, options = {}) {
             results.push(claudeFile);
         }
         if (wantsCodex(target)) {
-            const codexFile = external_node_path_namespaceObject.join(root, '.codex', 'hooks.json');
+            const codexDir = external_node_path_namespaceObject.join(root, '.codex');
+            const codexFile = external_node_path_namespaceObject.join(codexDir, 'hooks.json');
             mergeAndWrite(codexFile, config, 'standalone');
             results.push(codexFile);
+            results.push(ensureCodexHooksFeature(codexDir));
         }
     }
     return results;
@@ -426,52 +488,104 @@ function envOr(envVar, fallback) {
 const WIKI_ROOT = envOr('LLM_WIKI_ROOT', learnwyPath('llm-wiki'));
 const WIKI_DIR = (0,external_node_path_namespaceObject.join)(WIKI_ROOT, 'wiki');
 const RAW_DIR = (0,external_node_path_namespaceObject.join)(WIKI_ROOT, 'raw');
+// Entity-first wiki taxonomy (matches the personal knowledge-base layout).
+// Entity-type folders hold one page per real-world thing; source-type folders
+// hold one compiled page per ingested source (article / podcast / vlog / Lark thread).
 const PAGE_TYPES = [
     {
-        type: 'summaries',
-        label: 'Summaries'
+        type: 'people',
+        label: 'People',
+        group: 'entity'
+    },
+    {
+        type: 'organizations',
+        label: 'Organizations',
+        group: 'entity'
+    },
+    {
+        type: 'places',
+        label: 'Places',
+        group: 'entity'
+    },
+    {
+        type: 'products',
+        label: 'Products',
+        group: 'entity'
+    },
+    {
+        type: 'events',
+        label: 'Events',
+        group: 'entity'
     },
     {
         type: 'concepts',
-        label: 'Concepts'
+        label: 'Concepts',
+        group: 'entity'
     },
     {
-        type: 'entities',
-        label: 'Entities'
+        type: 'other-entities',
+        label: 'Other Entities',
+        group: 'entity'
     },
     {
-        type: 'comparisons',
-        label: 'Comparisons'
+        type: 'articles',
+        label: 'Articles',
+        group: 'source'
     },
     {
-        type: 'snippets',
-        label: 'Snippets'
+        type: 'podcasts',
+        label: 'Podcasts',
+        group: 'source'
     },
     {
-        type: 'troubleshooting',
-        label: 'Troubleshooting'
+        type: 'vlogs',
+        label: 'Vlogs',
+        group: 'source'
     },
     {
-        type: 'decisions',
-        label: 'Decisions'
+        type: 'diaries',
+        label: 'Diaries',
+        group: 'source'
     },
     {
-        type: 'cheatsheets',
-        label: 'Cheatsheets'
+        type: 'threads',
+        label: 'Threads',
+        group: 'source'
     }
 ];
 const PAGE_DIRS = PAGE_TYPES.map((p)=>p.type);
+// Lifecycle dirs created at init but excluded from indexing / orphan linting.
+// `inbox` holds pulled-but-uncompiled drafts; `archived` holds retired pages.
+const LIFECYCLE_DIRS = [
+    'inbox',
+    'archived'
+];
+// Dirs where a page having no incoming wikilink is normal (entities are
+// referenced from elsewhere but need not be; diaries / threads are chronological).
+const ORPHAN_EXEMPT_DIRS = new Set([
+    'people',
+    'organizations',
+    'places',
+    'products',
+    'events',
+    'other-entities',
+    'diaries',
+    'threads'
+]);
+// Raw (immutable) source material, one subdir per source type. `lark` holds
+// Lark group/doc pulls; `docs` holds ingested document exports.
 const RAW_SUBDIRS = [
     'books',
     'articles',
     'papers',
     'notes',
     'podcasts',
+    'vlogs',
     'transcripts',
     'snippets',
-    'troubleshooting',
     'specs',
-    'decisions'
+    'lark',
+    'docs'
 ];
 
 ;// CONCATENATED MODULE: ./src/llm-wiki/lib/fs-utils.ts
@@ -488,12 +602,12 @@ async function readMdFiles(dir) {
 async function readMdFilesDeep(dir) {
     const results = [];
     try {
-        const entries = await (0,promises_namespaceObject.readdir)(dir, {
+        const entries = await readdir(dir, {
             withFileTypes: true
         });
         for (const entry of entries){
             if (entry.isDirectory()) {
-                const subFiles = await readMdFiles((0,external_node_path_namespaceObject.join)(dir, entry.name));
+                const subFiles = await readMdFiles(join(dir, entry.name));
                 for (const f of subFiles){
                     results.push({
                         file: f,
@@ -588,241 +702,99 @@ function slugToTitle(slug) {
     return slug.replace(/\.md$/, '').split('-').map((w)=>w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 }
 
-;// CONCATENATED MODULE: ./src/llm-wiki/lib/categories.ts
-const CATEGORY_ORDER = [
-    {
-        category: 'Software Engineering',
-        match: [
-            'Software Engineering'
-        ]
-    },
-    {
-        category: 'Frontend Engineering',
-        match: [
-            'Frontend Engineering',
-            'web'
-        ]
-    },
-    {
-        category: 'iOS Development',
-        match: [
-            'iOS Development',
-            'iOS',
-            'ios'
-        ]
-    },
-    {
-        category: 'Android Development',
-        match: [
-            'Android Development',
-            'Android',
-            'android'
-        ]
-    },
-    {
-        category: 'Go BFF',
-        match: [
-            'Go BFF',
-            'Go',
-            'server'
-        ]
-    },
-    {
-        category: 'AI/ML',
-        match: [
-            'AI/ML',
-            'Artificial Intelligence',
-            'Machine Learning'
-        ]
-    },
-    {
-        category: 'System Design',
-        match: [
-            'System Design',
-            'Software Design'
-        ]
-    },
-    {
-        category: 'Thinking & Learning',
-        match: [
-            'Thinking',
-            'Learning',
-            'Psychology',
-            'Education'
-        ]
-    },
-    {
-        category: 'Writing & Literature',
-        match: [
-            'Writing',
-            'Literature'
-        ]
-    },
-    {
-        category: 'Humanities & Social Sciences',
-        match: [
-            'Philosophy',
-            'Linguistics',
-            'History',
-            'Law',
-            'Political Science',
-            'Sociology',
-            'Art'
-        ]
-    },
-    {
-        category: 'Economics & Business',
-        match: [
-            'Economics',
-            'Finance',
-            'Management',
-            'Accounting',
-            'Marketing',
-            'International Trade'
-        ]
-    },
-    {
-        category: 'Natural Sciences',
-        match: [
-            'Mathematics',
-            'Physics',
-            'Chemistry',
-            'Geography',
-            'Astronomy',
-            'Ecology'
-        ]
-    },
-    {
-        category: 'Life & Medical Sciences',
-        match: [
-            'Biology',
-            'Medicine',
-            'Medical',
-            'Traditional Chinese',
-            'Public Health',
-            'Nursing',
-            'Veterinary'
-        ]
-    },
-    {
-        category: 'Engineering & Technology',
-        match: [
-            'Computer Science',
-            'Electronic',
-            'Mechanical',
-            'Civil',
-            'Architecture',
-            'Materials',
-            'Energy',
-            'Environmental',
-            'Urban',
-            'Traffic'
-        ]
-    },
-    {
-        category: 'Agriculture & Forestry',
-        match: [
-            'Agronomy',
-            'Forestry',
-            'Horticulture',
-            'Aquaculture',
-            'Animal Husbandry'
-        ]
-    },
-    {
-        category: 'Interdisciplinary',
-        match: [
-            'Big Data',
-            'Bioinformatics',
-            'Food Science',
-            'Pharmacy',
-            'Kinesiology'
-        ]
-    },
-    {
-        category: 'Practical Skills',
-        match: [
-            'English',
-            'Database',
-            'Operating System',
-            'UI/UX',
-            'Software Testing',
-            'Programming',
-            'Design'
-        ]
-    },
-    {
-        category: 'Cross-Platform',
-        match: [
-            'cross-platform'
-        ]
-    },
-    {
-        category: 'Methodology',
-        match: [
-            'Methodology'
-        ]
-    }
-];
-function categorize(discipline) {
-    const d = discipline.toLowerCase();
-    for (const { category, match } of CATEGORY_ORDER){
-        if (match.some((m)=>d.includes(m.toLowerCase()))) return category;
-    }
-    return 'Other';
-}
-
 ;// CONCATENATED MODULE: ./src/llm-wiki/lib/index.ts
 
 
 
 
+;// CONCATENATED MODULE: ./src/llm-wiki/cmd/init.ts
+
+
+
+
+const SCHEMA = `# LLM Wiki \u{2014} Schema
+
+Entity-first personal knowledge base. The LLM compiles \`raw/\` source material
+into linked pages under \`wiki/\`; \`raw/\` is immutable (read-only to the LLM).
+
+## Layout
+
+- \`raw/\` \u{2014} immutable source material (one subdir per source type, incl. \`lark/\`)
+- \`wiki/\` \u{2014} compiled pages, one folder per entity / source type
+  - Entity types: people, organizations, places, products, events, concepts, other-entities
+  - Source types: articles, podcasts, vlogs, diaries, threads
+  - Lifecycle: inbox (uncompiled drafts), archived (retired)
+- \`wiki/index.md\` \u{2014} auto-generated master index
+- \`wiki/topics.txt\` \u{2014} auto-generated keyword list for auto-query
+- \`log.md\` \u{2014} append-only audit log
+
+## Conventions
+
+- Each page starts with a \`# Title\` H1.
+- Cross-link with \`[[folder/slug]]\` wikilinks (cap ~5 per page; overflow \u{2192} "See also").
+- Entity slugs are kebab-case (\`zhang-san\`, \`toko-standalone\`).
+- Source pages carry \`**Source**:\`, \`**Ingested**:\`, optional \`**Last verified**:\`.
+`;
+async function init_ensureDir(dir) {
+    await (0,promises_namespaceObject.mkdir)(dir, {
+        recursive: true
+    });
+}
+async function ensureFile(path, content) {
+    if (!(0,external_node_fs_namespaceObject.existsSync)(path)) await (0,promises_namespaceObject.writeFile)(path, content);
+}
+async function init() {
+    await init_ensureDir(WIKI_ROOT);
+    await init_ensureDir(WIKI_DIR);
+    await init_ensureDir(RAW_DIR);
+    for (const sub of RAW_SUBDIRS)await init_ensureDir((0,external_node_path_namespaceObject.join)(RAW_DIR, sub));
+    for (const dir of [
+        ...PAGE_DIRS,
+        ...LIFECYCLE_DIRS
+    ])await init_ensureDir((0,external_node_path_namespaceObject.join)(WIKI_DIR, dir));
+    await ensureFile((0,external_node_path_namespaceObject.join)(WIKI_ROOT, 'CLAUDE.md'), SCHEMA);
+    await ensureFile((0,external_node_path_namespaceObject.join)(WIKI_ROOT, 'log.md'), '# Wiki Log\n\n');
+    await ensureFile((0,external_node_path_namespaceObject.join)(WIKI_DIR, 'index.md'), '# Knowledge Base Index\n\n> Run `cli.cjs generate-index` to populate.\n');
+    await ensureFile((0,external_node_path_namespaceObject.join)(WIKI_DIR, 'topics.txt'), '');
+    // Touch CLAUDE.md so re-init reports cleanly even when present.
+    await (0,promises_namespaceObject.readFile)((0,external_node_path_namespaceObject.join)(WIKI_ROOT, 'CLAUDE.md'), 'utf-8');
+    console.log(`Initialized llm-wiki at ${WIKI_ROOT}`);
+    console.log(`  raw/    ${RAW_SUBDIRS.length} source subdirs`);
+    console.log(`  wiki/   ${PAGE_DIRS.length} page dirs + ${LIFECYCLE_DIRS.length} lifecycle dirs`);
+}
+const command = {
+    description: 'Scaffold the wiki root (raw/ + wiki/ folders, schema, index, log)',
+    run: ()=>init()
+};
 
 ;// CONCATENATED MODULE: ./src/llm-wiki/cmd/lint.ts
 
 
 
-const DEEP_SCAN_TYPES = new Set([
-    'concepts'
-]);
+// True if the page has an `# H1` title, skipping any leading YAML frontmatter.
+function hasTitle(content) {
+    const lines = content.split('\n');
+    let i = 0;
+    if (lines[0]?.trim() === '---') {
+        i = 1;
+        while(i < lines.length && lines[i].trim() !== '---')i++;
+        i++; // past closing fence
+    }
+    while(i < lines.length && lines[i].trim() === '')i++;
+    return lines[i]?.startsWith('# ') ?? false;
+}
 async function buildInventory() {
     const inventory = new Set();
     const allFiles = {};
     for (const dir of PAGE_DIRS){
-        const dirPath = (0,external_node_path_namespaceObject.join)(WIKI_DIR, dir);
-        allFiles[dir] = [];
-        if (DEEP_SCAN_TYPES.has(dir)) {
-            const entries = await readMdFilesDeep(dirPath);
-            for (const { file, subdir } of entries){
-                const relPath = subdir ? `${subdir}/${file}` : file;
-                allFiles[dir].push({
-                    file,
-                    relPath,
-                    subdir
-                });
-                const slug = file.replace('.md', '');
-                inventory.add(`${dir}/${slug}`);
-                inventory.add(`${dir}/${file}`);
-                if (subdir) {
-                    inventory.add(`${dir}/${subdir}/${slug}`);
-                    inventory.add(`${dir}/${subdir}/${file}`);
-                }
-            }
-        } else {
-            const files = await readMdFiles(dirPath);
-            for (const file of files){
-                allFiles[dir].push({
-                    file,
-                    relPath: file,
-                    subdir: ''
-                });
-                inventory.add(`${dir}/${file.replace('.md', '')}`);
-                inventory.add(`${dir}/${file}`);
-            }
+        const files = (await readMdFiles((0,external_node_path_namespaceObject.join)(WIKI_DIR, dir))).filter((f)=>f !== 'index.md');
+        allFiles[dir] = files;
+        for (const file of files){
+            inventory.add(`${dir}/${file.replace('.md', '')}`);
+            inventory.add(`${dir}/${file}`);
         }
     }
     inventory.add('index.md');
-    inventory.add('overview.md');
     return {
         inventory,
         allFiles
@@ -849,18 +821,6 @@ function checkWikilinks(content, inventory) {
         resolved
     };
 }
-function checkMetaTags(dir, content) {
-    const missing = [];
-    if (dir === 'snippets') {
-        if (!content.includes('**Language**:')) missing.push('**Language**: tag');
-        if (!content.includes('**Platform**:')) missing.push('**Platform**: tag');
-    }
-    if (dir === 'troubleshooting') {
-        if (!content.includes('**Platform**:')) missing.push('**Platform**: tag');
-        if (!content.includes('**Severity**:')) missing.push('**Severity**: tag');
-    }
-    return missing;
-}
 async function lint() {
     console.log('Linting wiki...\n');
     const { inventory, allFiles } = await buildInventory();
@@ -870,38 +830,24 @@ async function lint() {
     let totalLinks = 0;
     let totalPages = 0;
     for (const dir of PAGE_DIRS){
-        for (const { file, relPath, subdir } of allFiles[dir] || []){
-            const filePath = subdir ? (0,external_node_path_namespaceObject.join)(WIKI_DIR, dir, subdir, file) : (0,external_node_path_namespaceObject.join)(WIKI_DIR, dir, file);
-            const content = await (0,promises_namespaceObject.readFile)(filePath, 'utf-8');
-            const loc = `${dir}/${relPath}`;
+        for (const file of allFiles[dir] || []){
+            const content = await (0,promises_namespaceObject.readFile)((0,external_node_path_namespaceObject.join)(WIKI_DIR, dir, file), 'utf-8');
+            const loc = `${dir}/${file}`;
             totalPages++;
-            if (!content.split('\n')[0]?.startsWith('# ')) {
-                warnings.push(`${loc}: Missing # title on line 1`);
+            if (!hasTitle(content)) {
+                warnings.push(`${loc}: Missing # title`);
             }
             const { broken, resolved } = checkWikilinks(content, inventory);
             totalLinks += broken.length + resolved.length;
-            for (const link of broken){
-                errors.push(`${loc}: Broken link -> [[${link}]]`);
-            }
-            for (const target of resolved){
-                incomingLinks[target] = (incomingLinks[target] || 0) + 1;
-            }
-            const missingTags = checkMetaTags(dir, content);
-            for (const tag of missingTags){
-                warnings.push(`${loc}: Missing ${tag}`);
-            }
+            for (const link of broken)errors.push(`${loc}: Broken link -> [[${link}]]`);
+            for (const target of resolved)incomingLinks[target] = (incomingLinks[target] || 0) + 1;
         }
     }
     for (const dir of PAGE_DIRS){
-        if (dir === 'entities' || dir === 'comparisons') continue;
-        for (const { file, subdir } of allFiles[dir] || []){
-            const slug = file.replace('.md', '');
-            const flatKey = `${dir}/${slug}`;
-            const nestedKey = subdir ? `${dir}/${subdir}/${slug}` : flatKey;
-            if (!incomingLinks[flatKey] && !incomingLinks[nestedKey]) {
-                const loc = subdir ? `${dir}/${subdir}/${file}` : `${dir}/${file}`;
-                warnings.push(`${loc}: Orphan page (no incoming wikilinks)`);
-            }
+        if (ORPHAN_EXEMPT_DIRS.has(dir)) continue;
+        for (const file of allFiles[dir] || []){
+            const key = `${dir}/${file.replace('.md', '')}`;
+            if (!incomingLinks[key]) warnings.push(`${dir}/${file}: Orphan page (no incoming wikilinks)`);
         }
     }
     console.log('Statistics:');
@@ -930,8 +876,8 @@ async function lint() {
     }
     return errors.length > 0 ? 1 : 0;
 }
-const command = {
-    description: 'Check broken wikilinks, orphans, missing meta tags',
+const lint_command = {
+    description: 'Check broken wikilinks and orphan pages',
     run: async ()=>{
         const code = await lint();
         process.exit(code);
@@ -942,44 +888,23 @@ const command = {
 
 
 
-const generate_index_DEEP_SCAN_TYPES = new Set([
-    'concepts'
-]);
 async function scanPages() {
     const allPages = {};
     let totalPages = 0;
     for (const { type } of PAGE_TYPES){
         const dir = (0,external_node_path_namespaceObject.join)(WIKI_DIR, type);
+        const files = await readMdFiles(dir);
         const pages = [];
-        if (generate_index_DEEP_SCAN_TYPES.has(type)) {
-            const entries = await readMdFilesDeep(dir);
-            for (const { file, subdir } of entries){
-                const relPath = subdir ? `${subdir}/${file}` : file;
-                const meta = await extractMeta((0,external_node_path_namespaceObject.join)(dir, relPath));
-                const slug = file.replace('.md', '');
-                pages.push({
-                    slug,
-                    file,
-                    relPath,
-                    subdir,
-                    ...meta,
-                    title: meta.title || slugToTitle(slug)
-                });
-            }
-        } else {
-            const files = await readMdFiles(dir);
-            for (const file of files){
-                const meta = await extractMeta((0,external_node_path_namespaceObject.join)(dir, file));
-                const slug = file.replace('.md', '');
-                pages.push({
-                    slug,
-                    file,
-                    relPath: file,
-                    subdir: '',
-                    ...meta,
-                    title: meta.title || slugToTitle(slug)
-                });
-            }
+        for (const file of files){
+            if (file === 'index.md') continue;
+            const meta = await extractMeta((0,external_node_path_namespaceObject.join)(dir, file));
+            const slug = file.replace('.md', '');
+            pages.push({
+                slug,
+                file,
+                ...meta,
+                title: meta.title || slugToTitle(slug)
+            });
         }
         allPages[type] = pages;
         totalPages += pages.length;
@@ -989,140 +914,56 @@ async function scanPages() {
         totalPages
     };
 }
-function groupByDiscipline(allPages) {
-    const groups = {};
-    for (const [type, pages] of Object.entries(allPages)){
-        for (const page of pages){
-            const disc = page.discipline || page.platform || 'Uncategorized';
-            if (!groups[disc]) groups[disc] = {};
-            if (!groups[disc][type]) groups[disc][type] = [];
-            groups[disc][type].push(page);
-        }
+function renderType(type, label, pages) {
+    if (pages.length === 0) return [];
+    const lines = [
+        `### ${label} (${pages.length})`,
+        ''
+    ];
+    for (const p of pages.sort((a, b)=>a.slug.localeCompare(b.slug))){
+        const tag = p.verified === 'no' ? " \u26A0\uFE0F" : '';
+        const yearStr = p.year ? ` (${p.year})` : '';
+        lines.push(`- [${p.title}](${type}/${p.file})${yearStr}${tag}`);
     }
-    return groups;
-}
-function organizeByCategory(disciplineGroups) {
-    const organized = {};
-    for (const [disc, types] of Object.entries(disciplineGroups)){
-        const cat = categorize(disc);
-        if (!organized[cat]) organized[cat] = {
-            disciplines: {}
-        };
-        if (!organized[cat].disciplines[disc]) organized[cat].disciplines[disc] = {};
-        for (const [type, pages] of Object.entries(types)){
-            if (!organized[cat].disciplines[disc][type]) organized[cat].disciplines[disc][type] = [];
-            organized[cat].disciplines[disc][type].push(...pages);
-        }
-    }
-    return organized;
-}
-function renderSection(types) {
-    const lines = [];
-    const summaries = types.summaries || [];
-    const concepts = types.concepts || [];
-    const snippets = types.snippets || [];
-    const troubles = types.troubleshooting || [];
-    const comparisons = types.comparisons || [];
-    for (const s of summaries){
-        const yearStr = s.year ? ` (${s.year})` : '';
-        lines.push(`- [${s.title}](summaries/${s.relPath})${yearStr}`);
-    }
-    for (const c of concepts){
-        const tag = c.verified === 'no' ? " \u26A0\uFE0F" : '';
-        lines.push(`  - [${c.title}](concepts/${c.relPath})${tag}`);
-    }
-    if (snippets.length > 0) {
-        lines.push('  - **Snippets**:');
-        for (const sn of snippets)lines.push(`    - [${sn.title}](snippets/${sn.relPath})`);
-    }
-    if (troubles.length > 0) {
-        lines.push('  - **Troubleshooting**:');
-        for (const t of troubles)lines.push(`    - [${t.title}](troubleshooting/${t.relPath})`);
-    }
-    for (const comp of comparisons){
-        lines.push(`  - [${comp.title}](comparisons/${comp.relPath})`);
-    }
+    lines.push('');
     return lines;
 }
-function renderIndex({ allPages, totalPages, rawCount, organized }) {
+function renderIndex(allPages, totalPages, rawCount) {
     const lines = [];
     const now = new Date().toISOString().slice(0, 10);
-    const statsLine = Object.entries(allPages).filter(([, p])=>p.length > 0).map(([type, p])=>`${p.length} ${type}`).join(', ');
+    const statsLine = PAGE_TYPES.filter(({ type })=>allPages[type].length > 0).map(({ type })=>`${allPages[type].length} ${type}`).join(', ');
     lines.push('# Knowledge Base Index');
     lines.push('');
-    lines.push('**Created**: 2026-04-26');
     lines.push(`**Last updated**: ${now}`);
     lines.push(`**Total sources**: ${rawCount}`);
-    lines.push(`**Total wiki pages**: ${totalPages} (${statsLine})`);
+    lines.push(`**Total wiki pages**: ${totalPages}${statsLine ? ` (${statsLine})` : ''}`);
     lines.push('');
-    lines.push('> This file is auto-generated by `cli.cjs generate-index`. Do not edit manually.');
+    lines.push('> Auto-generated by `cli.cjs generate-index`. Do not edit manually.');
     lines.push('');
     lines.push('---');
     lines.push('');
-    lines.push('## By Category');
-    lines.push('');
-    for (const { category } of CATEGORY_ORDER){
-        const catData = organized[category];
-        if (!catData) continue;
-        let catSummaries = 0;
-        let catConcepts = 0;
-        let catSnippets = 0;
-        let catTrouble = 0;
-        let catComps = 0;
-        for (const types of Object.values(catData.disciplines)){
-            catSummaries += (types.summaries || []).length;
-            catConcepts += (types.concepts || []).length;
-            catSnippets += (types.snippets || []).length;
-            catTrouble += (types.troubleshooting || []).length;
-            catComps += (types.comparisons || []).length;
-        }
-        const parts = [];
-        if (catSummaries) parts.push(`${catSummaries} books/articles`);
-        if (catConcepts) parts.push(`${catConcepts} concepts`);
-        if (catSnippets) parts.push(`${catSnippets} snippets`);
-        if (catTrouble) parts.push(`${catTrouble} troubleshooting`);
-        if (catComps) parts.push(`${catComps} comparisons`);
-        lines.push(`### ${category} (${parts.join(', ')})`);
-        lines.push('');
-        for (const types of Object.values(catData.disciplines)){
-            lines.push(...renderSection(types));
-        }
-        lines.push('');
-    }
-    if (organized['Other']) {
-        lines.push('### Other');
-        lines.push('');
-        for (const types of Object.values(organized['Other'].disciplines)){
-            lines.push(...renderSection(types));
-        }
-        lines.push('');
-    }
     lines.push('## Entities');
     lines.push('');
-    for (const e of allPages.entities || []){
-        lines.push(`- [${e.title}](entities/${e.relPath})`);
+    for (const { type, label, group } of PAGE_TYPES){
+        if (group === 'entity') lines.push(...renderType(type, label, allPages[type]));
     }
+    lines.push('## Sources');
     lines.push('');
+    for (const { type, label, group } of PAGE_TYPES){
+        if (group === 'source') lines.push(...renderType(type, label, allPages[type]));
+    }
     return lines.join('\n');
 }
 async function generateIndex() {
     console.log('Scanning wiki directory...');
     const { allPages, totalPages } = await scanPages();
     for (const { type, label } of PAGE_TYPES){
-        console.log(`  ${label}: ${allPages[type].length}`);
+        if (allPages[type].length > 0) console.log(`  ${label}: ${allPages[type].length}`);
     }
     const rawCount = await countMdFilesInSubdirs(RAW_DIR, RAW_SUBDIRS);
     console.log(`  Raw sources: ${rawCount}`);
-    const disciplineGroups = groupByDiscipline(allPages);
-    const organized = organizeByCategory(disciplineGroups);
-    const output = renderIndex({
-        allPages,
-        totalPages,
-        rawCount,
-        organized
-    });
-    const outPath = (0,external_node_path_namespaceObject.join)(WIKI_DIR, 'index.md');
-    await (0,promises_namespaceObject.writeFile)(outPath, output);
+    const output = renderIndex(allPages, totalPages, rawCount);
+    await (0,promises_namespaceObject.writeFile)((0,external_node_path_namespaceObject.join)(WIKI_DIR, 'index.md'), output);
     console.log(`\nGenerated wiki/index.md (${totalPages} pages indexed)`);
 }
 const generate_index_command = {
@@ -1171,13 +1012,11 @@ const STOP_WORDS = new Set([
     'per'
 ]);
 const MIN_WORD_LENGTH = 3;
-const generate_topics_DEEP_SCAN_TYPES = new Set([
-    'concepts'
-]);
+const generate_topics_META_SCAN_LINES = 15;
 async function extractDiscipline(filePath) {
     try {
         const content = await (0,promises_namespaceObject.readFile)(filePath, 'utf-8');
-        const lines = content.split('\n').slice(0, 15);
+        const lines = content.split('\n').slice(0, generate_topics_META_SCAN_LINES);
         for (const line of lines){
             if (line.startsWith('**Discipline**:')) return line.split(':').slice(1).join(':').trim();
             if (line.startsWith('**Platform**:')) return line.split(':').slice(1).join(':').trim();
@@ -1194,24 +1033,13 @@ async function generateTopics() {
     const disciplines = new Set();
     for (const dir of PAGE_DIRS){
         const dirPath = (0,external_node_path_namespaceObject.join)(WIKI_DIR, dir);
-        let entries;
-        if (generate_topics_DEEP_SCAN_TYPES.has(dir)) {
-            entries = (await readMdFilesDeep(dirPath)).map((e)=>({
-                    file: e.file,
-                    fullPath: (0,external_node_path_namespaceObject.join)(dirPath, e.subdir ? `${e.subdir}/${e.file}` : e.file)
-                }));
-        } else {
-            const files = await readMdFiles(dirPath);
-            entries = files.map((f)=>({
-                    file: f,
-                    fullPath: (0,external_node_path_namespaceObject.join)(dirPath, f)
-                }));
-        }
-        for (const { file, fullPath } of entries){
+        const files = await readMdFiles(dirPath);
+        for (const file of files){
+            if (file === 'index.md') continue;
             const slug = file.replace('.md', '');
             keywords.add(slug);
             for (const word of slugToWords(slug))keywords.add(word.toLowerCase());
-            const disc = await extractDiscipline(fullPath);
+            const disc = await extractDiscipline((0,external_node_path_namespaceObject.join)(dirPath, file));
             if (disc) disciplines.add(disc);
         }
     }
@@ -1232,698 +1060,12 @@ async function generateTopics() {
     ].sort()){
         lines.push(k);
     }
-    const outPath = (0,external_node_path_namespaceObject.join)(WIKI_DIR, 'topics.txt');
-    await (0,promises_namespaceObject.writeFile)(outPath, lines.join('\n'));
+    await (0,promises_namespaceObject.writeFile)((0,external_node_path_namespaceObject.join)(WIKI_DIR, 'topics.txt'), lines.join('\n'));
     console.log(`Generated wiki/topics.txt (${keywords.size} keywords from ${disciplines.size} disciplines)`);
 }
 const generate_topics_command = {
     description: 'Regenerate wiki/topics.txt keyword index',
     run: ()=>generateTopics()
-};
-
-;// CONCATENATED MODULE: ./src/llm-wiki/lib/concept-domains.ts
-
-const DOMAIN_MAP = [
-    {
-        dir: 'frontend',
-        match: [
-            'frontend engineering',
-            'react',
-            'web ',
-            'css',
-            'tailwind',
-            'rsbuild',
-            'rspack',
-            'webpack',
-            'html',
-            'browser',
-            'dom ',
-            'typescript'
-        ]
-    },
-    {
-        dir: 'ios',
-        match: [
-            'ios development',
-            'ios ',
-            'swift',
-            'swiftui',
-            'uikit',
-            'xcode',
-            'apple'
-        ]
-    },
-    {
-        dir: 'android',
-        match: [
-            'android development',
-            'android ',
-            'kotlin',
-            'jetpack',
-            'gradle'
-        ]
-    },
-    {
-        dir: 'go',
-        match: [
-            'go bff',
-            'go ',
-            'golang',
-            'gin '
-        ]
-    },
-    {
-        dir: 'system-design',
-        match: [
-            'system design',
-            'distributed system'
-        ]
-    },
-    {
-        dir: 'ai-ml',
-        match: [
-            'ai/ml',
-            'artificial intelligence',
-            'machine learning',
-            'deep learning',
-            'llm',
-            'transformer'
-        ]
-    },
-    {
-        dir: 'devops',
-        match: [
-            'devops',
-            'ci/cd',
-            'deployment',
-            'observability',
-            'monitoring'
-        ]
-    },
-    {
-        dir: 'architecture',
-        match: [
-            'software engineering / design',
-            'software engineering / architecture',
-            'software engineering / production',
-            'software engineering / api',
-            'software design',
-            'design pattern',
-            'software engineering / process',
-            'software engineering / reactive'
-        ]
-    },
-    {
-        dir: 'se-practices',
-        match: [
-            'software engineering',
-            'software testing',
-            'testing',
-            'code review',
-            'refactoring',
-            'legacy code',
-            'technical debt'
-        ]
-    },
-    {
-        dir: 'cs-fundamentals',
-        match: [
-            'computer science',
-            'networking',
-            'algorithm',
-            'data structure',
-            'hardware'
-        ]
-    },
-    {
-        dir: 'philosophy',
-        match: [
-            'philosophy',
-            'ethics',
-            'existential',
-            'taoism',
-            'stoic'
-        ]
-    },
-    {
-        dir: 'psychology',
-        match: [
-            'psychology',
-            'behavior',
-            'cognitive',
-            'mindset',
-            'habit',
-            'motivation',
-            'meaning'
-        ]
-    },
-    {
-        dir: 'social-sciences',
-        match: [
-            'sociology',
-            'history',
-            'anthropology',
-            'education',
-            'political',
-            'economics',
-            'social'
-        ]
-    },
-    {
-        dir: 'methodology',
-        match: [
-            'methodology',
-            'strategy',
-            'contradiction',
-            'practice',
-            'protracted',
-            'decision-making'
-        ]
-    },
-    {
-        dir: 'natural-sciences',
-        match: [
-            'physics',
-            'chemistry',
-            'biology',
-            'mathematics',
-            'ecology',
-            'energy',
-            'environmental'
-        ]
-    },
-    {
-        dir: 'health-medicine',
-        match: [
-            'medicine',
-            'medical',
-            'public health',
-            'traditional chinese',
-            'nursing',
-            'veterinary',
-            'anatomy'
-        ]
-    },
-    {
-        dir: 'design-ux',
-        match: [
-            'design',
-            'ux',
-            'ui/ux',
-            'usability',
-            'human-computer'
-        ]
-    },
-    {
-        dir: 'writing-comm',
-        match: [
-            'writing',
-            'communication',
-            'literature',
-            'linguistics'
-        ]
-    },
-    {
-        dir: 'business',
-        match: [
-            'management',
-            'leadership',
-            'career',
-            'finance',
-            'investing',
-            'marketing'
-        ]
-    },
-    {
-        dir: 'agriculture',
-        match: [
-            'agronomy',
-            'forestry',
-            'horticulture',
-            'aquaculture',
-            'farming',
-            'animal husbandry'
-        ]
-    },
-    {
-        dir: 'cross-platform',
-        match: [
-            'cross-platform'
-        ]
-    }
-];
-const FILENAME_MAP = [
-    {
-        dir: 'frontend',
-        patterns: [
-            'react-',
-            'css-',
-            'tailwind-',
-            'rsbuild-',
-            'rspack-',
-            'webpack-',
-            'web-',
-            'dom-',
-            'ts-',
-            'lcp-',
-            'cls-',
-            'inp-',
-            'virtual-dom',
-            'streaming-ssr',
-            'server-component',
-            'use-transition',
-            'concurrent-mode',
-            'suspense-',
-            'module-federation',
-            'micro-frontend',
-            'shared-dependencies'
-        ]
-    },
-    {
-        dir: 'ios',
-        patterns: [
-            'ios-',
-            'swift-',
-            'swiftui-',
-            'uikit-',
-            'xcode-',
-            'navigation-stack',
-            'hosting-controller',
-            'uiviewrepresentable',
-            'scene-lifecycle',
-            'coordinator-pattern',
-            'spm-modularization',
-            'clean-architecture-ios',
-            'deep-linking-ios',
-            'dependency-injection-ios',
-            'actor-isolation',
-            'sendable-protocol',
-            'structured-concurrency'
-        ]
-    },
-    {
-        dir: 'android',
-        patterns: [
-            'android-',
-            'kotlin-',
-            'compose-',
-            'recyclerview-',
-            'activity-lifecycle',
-            'stateflow-',
-            'diffutil-',
-            'coroutine-',
-            'proguard-'
-        ]
-    },
-    {
-        dir: 'go',
-        patterns: [
-            'go-',
-            'gin-',
-            'context-propagation-go',
-            'sentinel-errors-go',
-            'error-wrapping-go',
-            'panic-recovery-go',
-            'vo-vs-dto',
-            'response-envelope',
-            'field-mask-',
-            'protobuf-vs-json',
-            'api-versioning-go',
-            'error-code-standard',
-            'request-id-tracing'
-        ]
-    },
-    {
-        dir: 'system-design',
-        patterns: [
-            'rate-limiter-',
-            'url-shortener-',
-            'notification-system-',
-            'chat-system-',
-            'consistent-hashing',
-            'vector-clocks',
-            'consensus-',
-            'cap-theorem',
-            'eventual-consistency',
-            'partition-tolerance',
-            'write-ahead-log',
-            'data-replication'
-        ]
-    },
-    {
-        dir: 'ai-ml',
-        patterns: [
-            'transformer-',
-            'attention-',
-            'llm-',
-            'rlhf-',
-            'prompt-',
-            'ai-',
-            'batch-vs-realtime-'
-        ]
-    },
-    {
-        dir: 'philosophy',
-        patterns: [
-            'eudaimonia',
-            'golden-mean',
-            'practical-wisdom',
-            'dasein',
-            'being-in-the-world',
-            'temporality-',
-            'wu-wei',
-            'the-tao',
-            'simplicity-and-naturalness',
-            'stoic-',
-            'dichotomy-of-control',
-            'memento-mori',
-            'virtu-and-fortuna'
-        ]
-    },
-    {
-        dir: 'psychology',
-        patterns: [
-            'growth-mindset',
-            'fixed-mindset',
-            'flow-state',
-            'habit-',
-            'logotherapy',
-            'will-to-meaning',
-            'meaning-through-',
-            'autotelic-',
-            'challenge-skill-',
-            'identity-based-',
-            'two-minute-rule',
-            'effort-as-path',
-            'lollapalooza-effect'
-        ]
-    },
-    {
-        dir: 'methodology',
-        patterns: [
-            'principal-contradiction',
-            'unity-of-opposites',
-            'two-point-',
-            'stage-theory',
-            'unity-of-knowing',
-            'yin-yang',
-            'strategic-',
-            'guerrilla-',
-            'mass-line',
-            'base-area',
-            'protracted-war',
-            'self-reliance'
-        ]
-    },
-    {
-        dir: 'se-practices',
-        patterns: [
-            'code-smell',
-            'refactoring-',
-            'test-list',
-            'walking-skeleton',
-            'release-slicing',
-            'assert-first',
-            'getting-to-green',
-            'two-hats-rule',
-            'characterization-test',
-            'seam-',
-            'feature-envy',
-            'legacy-code',
-            'working-effectively',
-            'technical-debt',
-            'on-call-',
-            'code-review-',
-            'writing-design-docs',
-            'trunk-based-',
-            'feature-flags-',
-            'canary-deployment'
-        ]
-    },
-    {
-        dir: 'architecture',
-        patterns: [
-            'bounded-context',
-            'ubiquitous-language',
-            'aggregate-design',
-            'domain-event',
-            'anti-corruption-layer',
-            'strangler-fig',
-            'information-hiding',
-            'deep-vs-shallow',
-            'abstraction-barrier',
-            'circuit-breaker',
-            'bulkhead-',
-            'sidecar-',
-            'ambassador-',
-            'scatter-gather',
-            'steady-state-',
-            'timeout-pattern',
-            'observer-pattern',
-            'strategy-pattern',
-            'decorator-pattern',
-            'factory-pattern',
-            'composite-pattern',
-            'singleton-',
-            'adapter-',
-            'command-pattern',
-            'architecture-quantum',
-            'architecture-styles',
-            'architecture-decision',
-            'architecture-fitness',
-            'architecture-characteristics'
-        ]
-    },
-    {
-        dir: 'devops',
-        patterns: [
-            'twelve-factor',
-            'config-via-environment',
-            'stateless-processes',
-            'port-binding',
-            'three-pillars-observability',
-            'distributed-tracing',
-            'structured-logging',
-            'cicd-'
-        ]
-    },
-    {
-        dir: 'cs-fundamentals',
-        patterns: [
-            'von-neumann',
-            'memory-hierarchy',
-            'instruction-pipeline',
-            'tcp-ip-',
-            'http2-http3',
-            'dns-resolution',
-            'debounce-throttle',
-            'tree-traversal'
-        ]
-    },
-    {
-        dir: 'business',
-        patterns: [
-            'staff-engineer',
-            'technical-vision',
-            'being-visible',
-            'sponsor-network',
-            'systems-thinking-engineering',
-            'team-growth',
-            'migrations-strategy',
-            'organizational-design',
-            'contribution-focus',
-            'circle-of-competence',
-            'mental-models'
-        ]
-    },
-    {
-        dir: 'writing-comm',
-        patterns: [
-            'active-verbs',
-            'unity-in-writing',
-            'conciseness-'
-        ]
-    },
-    {
-        dir: 'cross-platform',
-        patterns: [
-            'native-vs-cross-platform',
-            'shared-business-logic',
-            'platform-specific-ui',
-            'cross-platform'
-        ]
-    },
-    {
-        dir: 'social-sciences',
-        patterns: [
-            'cognitive-revolution',
-            'agricultural-revolution-trap',
-            'imagined-orders',
-            'paradigm-shift',
-            'normal-science',
-            'scientific-crisis',
-            'social-capital',
-            'civic-engagement',
-            'bridging-vs-bonding',
-            'sociological-imagination',
-            'banking-model-',
-            'critical-consciousness'
-        ]
-    },
-    {
-        dir: 'design-ux',
-        patterns: [
-            'norman-door',
-            'affordance',
-            'usability-'
-        ]
-    }
-];
-const BOOK_DOMAIN_MAP = {
-    'clean-code': 'se-practices',
-    refactoring: 'se-practices',
-    'the-pragmatic-programmer': 'se-practices',
-    'working-effectively-with-legacy-code': 'se-practices',
-    'test-driven-development': 'se-practices',
-    'lessons-learned-in-software-testing': 'se-practices',
-    'the-missing-readme': 'se-practices',
-    'domain-driven-design': 'architecture',
-    'a-philosophy-of-software-design': 'architecture',
-    'fundamentals-of-software-architecture': 'architecture',
-    'head-first-design-patterns': 'architecture',
-    'designing-distributed-systems': 'architecture',
-    'release-it': 'architecture',
-    'designing-data-intensive-applications': 'system-design',
-    'system-design-interview': 'system-design',
-    'user-story-mapping': 'se-practices',
-    'are-your-lights-on': 'se-practices',
-    'on-writing-well': 'writing-comm',
-    'the-elements-of-style': 'writing-comm',
-    'poor-charlies-almanack': 'business',
-    'the-effective-executive': 'business',
-    'staff-engineer': 'business',
-    'an-elegant-puzzle': 'business',
-    'on-contradiction': 'methodology',
-    'on-practice': 'methodology',
-    'on-protracted-war': 'methodology',
-    'thinking-fast-and-slow': 'psychology',
-    influence: 'psychology',
-    meditations: 'philosophy',
-    'the-prince': 'philosophy'
-};
-const concept_domains_META_SCAN_LINES = 15;
-async function concept_domains_extractDiscipline(filePath) {
-    try {
-        const content = await (0,promises_namespaceObject.readFile)(filePath, 'utf-8');
-        const lines = content.split('\n').slice(0, concept_domains_META_SCAN_LINES);
-        for (const line of lines){
-            if (line.startsWith('**Discipline**:')) return line.split(':').slice(1).join(':').trim();
-            if (line.startsWith('**Platform**:')) return line.split(':').slice(1).join(':').trim();
-        }
-    } catch  {
-    /* empty */ }
-    return '';
-}
-function classifyByDiscipline(discipline) {
-    const d = discipline.toLowerCase();
-    for (const { dir, match } of DOMAIN_MAP){
-        if (match.some((m)=>d.includes(m))) return dir;
-    }
-    return '_general';
-}
-function classifyByFilename(filename) {
-    const slug = filename.replace('.md', '').toLowerCase();
-    for (const { dir, patterns } of FILENAME_MAP){
-        if (patterns.some((p)=>slug.startsWith(p) || slug === p || slug.includes(p))) return dir;
-    }
-    return null;
-}
-async function classifyBySourceLinks(filePath) {
-    try {
-        const content = await (0,promises_namespaceObject.readFile)(filePath, 'utf-8');
-        const summaryLinks = [
-            ...content.matchAll(/\[\[summaries\/([^\]]+)\]\]/g)
-        ].map((m)=>m[1]);
-        if (summaryLinks.length === 0) return null;
-        for (const link of summaryLinks){
-            const slug = link.replace('.md', '');
-            if (BOOK_DOMAIN_MAP[slug]) return BOOK_DOMAIN_MAP[slug];
-        }
-    } catch  {
-    /* empty */ }
-    return null;
-}
-async function classifyConcept(filePath, filename) {
-    const discipline = await concept_domains_extractDiscipline(filePath);
-    let domain = discipline ? classifyByDiscipline(discipline) : null;
-    if (!domain || domain === '_general') {
-        const byName = classifyByFilename(filename);
-        if (byName) domain = byName;
-    }
-    if (!domain || domain === '_general') {
-        const bySource = await classifyBySourceLinks(filePath);
-        if (bySource) domain = bySource;
-        else domain = domain || '_general';
-    }
-    return domain;
-}
-
-;// CONCATENATED MODULE: ./src/llm-wiki/cmd/reorganize.ts
-
-
-
-
-const CONCEPTS_DIR = (0,external_node_path_namespaceObject.join)(WIKI_DIR, 'concepts');
-async function reorganize(args) {
-    const dryRun = args.includes('--dry-run');
-    const files = (await (0,promises_namespaceObject.readdir)(CONCEPTS_DIR)).filter((f)=>f.endsWith('.md'));
-    console.log(`Scanning ${files.length} concept files...\n`);
-    const moves = {};
-    const stats = {};
-    for (const file of files){
-        const domain = await classifyConcept((0,external_node_path_namespaceObject.join)(CONCEPTS_DIR, file), file);
-        moves[file] = domain;
-        stats[domain] = (stats[domain] || 0) + 1;
-    }
-    console.log('Domain distribution:');
-    const sorted = Object.entries(stats).sort((a, b)=>b[1] - a[1]);
-    for (const [domain, count] of sorted){
-        console.log(`  ${domain.padEnd(20)} ${String(count).padStart(4)}`);
-    }
-    console.log(`  ${'TOTAL'.padEnd(20)} ${String(files.length).padStart(4)}\n`);
-    if (dryRun) {
-        console.log("Dry run \u2014 no files moved. Remove --dry-run to execute.");
-        const examples = Object.entries(moves).slice(0, 10);
-        console.log('\nExample moves:');
-        for (const [file, domain] of examples){
-            console.log(`  ${file} -> concepts/${domain}/`);
-        }
-        return;
-    }
-    const domains = [
-        ...new Set(Object.values(moves))
-    ];
-    for (const domain of domains){
-        await (0,promises_namespaceObject.mkdir)((0,external_node_path_namespaceObject.join)(CONCEPTS_DIR, domain), {
-            recursive: true
-        });
-    }
-    let moved = 0;
-    for (const [file, domain] of Object.entries(moves)){
-        const src = (0,external_node_path_namespaceObject.join)(CONCEPTS_DIR, file);
-        const dst = (0,external_node_path_namespaceObject.join)(CONCEPTS_DIR, domain, file);
-        await (0,promises_namespaceObject.rename)(src, dst);
-        moved++;
-    }
-    console.log(`Moved ${moved} files into ${domains.length} subdirectories.`);
-    console.log('\nNext steps:');
-    console.log('  1. Run: node cli.cjs generate-index');
-    console.log('  2. Run: node cli.cjs generate-topics');
-    console.log('  3. Commit changes');
-}
-const reorganize_command = {
-    description: 'Move concept files into domain subdirs (--dry-run to preview)',
-    run: (args)=>reorganize(args)
 };
 
 ;// CONCATENATED MODULE: ./src/llm-wiki/cmd/freshness-check.ts
@@ -2077,41 +1219,26 @@ const freshness_check_command = {
 
 
 const HEALTH_FILE = (0,external_node_path_namespaceObject.join)(WIKI_ROOT, 'health.json');
-const health_check_DEEP_SCAN_TYPES = new Set([
-    'concepts'
-]);
+// Source-type dirs carry a **Source** ref that should resolve to raw material.
+const SOURCE_DIRS = new Set(PAGE_TYPES.filter((p)=>p.group === 'source').map((p)=>p.type));
 async function listAllPages() {
     const pages = [];
     for (const dir of PAGE_DIRS){
         const dirPath = (0,external_node_path_namespaceObject.join)(WIKI_DIR, dir);
-        if (health_check_DEEP_SCAN_TYPES.has(dir)) {
-            const entries = await readMdFilesDeep(dirPath);
-            for (const { file, subdir } of entries){
-                const relPath = subdir ? `${dir}/${subdir}/${file}` : `${dir}/${file}`;
-                const fullPath = subdir ? (0,external_node_path_namespaceObject.join)(dirPath, subdir, file) : (0,external_node_path_namespaceObject.join)(dirPath, file);
-                pages.push({
-                    dir,
-                    relPath,
-                    fullPath
-                });
-            }
-        } else {
-            const files = await readMdFiles(dirPath);
-            for (const file of files){
-                pages.push({
-                    dir,
-                    relPath: `${dir}/${file}`,
-                    fullPath: (0,external_node_path_namespaceObject.join)(dirPath, file)
-                });
-            }
+        const files = (await readMdFiles(dirPath)).filter((f)=>f !== 'index.md');
+        for (const file of files){
+            pages.push({
+                dir,
+                relPath: `${dir}/${file}`,
+                fullPath: (0,external_node_path_namespaceObject.join)(dirPath, file)
+            });
         }
     }
     return pages;
 }
 function health_check_buildInventory(pages) {
     const inv = new Set([
-        'index.md',
-        'overview.md'
+        'index.md'
     ]);
     for (const p of pages){
         const noMd = p.relPath.replace(/\.md$/, '');
@@ -2154,14 +1281,7 @@ async function findRawSource(sourceField) {
     for (const c of candidates){
         if ((0,external_node_fs_namespaceObject.existsSync)((0,external_node_path_namespaceObject.join)(RAW_DIR, c))) return true;
     }
-    for (const subdir of [
-        'books',
-        'articles',
-        'papers',
-        'notes',
-        'transcripts',
-        'specs'
-    ]){
+    for (const subdir of RAW_SUBDIRS){
         for (const c of candidates){
             if ((0,external_node_fs_namespaceObject.existsSync)((0,external_node_path_namespaceObject.join)(RAW_DIR, subdir, c))) return true;
         }
@@ -2201,7 +1321,7 @@ async function buildReport() {
         for (const target of resolved){
             incomingByTarget[target] = (incomingByTarget[target] || 0) + 1;
         }
-        if (p.dir === 'summaries') {
+        if (SOURCE_DIRS.has(p.dir)) {
             const src = await extractSourceField(p.fullPath);
             if (src) {
                 const found = await findRawSource(src);
@@ -2214,7 +1334,7 @@ async function buildReport() {
     }
     const orphans = [];
     for (const p of pages){
-        if (p.dir === 'entities' || p.dir === 'comparisons') continue;
+        if (ORPHAN_EXEMPT_DIRS.has(p.dir)) continue;
         const noMd = p.relPath.replace(/\.md$/, '');
         if (!incomingByTarget[noMd] && !incomingByTarget[p.relPath]) {
             orphans.push(p.relPath);
@@ -2243,7 +1363,7 @@ function printSummary(report) {
     console.log(`Wikilinks scanned: ${report.totals.wikilinks}`);
     console.log(`Broken wikilinks: ${report.totals.broken_links}`);
     console.log(`Orphan pages: ${report.totals.orphans}`);
-    console.log(`Broken **Source** refs in summaries: ${report.totals.broken_sources}`);
+    console.log(`Broken **Source** refs in source pages: ${report.totals.broken_sources}`);
     if (report.broken_sources.length) {
         console.log('');
         console.log(`Broken sources (${report.broken_sources.length}):`);
@@ -2292,13 +1412,10 @@ const health_check_command = {
 
 const pad = (str, width)=>String(str).padEnd(width);
 const num = (val, width)=>String(val).padStart(width);
-async function stats_stats() {
-    const DEEP_TYPES = new Set([
-        'concepts'
-    ]);
+async function stats() {
     const wiki = {};
     for (const { type } of PAGE_TYPES){
-        wiki[type] = DEEP_TYPES.has(type) ? await countMdFilesDeep((0,external_node_path_namespaceObject.join)(WIKI_DIR, type)) : await countMdFiles((0,external_node_path_namespaceObject.join)(WIKI_DIR, type));
+        wiki[type] = await countMdFiles((0,external_node_path_namespaceObject.join)(WIKI_DIR, type));
     }
     const raw = {};
     for (const sub of RAW_SUBDIRS){
@@ -2328,7 +1445,7 @@ async function stats_stats() {
 }
 const stats_command = {
     description: 'Box-drawing dashboard of raw + wiki page counts',
-    run: ()=>stats_stats()
+    run: ()=>stats()
 };
 
 ;// CONCATENATED MODULE: ./src/llm-wiki/cli.ts
@@ -2344,10 +1461,10 @@ const stats_command = {
 dispatch({
     name: 'llm-wiki',
     commands: {
-        lint: command,
+        init: command,
+        lint: lint_command,
         'generate-index': generate_index_command,
         'generate-topics': generate_topics_command,
-        reorganize: reorganize_command,
         'freshness-check': freshness_check_command,
         'health-check': health_check_command,
         stats: stats_command,

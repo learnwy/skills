@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import {
-  WIKI_DIR, RAW_DIR, PAGE_TYPES, RAW_SUBDIRS, countMdFiles, countMdFilesDeep,
+  WIKI_DIR, RAW_DIR, PAGE_TYPES, RAW_SUBDIRS, countMdFiles,
 } from '../lib/index.js';
 import type { Command } from '../../shared/cli.js';
 
@@ -8,12 +8,9 @@ const pad = (str: string | number, width: number): string => String(str).padEnd(
 const num = (val: number, width: number): string => String(val).padStart(width);
 
 async function stats(): Promise<void> {
-  const DEEP_TYPES = new Set(['concepts']);
   const wiki: Record<string, number> = {};
   for (const { type } of PAGE_TYPES) {
-    wiki[type] = DEEP_TYPES.has(type)
-      ? await countMdFilesDeep(join(WIKI_DIR, type))
-      : await countMdFiles(join(WIKI_DIR, type));
+    wiki[type] = await countMdFiles(join(WIKI_DIR, type));
   }
 
   const raw: Record<string, number> = {};
