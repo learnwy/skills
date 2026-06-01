@@ -28,7 +28,6 @@ skills/                           # 仓库根目录
 │   └── AGENTS.md
 ├── skills/                       # 可运行的技能模块
 │   ├── ai-brain/                 # 跨会话记忆系统
-│   ├── english-learner/          # 词汇学习助手
 │   ├── figma-node-fetcher/       # Figma 设计数据获取器
 │   ├── knowledge-consolidation/  # 知识持久化
 │   ├── project-agent-writer/     # 创建项目级代理

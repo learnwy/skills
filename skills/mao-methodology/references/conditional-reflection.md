@@ -25,7 +25,7 @@ After editing the source, run `pnpm run sync-docs` to propagate.
 
 ## 2. 三级反射强度模型
 
-本仓库 16 个 skills 大致落在三档：
+本仓库 15 个 skills 大致落在三档：
 
 ### Tier 1 — 硬反射（Hard Reflex）
 **100% 确定性，无 LLM 介入**。事件直接进脚本，输出注入对话上下文。
@@ -33,7 +33,7 @@ After editing the source, run `pnpm run sync-docs` to propagate.
 | Skill | 触发器 | 反射弧 |
 |---|---|---|
 | `learnwy-dispatch` | UserPromptSubmit / Stop / SessionStart hook | 单进程聚合调度 3 类 hook |
-| `english-learner`（hook 部分） | UserPromptSubmit + 检测到英文 | 注入 grammar tip 系统提示 |
+| `prompt-optimizer`（hook 部分） | UserPromptSubmit + 检测到提示词模式 | 注入 7 维度评分提示 |
 | `llm-wiki`（hook 部分） | UserPromptSubmit + 关键词扫描命中 | 注入相关 wiki topic 列表 |
 | `prompt-optimizer`（hook 部分） | UserPromptSubmit + 检测到提示词模式 | 注入 7 维度评分提示 |
 | `knowledge-consolidation`（Stop hook） | Stop + 模式匹配（"figured it out" 等） | 注入 nudge 提示用户保存 |
@@ -51,7 +51,7 @@ After editing the source, run `pnpm run sync-docs` to propagate.
 | `project-skill-writer` | "创建技能"、"编写技能"、"设计技能" |
 | `project-agent-writer` | "create agent"、"build an agent" |
 | `project-skill-installer` | "install skill"、"add skill" |
-| `english-learner`（主动模式） | "查单词"、"学英语"、"what does X mean" |
+| `prompt-optimizer`（主动模式） | "优化提示词"、"分析 prompt"、"review this prompt" |
 | `llm-wiki`（主动模式） | "知识库"、"个人 wiki"、"收录这个" |
 
 ### Tier 3 — 条件认知（Conditioned Cognition）
@@ -101,8 +101,8 @@ description: "<一句话核心能力>。Triggers: '<触发词1>'、'<触发词2>
 3. **边界排除（Do not use for）**：对抗"什么都想接"的过度泛化。本仓库 `knowledge-consolidation` 显式写了 "For global compounding knowledge, use llm-wiki instead"，避免和 wiki 抢活。
 4. **同类技能互链**：让模型在分诊时知道"另一个更合适的我"。
 
-**优秀示例**（来自本仓库 `english-learner`）：
-> "Auto-intercepts English messages... Triggers: any English message, any Chinese message, single English word, idiom, '查单词', '学英语', 'what does X mean', vocabulary review."
+**优秀示例**（来自本仓库 `prompt-optimizer`）：
+> "Pre-flight analysis and scoring of user prompts across 7 dimensions. Triggers: any substantive prose prompt, '优化提示词', '分析 prompt', 'review this prompt'. Do not use for: casual chat, single-word queries."
 
 **反例**：
 - ❌ description 写成"通用助手，可处理各种问题"——0 触发力。
@@ -117,7 +117,7 @@ description: "<一句话核心能力>。Triggers: '<触发词1>'、'<触发词2>
 1. **流程显式化**：把推理路径写成有限状态机（如 `requirement-workflow` 的 INIT → IMPLEMENTING → TESTING → DONE）。
 2. **检查点 / 验证门**：每一步结束前要求显式确认（写 spec、跑测试、读 diff），防止 LLM "感觉差不多了就跳步"。
 3. **agent 角色分离**：把"分析者 / 决策者 / 落笔者"分开（参考三本毛选 skill 的 decision-maker / problem-analyzer / report-writer 三角），各 agent 用各自的提示词范式，避免一个 prompt 既要分析又要总结又要决策。
-4. **回路（feedback loop）**：执行结果写回日志/index，下次同类问题能引用上次的产出。本仓库 `llm-wiki` 的 `wiki-links.json`、`prompt-optimizer` 的 trends 都是这种回路。
+4. **回路（feedback loop）**：执行结果写回日志/index，下次同类问题能引用上次的产出。本仓库 `llm-wiki` 的 `health.json`、`prompt-optimizer` 的 trends 都是这种回路。
 
 ---
 
@@ -131,7 +131,7 @@ description: "<一句话核心能力>。Triggers: '<触发词1>'、'<触发词2>
 | **结构 > 自由文本** | 用表格 / 列表 / YAML 替代散文。模型对结构化输入的"反射"更快更准。 |
 | **正例 + 反例配对** | 只给正例容易过拟合；只给反例容易混淆。本仓库多个 SKILL.md 用 "✅ Use for / ❌ Do not use for" 配对。 |
 | **触发词单调化** | 同一触发词只对应一个 skill。出现交叉时显式互斥（如 KC vs llm-wiki 的边界声明）。 |
-| **响应模板固化** | 输出格式用模板锚定（如 english-learner 的 "💡 English Tip 表"），不让模型每次重设计版式。 |
+| **响应模板固化** | 输出格式用模板锚定（如 prompt-optimizer 的 "7 维度评分表"），不让模型每次重设计版式。 |
 | **副作用前置声明** | "本 skill 会写文件到 X / 调用 Y API"。让模型/用户预知反射的"冲量"。 |
 
 ### 4.2 反射 vs 审议的边界标记
@@ -153,7 +153,7 @@ description: "<一句话核心能力>。Triggers: '<触发词1>'、'<触发词2>
 
 强反射的副作用是"过敏"：什么都触发。设计时主动加抑制条件：
 
-- `english-learner` 的 hook 写了 "Skip silently if English is fluent/natural"——避免每条英文都被打断。
+- `prompt-optimizer` 的 hook 写了 "Skip silently if input is casual chat or a single-word query"——避免每条消息都被打断。
 - `llm-wiki` 的 prompt-scan 用 1913 个关键词索引而非全文 grep，控制误报。
 - `prompt-optimizer` 显式列出 "不触发条件"（用户在闲聊、单词查询等场景）。
 
@@ -224,6 +224,6 @@ description: "<一句话核心能力>。Triggers: '<触发词1>'、'<触发词2>
 ## 参考
 
 - 本仓库 `skills/learnwy-dispatch/` —— Tier 1 dispatcher 的工业化实现
-- 本仓库 `skills/english-learner/SKILL.md` —— 双模式（hook + 主动）反射的最佳样板
+- 本仓库 `skills/prompt-optimizer/SKILL.md` —— 双模式（hook + 主动）反射的最佳样板
 - 本仓库 `skills/on-contradiction/` 等三本毛选 —— Tier 3 条件认知的 agent 三角
 - [Agent Skills Specification](https://agentskills.io/specification) —— 描述字段的官方规范

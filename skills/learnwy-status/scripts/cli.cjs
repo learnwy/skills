@@ -129,6 +129,64 @@ function wantsClaude(t) {
 function wantsCodex(t) {
     return t === 'codex' || t === 'both' || t === 'all';
 }
+function enableCodexHooksFeatureToml(source) {
+    const normalized = source.replace(/\r\n/g, '\n');
+    const lines = normalized.endsWith('\n') ? normalized.slice(0, -1).split('\n') : normalized.split('\n');
+    const effectiveLines = lines.length === 1 && lines[0] === '' ? [] : lines;
+    let featuresStart = -1;
+    let featuresEnd = effectiveLines.length;
+    for(let i = 0; i < effectiveLines.length; i++){
+        if (/^\s*\[features\]\s*(?:#.*)?$/.test(effectiveLines[i])) {
+            featuresStart = i;
+            for(let j = i + 1; j < effectiveLines.length; j++){
+                if (/^\s*\[[^\]]+\]\s*(?:#.*)?$/.test(effectiveLines[j])) {
+                    featuresEnd = j;
+                    break;
+                }
+            }
+            break;
+        }
+    }
+    if (featuresStart === -1) {
+        const next = [
+            ...effectiveLines
+        ];
+        if (next.length > 0 && next.some((line)=>line.trim() !== '')) next.push('');
+        next.push('[features]', 'hooks = true');
+        return next.join('\n') + '\n';
+    }
+    const before = effectiveLines.slice(0, featuresStart + 1);
+    const section = effectiveLines.slice(featuresStart + 1, featuresEnd);
+    const after = effectiveLines.slice(featuresEnd);
+    let hasHooks = false;
+    const updatedSection = [];
+    for (const line of section){
+        if (/^\s*codex_hooks\s*=/.test(line)) continue;
+        if (/^\s*hooks\s*=/.test(line)) {
+            const indent = line.match(/^(\s*)/)?.[1] || '';
+            updatedSection.push(`${indent}hooks = true`);
+            hasHooks = true;
+        } else {
+            updatedSection.push(line);
+        }
+    }
+    if (!hasHooks) updatedSection.unshift('hooks = true');
+    return [
+        ...before,
+        ...updatedSection,
+        ...after
+    ].join('\n') + '\n';
+}
+function ensureCodexHooksFeature(codexDir) {
+    const configFile = external_node_path_namespaceObject.join(codexDir, 'config.toml');
+    if (!external_node_fs_namespaceObject.existsSync(codexDir)) external_node_fs_namespaceObject.mkdirSync(codexDir, {
+        recursive: true
+    });
+    const existing = external_node_fs_namespaceObject.existsSync(configFile) ? external_node_fs_namespaceObject.readFileSync(configFile, 'utf8') : '';
+    const next = enableCodexHooksFeatureToml(existing);
+    if (next !== existing) external_node_fs_namespaceObject.writeFileSync(configFile, next);
+    return configFile;
+}
 function installHooks(config, options = {}) {
     const { target = 'both', scope = 'global', projectRoot } = options;
     const results = [];
@@ -150,9 +208,11 @@ function installHooks(config, options = {}) {
             results.push(claudeFile);
         }
         if (wantsCodex(target)) {
-            const codexFile = external_node_path_namespaceObject.join(homeDir, '.codex', 'hooks.json');
+            const codexDir = external_node_path_namespaceObject.join(homeDir, '.codex');
+            const codexFile = external_node_path_namespaceObject.join(codexDir, 'hooks.json');
             mergeAndWrite(codexFile, config, 'standalone');
             results.push(codexFile);
+            results.push(ensureCodexHooksFeature(codexDir));
         }
     } else {
         const root = projectRoot || getProjectDir();
@@ -167,9 +227,11 @@ function installHooks(config, options = {}) {
             results.push(claudeFile);
         }
         if (wantsCodex(target)) {
-            const codexFile = external_node_path_namespaceObject.join(root, '.codex', 'hooks.json');
+            const codexDir = external_node_path_namespaceObject.join(root, '.codex');
+            const codexFile = external_node_path_namespaceObject.join(codexDir, 'hooks.json');
             mergeAndWrite(codexFile, config, 'standalone');
             results.push(codexFile);
+            results.push(ensureCodexHooksFeature(codexDir));
         }
     }
     return results;
@@ -396,236 +458,6 @@ const uninstallCommand = {
     }
 };
 
-;// CONCATENATED MODULE: external "node:sqlite"
-const external_node_sqlite_namespaceObject = require("node:sqlite");
-;// CONCATENATED MODULE: ./src/shared/db.ts
-
-
-
-
-const DATA_ROOT = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'english-learner');
-const DB_PATH = external_node_path_namespaceObject.join(DATA_ROOT, 'data.db');
-const MIGRATIONS = [
-    {
-        version: 1,
-        up: `
-      CREATE TABLE IF NOT EXISTS words (
-        word TEXT PRIMARY KEY,
-        data TEXT NOT NULL,
-        mastery INTEGER NOT NULL DEFAULT 0,
-        lookup_count INTEGER NOT NULL DEFAULT 0,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        last_lookup TEXT
-      );
-      CREATE INDEX IF NOT EXISTS idx_words_mastery ON words(mastery);
-      CREATE INDEX IF NOT EXISTS idx_words_lookup ON words(lookup_count);
-
-      CREATE TABLE IF NOT EXISTS phrases (
-        phrase TEXT PRIMARY KEY,
-        data TEXT NOT NULL,
-        mastery INTEGER NOT NULL DEFAULT 0,
-        lookup_count INTEGER NOT NULL DEFAULT 0,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        last_lookup TEXT
-      );
-      CREATE INDEX IF NOT EXISTS idx_phrases_mastery ON phrases(mastery);
-      CREATE INDEX IF NOT EXISTS idx_phrases_lookup ON phrases(lookup_count);
-
-      CREATE TABLE IF NOT EXISTS history (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        ts TEXT NOT NULL,
-        query TEXT NOT NULL,
-        query_type TEXT NOT NULL
-      );
-      CREATE INDEX IF NOT EXISTS idx_history_ts ON history(ts);
-
-      CREATE TABLE IF NOT EXISTS meta (
-        key TEXT PRIMARY KEY,
-        value TEXT NOT NULL
-      );
-    `
-    },
-    {
-        version: 2,
-        up: `
-      ALTER TABLE words ADD COLUMN next_review_at TEXT;
-      ALTER TABLE phrases ADD COLUMN next_review_at TEXT;
-      CREATE INDEX IF NOT EXISTS idx_words_next_review ON words(next_review_at);
-      CREATE INDEX IF NOT EXISTS idx_phrases_next_review ON phrases(next_review_at);
-    `
-    },
-    {
-        version: 3,
-        up: `
-      CREATE TABLE IF NOT EXISTS corrections (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        original TEXT NOT NULL,
-        corrected TEXT NOT NULL,
-        reason TEXT,
-        count INTEGER NOT NULL DEFAULT 1,
-        first_seen TEXT NOT NULL,
-        last_seen TEXT NOT NULL,
-        UNIQUE(original, corrected)
-      );
-      CREATE INDEX IF NOT EXISTS idx_corrections_count ON corrections(count DESC);
-      CREATE INDEX IF NOT EXISTS idx_corrections_last_seen ON corrections(last_seen);
-      CREATE INDEX IF NOT EXISTS idx_corrections_original ON corrections(original);
-    `
-    },
-    {
-        version: 4,
-        up: `
-      CREATE TABLE IF NOT EXISTS materials (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        source_path TEXT NOT NULL UNIQUE,
-        source_type TEXT NOT NULL,
-        date TEXT NOT NULL,
-        hour TEXT,
-        title TEXT,
-        topics TEXT,
-        level TEXT,
-        word_count INTEGER DEFAULT 0,
-        imported_at TEXT NOT NULL,
-        checksum TEXT
-      );
-      CREATE INDEX IF NOT EXISTS idx_materials_type ON materials(source_type);
-      CREATE INDEX IF NOT EXISTS idx_materials_date ON materials(date);
-
-      CREATE TABLE IF NOT EXISTS material_words (
-        material_id INTEGER NOT NULL REFERENCES materials(id) ON DELETE CASCADE,
-        word TEXT NOT NULL,
-        position INTEGER,
-        phonetic TEXT,
-        pos TEXT,
-        meaning_en TEXT,
-        meaning_zh TEXT,
-        examples TEXT,
-        synonyms TEXT,
-        raw_entry TEXT,
-        PRIMARY KEY (material_id, word)
-      );
-      CREATE INDEX IF NOT EXISTS idx_material_words_word ON material_words(word);
-    `
-    },
-    {
-        version: 5,
-        up: `
-      CREATE TABLE IF NOT EXISTS prose_log (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        ts TEXT NOT NULL,
-        language TEXT NOT NULL,
-        length INTEGER NOT NULL,
-        had_issues INTEGER NOT NULL DEFAULT 0,
-        issue_count INTEGER NOT NULL DEFAULT 0,
-        excerpt TEXT
-      );
-      CREATE INDEX IF NOT EXISTS idx_prose_log_ts ON prose_log(ts);
-      CREATE INDEX IF NOT EXISTS idx_prose_log_lang ON prose_log(language);
-      CREATE INDEX IF NOT EXISTS idx_prose_log_had_issues ON prose_log(had_issues);
-    `
-    }
-];
-function intervalDaysForMastery(mastery) {
-    if (mastery >= 90) return 90;
-    if (mastery >= 70) return 30;
-    if (mastery >= 50) return 14;
-    if (mastery >= 30) return 7;
-    if (mastery >= 10) return 3;
-    return 1;
-}
-function nextReviewAt(mastery, fromDate = new Date()) {
-    const next = new Date(fromDate);
-    next.setUTCDate(next.getUTCDate() + intervalDaysForMastery(mastery));
-    return next.toISOString();
-}
-function applyMigrations(db) {
-    db.exec('CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);');
-    const row = db.prepare('SELECT value FROM meta WHERE key = ?').get('schema_version');
-    let current = row?.value ? parseInt(row.value, 10) : 0;
-    for (const m of MIGRATIONS){
-        if (m.version <= current) continue;
-        db.exec('BEGIN');
-        try {
-            db.exec(m.up);
-            db.prepare('INSERT INTO meta(key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').run('schema_version', String(m.version));
-            db.exec('COMMIT');
-        } catch (err) {
-            db.exec('ROLLBACK');
-            throw err;
-        }
-        current = m.version;
-    }
-}
-let _db = null;
-function getDb() {
-    if (_db) return _db;
-    external_node_fs_namespaceObject.mkdirSync(DATA_ROOT, {
-        recursive: true
-    });
-    _db = new external_node_sqlite_namespaceObject.DatabaseSync(DB_PATH);
-    _db.exec('PRAGMA journal_mode = WAL;');
-    _db.exec('PRAGMA foreign_keys = ON;');
-    applyMigrations(_db);
-    return _db;
-}
-function _resetDbForTesting() {
-    _db = null;
-}
-const SCHEMA_VERSION = MIGRATIONS[MIGRATIONS.length - 1].version;
-function rowToWord(row) {
-    if (!row) return null;
-    const inner = JSON.parse(row.data);
-    return {
-        word: row.word,
-        definitions: inner.definitions || [],
-        phonetic: inner.phonetic || '',
-        synonyms: inner.synonyms || [],
-        antonyms: inner.antonyms || [],
-        mastery: row.mastery,
-        lookup_count: row.lookup_count,
-        created_at: row.created_at,
-        updated_at: row.updated_at,
-        ...row.last_lookup ? {
-            last_lookup: row.last_lookup
-        } : {}
-    };
-}
-function rowToPhrase(row) {
-    if (!row) return null;
-    const inner = JSON.parse(row.data);
-    return {
-        phrase: row.phrase,
-        definition: inner.definition || '',
-        phonetic: inner.phonetic || '',
-        literal: inner.literal || '',
-        examples: inner.examples || [],
-        mastery: row.mastery,
-        lookup_count: row.lookup_count,
-        created_at: row.created_at,
-        updated_at: row.updated_at,
-        ...row.last_lookup ? {
-            last_lookup: row.last_lookup
-        } : {}
-    };
-}
-function withTransaction(fn) {
-    const db = getDb();
-    db.exec('BEGIN');
-    try {
-        const result = fn(db);
-        db.exec('COMMIT');
-        return result;
-    } catch (err) {
-        try {
-            db.exec('ROLLBACK');
-        } catch  {
-        /* swallow */ }
-        throw err;
-    }
-}
-
 ;// CONCATENATED MODULE: ./src/shared/learnwy-paths.ts
 
 
@@ -637,7 +469,6 @@ function learnwy_paths_skillRoot(skill) {
     return learnwyPath(skill);
 }
 const PATHS = {
-    englishLearner: learnwy_paths_skillRoot('english-learner'),
     llmWiki: learnwy_paths_skillRoot('llm-wiki'),
     promptOptimizer: learnwy_paths_skillRoot('prompt-optimizer'),
     knowledgeConsolidation: learnwy_paths_skillRoot('knowledge-consolidation'),
@@ -652,48 +483,6 @@ function envOr(envVar, fallback) {
 
 
 
-
-function readVocabSection() {
-    if (!external_node_fs_namespaceObject.existsSync(DB_PATH)) return null;
-    const db = getDb();
-    const totalsW = db.prepare(`
-    SELECT
-      COUNT(*) AS total,
-      COALESCE(SUM(lookup_count), 0) AS total_lookups,
-      SUM(CASE WHEN mastery >= 80 THEN 1 ELSE 0 END) AS mastered,
-      SUM(CASE WHEN mastery >= 30 AND mastery < 80 THEN 1 ELSE 0 END) AS learning,
-      SUM(CASE WHEN mastery < 30 THEN 1 ELSE 0 END) AS new_count
-    FROM words
-  `).get();
-    const totalsP = db.prepare(`
-    SELECT
-      COUNT(*) AS total,
-      COALESCE(SUM(lookup_count), 0) AS total_lookups,
-      SUM(CASE WHEN mastery >= 80 THEN 1 ELSE 0 END) AS mastered,
-      SUM(CASE WHEN mastery >= 30 AND mastery < 80 THEN 1 ELSE 0 END) AS learning,
-      SUM(CASE WHEN mastery < 30 THEN 1 ELSE 0 END) AS new_count
-    FROM phrases
-  `).get();
-    const total = (totalsW?.total || 0) + (totalsP?.total || 0);
-    if (total === 0) return null;
-    const reviewRows = db.prepare(`
-    SELECT item, mastery, lookup_count, score FROM (
-      SELECT word AS item, mastery, lookup_count, (100 - mastery) + lookup_count * 5 AS score FROM words
-      UNION ALL
-      SELECT phrase AS item, mastery, lookup_count, (100 - mastery) + lookup_count * 5 AS score FROM phrases
-    )
-    ORDER BY score DESC
-    LIMIT 3
-  `).all();
-    return {
-        total,
-        mastered: (totalsW?.mastered || 0) + (totalsP?.mastered || 0),
-        learning: (totalsW?.learning || 0) + (totalsP?.learning || 0),
-        new: (totalsW?.new_count || 0) + (totalsP?.new_count || 0),
-        total_lookups: (totalsW?.total_lookups || 0) + (totalsP?.total_lookups || 0),
-        top_review: reviewRows.map((r)=>r.item)
-    };
-}
 function readWikiSection() {
     const f = external_node_path_namespaceObject.join(LEARNWY_ROOT, 'llm-wiki', 'health.json');
     if (!external_node_fs_namespaceObject.existsSync(f)) return null;
@@ -785,34 +574,9 @@ function readLogsSection() {
         rotated_count: rotated
     };
 }
-function readCorrectionsSection() {
-    if (!external_node_fs_namespaceObject.existsSync(DB_PATH)) return null;
-    try {
-        const db = getDb();
-        const hasTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='corrections'").get();
-        if (!hasTable) return null;
-        const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-        const total = db.prepare('SELECT COALESCE(SUM(count),0) AS s FROM corrections').get().s;
-        const uniquePairs = db.prepare('SELECT COUNT(*) AS c FROM corrections').get().c;
-        const recent = db.prepare('SELECT COALESCE(SUM(count),0) AS s FROM corrections WHERE last_seen >= ?').get(cutoff).s;
-        const top = db.prepare(`SELECT original, corrected, count FROM corrections
-         ORDER BY count DESC, last_seen DESC LIMIT 5`).all();
-        if (total === 0) return null;
-        return {
-            total,
-            unique_pairs: uniquePairs,
-            recent_30d: recent,
-            top
-        };
-    } catch  {
-        return null;
-    }
-}
 function buildDigest() {
     return {
         generated_at: new Date().toISOString(),
-        vocab: readVocabSection(),
-        corrections: readCorrectionsSection(),
         wiki: readWikiSection(),
         optimizer: readOptimizerSection(),
         consolidation: readConsolidationSection(),
@@ -822,28 +586,6 @@ function buildDigest() {
 function formatHuman(d) {
     const lines = [];
     lines.push(`learnwy status \u{2014} ${d.generated_at}`);
-    lines.push('');
-    if (d.vocab) {
-        lines.push('Vocab (~/.learnwy/english-learner/):');
-        lines.push(`  ${d.vocab.total} items \u{2014} ${d.vocab.mastered} mastered, ${d.vocab.learning} learning, ${d.vocab.new} new (${d.vocab.total_lookups} total lookups)`);
-        if (d.vocab.top_review.length) {
-            lines.push(`  Top review: ${d.vocab.top_review.join(', ')}`);
-        }
-    } else {
-        lines.push("Vocab: (empty \u2014 run english-learner to start collecting)");
-    }
-    lines.push('');
-    if (d.corrections) {
-        lines.push(`English corrections: ${d.corrections.total} total, ${d.corrections.unique_pairs} unique pairs, ${d.corrections.recent_30d} in last 30d`);
-        if (d.corrections.top.length) {
-            lines.push('  Top recurring:');
-            for (const t of d.corrections.top){
-                lines.push(`    ${t.count}\xd7 "${t.original}" \u{2192} "${t.corrected}"`);
-            }
-        }
-    } else {
-        lines.push("English corrections: (none recorded \u2014 schema v3+)");
-    }
     lines.push('');
     if (d.wiki) {
         const stale = d.wiki.age_hours > 24 ? `\u{26A0} ${d.wiki.age_hours}h stale` : `${d.wiki.age_hours}h ago`;
@@ -877,17 +619,11 @@ function formatHuman(d) {
 }
 function formatCompact(d) {
     const parts = [];
-    if (d.vocab) {
-        parts.push(`vocab=${d.vocab.total} (${d.vocab.mastered}m/${d.vocab.learning}l/${d.vocab.new}n)`);
-    }
     if (d.wiki) {
         parts.push(`wiki=${d.wiki.pages}p ${d.wiki.broken_links}brk ${d.wiki.orphans}orphan ${d.wiki.broken_sources}srcdrift`);
     }
     if (d.optimizer) {
         parts.push(`optimizer=${d.optimizer.last_7d}/7d ${d.optimizer.last_30d}/30d`);
-    }
-    if (d.corrections) {
-        parts.push(`corrections=${d.corrections.recent_30d}/30d (${d.corrections.unique_pairs}u)`);
     }
     if (d.consolidation) {
         parts.push(`kc-nudge=${d.consolidation.hours_ago}h-ago`);
@@ -918,12 +654,12 @@ const command = {
 
 
 
-
 const HOME = external_node_os_namespaceObject.homedir();
 const doctor_LEARNWY_ROOT = external_node_path_namespaceObject.join(HOME, '.learnwy');
-const LEGACY_ROOT = external_node_path_namespaceObject.join(HOME, '.english-learner');
 const CLAUDE_SETTINGS = external_node_path_namespaceObject.join(HOME, '.claude', 'settings.json');
 const TRAE_HOOKS = external_node_path_namespaceObject.join(HOME, '.trae', 'hooks.json');
+const CODEX_HOOKS = external_node_path_namespaceObject.join(HOME, '.codex', 'hooks.json');
+const CODEX_CONFIG = external_node_path_namespaceObject.join(HOME, '.codex', 'config.toml');
 const REQUIRED_DISPATCHER_HOOKS = [
     'UserPromptSubmit',
     'Stop',
@@ -931,56 +667,16 @@ const REQUIRED_DISPATCHER_HOOKS = [
 ];
 function checkNode() {
     const major = parseInt(process.versions.node.split('.')[0] ?? '0', 10);
-    if (major >= 24) return {
-        name: 'Node version',
-        status: 'ok',
-        detail: `${process.version} (\u{2265} 24 required for node:sqlite)`
-    };
     if (major >= 22) return {
         name: 'Node version',
-        status: 'warn',
-        detail: `${process.version} \u{2014} english-learner needs \u{2265} 24`
+        status: 'ok',
+        detail: `${process.version} (\u{2265} 22 required)`
     };
     return {
         name: 'Node version',
         status: 'error',
-        detail: `${process.version} \u{2014} too old; upgrade to \u{2265} 24`
+        detail: `${process.version} \u{2014} too old; upgrade to \u{2265} 22`
     };
-}
-function checkSchemaVersion() {
-    if (!external_node_fs_namespaceObject.existsSync(DB_PATH)) {
-        return {
-            name: 'SQLite schema',
-            status: 'ok',
-            detail: 'no DB yet (will be created on first use)'
-        };
-    }
-    try {
-        const db = getDb();
-        const row = db.prepare('SELECT value FROM meta WHERE key = ?').get('schema_version');
-        const current = row?.value ? parseInt(row.value, 10) : 0;
-        if (current === SCHEMA_VERSION) return {
-            name: 'SQLite schema',
-            status: 'ok',
-            detail: `v${current} (latest)`
-        };
-        if (current < SCHEMA_VERSION) return {
-            name: 'SQLite schema',
-            status: 'warn',
-            detail: `at v${current}, latest is v${SCHEMA_VERSION} \u{2014} open english-learner once to auto-migrate`
-        };
-        return {
-            name: 'SQLite schema',
-            status: 'warn',
-            detail: `at v${current} but binary only knows v${SCHEMA_VERSION} \u{2014} newer DB than CLI`
-        };
-    } catch (err) {
-        return {
-            name: 'SQLite schema',
-            status: 'error',
-            detail: `cannot open ${DB_PATH}: ${err.message}`
-        };
-    }
 }
 function readHooksConfig(file) {
     if (!external_node_fs_namespaceObject.existsSync(file)) return null;
@@ -1016,7 +712,6 @@ function checkHookRegistration(file, label) {
         const cmds = hookCommands(cfg, event);
         const dispatcher = cmds.find((c)=>c.includes('learnwy-dispatch'));
         const stale = cmds.filter((c)=>[
-                'english-learner/scripts/hooks',
                 'llm-wiki/scripts/hooks',
                 'prompt-optimizer/scripts/hooks',
                 'knowledge-consolidation/scripts/hooks',
@@ -1044,9 +739,69 @@ function checkHookRegistration(file, label) {
     }
     return checks;
 }
+function readFeatureValue(toml, key) {
+    const lines = toml.replace(/\r\n/g, '\n').split('\n');
+    let inFeatures = false;
+    for (const line of lines){
+        if (/^\s*\[features\]\s*(?:#.*)?$/.test(line)) {
+            inFeatures = true;
+            continue;
+        }
+        if (inFeatures && /^\s*\[[^\]]+\]\s*(?:#.*)?$/.test(line)) break;
+        if (!inFeatures) continue;
+        const match = line.match(new RegExp(`^\\s*${key}\\s*=\\s*([^#]+)`));
+        if (match) return match[1].trim();
+    }
+    return null;
+}
+function checkCodexFeatureFlag() {
+    if (!external_node_fs_namespaceObject.existsSync(CODEX_CONFIG)) {
+        return {
+            name: 'Codex hooks feature',
+            status: 'ok',
+            detail: 'default enabled (no ~/.codex/config.toml)'
+        };
+    }
+    try {
+        const toml = external_node_fs_namespaceObject.readFileSync(CODEX_CONFIG, 'utf8');
+        const hooks = readFeatureValue(toml, 'hooks');
+        const legacyHooks = readFeatureValue(toml, 'codex_hooks');
+        if (hooks === 'false') {
+            return {
+                name: 'Codex hooks feature',
+                status: 'error',
+                detail: "`[features].hooks = false` disables hooks \u2014 run `pnpm run install:hooks`"
+            };
+        }
+        if (legacyHooks !== null) {
+            return {
+                name: 'Codex hooks feature',
+                status: 'warn',
+                detail: "`codex_hooks` is deprecated \u2014 run `pnpm run install:hooks` to migrate to `hooks = true`"
+            };
+        }
+        if (hooks === 'true') {
+            return {
+                name: 'Codex hooks feature',
+                status: 'ok',
+                detail: '`[features].hooks = true`'
+            };
+        }
+        return {
+            name: 'Codex hooks feature',
+            status: 'ok',
+            detail: 'default enabled'
+        };
+    } catch (err) {
+        return {
+            name: 'Codex hooks feature',
+            status: 'warn',
+            detail: `cannot read ${CODEX_CONFIG}: ${err.message}`
+        };
+    }
+}
 function checkPathLayout() {
     const required = [
-        'english-learner',
         'llm-wiki',
         'logs'
     ];
@@ -1057,19 +812,6 @@ function checkPathLayout() {
             name: `~/.learnwy/${sub}/`,
             status: external_node_fs_namespaceObject.existsSync(p) ? 'ok' : 'warn',
             detail: external_node_fs_namespaceObject.existsSync(p) ? 'present' : "missing \u2014 will be created when the subsystem first runs"
-        });
-    }
-    if (external_node_fs_namespaceObject.existsSync(LEGACY_ROOT)) {
-        checks.push({
-            name: 'legacy ~/.english-learner/',
-            status: 'warn',
-            detail: "should have been migrated to ~/.learnwy/english-learner/ \u2014 verify and `rm -rf ~/.english-learner/`"
-        });
-    } else {
-        checks.push({
-            name: 'legacy ~/.english-learner/',
-            status: 'ok',
-            detail: 'absent (migrated)'
         });
     }
     return checks;
@@ -1109,9 +851,10 @@ function checkBundles() {
 function runDoctor() {
     const checks = [];
     checks.push(checkNode());
-    checks.push(checkSchemaVersion());
     checks.push(...checkHookRegistration(CLAUDE_SETTINGS, 'Claude'));
     checks.push(...checkHookRegistration(TRAE_HOOKS, 'Trae'));
+    checks.push(...checkHookRegistration(CODEX_HOOKS, 'Codex'));
+    checks.push(checkCodexFeatureFlag());
     checks.push(...checkPathLayout());
     checks.push(...checkBundles());
     return checks;

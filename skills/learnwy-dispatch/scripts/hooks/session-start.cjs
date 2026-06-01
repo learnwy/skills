@@ -66,6 +66,64 @@ function wantsClaude(t) {
 function wantsCodex(t) {
     return t === 'codex' || t === 'both' || t === 'all';
 }
+function enableCodexHooksFeatureToml(source) {
+    const normalized = source.replace(/\r\n/g, '\n');
+    const lines = normalized.endsWith('\n') ? normalized.slice(0, -1).split('\n') : normalized.split('\n');
+    const effectiveLines = lines.length === 1 && lines[0] === '' ? [] : lines;
+    let featuresStart = -1;
+    let featuresEnd = effectiveLines.length;
+    for(let i = 0; i < effectiveLines.length; i++){
+        if (/^\s*\[features\]\s*(?:#.*)?$/.test(effectiveLines[i])) {
+            featuresStart = i;
+            for(let j = i + 1; j < effectiveLines.length; j++){
+                if (/^\s*\[[^\]]+\]\s*(?:#.*)?$/.test(effectiveLines[j])) {
+                    featuresEnd = j;
+                    break;
+                }
+            }
+            break;
+        }
+    }
+    if (featuresStart === -1) {
+        const next = [
+            ...effectiveLines
+        ];
+        if (next.length > 0 && next.some((line)=>line.trim() !== '')) next.push('');
+        next.push('[features]', 'hooks = true');
+        return next.join('\n') + '\n';
+    }
+    const before = effectiveLines.slice(0, featuresStart + 1);
+    const section = effectiveLines.slice(featuresStart + 1, featuresEnd);
+    const after = effectiveLines.slice(featuresEnd);
+    let hasHooks = false;
+    const updatedSection = [];
+    for (const line of section){
+        if (/^\s*codex_hooks\s*=/.test(line)) continue;
+        if (/^\s*hooks\s*=/.test(line)) {
+            const indent = line.match(/^(\s*)/)?.[1] || '';
+            updatedSection.push(`${indent}hooks = true`);
+            hasHooks = true;
+        } else {
+            updatedSection.push(line);
+        }
+    }
+    if (!hasHooks) updatedSection.unshift('hooks = true');
+    return [
+        ...before,
+        ...updatedSection,
+        ...after
+    ].join('\n') + '\n';
+}
+function ensureCodexHooksFeature(codexDir) {
+    const configFile = path.join(codexDir, 'config.toml');
+    if (!fs.existsSync(codexDir)) fs.mkdirSync(codexDir, {
+        recursive: true
+    });
+    const existing = fs.existsSync(configFile) ? fs.readFileSync(configFile, 'utf8') : '';
+    const next = enableCodexHooksFeatureToml(existing);
+    if (next !== existing) fs.writeFileSync(configFile, next);
+    return configFile;
+}
 function installHooks(config, options = {}) {
     const { target = 'both', scope = 'global', projectRoot } = options;
     const results = [];
@@ -87,9 +145,11 @@ function installHooks(config, options = {}) {
             results.push(claudeFile);
         }
         if (wantsCodex(target)) {
-            const codexFile = path.join(homeDir, '.codex', 'hooks.json');
+            const codexDir = path.join(homeDir, '.codex');
+            const codexFile = path.join(codexDir, 'hooks.json');
             mergeAndWrite(codexFile, config, 'standalone');
             results.push(codexFile);
+            results.push(ensureCodexHooksFeature(codexDir));
         }
     } else {
         const root = projectRoot || getProjectDir();
@@ -104,9 +164,11 @@ function installHooks(config, options = {}) {
             results.push(claudeFile);
         }
         if (wantsCodex(target)) {
-            const codexFile = path.join(root, '.codex', 'hooks.json');
+            const codexDir = path.join(root, '.codex');
+            const codexFile = path.join(codexDir, 'hooks.json');
             mergeAndWrite(codexFile, config, 'standalone');
             results.push(codexFile);
+            results.push(ensureCodexHooksFeature(codexDir));
         }
     }
     return results;
@@ -196,7 +258,6 @@ function skillRoot(skill) {
     return learnwyPath(skill);
 }
 const PATHS = {
-    englishLearner: skillRoot('english-learner'),
     llmWiki: skillRoot('llm-wiki'),
     promptOptimizer: skillRoot('prompt-optimizer'),
     knowledgeConsolidation: skillRoot('knowledge-consolidation'),
@@ -213,52 +274,104 @@ function envOr(envVar, fallback) {
 const WIKI_ROOT = envOr('LLM_WIKI_ROOT', learnwyPath('llm-wiki'));
 const WIKI_DIR = (0,external_node_path_namespaceObject.join)(WIKI_ROOT, 'wiki');
 const RAW_DIR = (0,external_node_path_namespaceObject.join)(WIKI_ROOT, 'raw');
+// Entity-first wiki taxonomy (matches the personal knowledge-base layout).
+// Entity-type folders hold one page per real-world thing; source-type folders
+// hold one compiled page per ingested source (article / podcast / vlog / Lark thread).
 const PAGE_TYPES = [
     {
-        type: 'summaries',
-        label: 'Summaries'
+        type: 'people',
+        label: 'People',
+        group: 'entity'
+    },
+    {
+        type: 'organizations',
+        label: 'Organizations',
+        group: 'entity'
+    },
+    {
+        type: 'places',
+        label: 'Places',
+        group: 'entity'
+    },
+    {
+        type: 'products',
+        label: 'Products',
+        group: 'entity'
+    },
+    {
+        type: 'events',
+        label: 'Events',
+        group: 'entity'
     },
     {
         type: 'concepts',
-        label: 'Concepts'
+        label: 'Concepts',
+        group: 'entity'
     },
     {
-        type: 'entities',
-        label: 'Entities'
+        type: 'other-entities',
+        label: 'Other Entities',
+        group: 'entity'
     },
     {
-        type: 'comparisons',
-        label: 'Comparisons'
+        type: 'articles',
+        label: 'Articles',
+        group: 'source'
     },
     {
-        type: 'snippets',
-        label: 'Snippets'
+        type: 'podcasts',
+        label: 'Podcasts',
+        group: 'source'
     },
     {
-        type: 'troubleshooting',
-        label: 'Troubleshooting'
+        type: 'vlogs',
+        label: 'Vlogs',
+        group: 'source'
     },
     {
-        type: 'decisions',
-        label: 'Decisions'
+        type: 'diaries',
+        label: 'Diaries',
+        group: 'source'
     },
     {
-        type: 'cheatsheets',
-        label: 'Cheatsheets'
+        type: 'threads',
+        label: 'Threads',
+        group: 'source'
     }
 ];
 const PAGE_DIRS = PAGE_TYPES.map((p)=>p.type);
+// Lifecycle dirs created at init but excluded from indexing / orphan linting.
+// `inbox` holds pulled-but-uncompiled drafts; `archived` holds retired pages.
+const LIFECYCLE_DIRS = (/* unused pure expression or super */ null && ([
+    'inbox',
+    'archived'
+]));
+// Dirs where a page having no incoming wikilink is normal (entities are
+// referenced from elsewhere but need not be; diaries / threads are chronological).
+const ORPHAN_EXEMPT_DIRS = new Set([
+    'people',
+    'organizations',
+    'places',
+    'products',
+    'events',
+    'other-entities',
+    'diaries',
+    'threads'
+]);
+// Raw (immutable) source material, one subdir per source type. `lark` holds
+// Lark group/doc pulls; `docs` holds ingested document exports.
 const RAW_SUBDIRS = (/* unused pure expression or super */ null && ([
     'books',
     'articles',
     'papers',
     'notes',
     'podcasts',
+    'vlogs',
     'transcripts',
     'snippets',
-    'troubleshooting',
     'specs',
-    'decisions'
+    'lark',
+    'docs'
 ]));
 
 ;// CONCATENATED MODULE: ./src/llm-wiki/lib/session-scan.ts
@@ -278,632 +391,12 @@ function scanSession() {
     ].join('\n');
 }
 
-;// CONCATENATED MODULE: external "node:sqlite"
-const external_node_sqlite_namespaceObject = require("node:sqlite");
-;// CONCATENATED MODULE: ./src/shared/db.ts
-
-
-
-
-const db_DATA_ROOT = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'english-learner');
-const DB_PATH = external_node_path_namespaceObject.join(db_DATA_ROOT, 'data.db');
-const MIGRATIONS = [
-    {
-        version: 1,
-        up: `
-      CREATE TABLE IF NOT EXISTS words (
-        word TEXT PRIMARY KEY,
-        data TEXT NOT NULL,
-        mastery INTEGER NOT NULL DEFAULT 0,
-        lookup_count INTEGER NOT NULL DEFAULT 0,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        last_lookup TEXT
-      );
-      CREATE INDEX IF NOT EXISTS idx_words_mastery ON words(mastery);
-      CREATE INDEX IF NOT EXISTS idx_words_lookup ON words(lookup_count);
-
-      CREATE TABLE IF NOT EXISTS phrases (
-        phrase TEXT PRIMARY KEY,
-        data TEXT NOT NULL,
-        mastery INTEGER NOT NULL DEFAULT 0,
-        lookup_count INTEGER NOT NULL DEFAULT 0,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        last_lookup TEXT
-      );
-      CREATE INDEX IF NOT EXISTS idx_phrases_mastery ON phrases(mastery);
-      CREATE INDEX IF NOT EXISTS idx_phrases_lookup ON phrases(lookup_count);
-
-      CREATE TABLE IF NOT EXISTS history (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        ts TEXT NOT NULL,
-        query TEXT NOT NULL,
-        query_type TEXT NOT NULL
-      );
-      CREATE INDEX IF NOT EXISTS idx_history_ts ON history(ts);
-
-      CREATE TABLE IF NOT EXISTS meta (
-        key TEXT PRIMARY KEY,
-        value TEXT NOT NULL
-      );
-    `
-    },
-    {
-        version: 2,
-        up: `
-      ALTER TABLE words ADD COLUMN next_review_at TEXT;
-      ALTER TABLE phrases ADD COLUMN next_review_at TEXT;
-      CREATE INDEX IF NOT EXISTS idx_words_next_review ON words(next_review_at);
-      CREATE INDEX IF NOT EXISTS idx_phrases_next_review ON phrases(next_review_at);
-    `
-    },
-    {
-        version: 3,
-        up: `
-      CREATE TABLE IF NOT EXISTS corrections (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        original TEXT NOT NULL,
-        corrected TEXT NOT NULL,
-        reason TEXT,
-        count INTEGER NOT NULL DEFAULT 1,
-        first_seen TEXT NOT NULL,
-        last_seen TEXT NOT NULL,
-        UNIQUE(original, corrected)
-      );
-      CREATE INDEX IF NOT EXISTS idx_corrections_count ON corrections(count DESC);
-      CREATE INDEX IF NOT EXISTS idx_corrections_last_seen ON corrections(last_seen);
-      CREATE INDEX IF NOT EXISTS idx_corrections_original ON corrections(original);
-    `
-    },
-    {
-        version: 4,
-        up: `
-      CREATE TABLE IF NOT EXISTS materials (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        source_path TEXT NOT NULL UNIQUE,
-        source_type TEXT NOT NULL,
-        date TEXT NOT NULL,
-        hour TEXT,
-        title TEXT,
-        topics TEXT,
-        level TEXT,
-        word_count INTEGER DEFAULT 0,
-        imported_at TEXT NOT NULL,
-        checksum TEXT
-      );
-      CREATE INDEX IF NOT EXISTS idx_materials_type ON materials(source_type);
-      CREATE INDEX IF NOT EXISTS idx_materials_date ON materials(date);
-
-      CREATE TABLE IF NOT EXISTS material_words (
-        material_id INTEGER NOT NULL REFERENCES materials(id) ON DELETE CASCADE,
-        word TEXT NOT NULL,
-        position INTEGER,
-        phonetic TEXT,
-        pos TEXT,
-        meaning_en TEXT,
-        meaning_zh TEXT,
-        examples TEXT,
-        synonyms TEXT,
-        raw_entry TEXT,
-        PRIMARY KEY (material_id, word)
-      );
-      CREATE INDEX IF NOT EXISTS idx_material_words_word ON material_words(word);
-    `
-    },
-    {
-        version: 5,
-        up: `
-      CREATE TABLE IF NOT EXISTS prose_log (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        ts TEXT NOT NULL,
-        language TEXT NOT NULL,
-        length INTEGER NOT NULL,
-        had_issues INTEGER NOT NULL DEFAULT 0,
-        issue_count INTEGER NOT NULL DEFAULT 0,
-        excerpt TEXT
-      );
-      CREATE INDEX IF NOT EXISTS idx_prose_log_ts ON prose_log(ts);
-      CREATE INDEX IF NOT EXISTS idx_prose_log_lang ON prose_log(language);
-      CREATE INDEX IF NOT EXISTS idx_prose_log_had_issues ON prose_log(had_issues);
-    `
-    }
-];
-function intervalDaysForMastery(mastery) {
-    if (mastery >= 90) return 90;
-    if (mastery >= 70) return 30;
-    if (mastery >= 50) return 14;
-    if (mastery >= 30) return 7;
-    if (mastery >= 10) return 3;
-    return 1;
-}
-function nextReviewAt(mastery, fromDate = new Date()) {
-    const next = new Date(fromDate);
-    next.setUTCDate(next.getUTCDate() + intervalDaysForMastery(mastery));
-    return next.toISOString();
-}
-function applyMigrations(db) {
-    db.exec('CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);');
-    const row = db.prepare('SELECT value FROM meta WHERE key = ?').get('schema_version');
-    let current = row?.value ? parseInt(row.value, 10) : 0;
-    for (const m of MIGRATIONS){
-        if (m.version <= current) continue;
-        db.exec('BEGIN');
-        try {
-            db.exec(m.up);
-            db.prepare('INSERT INTO meta(key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').run('schema_version', String(m.version));
-            db.exec('COMMIT');
-        } catch (err) {
-            db.exec('ROLLBACK');
-            throw err;
-        }
-        current = m.version;
-    }
-}
-let _db = null;
-function db_getDb() {
-    if (_db) return _db;
-    external_node_fs_namespaceObject.mkdirSync(db_DATA_ROOT, {
-        recursive: true
-    });
-    _db = new external_node_sqlite_namespaceObject.DatabaseSync(DB_PATH);
-    _db.exec('PRAGMA journal_mode = WAL;');
-    _db.exec('PRAGMA foreign_keys = ON;');
-    applyMigrations(_db);
-    return _db;
-}
-function _resetDbForTesting() {
-    _db = null;
-}
-const SCHEMA_VERSION = MIGRATIONS[MIGRATIONS.length - 1].version;
-function db_rowToWord(row) {
-    if (!row) return null;
-    const inner = JSON.parse(row.data);
-    return {
-        word: row.word,
-        definitions: inner.definitions || [],
-        phonetic: inner.phonetic || '',
-        synonyms: inner.synonyms || [],
-        antonyms: inner.antonyms || [],
-        mastery: row.mastery,
-        lookup_count: row.lookup_count,
-        created_at: row.created_at,
-        updated_at: row.updated_at,
-        ...row.last_lookup ? {
-            last_lookup: row.last_lookup
-        } : {}
-    };
-}
-function db_rowToPhrase(row) {
-    if (!row) return null;
-    const inner = JSON.parse(row.data);
-    return {
-        phrase: row.phrase,
-        definition: inner.definition || '',
-        phonetic: inner.phonetic || '',
-        literal: inner.literal || '',
-        examples: inner.examples || [],
-        mastery: row.mastery,
-        lookup_count: row.lookup_count,
-        created_at: row.created_at,
-        updated_at: row.updated_at,
-        ...row.last_lookup ? {
-            last_lookup: row.last_lookup
-        } : {}
-    };
-}
-function withTransaction(fn) {
-    const db = db_getDb();
-    db.exec('BEGIN');
-    try {
-        const result = fn(db);
-        db.exec('COMMIT');
-        return result;
-    } catch (err) {
-        try {
-            db.exec('ROLLBACK');
-        } catch  {
-        /* swallow */ }
-        throw err;
-    }
-}
-
-;// CONCATENATED MODULE: ./src/english-learner/cmd/quiz.ts
-
-function pickOrderClause(focus) {
-    switch(focus){
-        case 'low_mastery':
-            return 'ORDER BY mastery ASC, updated_at DESC';
-        case 'high_lookup':
-            return 'ORDER BY lookup_count DESC, mastery ASC';
-        case 'new':
-            return 'ORDER BY created_at DESC';
-        case 'random':
-            return 'ORDER BY RANDOM()';
-        default:
-            return 'ORDER BY mastery ASC, updated_at DESC';
-    }
-}
-function fetchWords(orderClause, limit) {
-    const db = getDb();
-    const rows = db.prepare(`SELECT * FROM words ${orderClause} LIMIT ?`).all(limit);
-    return rows.map((r)=>rowToWord(r)).filter((w)=>w !== null);
-}
-function fetchPhrases(orderClause, limit) {
-    const db = getDb();
-    const rows = db.prepare(`SELECT * FROM phrases ${orderClause} LIMIT ?`).all(limit);
-    return rows.map((r)=>rowToPhrase(r)).filter((p)=>p !== null);
-}
-function generateQuiz(count = 10, quizType = 'all', focus = 'low_mastery') {
-    const orderClause = pickOrderClause(focus);
-    const limit = Math.max(count * 2, count);
-    let pool = [];
-    if (quizType === 'word' || quizType === 'all') {
-        pool.push(...fetchWords(orderClause, limit).map((w)=>({
-                ...w,
-                type: 'word'
-            })));
-    }
-    if (quizType === 'phrase' || quizType === 'all') {
-        pool.push(...fetchPhrases(orderClause, limit).map((p)=>({
-                ...p,
-                type: 'phrase'
-            })));
-    }
-    if (!pool.length) return [];
-    if (focus === 'low_mastery') {
-        pool.sort((a, b)=>(a.mastery || 0) - (b.mastery || 0));
-    } else if (focus === 'high_lookup') {
-        pool.sort((a, b)=>(b.lookup_count || 0) - (a.lookup_count || 0));
-    } else if (focus === 'new') {
-        pool.sort((a, b)=>(b.created_at || '').localeCompare(a.created_at || ''));
-    } else {
-        for(let i = pool.length - 1; i > 0; i--){
-            const j = Math.floor(Math.random() * (i + 1));
-            [pool[i], pool[j]] = [
-                pool[j],
-                pool[i]
-            ];
-        }
-    }
-    return pool.slice(0, count).map((item)=>{
-        if (item.type === 'word') {
-            const defs = item.definitions || [];
-            return {
-                id: item.word,
-                type: 'word',
-                question: item.word,
-                answer: defs.map((d)=>`${d.pos} ${d.meaning}`).join('; '),
-                definitions: defs,
-                phonetic: item.phonetic || '',
-                examples: defs.flatMap((d)=>d.examples || []),
-                mastery: item.mastery || 0,
-                lookup_count: item.lookup_count || 0
-            };
-        }
-        return {
-            id: item.phrase,
-            type: 'phrase',
-            question: item.phrase,
-            answer: item.definition || '',
-            phonetic: item.phonetic || '',
-            examples: item.examples || [],
-            mastery: item.mastery || 0,
-            lookup_count: item.lookup_count || 0
-        };
-    });
-}
-function getReviewCandidates(limit = 20) {
-    const db = db_getDb();
-    const wordRows = db.prepare(`
-    SELECT word AS item, mastery, lookup_count, data,
-           CASE
-             WHEN next_review_at IS NULL THEN 1000 + (100 - mastery) + lookup_count * 5
-             WHEN next_review_at <= datetime('now') THEN 500 + (100 - mastery) + lookup_count * 5
-             ELSE (100 - mastery) + lookup_count * 5
-           END AS score
-    FROM words
-    ORDER BY score DESC
-    LIMIT ?
-  `).all(limit);
-    const phraseRows = db.prepare(`
-    SELECT phrase AS item, mastery, lookup_count, data,
-           CASE
-             WHEN next_review_at IS NULL THEN 1000 + (100 - mastery) + lookup_count * 5
-             WHEN next_review_at <= datetime('now') THEN 500 + (100 - mastery) + lookup_count * 5
-             ELSE (100 - mastery) + lookup_count * 5
-           END AS score
-    FROM phrases
-    ORDER BY score DESC
-    LIMIT ?
-  `).all(limit);
-    const items = [];
-    for (const r of wordRows){
-        const data = JSON.parse(r.data);
-        const defs = data.definitions || [];
-        items.push({
-            item: r.item,
-            type: 'word',
-            mastery: r.mastery,
-            lookup_count: r.lookup_count,
-            definition: defs.map((d)=>`${d.pos} ${d.meaning}`).join('; '),
-            score: r.score
-        });
-    }
-    for (const r of phraseRows){
-        const data = JSON.parse(r.data);
-        items.push({
-            item: r.item,
-            type: 'phrase',
-            mastery: r.mastery,
-            lookup_count: r.lookup_count,
-            definition: data.definition || '',
-            score: r.score
-        });
-    }
-    items.sort((a, b)=>b.score - a.score);
-    return items.slice(0, limit);
-}
-function getLearningSummary() {
-    const db = getDb();
-    const formatCats = (table)=>{
-        const c = db.prepare(`
-      SELECT
-        COUNT(*) AS total,
-        COALESCE(SUM(lookup_count), 0) AS total_lookups,
-        SUM(CASE WHEN mastery >= 80 THEN 1 ELSE 0 END) AS mastered,
-        SUM(CASE WHEN mastery >= 30 AND mastery < 80 THEN 1 ELSE 0 END) AS learning,
-        SUM(CASE WHEN mastery < 30 THEN 1 ELSE 0 END) AS new_count
-      FROM ${table}
-    `).get();
-        return {
-            total: c.total || 0,
-            mastered: c.mastered || 0,
-            learning: c.learning || 0,
-            new: c.new_count || 0,
-            total_lookups: c.total_lookups || 0
-        };
-    };
-    const recent = db.prepare(`
-    SELECT 'word' AS type, word AS id, created_at, mastery FROM words
-    UNION ALL
-    SELECT 'phrase' AS type, phrase AS id, created_at, mastery FROM phrases
-    ORDER BY created_at DESC
-    LIMIT 10
-  `).all();
-    return {
-        words: formatCats('words'),
-        phrases: formatCats('phrases'),
-        recent_additions: recent
-    };
-}
-const command = (/* unused pure expression or super */ null && ({
-    description: 'Quiz generation, review, and learning summary',
-    run: (args)=>{
-        if (args.length < 1) {
-            console.log('Usage: cli.cjs quiz <action> [args]');
-            console.log('Actions: generate, review, summary');
-            process.exit(1);
-        }
-        const action = args[0];
-        if (action === 'generate') {
-            const count = args[1] ? parseInt(args[1], 10) : 10;
-            const quizType = args[2] || 'all';
-            const focus = args[3] || 'low_mastery';
-            console.log(JSON.stringify(generateQuiz(count, quizType, focus), null, 2));
-        } else if (action === 'review') {
-            const limit = args[1] ? parseInt(args[1], 10) : 20;
-            console.log(JSON.stringify(getReviewCandidates(limit), null, 2));
-        } else if (action === 'summary') {
-            console.log(JSON.stringify(getLearningSummary(), null, 2));
-        } else {
-            console.log(JSON.stringify({
-                error: 'invalid_command'
-            }));
-            process.exit(1);
-        }
-    }
-}));
-
-;// CONCATENATED MODULE: ./src/english-learner/cmd/link-wiki.ts
-
-
-
-
-
-const WIKI_TOPICS = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'llm-wiki', 'wiki', 'topics.txt');
-const LINKS_FILE = external_node_path_namespaceObject.join(db_DATA_ROOT, 'wiki-links.json');
-const MIN_TERM_LEN = 4;
-const MAX_LINKS_PER_TERM = 3;
-function loadTopicSegments() {
-    const lines = [];
-    const segmentIndex = new Map();
-    if (!fs.existsSync(WIKI_TOPICS)) return {
-        lines,
-        segmentIndex
-    };
-    const raw = fs.readFileSync(WIKI_TOPICS, 'utf8');
-    for (const line of raw.split('\n')){
-        const t = line.trim();
-        if (!t || t.startsWith('#')) continue;
-        lines.push(t);
-        for (const seg of t.split('-')){
-            if (seg.length < MIN_TERM_LEN) continue;
-            const arr = segmentIndex.get(seg) ?? [];
-            arr.push(t);
-            segmentIndex.set(seg, arr);
-        }
-    }
-    return {
-        lines,
-        segmentIndex
-    };
-}
-function matchTerm(term, segmentIndex, topicLines) {
-    const lower = term.toLowerCase();
-    if (lower.length < MIN_TERM_LEN) return [];
-    const exact = segmentIndex.get(lower);
-    if (exact && exact.length) return exact.slice(0, MAX_LINKS_PER_TERM);
-    const tokens = lower.split(/[^a-z0-9]+/).filter((t)=>t.length >= MIN_TERM_LEN);
-    if (tokens.length === 0) return [];
-    const hits = new Set();
-    for (const tok of tokens){
-        const matches = segmentIndex.get(tok);
-        if (matches) {
-            for (const m of matches)hits.add(m);
-        }
-    }
-    if (hits.size === 0) {
-        for (const line of topicLines){
-            if (line.includes(lower)) hits.add(line);
-            if (hits.size >= MAX_LINKS_PER_TERM) break;
-        }
-    }
-    return Array.from(hits).slice(0, MAX_LINKS_PER_TERM);
-}
-function buildLinks() {
-    const { lines, segmentIndex } = loadTopicSegments();
-    const db = getDb();
-    const wordRows = db.prepare('SELECT word FROM words').all();
-    const phraseRows = db.prepare('SELECT phrase FROM phrases').all();
-    const links = [];
-    for (const r of wordRows){
-        const topics = matchTerm(r.word, segmentIndex, lines);
-        if (topics.length) links.push({
-            term: r.word,
-            type: 'word',
-            topics
-        });
-    }
-    for (const r of phraseRows){
-        const topics = matchTerm(r.phrase, segmentIndex, lines);
-        if (topics.length) links.push({
-            term: r.phrase,
-            type: 'phrase',
-            topics
-        });
-    }
-    return {
-        generated_at: new Date().toISOString(),
-        source: WIKI_TOPICS,
-        total_terms_scanned: wordRows.length + phraseRows.length,
-        total_terms_linked: links.length,
-        links
-    };
-}
-const link_wiki_command = (/* unused pure expression or super */ null && ({
-    description: 'Match vocab terms to llm-wiki topics; write ~/.learnwy/english-learner/wiki-links.json',
-    run: (args)=>{
-        const { flags } = parseArgs(args);
-        if (!fs.existsSync(WIKI_TOPICS)) {
-            console.error(`llm-wiki topics file not found: ${WIKI_TOPICS}`);
-            console.error("Skipping link-wiki \u2014 initialize llm-wiki first.");
-            process.exit(0);
-        }
-        const result = buildLinks();
-        if (flags['dry-run']) {
-            console.log(JSON.stringify(result, null, 2));
-            return;
-        }
-        if (!fs.existsSync(DATA_ROOT)) fs.mkdirSync(DATA_ROOT, {
-            recursive: true
-        });
-        fs.writeFileSync(LINKS_FILE, JSON.stringify(result, null, 2) + '\n');
-        console.log(`Wrote ${result.total_terms_linked} link(s) (of ${result.total_terms_scanned} terms) to ${LINKS_FILE}`);
-    }
-}));
-function readLinksMap() {
-    const map = new Map();
-    if (!external_node_fs_namespaceObject.existsSync(LINKS_FILE)) return map;
-    try {
-        const f = JSON.parse(external_node_fs_namespaceObject.readFileSync(LINKS_FILE, 'utf8'));
-        for (const l of f.links)map.set(l.term, l.topics);
-    } catch  {
-    /* ignore malformed file */ }
-    return map;
-}
-
-;// CONCATENATED MODULE: ./src/english-learner/lib/session-scan.ts
-
-
-
-
-const REVIEW_LIMIT = 3;
-const META_KEY = 'last_review_date';
-function todayISO() {
-    return new Date().toISOString().slice(0, 10);
-}
-function session_scan_scanSession() {
-    if (!external_node_fs_namespaceObject.existsSync(DB_PATH)) return null;
-    const db = db_getDb();
-    const row = db.prepare('SELECT value FROM meta WHERE key = ?').get(META_KEY);
-    const today = todayISO();
-    if (row?.value === today) return null;
-    const candidates = getReviewCandidates(REVIEW_LIMIT);
-    if (candidates.length === 0) return null;
-    const links = readLinksMap();
-    const lines = candidates.map((c)=>{
-        const def = c.definition.length > 80 ? `${c.definition.slice(0, 77)}...` : c.definition;
-        const matchedTopics = links.get(c.item);
-        const wikiHint = matchedTopics && matchedTopics.length ? ` \u{21AA} wiki: ${matchedTopics.slice(0, 2).join(', ')}` : '';
-        return `  \u{2022} ${c.type === 'phrase' ? '"' : ''}${c.item}${c.type === 'phrase' ? '"' : ''} (mastery ${c.mastery}) \u{2014} ${def}${wikiHint}`;
-    });
-    db.prepare('INSERT INTO meta(key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value').run(META_KEY, today);
-    return [
-        `[english-learner review] Daily refresh \u{2014} ${candidates.length} due-for-review item(s):`,
-        ...lines,
-        'When the user next references one of these, prefer it over fresh lookups, and bump mastery via batch_save once recalled correctly.'
-    ].join('\n');
-}
-
 ;// CONCATENATED MODULE: external "node:child_process"
 const external_node_child_process_namespaceObject = require("node:child_process");
 ;// CONCATENATED MODULE: ./src/learnwy-status/lib/digest.ts
 
 
 
-
-function readVocabSection() {
-    if (!external_node_fs_namespaceObject.existsSync(DB_PATH)) return null;
-    const db = db_getDb();
-    const totalsW = db.prepare(`
-    SELECT
-      COUNT(*) AS total,
-      COALESCE(SUM(lookup_count), 0) AS total_lookups,
-      SUM(CASE WHEN mastery >= 80 THEN 1 ELSE 0 END) AS mastered,
-      SUM(CASE WHEN mastery >= 30 AND mastery < 80 THEN 1 ELSE 0 END) AS learning,
-      SUM(CASE WHEN mastery < 30 THEN 1 ELSE 0 END) AS new_count
-    FROM words
-  `).get();
-    const totalsP = db.prepare(`
-    SELECT
-      COUNT(*) AS total,
-      COALESCE(SUM(lookup_count), 0) AS total_lookups,
-      SUM(CASE WHEN mastery >= 80 THEN 1 ELSE 0 END) AS mastered,
-      SUM(CASE WHEN mastery >= 30 AND mastery < 80 THEN 1 ELSE 0 END) AS learning,
-      SUM(CASE WHEN mastery < 30 THEN 1 ELSE 0 END) AS new_count
-    FROM phrases
-  `).get();
-    const total = (totalsW?.total || 0) + (totalsP?.total || 0);
-    if (total === 0) return null;
-    const reviewRows = db.prepare(`
-    SELECT item, mastery, lookup_count, score FROM (
-      SELECT word AS item, mastery, lookup_count, (100 - mastery) + lookup_count * 5 AS score FROM words
-      UNION ALL
-      SELECT phrase AS item, mastery, lookup_count, (100 - mastery) + lookup_count * 5 AS score FROM phrases
-    )
-    ORDER BY score DESC
-    LIMIT 3
-  `).all();
-    return {
-        total,
-        mastered: (totalsW?.mastered || 0) + (totalsP?.mastered || 0),
-        learning: (totalsW?.learning || 0) + (totalsP?.learning || 0),
-        new: (totalsW?.new_count || 0) + (totalsP?.new_count || 0),
-        total_lookups: (totalsW?.total_lookups || 0) + (totalsP?.total_lookups || 0),
-        top_review: reviewRows.map((r)=>r.item)
-    };
-}
 function readWikiSection() {
     const f = external_node_path_namespaceObject.join(LEARNWY_ROOT, 'llm-wiki', 'health.json');
     if (!external_node_fs_namespaceObject.existsSync(f)) return null;
@@ -995,34 +488,9 @@ function readLogsSection() {
         rotated_count: rotated
     };
 }
-function readCorrectionsSection() {
-    if (!external_node_fs_namespaceObject.existsSync(DB_PATH)) return null;
-    try {
-        const db = db_getDb();
-        const hasTable = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='corrections'").get();
-        if (!hasTable) return null;
-        const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-        const total = db.prepare('SELECT COALESCE(SUM(count),0) AS s FROM corrections').get().s;
-        const uniquePairs = db.prepare('SELECT COUNT(*) AS c FROM corrections').get().c;
-        const recent = db.prepare('SELECT COALESCE(SUM(count),0) AS s FROM corrections WHERE last_seen >= ?').get(cutoff).s;
-        const top = db.prepare(`SELECT original, corrected, count FROM corrections
-         ORDER BY count DESC, last_seen DESC LIMIT 5`).all();
-        if (total === 0) return null;
-        return {
-            total,
-            unique_pairs: uniquePairs,
-            recent_30d: recent,
-            top
-        };
-    } catch  {
-        return null;
-    }
-}
 function buildDigest() {
     return {
         generated_at: new Date().toISOString(),
-        vocab: readVocabSection(),
-        corrections: readCorrectionsSection(),
         wiki: readWikiSection(),
         optimizer: readOptimizerSection(),
         consolidation: readConsolidationSection(),
@@ -1032,28 +500,6 @@ function buildDigest() {
 function formatHuman(d) {
     const lines = [];
     lines.push(`learnwy status \u{2014} ${d.generated_at}`);
-    lines.push('');
-    if (d.vocab) {
-        lines.push('Vocab (~/.learnwy/english-learner/):');
-        lines.push(`  ${d.vocab.total} items \u{2014} ${d.vocab.mastered} mastered, ${d.vocab.learning} learning, ${d.vocab.new} new (${d.vocab.total_lookups} total lookups)`);
-        if (d.vocab.top_review.length) {
-            lines.push(`  Top review: ${d.vocab.top_review.join(', ')}`);
-        }
-    } else {
-        lines.push("Vocab: (empty \u2014 run english-learner to start collecting)");
-    }
-    lines.push('');
-    if (d.corrections) {
-        lines.push(`English corrections: ${d.corrections.total} total, ${d.corrections.unique_pairs} unique pairs, ${d.corrections.recent_30d} in last 30d`);
-        if (d.corrections.top.length) {
-            lines.push('  Top recurring:');
-            for (const t of d.corrections.top){
-                lines.push(`    ${t.count}\xd7 "${t.original}" \u{2192} "${t.corrected}"`);
-            }
-        }
-    } else {
-        lines.push("English corrections: (none recorded \u2014 schema v3+)");
-    }
     lines.push('');
     if (d.wiki) {
         const stale = d.wiki.age_hours > 24 ? `\u{26A0} ${d.wiki.age_hours}h stale` : `${d.wiki.age_hours}h ago`;
@@ -1087,17 +533,11 @@ function formatHuman(d) {
 }
 function formatCompact(d) {
     const parts = [];
-    if (d.vocab) {
-        parts.push(`vocab=${d.vocab.total} (${d.vocab.mastered}m/${d.vocab.learning}l/${d.vocab.new}n)`);
-    }
     if (d.wiki) {
         parts.push(`wiki=${d.wiki.pages}p ${d.wiki.broken_links}brk ${d.wiki.orphans}orphan ${d.wiki.broken_sources}srcdrift`);
     }
     if (d.optimizer) {
         parts.push(`optimizer=${d.optimizer.last_7d}/7d ${d.optimizer.last_30d}/30d`);
-    }
-    if (d.corrections) {
-        parts.push(`corrections=${d.corrections.recent_30d}/30d (${d.corrections.unique_pairs}u)`);
     }
     if (d.consolidation) {
         parts.push(`kc-nudge=${d.consolidation.hours_ago}h-ago`);
@@ -1122,14 +562,6 @@ const REFRESH_TARGETS = [
         cli: external_node_path_namespaceObject.join(AGENTS_ROOT, 'llm-wiki', 'scripts', 'cli.cjs'),
         args: [
             'health-check'
-        ]
-    },
-    {
-        artifact: external_node_path_namespaceObject.join(HOME, '.learnwy', 'english-learner', 'wiki-links.json'),
-        precondition: ()=>external_node_fs_namespaceObject.existsSync(external_node_path_namespaceObject.join(HOME, '.learnwy', 'english-learner', 'data.db')),
-        cli: external_node_path_namespaceObject.join(AGENTS_ROOT, 'english-learner', 'scripts', 'cli.cjs'),
-        args: [
-            'link-wiki'
         ]
     }
 ];
@@ -1191,7 +623,7 @@ function autoRefresh() {
     }
     return refreshed;
 }
-function lib_session_scan_scanSession() {
+function session_scan_scanSession() {
     const refreshed = autoRefresh();
     const week = isoWeek(new Date());
     const state = readState();
@@ -1202,7 +634,7 @@ function lib_session_scan_scanSession() {
         return null;
     }
     const digest = buildDigest();
-    if (!digest.vocab && !digest.wiki && !digest.optimizer && !digest.consolidation) return null;
+    if (!digest.wiki && !digest.optimizer && !digest.consolidation) return null;
     const compact = formatCompact(digest);
     const wikiAlert = digest.wiki && digest.wiki.broken_links > 0 ? `  \u{26A0} wiki: ${digest.wiki.broken_links} broken link(s) \u{2014} run "llm-wiki health-check"` : null;
     const refreshLine = refreshed.length ? `  \u{21BB} auto-refreshing in background: ${refreshed.join(', ')}` : null;
@@ -1223,19 +655,14 @@ function lib_session_scan_scanSession() {
 
 
 
-
 const SCANNERS = [
     {
         name: 'llm-wiki',
         scan: scanSession
     },
     {
-        name: 'english-learner',
-        scan: session_scan_scanSession
-    },
-    {
         name: 'learnwy-status',
-        scan: lib_session_scan_scanSession
+        scan: session_scan_scanSession
     }
 ];
 async function main() {

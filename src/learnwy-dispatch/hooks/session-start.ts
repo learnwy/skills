@@ -1,14 +1,12 @@
 #!/usr/bin/env node
 import { readStdin, injectContext } from '../../shared/hooks-lib.js';
 import { scanSession as wikiScan } from '../../llm-wiki/lib/session-scan.js';
-import { scanSession as englishScan } from '../../english-learner/lib/session-scan.js';
 import { scanSession as statusScan } from '../../learnwy-status/lib/session-scan.js';
 
 type Scanner = () => string | null;
 
 const SCANNERS: { name: string; scan: Scanner }[] = [
   { name: 'llm-wiki', scan: wikiScan },
-  { name: 'english-learner', scan: englishScan },
   { name: 'learnwy-status', scan: statusScan },
 ];
 

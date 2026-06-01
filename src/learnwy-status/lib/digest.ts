@@ -1,16 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { DB_PATH, getDb } from '../../shared/db.js';
 import { LEARNWY_ROOT } from '../../shared/learnwy-paths.js';
-
-export interface VocabSection {
-  total: number;
-  mastered: number;
-  learning: number;
-  new: number;
-  total_lookups: number;
-  top_review: string[];
-}
 
 export interface WikiSection {
   generated_at: string;
@@ -38,81 +28,12 @@ export interface LogsSection {
   rotated_count: number;
 }
 
-export interface CorrectionsSection {
-  total: number;
-  unique_pairs: number;
-  recent_30d: number;
-  top: Array<{ original: string; corrected: string; count: number }>;
-}
-
 export interface Digest {
   generated_at: string;
-  vocab: VocabSection | null;
-  corrections: CorrectionsSection | null;
   wiki: WikiSection | null;
   optimizer: OptimizerSection | null;
   consolidation: ConsolidationSection | null;
   logs: LogsSection;
-}
-
-interface ReviewRow {
-  item: string;
-  mastery: number;
-  lookup_count: number;
-}
-
-interface SummaryCount {
-  total: number;
-  mastered: number;
-  learning: number;
-  new_count: number;
-  total_lookups: number;
-}
-
-export function readVocabSection(): VocabSection | null {
-  if (!fs.existsSync(DB_PATH)) return null;
-  const db = getDb();
-
-  const totalsW = db.prepare(`
-    SELECT
-      COUNT(*) AS total,
-      COALESCE(SUM(lookup_count), 0) AS total_lookups,
-      SUM(CASE WHEN mastery >= 80 THEN 1 ELSE 0 END) AS mastered,
-      SUM(CASE WHEN mastery >= 30 AND mastery < 80 THEN 1 ELSE 0 END) AS learning,
-      SUM(CASE WHEN mastery < 30 THEN 1 ELSE 0 END) AS new_count
-    FROM words
-  `).get() as SummaryCount | undefined;
-  const totalsP = db.prepare(`
-    SELECT
-      COUNT(*) AS total,
-      COALESCE(SUM(lookup_count), 0) AS total_lookups,
-      SUM(CASE WHEN mastery >= 80 THEN 1 ELSE 0 END) AS mastered,
-      SUM(CASE WHEN mastery >= 30 AND mastery < 80 THEN 1 ELSE 0 END) AS learning,
-      SUM(CASE WHEN mastery < 30 THEN 1 ELSE 0 END) AS new_count
-    FROM phrases
-  `).get() as SummaryCount | undefined;
-
-  const total = (totalsW?.total || 0) + (totalsP?.total || 0);
-  if (total === 0) return null;
-
-  const reviewRows = db.prepare(`
-    SELECT item, mastery, lookup_count, score FROM (
-      SELECT word AS item, mastery, lookup_count, (100 - mastery) + lookup_count * 5 AS score FROM words
-      UNION ALL
-      SELECT phrase AS item, mastery, lookup_count, (100 - mastery) + lookup_count * 5 AS score FROM phrases
-    )
-    ORDER BY score DESC
-    LIMIT 3
-  `).all() as unknown as ReviewRow[];
-
-  return {
-    total,
-    mastered: (totalsW?.mastered || 0) + (totalsP?.mastered || 0),
-    learning: (totalsW?.learning || 0) + (totalsP?.learning || 0),
-    new: (totalsW?.new_count || 0) + (totalsP?.new_count || 0),
-    total_lookups: (totalsW?.total_lookups || 0) + (totalsP?.total_lookups || 0),
-    top_review: reviewRows.map((r) => r.item),
-  };
 }
 
 interface HealthFile {
@@ -214,40 +135,9 @@ export function readLogsSection(): LogsSection {
   return { largest_file: largestName, largest_size_bytes: largestSize, rotated_count: rotated };
 }
 
-export function readCorrectionsSection(): CorrectionsSection | null {
-  if (!fs.existsSync(DB_PATH)) return null;
-  try {
-    const db = getDb();
-    const hasTable = db
-      .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='corrections'")
-      .get();
-    if (!hasTable) return null;
-    const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    const total = (db.prepare('SELECT COALESCE(SUM(count),0) AS s FROM corrections').get() as { s: number }).s;
-    const uniquePairs = (db.prepare('SELECT COUNT(*) AS c FROM corrections').get() as { c: number }).c;
-    const recent = (
-      db
-        .prepare('SELECT COALESCE(SUM(count),0) AS s FROM corrections WHERE last_seen >= ?')
-        .get(cutoff) as { s: number }
-    ).s;
-    const top = db
-      .prepare(
-        `SELECT original, corrected, count FROM corrections
-         ORDER BY count DESC, last_seen DESC LIMIT 5`,
-      )
-      .all() as Array<{ original: string; corrected: string; count: number }>;
-    if (total === 0) return null;
-    return { total, unique_pairs: uniquePairs, recent_30d: recent, top };
-  } catch {
-    return null;
-  }
-}
-
 export function buildDigest(): Digest {
   return {
     generated_at: new Date().toISOString(),
-    vocab: readVocabSection(),
-    corrections: readCorrectionsSection(),
     wiki: readWikiSection(),
     optimizer: readOptimizerSection(),
     consolidation: readConsolidationSection(),
@@ -258,30 +148,6 @@ export function buildDigest(): Digest {
 export function formatHuman(d: Digest): string {
   const lines: string[] = [];
   lines.push(`learnwy status — ${d.generated_at}`);
-  lines.push('');
-
-  if (d.vocab) {
-    lines.push('Vocab (~/.learnwy/english-learner/):');
-    lines.push(`  ${d.vocab.total} items — ${d.vocab.mastered} mastered, ${d.vocab.learning} learning, ${d.vocab.new} new (${d.vocab.total_lookups} total lookups)`);
-    if (d.vocab.top_review.length) {
-      lines.push(`  Top review: ${d.vocab.top_review.join(', ')}`);
-    }
-  } else {
-    lines.push('Vocab: (empty — run english-learner to start collecting)');
-  }
-  lines.push('');
-
-  if (d.corrections) {
-    lines.push(`English corrections: ${d.corrections.total} total, ${d.corrections.unique_pairs} unique pairs, ${d.corrections.recent_30d} in last 30d`);
-    if (d.corrections.top.length) {
-      lines.push('  Top recurring:');
-      for (const t of d.corrections.top) {
-        lines.push(`    ${t.count}× "${t.original}" → "${t.corrected}"`);
-      }
-    }
-  } else {
-    lines.push('English corrections: (none recorded — schema v3+)');
-  }
   lines.push('');
 
   if (d.wiki) {
@@ -321,17 +187,11 @@ export function formatHuman(d: Digest): string {
 
 export function formatCompact(d: Digest): string {
   const parts: string[] = [];
-  if (d.vocab) {
-    parts.push(`vocab=${d.vocab.total} (${d.vocab.mastered}m/${d.vocab.learning}l/${d.vocab.new}n)`);
-  }
   if (d.wiki) {
     parts.push(`wiki=${d.wiki.pages}p ${d.wiki.broken_links}brk ${d.wiki.orphans}orphan ${d.wiki.broken_sources}srcdrift`);
   }
   if (d.optimizer) {
     parts.push(`optimizer=${d.optimizer.last_7d}/7d ${d.optimizer.last_30d}/30d`);
-  }
-  if (d.corrections) {
-    parts.push(`corrections=${d.corrections.recent_30d}/30d (${d.corrections.unique_pairs}u)`);
   }
   if (d.consolidation) {
     parts.push(`kc-nudge=${d.consolidation.hours_ago}h-ago`);

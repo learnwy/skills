@@ -3,7 +3,6 @@ import * as path from 'node:path';
 import * as os from 'node:os';
 import type { Command } from '../../shared/cli.js';
 import { parseArgs } from '../../shared/cli.js';
-import { DB_PATH, SCHEMA_VERSION, getDb } from '../../shared/db.js';
 
 type Status = 'ok' | 'warn' | 'error';
 
@@ -15,33 +14,17 @@ interface Check {
 
 const HOME = os.homedir();
 const LEARNWY_ROOT = path.join(HOME, '.learnwy');
-const LEGACY_ROOT = path.join(HOME, '.english-learner');
 const CLAUDE_SETTINGS = path.join(HOME, '.claude', 'settings.json');
 const TRAE_HOOKS = path.join(HOME, '.trae', 'hooks.json');
+const CODEX_HOOKS = path.join(HOME, '.codex', 'hooks.json');
+const CODEX_CONFIG = path.join(HOME, '.codex', 'config.toml');
 
 const REQUIRED_DISPATCHER_HOOKS = ['UserPromptSubmit', 'Stop', 'SessionStart'];
 
 function checkNode(): Check {
   const major = parseInt(process.versions.node.split('.')[0] ?? '0', 10);
-  if (major >= 24) return { name: 'Node version', status: 'ok', detail: `${process.version} (≥ 24 required for node:sqlite)` };
-  if (major >= 22) return { name: 'Node version', status: 'warn', detail: `${process.version} — english-learner needs ≥ 24` };
-  return { name: 'Node version', status: 'error', detail: `${process.version} — too old; upgrade to ≥ 24` };
-}
-
-function checkSchemaVersion(): Check {
-  if (!fs.existsSync(DB_PATH)) {
-    return { name: 'SQLite schema', status: 'ok', detail: 'no DB yet (will be created on first use)' };
-  }
-  try {
-    const db = getDb();
-    const row = db.prepare('SELECT value FROM meta WHERE key = ?').get('schema_version') as { value?: string } | undefined;
-    const current = row?.value ? parseInt(row.value, 10) : 0;
-    if (current === SCHEMA_VERSION) return { name: 'SQLite schema', status: 'ok', detail: `v${current} (latest)` };
-    if (current < SCHEMA_VERSION) return { name: 'SQLite schema', status: 'warn', detail: `at v${current}, latest is v${SCHEMA_VERSION} — open english-learner once to auto-migrate` };
-    return { name: 'SQLite schema', status: 'warn', detail: `at v${current} but binary only knows v${SCHEMA_VERSION} — newer DB than CLI` };
-  } catch (err) {
-    return { name: 'SQLite schema', status: 'error', detail: `cannot open ${DB_PATH}: ${(err as Error).message}` };
-  }
+  if (major >= 22) return { name: 'Node version', status: 'ok', detail: `${process.version} (≥ 22 required)` };
+  return { name: 'Node version', status: 'error', detail: `${process.version} — too old; upgrade to ≥ 22` };
 }
 
 interface SettingsHooks {
@@ -78,7 +61,7 @@ function checkHookRegistration(file: string, label: string): Check[] {
     const cmds = hookCommands(cfg, event);
     const dispatcher = cmds.find((c) => c.includes('learnwy-dispatch'));
     const stale = cmds.filter((c) =>
-      ['english-learner/scripts/hooks', 'llm-wiki/scripts/hooks', 'prompt-optimizer/scripts/hooks',
+      ['llm-wiki/scripts/hooks', 'prompt-optimizer/scripts/hooks',
        'knowledge-consolidation/scripts/hooks', 'learnwy-status/scripts/hooks'].some((p) => c.includes(p)),
     );
     if (!dispatcher) {
@@ -92,8 +75,47 @@ function checkHookRegistration(file: string, label: string): Check[] {
   return checks;
 }
 
+function readFeatureValue(toml: string, key: string): string | null {
+  const lines = toml.replace(/\r\n/g, '\n').split('\n');
+  let inFeatures = false;
+  for (const line of lines) {
+    if (/^\s*\[features\]\s*(?:#.*)?$/.test(line)) {
+      inFeatures = true;
+      continue;
+    }
+    if (inFeatures && /^\s*\[[^\]]+\]\s*(?:#.*)?$/.test(line)) break;
+    if (!inFeatures) continue;
+    const match = line.match(new RegExp(`^\\s*${key}\\s*=\\s*([^#]+)`));
+    if (match) return match[1].trim();
+  }
+  return null;
+}
+
+function checkCodexFeatureFlag(): Check {
+  if (!fs.existsSync(CODEX_CONFIG)) {
+    return { name: 'Codex hooks feature', status: 'ok', detail: 'default enabled (no ~/.codex/config.toml)' };
+  }
+  try {
+    const toml = fs.readFileSync(CODEX_CONFIG, 'utf8');
+    const hooks = readFeatureValue(toml, 'hooks');
+    const legacyHooks = readFeatureValue(toml, 'codex_hooks');
+    if (hooks === 'false') {
+      return { name: 'Codex hooks feature', status: 'error', detail: '`[features].hooks = false` disables hooks — run `pnpm run install:hooks`' };
+    }
+    if (legacyHooks !== null) {
+      return { name: 'Codex hooks feature', status: 'warn', detail: '`codex_hooks` is deprecated — run `pnpm run install:hooks` to migrate to `hooks = true`' };
+    }
+    if (hooks === 'true') {
+      return { name: 'Codex hooks feature', status: 'ok', detail: '`[features].hooks = true`' };
+    }
+    return { name: 'Codex hooks feature', status: 'ok', detail: 'default enabled' };
+  } catch (err) {
+    return { name: 'Codex hooks feature', status: 'warn', detail: `cannot read ${CODEX_CONFIG}: ${(err as Error).message}` };
+  }
+}
+
 function checkPathLayout(): Check[] {
-  const required = ['english-learner', 'llm-wiki', 'logs'];
+  const required = ['llm-wiki', 'logs'];
   const checks: Check[] = [];
   for (const sub of required) {
     const p = path.join(LEARNWY_ROOT, sub);
@@ -102,15 +124,6 @@ function checkPathLayout(): Check[] {
       status: fs.existsSync(p) ? 'ok' : 'warn',
       detail: fs.existsSync(p) ? 'present' : 'missing — will be created when the subsystem first runs',
     });
-  }
-  if (fs.existsSync(LEGACY_ROOT)) {
-    checks.push({
-      name: 'legacy ~/.english-learner/',
-      status: 'warn',
-      detail: 'should have been migrated to ~/.learnwy/english-learner/ — verify and `rm -rf ~/.english-learner/`',
-    });
-  } else {
-    checks.push({ name: 'legacy ~/.english-learner/', status: 'ok', detail: 'absent (migrated)' });
   }
   return checks;
 }
@@ -129,9 +142,10 @@ function checkBundles(): Check[] {
 export function runDoctor(): Check[] {
   const checks: Check[] = [];
   checks.push(checkNode());
-  checks.push(checkSchemaVersion());
   checks.push(...checkHookRegistration(CLAUDE_SETTINGS, 'Claude'));
   checks.push(...checkHookRegistration(TRAE_HOOKS, 'Trae'));
+  checks.push(...checkHookRegistration(CODEX_HOOKS, 'Codex'));
+  checks.push(checkCodexFeatureFlag());
   checks.push(...checkPathLayout());
   checks.push(...checkBundles());
   return checks;

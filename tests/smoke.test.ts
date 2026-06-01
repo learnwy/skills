@@ -58,8 +58,6 @@ describe('cli.cjs --help loads cleanly', () => {
 
 describe('hooks accept stdin payloads', () => {
   const cases: Array<[string, string, Record<string, unknown>]> = [
-    ['english-learner', 'user-prompt-scan', { user_message: 'I think this thing maybe could be improved' }],
-    ['english-learner', 'stop-response-scan', { transcript: 'a'.repeat(200) + ' ephemeral magnificent quintessential' }],
     ['llm-wiki', 'auto-query', { user_message: 'tell me about react performance optimization' }],
     ['llm-wiki', 'session-context', {}],
     ['prompt-optimizer', 'user-prompt-scan', { user_message: 'optimize my prompt: write good code' }],

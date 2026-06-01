@@ -290,7 +290,6 @@ function skillRoot(skill) {
     return learnwyPath(skill);
 }
 const PATHS = {
-    englishLearner: skillRoot('english-learner'),
     llmWiki: skillRoot('llm-wiki'),
     promptOptimizer: skillRoot('prompt-optimizer'),
     knowledgeConsolidation: skillRoot('knowledge-consolidation'),

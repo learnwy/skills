@@ -1,13 +1,11 @@
 #!/usr/bin/env node
 import { readStdin, injectContext } from '../../shared/hooks-lib.js';
-import { scanPrompt as englishScan } from '../../english-learner/lib/prompt-scan.js';
 import { scanPrompt as wikiScan } from '../../llm-wiki/lib/prompt-scan.js';
 import { scanPrompt as optimizerScan } from '../../prompt-optimizer/lib/prompt-scan.js';
 
 type Scanner = (message: string) => string | null;
 
 const SCANNERS: { name: string; scan: Scanner }[] = [
-  { name: 'english-learner', scan: englishScan },
   { name: 'llm-wiki', scan: wikiScan },
   { name: 'prompt-optimizer', scan: optimizerScan },
 ];

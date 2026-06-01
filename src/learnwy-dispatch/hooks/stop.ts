@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import { readStdin, injectContext } from '../../shared/hooks-lib.js';
-import { scanStop as englishStop } from '../../english-learner/lib/stop-scan.js';
 import { scanStop as kcStop, type StopPayload } from '../../knowledge-consolidation/lib/stop-scan.js';
 
 async function main(): Promise<void> {
@@ -13,12 +12,6 @@ async function main(): Promise<void> {
   if (!transcript) return;
 
   const blocks: string[] = [];
-  try {
-    const a = englishStop(transcript);
-    if (a) blocks.push(a);
-  } catch {
-    /* swallow */
-  }
   try {
     const b = kcStop(transcript, payload as StopPayload);
     if (b) blocks.push(b);

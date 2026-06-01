@@ -12,7 +12,6 @@ export function skillRoot(skill: string): string {
 }
 
 export const PATHS = {
-  englishLearner: skillRoot('english-learner'),
   llmWiki: skillRoot('llm-wiki'),
   promptOptimizer: skillRoot('prompt-optimizer'),
   knowledgeConsolidation: skillRoot('knowledge-consolidation'),

@@ -32,12 +32,9 @@ const SUBSTANTIVE_SIGNALS: RegExp[] = [
 ];
 
 const SKILL_OUTPUT_MARKERS = [
-  '[english-learner',
   '[llm-wiki]',
   '[prompt-optimizer',
   '[knowledge-consolidation]',
-  '词义 Definitions',
-  '掌握度:',
 ];
 
 interface NudgeState {

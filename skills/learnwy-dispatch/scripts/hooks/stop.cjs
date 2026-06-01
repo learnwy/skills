@@ -66,6 +66,64 @@ function wantsClaude(t) {
 function wantsCodex(t) {
     return t === 'codex' || t === 'both' || t === 'all';
 }
+function enableCodexHooksFeatureToml(source) {
+    const normalized = source.replace(/\r\n/g, '\n');
+    const lines = normalized.endsWith('\n') ? normalized.slice(0, -1).split('\n') : normalized.split('\n');
+    const effectiveLines = lines.length === 1 && lines[0] === '' ? [] : lines;
+    let featuresStart = -1;
+    let featuresEnd = effectiveLines.length;
+    for(let i = 0; i < effectiveLines.length; i++){
+        if (/^\s*\[features\]\s*(?:#.*)?$/.test(effectiveLines[i])) {
+            featuresStart = i;
+            for(let j = i + 1; j < effectiveLines.length; j++){
+                if (/^\s*\[[^\]]+\]\s*(?:#.*)?$/.test(effectiveLines[j])) {
+                    featuresEnd = j;
+                    break;
+                }
+            }
+            break;
+        }
+    }
+    if (featuresStart === -1) {
+        const next = [
+            ...effectiveLines
+        ];
+        if (next.length > 0 && next.some((line)=>line.trim() !== '')) next.push('');
+        next.push('[features]', 'hooks = true');
+        return next.join('\n') + '\n';
+    }
+    const before = effectiveLines.slice(0, featuresStart + 1);
+    const section = effectiveLines.slice(featuresStart + 1, featuresEnd);
+    const after = effectiveLines.slice(featuresEnd);
+    let hasHooks = false;
+    const updatedSection = [];
+    for (const line of section){
+        if (/^\s*codex_hooks\s*=/.test(line)) continue;
+        if (/^\s*hooks\s*=/.test(line)) {
+            const indent = line.match(/^(\s*)/)?.[1] || '';
+            updatedSection.push(`${indent}hooks = true`);
+            hasHooks = true;
+        } else {
+            updatedSection.push(line);
+        }
+    }
+    if (!hasHooks) updatedSection.unshift('hooks = true');
+    return [
+        ...before,
+        ...updatedSection,
+        ...after
+    ].join('\n') + '\n';
+}
+function ensureCodexHooksFeature(codexDir) {
+    const configFile = path.join(codexDir, 'config.toml');
+    if (!fs.existsSync(codexDir)) fs.mkdirSync(codexDir, {
+        recursive: true
+    });
+    const existing = fs.existsSync(configFile) ? fs.readFileSync(configFile, 'utf8') : '';
+    const next = enableCodexHooksFeatureToml(existing);
+    if (next !== existing) fs.writeFileSync(configFile, next);
+    return configFile;
+}
 function installHooks(config, options = {}) {
     const { target = 'both', scope = 'global', projectRoot } = options;
     const results = [];
@@ -87,9 +145,11 @@ function installHooks(config, options = {}) {
             results.push(claudeFile);
         }
         if (wantsCodex(target)) {
-            const codexFile = path.join(homeDir, '.codex', 'hooks.json');
+            const codexDir = path.join(homeDir, '.codex');
+            const codexFile = path.join(codexDir, 'hooks.json');
             mergeAndWrite(codexFile, config, 'standalone');
             results.push(codexFile);
+            results.push(ensureCodexHooksFeature(codexDir));
         }
     } else {
         const root = projectRoot || getProjectDir();
@@ -104,9 +164,11 @@ function installHooks(config, options = {}) {
             results.push(claudeFile);
         }
         if (wantsCodex(target)) {
-            const codexFile = path.join(root, '.codex', 'hooks.json');
+            const codexDir = path.join(root, '.codex');
+            const codexFile = path.join(codexDir, 'hooks.json');
             mergeAndWrite(codexFile, config, 'standalone');
             results.push(codexFile);
+            results.push(ensureCodexHooksFeature(codexDir));
         }
     }
     return results;
@@ -183,49 +245,6 @@ function uninstallHooks(skillId, options = {}) {
     }
 }
 
-;// CONCATENATED MODULE: ./src/english-learner/lib/stop-scan.ts
-const SKILL_MARKERS = [
-    "\uD83D\uDCD6 **",
-    "\u8BCD\u4E49 Definitions",
-    "\u540C\u4E49\u8BCD:",
-    "\u53CD\u4E49\u8BCD:",
-    "\u638C\u63E1\u5EA6:",
-    'english-learner hook',
-    "\u67E5\u8BE2\u6B21\u6570:"
-];
-const isEnglishLearnerOutput = (text)=>SKILL_MARKERS.some((m)=>text.includes(m));
-function extractCandidates(text) {
-    if (!text) return [];
-    const stripped = text.replace(/```[\s\S]*?```/g, ' ').replace(/`[^`]+`/g, ' ').replace(/!\[[^\]]*\]\([^)]+\)/g, ' ').replace(/\[[^\]]*\]\([^)]+\)/g, ' ').replace(/[#*_>|`~\-]+/g, ' ');
-    const tokens = stripped.match(/\b[a-zA-Z][a-zA-Z'-]{6,}\b/g) || [];
-    const seen = new Set();
-    const candidates = [];
-    for (const raw of tokens){
-        const w = raw.toLowerCase();
-        if (seen.has(w)) continue;
-        if (/^[A-Z]{2,}$/.test(raw)) continue;
-        if (/'s$|'re$|'ve$|'ll$|n't$/.test(w)) continue;
-        seen.add(w);
-        candidates.push(w);
-        if (candidates.length >= 12) break;
-    }
-    return candidates;
-}
-function scanStop(transcript) {
-    if (!transcript || transcript.length < 200) return null;
-    if (isEnglishLearnerOutput(transcript)) return null;
-    const candidates = extractCandidates(transcript);
-    if (candidates.length < 5) return null;
-    return [
-        '[english-learner stop hook]',
-        "Scan the assistant's last response for 2-4 advanced or non-obvious English words/phrases the user might want to learn",
-        `(initial candidates: ${candidates.slice(0, 8).join(', ')}).`,
-        'If anything is genuinely worth surfacing, ask the user: "Want to save these to your vocabulary store?".',
-        "Only the user can decide \u2014 do NOT auto-save.",
-        'Skip silently if everything is common (CEFR A1-B1) or domain jargon.'
-    ].join(' ');
-}
-
 ;// CONCATENATED MODULE: external "node:os"
 const external_node_os_namespaceObject = require("node:os");
 ;// CONCATENATED MODULE: ./src/shared/learnwy-paths.ts
@@ -239,7 +258,6 @@ function skillRoot(skill) {
     return learnwyPath(skill);
 }
 const PATHS = {
-    englishLearner: skillRoot('english-learner'),
     llmWiki: skillRoot('llm-wiki'),
     promptOptimizer: skillRoot('prompt-optimizer'),
     knowledgeConsolidation: skillRoot('knowledge-consolidation'),
@@ -280,12 +298,9 @@ const SUBSTANTIVE_SIGNALS = [
     /\b(?:non[-\s]?obvious|subtle|tricky|gotcha|surprised)\b/i
 ];
 const SKILL_OUTPUT_MARKERS = [
-    '[english-learner',
     '[llm-wiki]',
     '[prompt-optimizer',
-    '[knowledge-consolidation]',
-    "\u8BCD\u4E49 Definitions",
-    "\u638C\u63E1\u5EA6:"
+    '[knowledge-consolidation]'
 ];
 function readState() {
     if (!external_node_fs_namespaceObject.existsSync(STATE_FILE)) return null;
@@ -310,7 +325,7 @@ function isSkillOutput(text) {
 function countMatches(text, patterns) {
     return patterns.filter((re)=>re.test(text)).length;
 }
-function stop_scan_scanStop(transcript, payload = {}) {
+function scanStop(transcript, payload = {}) {
     if (transcript.length < MIN_RESPONSE_LEN) return null;
     if (isSkillOutput(transcript)) return null;
     const resolution = countMatches(transcript, RESOLUTION_SIGNALS);
@@ -346,19 +361,13 @@ function stop_scan_scanStop(transcript, payload = {}) {
 ;// CONCATENATED MODULE: ./src/learnwy-dispatch/hooks/stop.ts
 
 
-
 async function main() {
     const payload = await readStdin();
     const transcript = payload.assistant_message || payload.last_response || payload.transcript || '';
     if (!transcript) return;
     const blocks = [];
     try {
-        const a = scanStop(transcript);
-        if (a) blocks.push(a);
-    } catch  {
-    /* swallow */ }
-    try {
-        const b = stop_scan_scanStop(transcript, payload);
+        const b = scanStop(transcript, payload);
         if (b) blocks.push(b);
     } catch  {
     /* swallow */ }

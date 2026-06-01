@@ -66,6 +66,64 @@ function wantsClaude(t) {
 function wantsCodex(t) {
     return t === 'codex' || t === 'both' || t === 'all';
 }
+function enableCodexHooksFeatureToml(source) {
+    const normalized = source.replace(/\r\n/g, '\n');
+    const lines = normalized.endsWith('\n') ? normalized.slice(0, -1).split('\n') : normalized.split('\n');
+    const effectiveLines = lines.length === 1 && lines[0] === '' ? [] : lines;
+    let featuresStart = -1;
+    let featuresEnd = effectiveLines.length;
+    for(let i = 0; i < effectiveLines.length; i++){
+        if (/^\s*\[features\]\s*(?:#.*)?$/.test(effectiveLines[i])) {
+            featuresStart = i;
+            for(let j = i + 1; j < effectiveLines.length; j++){
+                if (/^\s*\[[^\]]+\]\s*(?:#.*)?$/.test(effectiveLines[j])) {
+                    featuresEnd = j;
+                    break;
+                }
+            }
+            break;
+        }
+    }
+    if (featuresStart === -1) {
+        const next = [
+            ...effectiveLines
+        ];
+        if (next.length > 0 && next.some((line)=>line.trim() !== '')) next.push('');
+        next.push('[features]', 'hooks = true');
+        return next.join('\n') + '\n';
+    }
+    const before = effectiveLines.slice(0, featuresStart + 1);
+    const section = effectiveLines.slice(featuresStart + 1, featuresEnd);
+    const after = effectiveLines.slice(featuresEnd);
+    let hasHooks = false;
+    const updatedSection = [];
+    for (const line of section){
+        if (/^\s*codex_hooks\s*=/.test(line)) continue;
+        if (/^\s*hooks\s*=/.test(line)) {
+            const indent = line.match(/^(\s*)/)?.[1] || '';
+            updatedSection.push(`${indent}hooks = true`);
+            hasHooks = true;
+        } else {
+            updatedSection.push(line);
+        }
+    }
+    if (!hasHooks) updatedSection.unshift('hooks = true');
+    return [
+        ...before,
+        ...updatedSection,
+        ...after
+    ].join('\n') + '\n';
+}
+function ensureCodexHooksFeature(codexDir) {
+    const configFile = path.join(codexDir, 'config.toml');
+    if (!fs.existsSync(codexDir)) fs.mkdirSync(codexDir, {
+        recursive: true
+    });
+    const existing = fs.existsSync(configFile) ? fs.readFileSync(configFile, 'utf8') : '';
+    const next = enableCodexHooksFeatureToml(existing);
+    if (next !== existing) fs.writeFileSync(configFile, next);
+    return configFile;
+}
 function installHooks(config, options = {}) {
     const { target = 'both', scope = 'global', projectRoot } = options;
     const results = [];
@@ -87,9 +145,11 @@ function installHooks(config, options = {}) {
             results.push(claudeFile);
         }
         if (wantsCodex(target)) {
-            const codexFile = path.join(homeDir, '.codex', 'hooks.json');
+            const codexDir = path.join(homeDir, '.codex');
+            const codexFile = path.join(codexDir, 'hooks.json');
             mergeAndWrite(codexFile, config, 'standalone');
             results.push(codexFile);
+            results.push(ensureCodexHooksFeature(codexDir));
         }
     } else {
         const root = projectRoot || getProjectDir();
@@ -104,9 +164,11 @@ function installHooks(config, options = {}) {
             results.push(claudeFile);
         }
         if (wantsCodex(target)) {
-            const codexFile = path.join(root, '.codex', 'hooks.json');
+            const codexDir = path.join(root, '.codex');
+            const codexFile = path.join(codexDir, 'hooks.json');
             mergeAndWrite(codexFile, config, 'standalone');
             results.push(codexFile);
+            results.push(ensureCodexHooksFeature(codexDir));
         }
     }
     return results;
@@ -215,89 +277,6 @@ function looksLikeChineseLearnIntent(text) {
     return chineseRatio(text) > 0.3 || CHINESE_LEARN_RE.test(text);
 }
 
-;// CONCATENATED MODULE: ./src/english-learner/lib/prompt-scan.ts
-
-const RECORD_INPUT_HINT = 'Always log this turn via `node {english-learner-skill}/scripts/cli.cjs vocab record-input \'{"language":"<en|zh|ja|ko|other>","text":"<original message>","had_issues":<true|false>,"issue_count":<n>}\'` \u2014 even when no issues are found, so we can track fluency rate over time.';
-const ENGLISH_BLOCK = [
-    '[english-learner hook] The user wrote in English.',
-    'Before responding, scan for grammar/word-choice/expression issues (max 3).',
-    'If found, prepend a brief "\uD83D\uDCA1 English Tip" table, then proceed with the task.',
-    'After rendering the table, persist the corrections by calling:',
-    '`node {english-learner-skill}/scripts/cli.cjs vocab record-correction \'[{"original":"X","corrected":"Y","reason":"Z","words":[{"word":"...","definition":"...","phonetic":"..."}]}]\'`.',
-    "The optional `words[]` field also feeds the words table \u2014 include it for genuinely new vocabulary, omit for typo\u2192correct cases.",
-    'If English is fluent/natural, do NOT render a tip table \u2014 instead render exactly one line: "\u2705 English looks fluent \u2014 no issues found." then proceed.',
-    RECORD_INPUT_HINT
-].join(' ');
-const CHINESE_BLOCK_FULL = [
-    '[english-learner hook] The user wrote in Chinese.',
-    'Before responding to the task, prepend a "\uD83C\uDF10 \u4E2D\u8BD1\u82F1" section:',
-    "1. Check the Chinese for grammar errors, typos, or awkward phrasing \u2014 if found, show corrections in a table.",
-    "2. Translate the user's Chinese into natural English (provide 2-3 alternative expressions).",
-    '3. Extract 2-3 key vocabulary/phrases from the translation, show phonetic + brief usage note.',
-    "4. Auto-save all new words/phrases via batch_save (no need to ask \u2014 just save them).",
-    "5. Then proceed with the user's actual task.",
-    'Format: "\uD83C\uDF10 \u4E2D\u8BD1\u82F1" header, corrections table (if any), English translations, vocab table, then separator and task response.',
-    RECORD_INPUT_HINT
-].join(' ');
-const CHINESE_BLOCK_LIGHT = [
-    "[english-learner hook] The user wrote in Chinese (long-form or tech-heavy \u2014 light mode, but DO NOT skip).",
-    'Prepend a brief "\uD83C\uDF10 \u4E2D\u8BD1\u82F1 (light)" section before tackling the task:',
-    "1. Translate the user's core ask into ONE natural English sentence (skip alternative phrasings).",
-    '2. Extract 1 key English vocabulary/phrase if something stands out (phonetic + 1-line usage); otherwise omit the vocab table.',
-    '3. Skip the corrections table unless an obvious typo exists.',
-    '4. Auto-save the vocab item via batch_save if extracted.',
-    "5. Then proceed with the user's actual task in normal flow.",
-    "Rationale: long task descriptions and tech contexts still get translation exposure \u2014 never silently skipped.",
-    RECORD_INPUT_HINT
-].join(' ');
-const OTHER_LANG_BLOCK_FULL = [
-    '[english-learner hook] The user wrote in a language other than English or Chinese.',
-    'Detect the language (likely Japanese, Korean, Spanish, French, German, Russian, Arabic, etc.) and prepend a "\uD83C\uDF10 Translate & Learn" section:',
-    "1. Name the detected language explicitly on the first line (e.g. \"Detected: Japanese\").",
-    "2. Translate the user's message into natural English (1-2 alternative expressions).",
-    '3. Extract 2-3 key English vocabulary/phrases from the translation, with phonetic + brief usage note.',
-    "4. Auto-save the new words via `vocab batch_save` (no need to ask \u2014 just save them).",
-    "5. Then proceed with the user's actual task in English.",
-    RECORD_INPUT_HINT
-].join(' ');
-const OTHER_LANG_BLOCK_LIGHT = [
-    '[english-learner hook] The user wrote a long message in a non-English/non-Chinese language (light mode, but DO NOT skip).',
-    'Prepend a brief "\uD83C\uDF10 Translate & Learn (light)" section:',
-    "1. Name the detected language on line one (e.g. \"Detected: Japanese\").",
-    "2. Translate the user's core ask into ONE natural English sentence.",
-    '3. Optionally extract 1 vocabulary item if notable; otherwise omit.',
-    '4. Auto-save via batch_save if extracted.',
-    "5. Then proceed with the user's actual task in English.",
-    RECORD_INPUT_HINT
-].join(' ');
-function detectLanguage(message) {
-    const enRatio = englishRatio(message);
-    const cnRatio = chineseRatio(message);
-    if (enRatio >= 0.6) return 'en';
-    if (cnRatio >= 0.3 || looksLikeChineseLearnIntent(message)) return 'zh';
-    if (message.length >= 10) return 'other';
-    return null;
-}
-const CN_TECH_RE = /代码|编程|bug|修复|重构|编译|部署|配置文件/;
-const CN_FULL_MAX_LEN = 500;
-const OTHER_FULL_MAX_LEN = 800;
-function scanPrompt(message) {
-    if (!message) return null;
-    const minLen = chineseRatio(message) > 0 ? 2 : 4;
-    if (message.length < minLen) return null;
-    if (looksLikeNonProse(message)) return null;
-    if (/^Use Skill:/i.test(message.trim())) return null;
-    const lang = detectLanguage(message);
-    if (lang === null) return null;
-    if (lang === 'en') return ENGLISH_BLOCK;
-    if (lang === 'zh') {
-        const isTechHeavy = CN_TECH_RE.test(message);
-        const isLong = message.length > CN_FULL_MAX_LEN;
-        return isTechHeavy || isLong ? CHINESE_BLOCK_LIGHT : CHINESE_BLOCK_FULL;
-    }
-    return message.length > OTHER_FULL_MAX_LEN ? OTHER_LANG_BLOCK_LIGHT : OTHER_LANG_BLOCK_FULL;
-}
-
 ;// CONCATENATED MODULE: external "node:os"
 const external_node_os_namespaceObject = require("node:os");
 ;// CONCATENATED MODULE: ./src/shared/learnwy-paths.ts
@@ -311,7 +290,6 @@ function skillRoot(skill) {
     return learnwyPath(skill);
 }
 const PATHS = {
-    englishLearner: skillRoot('english-learner'),
     llmWiki: skillRoot('llm-wiki'),
     promptOptimizer: skillRoot('prompt-optimizer'),
     knowledgeConsolidation: skillRoot('knowledge-consolidation'),
@@ -328,52 +306,104 @@ function envOr(envVar, fallback) {
 const WIKI_ROOT = envOr('LLM_WIKI_ROOT', learnwyPath('llm-wiki'));
 const WIKI_DIR = (0,external_node_path_namespaceObject.join)(WIKI_ROOT, 'wiki');
 const RAW_DIR = (0,external_node_path_namespaceObject.join)(WIKI_ROOT, 'raw');
+// Entity-first wiki taxonomy (matches the personal knowledge-base layout).
+// Entity-type folders hold one page per real-world thing; source-type folders
+// hold one compiled page per ingested source (article / podcast / vlog / Lark thread).
 const PAGE_TYPES = [
     {
-        type: 'summaries',
-        label: 'Summaries'
+        type: 'people',
+        label: 'People',
+        group: 'entity'
+    },
+    {
+        type: 'organizations',
+        label: 'Organizations',
+        group: 'entity'
+    },
+    {
+        type: 'places',
+        label: 'Places',
+        group: 'entity'
+    },
+    {
+        type: 'products',
+        label: 'Products',
+        group: 'entity'
+    },
+    {
+        type: 'events',
+        label: 'Events',
+        group: 'entity'
     },
     {
         type: 'concepts',
-        label: 'Concepts'
+        label: 'Concepts',
+        group: 'entity'
     },
     {
-        type: 'entities',
-        label: 'Entities'
+        type: 'other-entities',
+        label: 'Other Entities',
+        group: 'entity'
     },
     {
-        type: 'comparisons',
-        label: 'Comparisons'
+        type: 'articles',
+        label: 'Articles',
+        group: 'source'
     },
     {
-        type: 'snippets',
-        label: 'Snippets'
+        type: 'podcasts',
+        label: 'Podcasts',
+        group: 'source'
     },
     {
-        type: 'troubleshooting',
-        label: 'Troubleshooting'
+        type: 'vlogs',
+        label: 'Vlogs',
+        group: 'source'
     },
     {
-        type: 'decisions',
-        label: 'Decisions'
+        type: 'diaries',
+        label: 'Diaries',
+        group: 'source'
     },
     {
-        type: 'cheatsheets',
-        label: 'Cheatsheets'
+        type: 'threads',
+        label: 'Threads',
+        group: 'source'
     }
 ];
 const PAGE_DIRS = PAGE_TYPES.map((p)=>p.type);
+// Lifecycle dirs created at init but excluded from indexing / orphan linting.
+// `inbox` holds pulled-but-uncompiled drafts; `archived` holds retired pages.
+const LIFECYCLE_DIRS = (/* unused pure expression or super */ null && ([
+    'inbox',
+    'archived'
+]));
+// Dirs where a page having no incoming wikilink is normal (entities are
+// referenced from elsewhere but need not be; diaries / threads are chronological).
+const ORPHAN_EXEMPT_DIRS = new Set([
+    'people',
+    'organizations',
+    'places',
+    'products',
+    'events',
+    'other-entities',
+    'diaries',
+    'threads'
+]);
+// Raw (immutable) source material, one subdir per source type. `lark` holds
+// Lark group/doc pulls; `docs` holds ingested document exports.
 const RAW_SUBDIRS = (/* unused pure expression or super */ null && ([
     'books',
     'articles',
     'papers',
     'notes',
     'podcasts',
+    'vlogs',
     'transcripts',
     'snippets',
-    'troubleshooting',
     'specs',
-    'decisions'
+    'lark',
+    'docs'
 ]));
 
 ;// CONCATENATED MODULE: ./src/llm-wiki/lib/prompt-scan.ts
@@ -381,7 +411,7 @@ const RAW_SUBDIRS = (/* unused pure expression or super */ null && ([
 
 
 
-function prompt_scan_scanPrompt(message, wikiRoot = WIKI_ROOT) {
+function scanPrompt(message, wikiRoot = WIKI_ROOT) {
     const lower = (message || '').toLowerCase();
     if (lower.length < 15) return null;
     if (looksLikeNonProse(message)) return null;
@@ -487,7 +517,7 @@ function looksLikeStructuredPrompt(text) {
     const matches = PROMPT_SHAPE_MARKERS.filter((re)=>re.test(text)).length;
     return matches >= 2;
 }
-function lib_prompt_scan_scanPrompt(message) {
+function prompt_scan_scanPrompt(message) {
     if (!message) return null;
     const trimmed = message.trim();
     if (looksLikeNonProse(message)) return null;
@@ -526,19 +556,14 @@ function lib_prompt_scan_scanPrompt(message) {
 
 
 
-
 const SCANNERS = [
     {
-        name: 'english-learner',
+        name: 'llm-wiki',
         scan: scanPrompt
     },
     {
-        name: 'llm-wiki',
-        scan: prompt_scan_scanPrompt
-    },
-    {
         name: 'prompt-optimizer',
-        scan: lib_prompt_scan_scanPrompt
+        scan: prompt_scan_scanPrompt
     }
 ];
 async function main() {

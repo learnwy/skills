@@ -23,12 +23,6 @@ const REFRESH_TARGETS: RefreshTarget[] = [
     cli: path.join(AGENTS_ROOT, 'llm-wiki', 'scripts', 'cli.cjs'),
     args: ['health-check'],
   },
-  {
-    artifact: path.join(HOME, '.learnwy', 'english-learner', 'wiki-links.json'),
-    precondition: () => fs.existsSync(path.join(HOME, '.learnwy', 'english-learner', 'data.db')),
-    cli: path.join(AGENTS_ROOT, 'english-learner', 'scripts', 'cli.cjs'),
-    args: ['link-wiki'],
-  },
 ];
 
 interface State {
@@ -105,7 +99,7 @@ export function scanSession(): string | null {
   }
 
   const digest = buildDigest();
-  if (!digest.vocab && !digest.wiki && !digest.optimizer && !digest.consolidation) return null;
+  if (!digest.wiki && !digest.optimizer && !digest.consolidation) return null;
 
   const compact = formatCompact(digest);
   const wikiAlert = digest.wiki && digest.wiki.broken_links > 0

@@ -30,7 +30,6 @@ skills/                                    # 仓库根目录
 │   ├── legacy-surgeon/
 │   └── test-strategist/
 └── skills/                                # 可运行的技能模块
-    ├── english-learner/                   # 词汇学习助手 + 间隔复习
     ├── knowledge-consolidation/           # 对话洞察持久化（含 Stop 自动 nudge）
     ├── learnwy-dispatch/                  # UserPromptSubmit/Stop/SessionStart 单进程调度器
     ├── learnwy-status/                    # 跨子系统数据综合视图 + doctor 健康体检
@@ -73,11 +72,10 @@ skills/                                    # 仓库根目录
 
 | 技能 | 说明 | 包含脚本 |
 |------|------|----------|
-| **english-learner** | 词汇学习，自动拦截式英语辅导；间隔复习（1/3/7/14/30/90d）；与 llm-wiki 自动建索引 | 是 (TS → bundled CJS)；子命令 `vocab`、`quiz`、`sentence`、`migrate`、`link-wiki` |
 | **knowledge-consolidation** | 将对话洞察持久化到项目 knowledges/；Stop 钩子自动 nudge | 是 (CJS) |
 | **prompt-optimizer** | 提示词预检分析与优化（7 维度评分）；事件落盘 + `trends` 聚合 | 是；子命令 `trends` |
-| **llm-wiki** | Karpathy 式知识库；`health-check` 一键体检 + JSON 快照 | 是；子命令 `lint`、`generate-index`、`generate-topics`、`reorganize`、`freshness-check`、`health-check`、`stats` |
-| **learnwy-status** | 跨子系统综合视图（vocab/wiki/optimizer/kc/logs）；周度自动摘要；自动刷新过期 health.json / wiki-links.json；`doctor` 系统体检 | 是；子命令 `status`、`doctor` |
+| **llm-wiki** | Karpathy 式知识库；`health-check` 一键体检 + JSON 快照 | 是；子命令 `lint`、`generate-index`、`generate-topics`、`init`、`freshness-check`、`health-check`、`stats` |
+| **learnwy-status** | 跨子系统综合视图（wiki/optimizer/kc/logs）；周度自动摘要；自动刷新过期 health.json；`doctor` 系统体检 | 是；子命令 `status`、`doctor` |
 | **learnwy-dispatch** | 内部协调器：UserPromptSubmit + Stop + SessionStart 三类钩子合并到单 Node 进程 | 是（仅 install/uninstall）|
 
 ### 钩子调度器（Dispatcher Trio）
@@ -86,9 +84,9 @@ skills/                                    # 仓库根目录
 
 | 事件 | 调度器入口 | 调度的子扫描函数 |
 |------|------------|------------------|
-| `UserPromptSubmit` | `skills/learnwy-dispatch/scripts/hooks/user-prompt-submit.cjs` | `english-learner/lib/prompt-scan` + `llm-wiki/lib/prompt-scan` + `prompt-optimizer/lib/prompt-scan` |
-| `Stop` | `skills/learnwy-dispatch/scripts/hooks/stop.cjs` | `english-learner/lib/stop-scan` + `knowledge-consolidation/lib/stop-scan` |
-| `SessionStart` | `skills/learnwy-dispatch/scripts/hooks/session-start.cjs` | `llm-wiki/lib/session-scan` + `english-learner/lib/session-scan` + `learnwy-status/lib/session-scan` |
+| `UserPromptSubmit` | `skills/learnwy-dispatch/scripts/hooks/user-prompt-submit.cjs` | `llm-wiki/lib/prompt-scan` + `prompt-optimizer/lib/prompt-scan` |
+| `Stop` | `skills/learnwy-dispatch/scripts/hooks/stop.cjs` | `knowledge-consolidation/lib/stop-scan` |
+| `SessionStart` | `skills/learnwy-dispatch/scripts/hooks/session-start.cjs` | `llm-wiki/lib/session-scan` + `learnwy-status/lib/session-scan` |
 
 每个子扫描函数都是纯 `(payload | message) => string | null`，副作用（DB 写、状态持久化）封装在自己的 lib 里。一个扫描器抛错不会影响其它扫描器。原本各技能下的同名 hooks/`<event>`.cjs 入口被保留作为备用入口，但生产路径上只走 dispatcher。
 
@@ -142,7 +140,7 @@ metadata:
   └── hooks/<event>.ts    ← 可选；每个文件打包为一个 scripts/hooks/<event>.cjs
   ```
   `src/shared/cli.ts` 提供 `dispatch({ name, commands })` 和 `parseArgs`。包含 hooks 的技能通过从 `src/shared/install-entry.ts` 导入来添加 `install` / `uninstall` 子命令。
-- 所有脚本以打包 CJS 形式发布，目标 Node.js ≥ 22（`english-learner` 的 SQLite 路径另需 Node ≥ 24 以使用内置 `node:sqlite` 模块）
+- 所有脚本以打包 CJS 形式发布，目标 Node.js ≥ 22
 - **路径约定**：SKILL.md 中所有脚本路径相对于 `{skill_root}`（即 SKILL.md 所在目录）。标准调用形式为 `node scripts/cli.cjs <subcommand> [args]`（命令类技能）和 `node scripts/hooks/<event>.cjs`（hook 入口）。
 - 所有技能文档使用英文
 
@@ -212,8 +210,6 @@ src/                          ← 源码（TypeScript）
 │   ├── cli.ts                ← 命令分发器 + parseArgs 辅助函数
 │   ├── hooks-lib.ts          ← Hook 工具函数（stdin、injectContext、install/uninstall 原语）
 │   ├── install-entry.ts      ← `installCommand` / `uninstallCommand` 作为子命令导出
-│   └── db.ts                 ← SQLite 辅助函数（english-learner）
-├── english-learner/{cli,cmd/,hooks/}
 ├── llm-wiki/{cli,cmd/,lib/,hooks/}
 ├── prompt-optimizer/{cli,hooks/}
 ├── requirement-workflow/{cli,cmd/,lib/}
@@ -241,8 +237,8 @@ pnpm run check                # typecheck + build（CI 门禁）
 ```bash
 pnpm run install:hooks                                     # 全局注册所有技能 hooks
 pnpm run uninstall:hooks                                   # 移除所有技能 hooks
-node skills/english-learner/scripts/cli.cjs migrate        # 旧版 JSON → SQLite（任何子命令可用 --help 查看用法）
-node skills/english-learner/scripts/cli.cjs install        # 单技能安装（由 manage-hooks 调用）
+node skills/llm-wiki/scripts/cli.cjs init                  # 初始化知识库（任何子命令可用 --help 查看用法）
+node skills/llm-wiki/scripts/cli.cjs health-check          # 单技能安装（由 manage-hooks 调用）
 ```
 
 **发布命令**：
@@ -253,43 +249,28 @@ pnpm run release              # git push + pnpm dlx skills install + 注册 IDE 
 发布按以下三个步骤顺序执行：
 1. `git push origin main` — 将新的打包文件发布到 GitHub
 2. `pnpm dlx skills install -g -y learnwy/skills` — 拉取最新版到 `~/.agents/skills/<name>/`，并向所有 15 个支持的 AI 代理注册每个技能
-3. `pnpm run install:hooks` — `scripts/manage-hooks.mjs` 遍历每个包含 `hooks.json` 的技能，运行其 `cli.cjs install --scope global --target both`，在 `~/.claude/settings.json`、`~/.trae/hooks.json` 和 `~/.trae-cn/hooks.json` 中注册条目。幂等操作。
+3. `pnpm run install:hooks` — `scripts/manage-hooks.mjs` 遍历每个包含 `hooks.json` 的技能，运行其 `cli.cjs install --scope global --target both`，在 `~/.claude/settings.json`、`~/.trae/hooks.json`、`~/.trae-cn/hooks.json` 和 `~/.codex/hooks.json` 中注册条目，并确保 `~/.codex/config.toml` 使用 canonical `[features].hooks = true`。幂等操作。
 
 **Pre-commit 守卫**：`.githooks/pre-commit` 在 `src/`、`scripts/`、`rslib.config.ts`、`tsconfig.json` 或 `package.json` 被暂存时运行 `pnpm run check`，如果 `skills/*/scripts/` 不同步则拒绝提交。然后运行 `node scripts/lint-skill-docs.mjs` 检查 `SKILL.md` 中提到的 `cli.cjs <subcommand>` 是否都能在 `src/<skill>/cli.ts` 的 `commands` map 里解析到，未对齐就拒绝提交。`pnpm install` 通过 `prepare` 脚本（`git config core.hooksPath .githooks`）将这两个守卫接入。
 
 **Hook 安装幂等性**：`scripts/manage-hooks.mjs install` 现在先做一次 uninstall 扫描再 install，因此重复运行 `pnpm run install:hooks` 不会留下旧拓扑（例如旧版本曾在每个技能下注册 UserPromptSubmit，新版本统一走 dispatcher 后多次执行 install 会自然清理）。`pnpm run release --dry-run` 展示每一步将要执行的命令，但不实际推送或安装。
-
-### SQLite Schema 迁移
-
-`src/shared/db.ts` 通过有序的 `MIGRATIONS` 数组管理 schema 演进：
-
-```ts
-const MIGRATIONS: Migration[] = [
-  { version: 1, up: '/* CREATE TABLE … 当前所有表与索引 */' },
-  { version: 2, up: 'ALTER TABLE words ADD COLUMN next_review_at TEXT; …' },
-];
-```
-
-`getDb()` 在每次首次打开时读取 `meta.schema_version`，按版本号顺序应用所有未执行的迁移（事务包裹）。新增列、索引或表请追加 `{ version: N+1, up: '...' }`，**不要**修改已发布的迁移。`SCHEMA_VERSION` 常量供 `learnwy-status doctor` 等检查器与运行时实际版本比对。
 
 ### 自动数据演进 (Auto-Evolution)
 
 围绕 `~/.learnwy/` 的数据流由四类钩子驱动，逐步把"沉淀的数据"转换成"主动作用于用户的反馈"：
 
 1. **数据采集**（`UserPromptSubmit` 经 dispatcher）：
-   - english-learner 截获英文/中文消息，自动保存关键词汇
    - prompt-optimizer 把每次触发记录到 `~/.learnwy/prompt-optimizer/events.jsonl`
+   - llm-wiki 扫描关键词命中，注入相关 wiki topic 列表
 2. **数据回流**（`Stop` 经 dispatcher）：
-   - english-learner 从助手回复抽取候选生词（用户决定是否保存）
    - knowledge-consolidation 在检测到 "解决问题" 信号时一次性 nudge `/save`
 3. **数据呈现**（`SessionStart` 经 dispatcher）：
    - llm-wiki 注入相关主题
-   - english-learner 每天首次会话推送 3 个到期复习（间隔复习算法）
-   - learnwy-status 每 ISO 周首次会话推送综合摘要 + 自动后台刷新过期的 health.json / wiki-links.json
+   - learnwy-status 每 ISO 周首次会话推送综合摘要 + 自动后台刷新过期的 health.json
 4. **手动检视**：
    - `learnwy-status status` — 全局综合面板
-   - `learnwy-status doctor` — 系统体检（schema 版本、hook 注册、目录结构、Node 版本）
-   - `llm-wiki health-check` / `english-learner link-wiki` / `prompt-optimizer trends` — 子系统快照
+   - `learnwy-status doctor` — 系统体检（hook 注册、目录结构、Node 版本）
+   - `llm-wiki health-check` / `prompt-optimizer trends` — 子系统快照
 
 新加子系统应遵循同一模式：lib 函数纯化、副作用包裹在 lib、入口仅 readStdin + 调用 lib + injectContext。
 
@@ -299,7 +280,7 @@ const MIGRATIONS: Migration[] = [
 
 | 依赖类型 | 策略 |
 |----------|------|
-| **内置 Node 模块**（`node:sqlite`、`node:fs` 等） | 添加到 `rslib.config.ts` 的 `output.externals` 中。在技能的 SKILL.md `## Prerequisites` 中记录所需的 Node 版本。 |
+| **内置 Node 模块**（`node:fs`、`node:path` 等） | 添加到 `rslib.config.ts` 的 `output.externals` 中。在技能的 SKILL.md `## Prerequisites` 中记录所需的 Node 版本。 |
 | **纯 JS 依赖**（如 `yaml`、`zod`、`chalk`） | 打包到产物中（rslib 默认行为）。消费端无需安装。 |
 | **原生依赖**（如 `better-sqlite3`、`sharp`） | 为技能提供一个小型 `skills/<name>/package.json` 包含运行时依赖。在 SKILL.md 的 Prerequisites 中告知用户执行一次 `cd skills/<name> && pnpm install`。 |
 
@@ -313,7 +294,7 @@ const MIGRATIONS: Migration[] = [
 
 ### IDE Hooks
 
-技能可以注册确定性 hooks，在 IDE 生命周期事件（SessionStart、UserPromptSubmit、PreToolUse、PostToolUse、Stop）时触发。兼容 Trae 和 Claude Code。
+技能可以注册确定性 hooks，在 IDE 生命周期事件（SessionStart、UserPromptSubmit、PreToolUse、PostToolUse、Stop）时触发。兼容 Trae、Claude Code 和 Codex。
 
 ```
 skills/<name>/hooks.json                       → 逐技能 hook 配置（手写）
@@ -337,3 +318,4 @@ node scripts/cli.cjs uninstall --scope global --target both
 **安装位置**：
 - Trae: `~/.trae/hooks.json`（独立 hooks 文件）
 - Claude Code: `~/.claude/settings.json`（合并到 `hooks` 键中）
+- Codex: `~/.codex/hooks.json`（独立 hooks 文件）；`~/.codex/config.toml` 中使用 `[features].hooks = true`，不要再写 deprecated `codex_hooks`
