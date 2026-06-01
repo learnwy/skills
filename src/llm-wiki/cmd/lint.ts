@@ -39,7 +39,8 @@ function checkWikilinks(content: string, inventory: Set<string>): { broken: stri
   const resolved: string[] = [];
 
   for (const match of content.matchAll(/\[\[([^\]]+)\]\]/g)) {
-    const link = match[1].replace(/\.md$/, '');
+    // Strip an optional `|alias` display suffix and `#anchor` before resolving.
+    const link = match[1].split('|')[0].split('#')[0].trim().replace(/\.md$/, '');
     const normalized = link.replace(/^raw\//, '').replace(/^wiki\//, '');
     const isWikiLink = PAGE_DIRS.some((d) => normalized.startsWith(`${d}/`));
     if (!isWikiLink) continue;
