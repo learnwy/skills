@@ -489,6 +489,11 @@ function envOr(envVar, fallback) {
     const v = process.env[envVar];
     return v && v.length > 0 ? v : fallback;
 }
+function expandHome(p) {
+    if (p === '~') return os.homedir();
+    if (p.startsWith('~/') || p.startsWith('~\\')) return path.join(os.homedir(), p.slice(2));
+    return p;
+}
 
 ;// CONCATENATED MODULE: ./src/lwy-prompt-optimizer/lib/events.ts
 

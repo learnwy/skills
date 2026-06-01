@@ -827,6 +827,11 @@ function envOr(envVar, fallback) {
     const v = process.env[envVar];
     return v && v.length > 0 ? v : fallback;
 }
+function expandHome(p) {
+    if (p === '~') return external_node_os_namespaceObject.homedir();
+    if (p.startsWith('~/') || p.startsWith('~\\')) return external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), p.slice(2));
+    return p;
+}
 
 ;// CONCATENATED MODULE: ./src/lwy-knowledge-consolidation/cmd/promote.ts
 
@@ -840,7 +845,7 @@ Promote a project-local knowledge doc into the global llm-wiki ingestion queue.
 
 Arguments:
   -p, --path        Path to the KC doc to promote (required)
-      --wiki-root   llm-wiki root (default: $LLM_WIKI_ROOT or ~/.learnwy/llm-wiki)
+      --wiki-root   llm-wiki root (default: ~/.learnwy/llm-wiki)
   -h, --help        Show help
 
 Behaviour:
@@ -855,7 +860,7 @@ function promote_isoDate() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 function defaultWikiRoot() {
-    return envOr('LLM_WIKI_ROOT', learnwyPath('llm-wiki'));
+    return learnwyPath('llm-wiki');
 }
 function deriveSlug(filePath) {
     const base = external_node_path_namespaceObject.basename(filePath, '.md');
@@ -872,7 +877,7 @@ function promote_run(rawArgs) {
                 docPath = rawArgs[++i] || '';
                 break;
             case '--wiki-root':
-                wikiRoot = rawArgs[++i] || '';
+                wikiRoot = expandHome(rawArgs[++i] || '');
                 break;
             case '-h':
             case '--help':

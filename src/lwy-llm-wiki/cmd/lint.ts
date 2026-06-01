@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { WIKI_DIR, PAGE_DIRS, ORPHAN_EXEMPT_DIRS, readMdFiles } from '../lib/index.js';
-import type { Command } from '../../shared/cli.js';
+import { resolveWikiPaths, PAGE_DIRS, ORPHAN_EXEMPT_DIRS, readMdFiles } from '../lib/index.js';
+import { parseArgs, type Command } from '../../shared/cli.js';
 
 // True if the page has an `# H1` title, skipping any leading YAML frontmatter.
 export function hasTitle(content: string): boolean {
@@ -16,12 +16,12 @@ export function hasTitle(content: string): boolean {
   return lines[i]?.startsWith('# ') ?? false;
 }
 
-async function buildInventory(): Promise<{ inventory: Set<string>; allFiles: Record<string, string[]> }> {
+async function buildInventory(wikiDir: string): Promise<{ inventory: Set<string>; allFiles: Record<string, string[]> }> {
   const inventory = new Set<string>();
   const allFiles: Record<string, string[]> = {};
 
   for (const dir of PAGE_DIRS) {
-    const files = (await readMdFiles(join(WIKI_DIR, dir))).filter((f) => f !== 'index.md');
+    const files = (await readMdFiles(join(wikiDir, dir))).filter((f) => f !== 'index.md');
     allFiles[dir] = files;
     for (const file of files) {
       inventory.add(`${dir}/${file.replace('.md', '')}`);
@@ -58,10 +58,10 @@ function checkWikilinks(content: string, inventory: Set<string>): { broken: stri
   return { broken, resolved };
 }
 
-async function lint(): Promise<number> {
+async function lint(wikiDir: string): Promise<number> {
   console.log('Linting wiki...\n');
 
-  const { inventory, allFiles } = await buildInventory();
+  const { inventory, allFiles } = await buildInventory(wikiDir);
   const errors: string[] = [];
   const warnings: string[] = [];
   const incomingLinks: Record<string, number> = {};
@@ -70,7 +70,7 @@ async function lint(): Promise<number> {
 
   for (const dir of PAGE_DIRS) {
     for (const file of allFiles[dir] || []) {
-      const content = await readFile(join(WIKI_DIR, dir, file), 'utf-8');
+      const content = await readFile(join(wikiDir, dir, file), 'utf-8');
       const loc = `${dir}/${file}`;
       totalPages++;
 
@@ -126,9 +126,10 @@ async function lint(): Promise<number> {
 }
 
 export const command: Command = {
-  description: 'Check broken wikilinks and orphan pages',
-  run: async () => {
-    const code = await lint();
+  description: 'Check broken wikilinks and orphan pages. --root DIR',
+  run: async (args) => {
+    const { wikiDir } = resolveWikiPaths(parseArgs(args).flags);
+    const code = await lint(wikiDir);
     process.exit(code);
   },
 };

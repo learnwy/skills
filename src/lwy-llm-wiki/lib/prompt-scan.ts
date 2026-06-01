@@ -1,9 +1,9 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { looksLikeNonProse } from '../../shared/text-classifiers.js';
-import { WIKI_ROOT } from './constants.js';
+import { DEFAULT_WIKI_ROOT } from './constants.js';
 
-export function scanPrompt(message: string, wikiRoot: string = WIKI_ROOT): string | null {
+export function scanPrompt(message: string, wikiRoot: string = DEFAULT_WIKI_ROOT): string | null {
   const lower = (message || '').toLowerCase();
   if (lower.length < 15) return null;
   if (looksLikeNonProse(message)) return null;

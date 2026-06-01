@@ -1,7 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { WIKI_DIR, PAGE_DIRS } from '../lib/index.js';
-import type { Command } from '../../shared/cli.js';
+import { resolveWikiPaths, PAGE_DIRS } from '../lib/index.js';
+import { parseArgs, type Command } from '../../shared/cli.js';
 
 const STALE_DAYS = 180;
 const TECH_STALE_DAYS = 90;
@@ -94,7 +94,7 @@ async function scanDir(baseDir: string, subdir: string): Promise<PageInfo[]> {
   return results;
 }
 
-async function freshnessCheck(): Promise<void> {
+async function freshnessCheck(wikiDir: string): Promise<void> {
   const now = new Date();
   console.log(`Freshness check — ${now.toISOString().slice(0, 10)}\n`);
 
@@ -103,7 +103,7 @@ async function freshnessCheck(): Promise<void> {
   const noDate: PageInfo[] = [];
 
   for (const subdir of PAGE_DIRS) {
-    const pages = await scanDir(WIKI_DIR, subdir);
+    const pages = await scanDir(wikiDir, subdir);
     for (const page of pages) {
       const refDate = parseDate(page.lastVerified) || parseDate(page.ingested);
       if (!refDate) {
@@ -154,6 +154,6 @@ async function freshnessCheck(): Promise<void> {
 }
 
 export const command: Command = {
-  description: 'Flag stale (>90d/180d), unverified, or undated pages',
-  run: () => freshnessCheck(),
+  description: 'Flag stale (>90d/180d), unverified, or undated pages. --root DIR',
+  run: (args) => freshnessCheck(resolveWikiPaths(parseArgs(args).flags).wikiDir),
 };

@@ -1,10 +1,10 @@
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
-  WIKI_DIR, RAW_DIR, PAGE_TYPES, RAW_SUBDIRS,
+  resolveWikiPaths, PAGE_TYPES, RAW_SUBDIRS,
   readMdFiles, countMdFilesInSubdirs, extractMeta, slugToTitle, type Meta,
 } from '../lib/index.js';
-import type { Command } from '../../shared/cli.js';
+import { parseArgs, type Command } from '../../shared/cli.js';
 
 interface Page extends Meta {
   slug: string;
@@ -13,12 +13,12 @@ interface Page extends Meta {
 
 type AllPages = Record<string, Page[]>;
 
-async function scanPages(): Promise<{ allPages: AllPages; totalPages: number }> {
+async function scanPages(wikiDir: string): Promise<{ allPages: AllPages; totalPages: number }> {
   const allPages: AllPages = {};
   let totalPages = 0;
 
   for (const { type } of PAGE_TYPES) {
-    const dir = join(WIKI_DIR, type);
+    const dir = join(wikiDir, type);
     const files = await readMdFiles(dir);
     const pages: Page[] = [];
     for (const file of files) {
@@ -80,23 +80,26 @@ function renderIndex(allPages: AllPages, totalPages: number, rawCount: number): 
   return lines.join('\n');
 }
 
-async function generateIndex(): Promise<void> {
+async function generateIndex(wikiDir: string, rawDir: string): Promise<void> {
   console.log('Scanning wiki directory...');
 
-  const { allPages, totalPages } = await scanPages();
+  const { allPages, totalPages } = await scanPages(wikiDir);
   for (const { type, label } of PAGE_TYPES) {
     if (allPages[type].length > 0) console.log(`  ${label}: ${allPages[type].length}`);
   }
 
-  const rawCount = await countMdFilesInSubdirs(RAW_DIR, RAW_SUBDIRS);
+  const rawCount = await countMdFilesInSubdirs(rawDir, RAW_SUBDIRS);
   console.log(`  Raw sources: ${rawCount}`);
 
   const output = renderIndex(allPages, totalPages, rawCount);
-  await writeFile(join(WIKI_DIR, 'index.md'), output);
+  await writeFile(join(wikiDir, 'index.md'), output);
   console.log(`\nGenerated wiki/index.md (${totalPages} pages indexed)`);
 }
 
 export const command: Command = {
-  description: 'Regenerate wiki/index.md from filesystem',
-  run: () => generateIndex(),
+  description: 'Regenerate wiki/index.md from filesystem. --root DIR',
+  run: (args) => {
+    const { wikiDir, rawDir } = resolveWikiPaths(parseArgs(args).flags);
+    return generateIndex(wikiDir, rawDir);
+  },
 };

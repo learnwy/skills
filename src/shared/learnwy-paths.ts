@@ -26,3 +26,9 @@ export function envOr(envVar: string, fallback: string): string {
   const v = process.env[envVar];
   return v && v.length > 0 ? v : fallback;
 }
+
+export function expandHome(p: string): string {
+  if (p === '~') return os.homedir();
+  if (p.startsWith('~/') || p.startsWith('~\\')) return path.join(os.homedir(), p.slice(2));
+  return p;
+}

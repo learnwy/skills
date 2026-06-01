@@ -1,7 +1,7 @@
 export {
-  WIKI_ROOT, WIKI_DIR, RAW_DIR, PAGE_TYPES, PAGE_DIRS,
-  LIFECYCLE_DIRS, ORPHAN_EXEMPT_DIRS, RAW_SUBDIRS,
-  type PageType,
+  DEFAULT_WIKI_ROOT, wikiPaths, resolveWikiPaths,
+  PAGE_TYPES, PAGE_DIRS, LIFECYCLE_DIRS, ORPHAN_EXEMPT_DIRS, RAW_SUBDIRS,
+  type PageType, type WikiPaths,
 } from './constants.js';
 export {
   readMdFiles, readMdFilesDeep, countMdFiles, countMdFilesDeep, countMdFilesInSubdirs,

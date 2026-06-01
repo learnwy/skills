@@ -491,13 +491,28 @@ function envOr(envVar, fallback) {
     const v = process.env[envVar];
     return v && v.length > 0 ? v : fallback;
 }
+function expandHome(p) {
+    if (p === '~') return external_node_os_namespaceObject.homedir();
+    if (p.startsWith('~/') || p.startsWith('~\\')) return external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), p.slice(2));
+    return p;
+}
 
 ;// CONCATENATED MODULE: ./src/lwy-llm-wiki/lib/constants.ts
 
 
-const WIKI_ROOT = envOr('LLM_WIKI_ROOT', learnwyPath('llm-wiki'));
-const WIKI_DIR = (0,external_node_path_namespaceObject.join)(WIKI_ROOT, 'wiki');
-const RAW_DIR = (0,external_node_path_namespaceObject.join)(WIKI_ROOT, 'raw');
+const DEFAULT_WIKI_ROOT = learnwyPath('llm-wiki');
+function wikiPaths(root = DEFAULT_WIKI_ROOT) {
+    const r = expandHome(root);
+    return {
+        root: r,
+        wikiDir: (0,external_node_path_namespaceObject.join)(r, 'wiki'),
+        rawDir: (0,external_node_path_namespaceObject.join)(r, 'raw')
+    };
+}
+function resolveWikiPaths(flags = {}) {
+    const r = flags.root ?? flags['wiki-root'];
+    return wikiPaths(typeof r === 'string' && r.length > 0 ? r : DEFAULT_WIKI_ROOT);
+}
 // Entity-first wiki taxonomy (matches the personal knowledge-base layout).
 // Entity-type folders hold one page per real-world thing; source-type folders
 // hold one compiled page per ingested source (article / podcast / vlog / Lark thread).
@@ -722,6 +737,7 @@ function slugToTitle(slug) {
 
 
 
+
 const SCHEMA = `# LLM Wiki \u{2014} Schema
 
 Entity-first personal knowledge base. The LLM compiles \`raw/\` source material
@@ -753,31 +769,31 @@ async function init_ensureDir(dir) {
 async function ensureFile(path, content) {
     if (!(0,external_node_fs_namespaceObject.existsSync)(path)) await (0,promises_namespaceObject.writeFile)(path, content);
 }
-async function init() {
-    await init_ensureDir(WIKI_ROOT);
-    await init_ensureDir(WIKI_DIR);
-    await init_ensureDir(RAW_DIR);
-    for (const sub of RAW_SUBDIRS)await init_ensureDir((0,external_node_path_namespaceObject.join)(RAW_DIR, sub));
+async function init({ root, wikiDir, rawDir }) {
+    await init_ensureDir(root);
+    await init_ensureDir(wikiDir);
+    await init_ensureDir(rawDir);
+    for (const sub of RAW_SUBDIRS)await init_ensureDir((0,external_node_path_namespaceObject.join)(rawDir, sub));
     for (const dir of [
         ...PAGE_DIRS,
         ...LIFECYCLE_DIRS
-    ])await init_ensureDir((0,external_node_path_namespaceObject.join)(WIKI_DIR, dir));
-    await ensureFile((0,external_node_path_namespaceObject.join)(WIKI_ROOT, 'CLAUDE.md'), SCHEMA);
-    await ensureFile((0,external_node_path_namespaceObject.join)(WIKI_ROOT, 'log.md'), '# Wiki Log\n\n');
-    await ensureFile((0,external_node_path_namespaceObject.join)(WIKI_DIR, 'index.md'), '# Knowledge Base Index\n\n> Run `cli.cjs generate-index` to populate.\n');
-    await ensureFile((0,external_node_path_namespaceObject.join)(WIKI_DIR, 'topics.txt'), '');
-    // Touch CLAUDE.md so re-init reports cleanly even when present.
-    await (0,promises_namespaceObject.readFile)((0,external_node_path_namespaceObject.join)(WIKI_ROOT, 'CLAUDE.md'), 'utf-8');
-    console.log(`Initialized llm-wiki at ${WIKI_ROOT}`);
+    ])await init_ensureDir((0,external_node_path_namespaceObject.join)(wikiDir, dir));
+    await ensureFile((0,external_node_path_namespaceObject.join)(root, 'CLAUDE.md'), SCHEMA);
+    await ensureFile((0,external_node_path_namespaceObject.join)(root, 'log.md'), '# Wiki Log\n\n');
+    await ensureFile((0,external_node_path_namespaceObject.join)(wikiDir, 'index.md'), '# Knowledge Base Index\n\n> Run `cli.cjs generate-index` to populate.\n');
+    await ensureFile((0,external_node_path_namespaceObject.join)(wikiDir, 'topics.txt'), '');
+    await (0,promises_namespaceObject.readFile)((0,external_node_path_namespaceObject.join)(root, 'CLAUDE.md'), 'utf-8');
+    console.log(`Initialized llm-wiki at ${root}`);
     console.log(`  raw/    ${RAW_SUBDIRS.length} source subdirs`);
     console.log(`  wiki/   ${PAGE_DIRS.length} page dirs + ${LIFECYCLE_DIRS.length} lifecycle dirs`);
 }
 const command = {
-    description: 'Scaffold the wiki root (raw/ + wiki/ folders, schema, index, log)',
-    run: ()=>init()
+    description: 'Scaffold the wiki root (raw/ + wiki/ folders, schema, index, log). --root DIR',
+    run: (args)=>init(resolveWikiPaths(parseArgs(args).flags))
 };
 
 ;// CONCATENATED MODULE: ./src/lwy-llm-wiki/cmd/lint.ts
+
 
 
 
@@ -793,11 +809,11 @@ function hasTitle(content) {
     while(i < lines.length && lines[i].trim() === '')i++;
     return lines[i]?.startsWith('# ') ?? false;
 }
-async function buildInventory() {
+async function buildInventory(wikiDir) {
     const inventory = new Set();
     const allFiles = {};
     for (const dir of PAGE_DIRS){
-        const files = (await readMdFiles((0,external_node_path_namespaceObject.join)(WIKI_DIR, dir))).filter((f)=>f !== 'index.md');
+        const files = (await readMdFiles((0,external_node_path_namespaceObject.join)(wikiDir, dir))).filter((f)=>f !== 'index.md');
         allFiles[dir] = files;
         for (const file of files){
             inventory.add(`${dir}/${file.replace('.md', '')}`);
@@ -832,9 +848,9 @@ function checkWikilinks(content, inventory) {
         resolved
     };
 }
-async function lint() {
+async function lint(wikiDir) {
     console.log('Linting wiki...\n');
-    const { inventory, allFiles } = await buildInventory();
+    const { inventory, allFiles } = await buildInventory(wikiDir);
     const errors = [];
     const warnings = [];
     const incomingLinks = {};
@@ -842,7 +858,7 @@ async function lint() {
     let totalPages = 0;
     for (const dir of PAGE_DIRS){
         for (const file of allFiles[dir] || []){
-            const content = await (0,promises_namespaceObject.readFile)((0,external_node_path_namespaceObject.join)(WIKI_DIR, dir, file), 'utf-8');
+            const content = await (0,promises_namespaceObject.readFile)((0,external_node_path_namespaceObject.join)(wikiDir, dir, file), 'utf-8');
             const loc = `${dir}/${file}`;
             totalPages++;
             if (!hasTitle(content)) {
@@ -888,9 +904,10 @@ async function lint() {
     return errors.length > 0 ? 1 : 0;
 }
 const lint_command = {
-    description: 'Check broken wikilinks and orphan pages',
-    run: async ()=>{
-        const code = await lint();
+    description: 'Check broken wikilinks and orphan pages. --root DIR',
+    run: async (args)=>{
+        const { wikiDir } = resolveWikiPaths(parseArgs(args).flags);
+        const code = await lint(wikiDir);
         process.exit(code);
     }
 };
@@ -899,11 +916,12 @@ const lint_command = {
 
 
 
-async function scanPages() {
+
+async function scanPages(wikiDir) {
     const allPages = {};
     let totalPages = 0;
     for (const { type } of PAGE_TYPES){
-        const dir = (0,external_node_path_namespaceObject.join)(WIKI_DIR, type);
+        const dir = (0,external_node_path_namespaceObject.join)(wikiDir, type);
         const files = await readMdFiles(dir);
         const pages = [];
         for (const file of files){
@@ -965,24 +983,28 @@ function renderIndex(allPages, totalPages, rawCount) {
     }
     return lines.join('\n');
 }
-async function generateIndex() {
+async function generateIndex(wikiDir, rawDir) {
     console.log('Scanning wiki directory...');
-    const { allPages, totalPages } = await scanPages();
+    const { allPages, totalPages } = await scanPages(wikiDir);
     for (const { type, label } of PAGE_TYPES){
         if (allPages[type].length > 0) console.log(`  ${label}: ${allPages[type].length}`);
     }
-    const rawCount = await countMdFilesInSubdirs(RAW_DIR, RAW_SUBDIRS);
+    const rawCount = await countMdFilesInSubdirs(rawDir, RAW_SUBDIRS);
     console.log(`  Raw sources: ${rawCount}`);
     const output = renderIndex(allPages, totalPages, rawCount);
-    await (0,promises_namespaceObject.writeFile)((0,external_node_path_namespaceObject.join)(WIKI_DIR, 'index.md'), output);
+    await (0,promises_namespaceObject.writeFile)((0,external_node_path_namespaceObject.join)(wikiDir, 'index.md'), output);
     console.log(`\nGenerated wiki/index.md (${totalPages} pages indexed)`);
 }
 const generate_index_command = {
-    description: 'Regenerate wiki/index.md from filesystem',
-    run: ()=>generateIndex()
+    description: 'Regenerate wiki/index.md from filesystem. --root DIR',
+    run: (args)=>{
+        const { wikiDir, rawDir } = resolveWikiPaths(parseArgs(args).flags);
+        return generateIndex(wikiDir, rawDir);
+    }
 };
 
 ;// CONCATENATED MODULE: ./src/lwy-llm-wiki/cmd/generate-topics.ts
+
 
 
 
@@ -1039,11 +1061,11 @@ async function extractDiscipline(filePath) {
 function slugToWords(slug) {
     return slug.split('-').filter((w)=>w.length >= MIN_WORD_LENGTH && !STOP_WORDS.has(w.toLowerCase()));
 }
-async function generateTopics() {
+async function generateTopics(wikiDir) {
     const keywords = new Set();
     const disciplines = new Set();
     for (const dir of PAGE_DIRS){
-        const dirPath = (0,external_node_path_namespaceObject.join)(WIKI_DIR, dir);
+        const dirPath = (0,external_node_path_namespaceObject.join)(wikiDir, dir);
         const files = await readMdFiles(dirPath);
         for (const file of files){
             if (file === 'index.md') continue;
@@ -1071,15 +1093,16 @@ async function generateTopics() {
     ].sort()){
         lines.push(k);
     }
-    await (0,promises_namespaceObject.writeFile)((0,external_node_path_namespaceObject.join)(WIKI_DIR, 'topics.txt'), lines.join('\n'));
+    await (0,promises_namespaceObject.writeFile)((0,external_node_path_namespaceObject.join)(wikiDir, 'topics.txt'), lines.join('\n'));
     console.log(`Generated wiki/topics.txt (${keywords.size} keywords from ${disciplines.size} disciplines)`);
 }
 const generate_topics_command = {
-    description: 'Regenerate wiki/topics.txt keyword index',
-    run: ()=>generateTopics()
+    description: 'Regenerate wiki/topics.txt keyword index. --root DIR',
+    run: (args)=>generateTopics(resolveWikiPaths(parseArgs(args).flags).wikiDir)
 };
 
 ;// CONCATENATED MODULE: ./src/lwy-llm-wiki/cmd/freshness-check.ts
+
 
 
 
@@ -1160,14 +1183,14 @@ async function scanDir(baseDir, subdir) {
     /* empty */ }
     return results;
 }
-async function freshnessCheck() {
+async function freshnessCheck(wikiDir) {
     const now = new Date();
     console.log(`Freshness check \u{2014} ${now.toISOString().slice(0, 10)}\n`);
     const stale = [];
     const unverified = [];
     const noDate = [];
     for (const subdir of PAGE_DIRS){
-        const pages = await scanDir(WIKI_DIR, subdir);
+        const pages = await scanDir(wikiDir, subdir);
         for (const page of pages){
             const refDate = parseDate(page.lastVerified) || parseDate(page.ingested);
             if (!refDate) {
@@ -1219,8 +1242,8 @@ async function freshnessCheck() {
     }
 }
 const freshness_check_command = {
-    description: 'Flag stale (>90d/180d), unverified, or undated pages',
-    run: ()=>freshnessCheck()
+    description: 'Flag stale (>90d/180d), unverified, or undated pages. --root DIR',
+    run: (args)=>freshnessCheck(resolveWikiPaths(parseArgs(args).flags).wikiDir)
 };
 
 ;// CONCATENATED MODULE: ./src/lwy-llm-wiki/cmd/health-check.ts
@@ -1229,13 +1252,12 @@ const freshness_check_command = {
 
 
 
-const HEALTH_FILE = (0,external_node_path_namespaceObject.join)(WIKI_ROOT, 'health.json');
 // Source-type dirs carry a **Source** ref that should resolve to raw material.
 const SOURCE_DIRS = new Set(PAGE_TYPES.filter((p)=>p.group === 'source').map((p)=>p.type));
-async function listAllPages() {
+async function listAllPages(wikiDir) {
     const pages = [];
     for (const dir of PAGE_DIRS){
-        const dirPath = (0,external_node_path_namespaceObject.join)(WIKI_DIR, dir);
+        const dirPath = (0,external_node_path_namespaceObject.join)(wikiDir, dir);
         const files = (await readMdFiles(dirPath)).filter((f)=>f !== 'index.md');
         for (const file of files){
             pages.push({
@@ -1279,7 +1301,7 @@ function scanWikilinks(content, inventory) {
         resolved
     };
 }
-async function findRawSource(sourceField) {
+async function findRawSource(sourceField, rawDir) {
     const cleaned = sourceField.replace(/^\s*\[+/, '').replace(/\]+\s*$/, '').trim();
     if (!cleaned) return true;
     if (/^https?:\/\//i.test(cleaned)) return true;
@@ -1290,11 +1312,11 @@ async function findRawSource(sourceField) {
         `${cleaned.replace(/\s+/g, '-').toLowerCase()}.md`
     ];
     for (const c of candidates){
-        if ((0,external_node_fs_namespaceObject.existsSync)((0,external_node_path_namespaceObject.join)(RAW_DIR, c))) return true;
+        if ((0,external_node_fs_namespaceObject.existsSync)((0,external_node_path_namespaceObject.join)(rawDir, c))) return true;
     }
     for (const subdir of RAW_SUBDIRS){
         for (const c of candidates){
-            if ((0,external_node_fs_namespaceObject.existsSync)((0,external_node_path_namespaceObject.join)(RAW_DIR, subdir, c))) return true;
+            if ((0,external_node_fs_namespaceObject.existsSync)((0,external_node_path_namespaceObject.join)(rawDir, subdir, c))) return true;
         }
     }
     return false;
@@ -1314,8 +1336,8 @@ async function extractSourceField(filePath) {
         return null;
     }
 }
-async function buildReport() {
-    const pages = await listAllPages();
+async function buildReport({ root, wikiDir, rawDir }) {
+    const pages = await listAllPages(wikiDir);
     const inventory = health_check_buildInventory(pages);
     const brokenLinks = [];
     const incomingByTarget = {};
@@ -1335,7 +1357,7 @@ async function buildReport() {
         if (SOURCE_DIRS.has(p.dir)) {
             const src = await extractSourceField(p.fullPath);
             if (src) {
-                const found = await findRawSource(src);
+                const found = await findRawSource(src, rawDir);
                 if (!found) brokenSources.push({
                     page: p.relPath,
                     source: src
@@ -1353,7 +1375,7 @@ async function buildReport() {
     }
     return {
         generated_at: new Date().toISOString(),
-        wiki_root: WIKI_ROOT,
+        wiki_root: root,
         totals: {
             pages: pages.length,
             wikilinks: totalWikilinks,
@@ -1366,7 +1388,7 @@ async function buildReport() {
         broken_sources: brokenSources
     };
 }
-function printSummary(report) {
+function printSummary(report, healthFile) {
     console.log(`llm-wiki health \u{2014} ${report.generated_at}`);
     console.log(`Wiki root: ${report.wiki_root}`);
     console.log('');
@@ -1393,27 +1415,29 @@ function printSummary(report) {
         }
     }
     console.log('');
-    console.log(`Full report: ${HEALTH_FILE}`);
+    console.log(`Full report: ${healthFile}`);
 }
 const health_check_command = {
-    description: 'Aggregate wiki health: broken links, orphans, broken **Source** refs; writes health.json',
+    description: 'Aggregate wiki health: broken links, orphans, broken **Source** refs; writes health.json. --root DIR',
     run: async (args)=>{
         const { flags } = parseArgs(args);
-        if (!(0,external_node_fs_namespaceObject.existsSync)(WIKI_DIR)) {
-            console.error(`Wiki not initialized at ${WIKI_ROOT}.`);
+        const paths = resolveWikiPaths(flags);
+        const healthFile = (0,external_node_path_namespaceObject.join)(paths.root, 'health.json');
+        if (!(0,external_node_fs_namespaceObject.existsSync)(paths.wikiDir)) {
+            console.error(`Wiki not initialized at ${paths.root}.`);
             process.exit(1);
         }
-        const report = await buildReport();
+        const report = await buildReport(paths);
         if (flags.json) {
             console.log(JSON.stringify(report, null, 2));
         } else {
-            printSummary(report);
+            printSummary(report, healthFile);
         }
         if (!flags['dry-run']) {
-            await (0,promises_namespaceObject.mkdir)((0,external_node_path_namespaceObject.dirname)(HEALTH_FILE), {
+            await (0,promises_namespaceObject.mkdir)((0,external_node_path_namespaceObject.dirname)(healthFile), {
                 recursive: true
             });
-            await (0,promises_namespaceObject.writeFile)(HEALTH_FILE, JSON.stringify(report, null, 2) + '\n');
+            await (0,promises_namespaceObject.writeFile)(healthFile, JSON.stringify(report, null, 2) + '\n');
         }
     }
 };
@@ -1421,16 +1445,17 @@ const health_check_command = {
 ;// CONCATENATED MODULE: ./src/lwy-llm-wiki/cmd/stats.ts
 
 
+
 const pad = (str, width)=>String(str).padEnd(width);
 const num = (val, width)=>String(val).padStart(width);
-async function stats() {
+async function stats(wikiDir, rawDir) {
     const wiki = {};
     for (const { type } of PAGE_TYPES){
-        wiki[type] = await countMdFiles((0,external_node_path_namespaceObject.join)(WIKI_DIR, type));
+        wiki[type] = await countMdFiles((0,external_node_path_namespaceObject.join)(wikiDir, type));
     }
     const raw = {};
     for (const sub of RAW_SUBDIRS){
-        raw[sub] = await countMdFiles((0,external_node_path_namespaceObject.join)(RAW_DIR, sub));
+        raw[sub] = await countMdFiles((0,external_node_path_namespaceObject.join)(rawDir, sub));
     }
     const totalRaw = Object.values(raw).reduce((a, b)=>a + b, 0);
     const totalWiki = Object.values(wiki).reduce((a, b)=>a + b, 0);
@@ -1455,8 +1480,11 @@ async function stats() {
     console.log(line("\u255A", "\u2550".repeat(W - 2), "\u255D"));
 }
 const stats_command = {
-    description: 'Box-drawing dashboard of raw + wiki page counts',
-    run: ()=>stats()
+    description: 'Box-drawing dashboard of raw + wiki page counts. --root DIR',
+    run: (args)=>{
+        const { wikiDir, rawDir } = resolveWikiPaths(parseArgs(args).flags);
+        return stats(wikiDir, rawDir);
+    }
 };
 
 ;// CONCATENATED MODULE: ./src/lwy-llm-wiki/cli.ts

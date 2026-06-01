@@ -1,9 +1,23 @@
 import { join } from 'node:path';
-import { envOr, learnwyPath } from '../../shared/learnwy-paths.js';
+import { learnwyPath, expandHome } from '../../shared/learnwy-paths.js';
 
-export const WIKI_ROOT = envOr('LLM_WIKI_ROOT', learnwyPath('llm-wiki'));
-export const WIKI_DIR = join(WIKI_ROOT, 'wiki');
-export const RAW_DIR = join(WIKI_ROOT, 'raw');
+export const DEFAULT_WIKI_ROOT = learnwyPath('llm-wiki');
+
+export interface WikiPaths {
+  root: string;
+  wikiDir: string;
+  rawDir: string;
+}
+
+export function wikiPaths(root: string = DEFAULT_WIKI_ROOT): WikiPaths {
+  const r = expandHome(root);
+  return { root: r, wikiDir: join(r, 'wiki'), rawDir: join(r, 'raw') };
+}
+
+export function resolveWikiPaths(flags: Record<string, string | boolean> = {}): WikiPaths {
+  const r = flags.root ?? flags['wiki-root'];
+  return wikiPaths(typeof r === 'string' && r.length > 0 ? r : DEFAULT_WIKI_ROOT);
+}
 
 export interface PageType {
   type: string;

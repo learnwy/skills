@@ -2,13 +2,11 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import {
-  WIKI_DIR, RAW_DIR, WIKI_ROOT, PAGE_DIRS, PAGE_TYPES, ORPHAN_EXEMPT_DIRS,
-  RAW_SUBDIRS, readMdFiles,
+  resolveWikiPaths, PAGE_DIRS, PAGE_TYPES, ORPHAN_EXEMPT_DIRS,
+  RAW_SUBDIRS, readMdFiles, type WikiPaths,
 } from '../lib/index.js';
-import type { Command } from '../../shared/cli.js';
-import { parseArgs } from '../../shared/cli.js';
+import { parseArgs, type Command } from '../../shared/cli.js';
 
-const HEALTH_FILE = join(WIKI_ROOT, 'health.json');
 // Source-type dirs carry a **Source** ref that should resolve to raw material.
 const SOURCE_DIRS = new Set(PAGE_TYPES.filter((p) => p.group === 'source').map((p) => p.type));
 
@@ -43,10 +41,10 @@ interface HealthReport {
   broken_sources: BrokenSource[];
 }
 
-async function listAllPages(): Promise<PageRef[]> {
+async function listAllPages(wikiDir: string): Promise<PageRef[]> {
   const pages: PageRef[] = [];
   for (const dir of PAGE_DIRS) {
-    const dirPath = join(WIKI_DIR, dir);
+    const dirPath = join(wikiDir, dir);
     const files = (await readMdFiles(dirPath)).filter((f) => f !== 'index.md');
     for (const file of files) {
       pages.push({ dir, relPath: `${dir}/${file}`, fullPath: join(dirPath, file) });
@@ -84,7 +82,7 @@ function scanWikilinks(content: string, inventory: Set<string>): { broken: strin
   return { broken, resolved };
 }
 
-async function findRawSource(sourceField: string): Promise<boolean> {
+async function findRawSource(sourceField: string, rawDir: string): Promise<boolean> {
   const cleaned = sourceField.replace(/^\s*\[+/, '').replace(/\]+\s*$/, '').trim();
   if (!cleaned) return true;
   if (/^https?:\/\//i.test(cleaned)) return true;
@@ -96,11 +94,11 @@ async function findRawSource(sourceField: string): Promise<boolean> {
     `${cleaned.replace(/\s+/g, '-').toLowerCase()}.md`,
   ];
   for (const c of candidates) {
-    if (existsSync(join(RAW_DIR, c))) return true;
+    if (existsSync(join(rawDir, c))) return true;
   }
   for (const subdir of RAW_SUBDIRS) {
     for (const c of candidates) {
-      if (existsSync(join(RAW_DIR, subdir, c))) return true;
+      if (existsSync(join(rawDir, subdir, c))) return true;
     }
   }
   return false;
@@ -122,8 +120,8 @@ async function extractSourceField(filePath: string): Promise<string | null> {
   }
 }
 
-async function buildReport(): Promise<HealthReport> {
-  const pages = await listAllPages();
+async function buildReport({ root, wikiDir, rawDir }: WikiPaths): Promise<HealthReport> {
+  const pages = await listAllPages(wikiDir);
   const inventory = buildInventory(pages);
 
   const brokenLinks: BrokenLink[] = [];
@@ -143,7 +141,7 @@ async function buildReport(): Promise<HealthReport> {
     if (SOURCE_DIRS.has(p.dir)) {
       const src = await extractSourceField(p.fullPath);
       if (src) {
-        const found = await findRawSource(src);
+        const found = await findRawSource(src, rawDir);
         if (!found) brokenSources.push({ page: p.relPath, source: src });
       }
     }
@@ -160,7 +158,7 @@ async function buildReport(): Promise<HealthReport> {
 
   return {
     generated_at: new Date().toISOString(),
-    wiki_root: WIKI_ROOT,
+    wiki_root: root,
     totals: {
       pages: pages.length,
       wikilinks: totalWikilinks,
@@ -174,7 +172,7 @@ async function buildReport(): Promise<HealthReport> {
   };
 }
 
-function printSummary(report: HealthReport): void {
+function printSummary(report: HealthReport, healthFile: string): void {
   console.log(`llm-wiki health — ${report.generated_at}`);
   console.log(`Wiki root: ${report.wiki_root}`);
   console.log('');
@@ -202,26 +200,28 @@ function printSummary(report: HealthReport): void {
     }
   }
   console.log('');
-  console.log(`Full report: ${HEALTH_FILE}`);
+  console.log(`Full report: ${healthFile}`);
 }
 
 export const command: Command = {
-  description: 'Aggregate wiki health: broken links, orphans, broken **Source** refs; writes health.json',
+  description: 'Aggregate wiki health: broken links, orphans, broken **Source** refs; writes health.json. --root DIR',
   run: async (args) => {
     const { flags } = parseArgs(args);
-    if (!existsSync(WIKI_DIR)) {
-      console.error(`Wiki not initialized at ${WIKI_ROOT}.`);
+    const paths = resolveWikiPaths(flags);
+    const healthFile = join(paths.root, 'health.json');
+    if (!existsSync(paths.wikiDir)) {
+      console.error(`Wiki not initialized at ${paths.root}.`);
       process.exit(1);
     }
-    const report = await buildReport();
+    const report = await buildReport(paths);
     if (flags.json) {
       console.log(JSON.stringify(report, null, 2));
     } else {
-      printSummary(report);
+      printSummary(report, healthFile);
     }
     if (!flags['dry-run']) {
-      await mkdir(dirname(HEALTH_FILE), { recursive: true });
-      await writeFile(HEALTH_FILE, JSON.stringify(report, null, 2) + '\n');
+      await mkdir(dirname(healthFile), { recursive: true });
+      await writeFile(healthFile, JSON.stringify(report, null, 2) + '\n');
     }
   },
 };

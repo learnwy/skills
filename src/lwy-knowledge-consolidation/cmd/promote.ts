@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type { Command } from '../../shared/cli.js';
-import { envOr, learnwyPath } from '../../shared/learnwy-paths.js';
+import { learnwyPath, expandHome } from '../../shared/learnwy-paths.js';
 import { sanitizeFilename } from '../lib/path-builder.js';
 
 function showHelp(): void {
@@ -11,7 +11,7 @@ Promote a project-local knowledge doc into the global llm-wiki ingestion queue.
 
 Arguments:
   -p, --path        Path to the KC doc to promote (required)
-      --wiki-root   llm-wiki root (default: \$LLM_WIKI_ROOT or ~/.learnwy/llm-wiki)
+      --wiki-root   llm-wiki root (default: ~/.learnwy/llm-wiki)
   -h, --help        Show help
 
 Behaviour:
@@ -28,7 +28,7 @@ function isoDate(): string {
 }
 
 function defaultWikiRoot(): string {
-  return envOr('LLM_WIKI_ROOT', learnwyPath('llm-wiki'));
+  return learnwyPath('llm-wiki');
 }
 
 function deriveSlug(filePath: string): string {
@@ -43,7 +43,7 @@ function run(rawArgs: string[]): void {
   for (let i = 0; i < rawArgs.length; i++) {
     switch (rawArgs[i]) {
       case '-p': case '--path': docPath = rawArgs[++i] || ''; break;
-      case '--wiki-root': wikiRoot = rawArgs[++i] || ''; break;
+      case '--wiki-root': wikiRoot = expandHome(rawArgs[++i] || ''); break;
       case '-h': case '--help': showHelp(); process.exit(0);
       default:
         process.stderr.write(`Error: Unknown option: ${rawArgs[i]}\n`);

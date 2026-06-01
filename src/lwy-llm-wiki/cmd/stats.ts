@@ -1,21 +1,21 @@
 import { join } from 'node:path';
 import {
-  WIKI_DIR, RAW_DIR, PAGE_TYPES, RAW_SUBDIRS, countMdFiles,
+  resolveWikiPaths, PAGE_TYPES, RAW_SUBDIRS, countMdFiles,
 } from '../lib/index.js';
-import type { Command } from '../../shared/cli.js';
+import { parseArgs, type Command } from '../../shared/cli.js';
 
 const pad = (str: string | number, width: number): string => String(str).padEnd(width);
 const num = (val: number, width: number): string => String(val).padStart(width);
 
-async function stats(): Promise<void> {
+async function stats(wikiDir: string, rawDir: string): Promise<void> {
   const wiki: Record<string, number> = {};
   for (const { type } of PAGE_TYPES) {
-    wiki[type] = await countMdFiles(join(WIKI_DIR, type));
+    wiki[type] = await countMdFiles(join(wikiDir, type));
   }
 
   const raw: Record<string, number> = {};
   for (const sub of RAW_SUBDIRS) {
-    raw[sub] = await countMdFiles(join(RAW_DIR, sub));
+    raw[sub] = await countMdFiles(join(rawDir, sub));
   }
 
   const totalRaw = Object.values(raw).reduce((a, b) => a + b, 0);
@@ -48,6 +48,9 @@ async function stats(): Promise<void> {
 }
 
 export const command: Command = {
-  description: 'Box-drawing dashboard of raw + wiki page counts',
-  run: () => stats(),
+  description: 'Box-drawing dashboard of raw + wiki page counts. --root DIR',
+  run: (args) => {
+    const { wikiDir, rawDir } = resolveWikiPaths(parseArgs(args).flags);
+    return stats(wikiDir, rawDir);
+  },
 };

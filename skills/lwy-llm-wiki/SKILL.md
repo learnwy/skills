@@ -65,7 +65,7 @@ metadata:
 ### 存储位置
 
 - **全局（默认）**: `~/.learnwy/llm-wiki/` — 跨项目跨会话共享
-- 可通过 `LLM_WIKI_ROOT` 环境变量覆盖
+- 可通过 `--root <dir>` 选项覆盖（如分身库 `--root ~/.learnwy/ai/private/self`）
 
 ## 目录结构（实体优先）
 
@@ -145,7 +145,7 @@ node scripts/cli.cjs install / uninstall        # 注册/移除 IDE 钩子
 | `freshness-check` | 过时页面（技术类90天，稳定类180天）、未验证、缺少日期 | 每月或重大版本发布后 |
 | `health-check` | 断链 / 孤立 / 失效 **Source** 引用 → `health.json` | CI / 提交前 |
 
-可通过 `LLM_WIKI_ROOT` 环境变量覆盖 wiki 位置。
+每个命令都接受 `--root <dir>` 覆盖 wiki 位置（默认 `~/.learnwy/llm-wiki`）；同一引擎即可驱动公开世界库与私有分身库，无需环境变量。
 
 ## Agent 输出契约
 

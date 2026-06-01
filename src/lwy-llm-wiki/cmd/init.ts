@@ -2,9 +2,9 @@ import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import {
-  WIKI_ROOT, WIKI_DIR, RAW_DIR, PAGE_DIRS, LIFECYCLE_DIRS, RAW_SUBDIRS,
+  resolveWikiPaths, PAGE_DIRS, LIFECYCLE_DIRS, RAW_SUBDIRS, type WikiPaths,
 } from '../lib/index.js';
-import type { Command } from '../../shared/cli.js';
+import { parseArgs, type Command } from '../../shared/cli.js';
 
 const SCHEMA = `# LLM Wiki — Schema
 
@@ -38,31 +38,30 @@ async function ensureFile(path: string, content: string): Promise<void> {
   if (!existsSync(path)) await writeFile(path, content);
 }
 
-async function init(): Promise<void> {
-  await ensureDir(WIKI_ROOT);
-  await ensureDir(WIKI_DIR);
-  await ensureDir(RAW_DIR);
+async function init({ root, wikiDir, rawDir }: WikiPaths): Promise<void> {
+  await ensureDir(root);
+  await ensureDir(wikiDir);
+  await ensureDir(rawDir);
 
-  for (const sub of RAW_SUBDIRS) await ensureDir(join(RAW_DIR, sub));
-  for (const dir of [...PAGE_DIRS, ...LIFECYCLE_DIRS]) await ensureDir(join(WIKI_DIR, dir));
+  for (const sub of RAW_SUBDIRS) await ensureDir(join(rawDir, sub));
+  for (const dir of [...PAGE_DIRS, ...LIFECYCLE_DIRS]) await ensureDir(join(wikiDir, dir));
 
-  await ensureFile(join(WIKI_ROOT, 'CLAUDE.md'), SCHEMA);
-  await ensureFile(join(WIKI_ROOT, 'log.md'), '# Wiki Log\n\n');
+  await ensureFile(join(root, 'CLAUDE.md'), SCHEMA);
+  await ensureFile(join(root, 'log.md'), '# Wiki Log\n\n');
   await ensureFile(
-    join(WIKI_DIR, 'index.md'),
+    join(wikiDir, 'index.md'),
     '# Knowledge Base Index\n\n> Run `cli.cjs generate-index` to populate.\n',
   );
-  await ensureFile(join(WIKI_DIR, 'topics.txt'), '');
+  await ensureFile(join(wikiDir, 'topics.txt'), '');
 
-  // Touch CLAUDE.md so re-init reports cleanly even when present.
-  await readFile(join(WIKI_ROOT, 'CLAUDE.md'), 'utf-8');
+  await readFile(join(root, 'CLAUDE.md'), 'utf-8');
 
-  console.log(`Initialized llm-wiki at ${WIKI_ROOT}`);
+  console.log(`Initialized llm-wiki at ${root}`);
   console.log(`  raw/    ${RAW_SUBDIRS.length} source subdirs`);
   console.log(`  wiki/   ${PAGE_DIRS.length} page dirs + ${LIFECYCLE_DIRS.length} lifecycle dirs`);
 }
 
 export const command: Command = {
-  description: 'Scaffold the wiki root (raw/ + wiki/ folders, schema, index, log)',
-  run: () => init(),
+  description: 'Scaffold the wiki root (raw/ + wiki/ folders, schema, index, log). --root DIR',
+  run: (args) => init(resolveWikiPaths(parseArgs(args).flags)),
 };

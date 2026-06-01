@@ -1,7 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { WIKI_DIR, PAGE_DIRS, readMdFiles } from '../lib/index.js';
-import type { Command } from '../../shared/cli.js';
+import { resolveWikiPaths, PAGE_DIRS, readMdFiles } from '../lib/index.js';
+import { parseArgs, type Command } from '../../shared/cli.js';
 
 const STOP_WORDS = new Set([
   'the', 'and', 'for', 'with', 'from', 'that', 'this', 'into',
@@ -33,12 +33,12 @@ function slugToWords(slug: string): string[] {
     .filter((w) => w.length >= MIN_WORD_LENGTH && !STOP_WORDS.has(w.toLowerCase()));
 }
 
-async function generateTopics(): Promise<void> {
+async function generateTopics(wikiDir: string): Promise<void> {
   const keywords = new Set<string>();
   const disciplines = new Set<string>();
 
   for (const dir of PAGE_DIRS) {
-    const dirPath = join(WIKI_DIR, dir);
+    const dirPath = join(wikiDir, dir);
     const files = await readMdFiles(dirPath);
     for (const file of files) {
       if (file === 'index.md') continue;
@@ -67,11 +67,11 @@ async function generateTopics(): Promise<void> {
     lines.push(k);
   }
 
-  await writeFile(join(WIKI_DIR, 'topics.txt'), lines.join('\n'));
+  await writeFile(join(wikiDir, 'topics.txt'), lines.join('\n'));
   console.log(`Generated wiki/topics.txt (${keywords.size} keywords from ${disciplines.size} disciplines)`);
 }
 
 export const command: Command = {
-  description: 'Regenerate wiki/topics.txt keyword index',
-  run: () => generateTopics(),
+  description: 'Regenerate wiki/topics.txt keyword index. --root DIR',
+  run: (args) => generateTopics(resolveWikiPaths(parseArgs(args).flags).wikiDir),
 };
