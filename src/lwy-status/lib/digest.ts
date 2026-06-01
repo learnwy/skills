@@ -66,7 +66,7 @@ interface OptimizerEvent {
 }
 
 export function readOptimizerSection(): OptimizerSection | null {
-  const f = path.join(LEARNWY_ROOT, 'prompt-optimizer', 'events.jsonl');
+  const f = path.join(LEARNWY_ROOT, '.var', 'prompt-optimizer', 'events.jsonl');
   if (!fs.existsSync(f)) return null;
   const now = Date.now();
   const cutoff7 = now - 7 * 24 * 60 * 60 * 1000;
@@ -97,7 +97,7 @@ interface NudgeFile {
 }
 
 export function readConsolidationSection(): ConsolidationSection | null {
-  const f = path.join(LEARNWY_ROOT, 'knowledge-consolidation', 'last-nudge.json');
+  const f = path.join(LEARNWY_ROOT, '.var', 'knowledge-consolidation', 'last-nudge.json');
   if (!fs.existsSync(f)) return null;
   try {
     const j = JSON.parse(fs.readFileSync(f, 'utf8')) as NudgeFile;
@@ -113,7 +113,7 @@ export function readConsolidationSection(): ConsolidationSection | null {
 }
 
 export function readLogsSection(): LogsSection {
-  const dir = path.join(LEARNWY_ROOT, 'logs');
+  const dir = path.join(LEARNWY_ROOT, '.var', 'logs');
   if (!fs.existsSync(dir)) return { largest_file: null, largest_size_bytes: 0, rotated_count: 0 };
   let largestName: string | null = null;
   let largestSize = 0;

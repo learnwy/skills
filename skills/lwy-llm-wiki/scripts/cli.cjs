@@ -348,7 +348,7 @@ const LEVEL_RANK = {
 const DEFAULT_MAX_BYTES = 5 * 1024 * 1024;
 const KEEP_GENERATIONS = 3;
 function logRoot() {
-    return external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'logs');
+    return external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', '.var', 'logs');
 }
 function envLevel() {
     const raw = (process.env.LEARNWY_LOG_LEVEL || '').toLowerCase();
@@ -470,11 +470,14 @@ function learnwyPath(...segments) {
 function learnwy_paths_skillRoot(skill) {
     return learnwyPath(skill);
 }
+function varRoot(name) {
+    return learnwyPath('.var', name);
+}
 const PATHS = {
     llmWiki: learnwy_paths_skillRoot('llm-wiki'),
-    promptOptimizer: learnwy_paths_skillRoot('prompt-optimizer'),
-    knowledgeConsolidation: learnwy_paths_skillRoot('knowledge-consolidation'),
-    learnwyStatus: learnwy_paths_skillRoot('learnwy-status')
+    promptOptimizer: varRoot('prompt-optimizer'),
+    knowledgeConsolidation: varRoot('knowledge-consolidation'),
+    learnwyStatus: varRoot('learnwy-status')
 };
 function envOr(envVar, fallback) {
     const v = process.env[envVar];

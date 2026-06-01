@@ -42,7 +42,7 @@ describe('createLogger', () => {
       log.warn('w');
       log.error('e');
     });
-    const file = join(tmpHome, '.learnwy', 'logs', 'test-skill.log');
+    const file = join(tmpHome, '.learnwy', '.var', 'logs', 'test-skill.log');
     expect(existsSync(file)).toBe(true);
     const content = readFileSync(file, 'utf8');
     expect(content).not.toMatch(/\[debug\]/);
@@ -55,7 +55,7 @@ describe('createLogger', () => {
     withEnv({ LEARNWY_LOG_LEVEL: 'debug' }, () => {
       createLogger('verbose-skill').debug('hello-debug');
     });
-    const content = readFileSync(join(tmpHome, '.learnwy', 'logs', 'verbose-skill.log'), 'utf8');
+    const content = readFileSync(join(tmpHome, '.learnwy', '.var', 'logs', 'verbose-skill.log'), 'utf8');
     expect(content).toMatch(/\[debug\] verbose-skill: hello-debug/);
   });
 
@@ -63,7 +63,7 @@ describe('createLogger', () => {
     withEnv({ LEARNWY_LOG_LEVEL: 'error' }, () => {
       createLogger('err-skill').error(new Error('boom'));
     });
-    const content = readFileSync(join(tmpHome, '.learnwy', 'logs', 'err-skill.log'), 'utf8');
+    const content = readFileSync(join(tmpHome, '.learnwy', '.var', 'logs', 'err-skill.log'), 'utf8');
     expect(content).toMatch(/\[error\] err-skill: boom/);
     expect(content).toMatch(/at /); // stack frame
   });
@@ -73,7 +73,7 @@ describe('createLogger', () => {
       createLogger('append-skill').info('first');
       createLogger('append-skill').info('second');
     });
-    const content = readFileSync(join(tmpHome, '.learnwy', 'logs', 'append-skill.log'), 'utf8');
+    const content = readFileSync(join(tmpHome, '.learnwy', '.var', 'logs', 'append-skill.log'), 'utf8');
     expect(content.match(/\[info\]/g)?.length).toBe(2);
   });
 

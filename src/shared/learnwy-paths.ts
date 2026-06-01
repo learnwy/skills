@@ -11,11 +11,15 @@ export function skillRoot(skill: string): string {
   return learnwyPath(skill);
 }
 
+export function varRoot(name: string): string {
+  return learnwyPath('.var', name);
+}
+
 export const PATHS = {
   llmWiki: skillRoot('llm-wiki'),
-  promptOptimizer: skillRoot('prompt-optimizer'),
-  knowledgeConsolidation: skillRoot('knowledge-consolidation'),
-  learnwyStatus: skillRoot('learnwy-status'),
+  promptOptimizer: varRoot('prompt-optimizer'),
+  knowledgeConsolidation: varRoot('knowledge-consolidation'),
+  learnwyStatus: varRoot('learnwy-status'),
 } as const;
 
 export function envOr(envVar: string, fallback: string): string {

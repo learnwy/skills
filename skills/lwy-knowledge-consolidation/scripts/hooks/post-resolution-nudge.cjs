@@ -257,11 +257,14 @@ function learnwyPath(...segments) {
 function skillRoot(skill) {
     return learnwyPath(skill);
 }
+function varRoot(name) {
+    return learnwyPath('.var', name);
+}
 const PATHS = {
     llmWiki: skillRoot('llm-wiki'),
-    promptOptimizer: skillRoot('prompt-optimizer'),
-    knowledgeConsolidation: skillRoot('knowledge-consolidation'),
-    learnwyStatus: skillRoot('learnwy-status')
+    promptOptimizer: varRoot('prompt-optimizer'),
+    knowledgeConsolidation: varRoot('knowledge-consolidation'),
+    learnwyStatus: varRoot('learnwy-status')
 };
 function envOr(envVar, fallback) {
     const v = process.env[envVar];
@@ -272,7 +275,7 @@ function envOr(envVar, fallback) {
 
 
 
-const STATE_FILE = learnwyPath('knowledge-consolidation', 'last-nudge.json');
+const STATE_FILE = learnwyPath('.var', 'knowledge-consolidation', 'last-nudge.json');
 const DEBOUNCE_MS = 60 * 60 * 1000;
 const MIN_RESPONSE_LEN = 1500;
 const RESOLUTION_SIGNALS = [

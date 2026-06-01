@@ -348,7 +348,7 @@ const LEVEL_RANK = {
 const DEFAULT_MAX_BYTES = 5 * 1024 * 1024;
 const KEEP_GENERATIONS = 3;
 function logRoot() {
-    return external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'logs');
+    return external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', '.var', 'logs');
 }
 function envLevel() {
     const raw = (process.env.LEARNWY_LOG_LEVEL || '').toLowerCase();

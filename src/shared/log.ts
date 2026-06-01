@@ -11,7 +11,7 @@ const DEFAULT_MAX_BYTES = 5 * 1024 * 1024;
 const KEEP_GENERATIONS = 3;
 
 export function logRoot(): string {
-  return path.join(os.homedir(), '.learnwy', 'logs');
+  return path.join(os.homedir(), '.learnwy', '.var', 'logs');
 }
 
 function envLevel(): LogLevel {

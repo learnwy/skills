@@ -257,11 +257,14 @@ function learnwyPath(...segments) {
 function skillRoot(skill) {
     return learnwyPath(skill);
 }
+function varRoot(name) {
+    return learnwyPath('.var', name);
+}
 const PATHS = {
     llmWiki: skillRoot('llm-wiki'),
-    promptOptimizer: skillRoot('prompt-optimizer'),
-    knowledgeConsolidation: skillRoot('knowledge-consolidation'),
-    learnwyStatus: skillRoot('learnwy-status')
+    promptOptimizer: varRoot('prompt-optimizer'),
+    knowledgeConsolidation: varRoot('knowledge-consolidation'),
+    learnwyStatus: varRoot('learnwy-status')
 };
 function envOr(envVar, fallback) {
     const v = process.env[envVar];
@@ -416,7 +419,7 @@ function readWikiSection() {
     }
 }
 function readOptimizerSection() {
-    const f = external_node_path_namespaceObject.join(LEARNWY_ROOT, 'prompt-optimizer', 'events.jsonl');
+    const f = external_node_path_namespaceObject.join(LEARNWY_ROOT, '.var', 'prompt-optimizer', 'events.jsonl');
     if (!external_node_fs_namespaceObject.existsSync(f)) return null;
     const now = Date.now();
     const cutoff7 = now - 7 * 24 * 60 * 60 * 1000;
@@ -444,7 +447,7 @@ function readOptimizerSection() {
     };
 }
 function readConsolidationSection() {
-    const f = external_node_path_namespaceObject.join(LEARNWY_ROOT, 'knowledge-consolidation', 'last-nudge.json');
+    const f = external_node_path_namespaceObject.join(LEARNWY_ROOT, '.var', 'knowledge-consolidation', 'last-nudge.json');
     if (!external_node_fs_namespaceObject.existsSync(f)) return null;
     try {
         const j = JSON.parse(external_node_fs_namespaceObject.readFileSync(f, 'utf8'));
@@ -459,7 +462,7 @@ function readConsolidationSection() {
     }
 }
 function readLogsSection() {
-    const dir = external_node_path_namespaceObject.join(LEARNWY_ROOT, 'logs');
+    const dir = external_node_path_namespaceObject.join(LEARNWY_ROOT, '.var', 'logs');
     if (!external_node_fs_namespaceObject.existsSync(dir)) return {
         largest_file: null,
         largest_size_bytes: 0,
@@ -551,7 +554,7 @@ function formatCompact(d) {
 
 
 
-const STATE_FILE = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', 'learnwy-status', 'state.json');
+const STATE_FILE = external_node_path_namespaceObject.join(external_node_os_namespaceObject.homedir(), '.learnwy', '.var', 'learnwy-status', 'state.json');
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const HOME = external_node_os_namespaceObject.homedir();
 const AGENTS_ROOT = external_node_path_namespaceObject.join(HOME, '.agents', 'skills');

@@ -4,7 +4,7 @@ import * as os from 'node:os';
 import { spawn } from 'node:child_process';
 import { buildDigest, formatCompact } from './digest.js';
 
-const STATE_FILE = path.join(os.homedir(), '.learnwy', 'learnwy-status', 'state.json');
+const STATE_FILE = path.join(os.homedir(), '.learnwy', '.var', 'learnwy-status', 'state.json');
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const HOME = os.homedir();
 const AGENTS_ROOT = path.join(HOME, '.agents', 'skills');

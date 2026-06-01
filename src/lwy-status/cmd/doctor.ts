@@ -115,7 +115,7 @@ function checkCodexFeatureFlag(): Check {
 }
 
 function checkPathLayout(): Check[] {
-  const required = ['llm-wiki', 'logs'];
+  const required = ['llm-wiki', path.join('.var', 'logs')];
   const checks: Check[] = [];
   for (const sub of required) {
     const p = path.join(LEARNWY_ROOT, sub);

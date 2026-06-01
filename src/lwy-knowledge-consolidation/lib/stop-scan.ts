@@ -2,7 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { learnwyPath } from '../../shared/learnwy-paths.js';
 
-const STATE_FILE = learnwyPath('knowledge-consolidation', 'last-nudge.json');
+const STATE_FILE = learnwyPath('.var', 'knowledge-consolidation', 'last-nudge.json');
 const DEBOUNCE_MS = 60 * 60 * 1000;
 const MIN_RESPONSE_LEN = 1500;
 

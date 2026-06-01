@@ -289,11 +289,14 @@ function learnwyPath(...segments) {
 function skillRoot(skill) {
     return learnwyPath(skill);
 }
+function varRoot(name) {
+    return learnwyPath('.var', name);
+}
 const PATHS = {
     llmWiki: skillRoot('llm-wiki'),
-    promptOptimizer: skillRoot('prompt-optimizer'),
-    knowledgeConsolidation: skillRoot('knowledge-consolidation'),
-    learnwyStatus: skillRoot('learnwy-status')
+    promptOptimizer: varRoot('prompt-optimizer'),
+    knowledgeConsolidation: varRoot('knowledge-consolidation'),
+    learnwyStatus: varRoot('learnwy-status')
 };
 function envOr(envVar, fallback) {
     const v = process.env[envVar];

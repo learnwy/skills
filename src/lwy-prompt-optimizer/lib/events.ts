@@ -3,7 +3,7 @@ import * as path from 'node:path';
 import { envOr, learnwyPath } from '../../shared/learnwy-paths.js';
 
 export function dataRoot(): string {
-  return envOr('LEARNWY_PROMPT_OPTIMIZER_ROOT', learnwyPath('prompt-optimizer'));
+  return envOr('LEARNWY_PROMPT_OPTIMIZER_ROOT', learnwyPath('.var', 'prompt-optimizer'));
 }
 
 export function eventsFile(): string {
