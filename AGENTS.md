@@ -30,19 +30,19 @@ skills/                                    # 仓库根目录
 │   ├── legacy-surgeon/
 │   └── test-strategist/
 └── skills/                                # 可运行的技能模块
-    ├── knowledge-consolidation/           # 对话洞察持久化（含 Stop 自动 nudge）
-    ├── learnwy-dispatch/                  # UserPromptSubmit/Stop/SessionStart 单进程调度器
-    ├── learnwy-status/                    # 跨子系统数据综合视图 + doctor 健康体检
-    ├── llm-wiki/                          # Karpathy 式知识库
+    ├── lwy-knowledge-consolidation/           # 对话洞察持久化（含 Stop 自动 nudge）
+    ├── lwy-dispatch/                  # UserPromptSubmit/Stop/SessionStart 单进程调度器
+    ├── lwy-status/                    # 跨子系统数据综合视图 + doctor 健康体检
+    ├── lwy-llm-wiki/                          # Karpathy 式知识库
     ├── on-contradiction/                  # 矛盾论方法论
     ├── on-practice/                       # 实践论方法论
     ├── on-protracted-war/                 # 论持久战方法论
-    ├── project-agent-writer/              # 创建项目级代理
-    ├── project-skill-installer/           # 将技能安装到项目中
-    ├── project-skill-writer/              # 创建项目级技能
-    ├── requirement-workflow/              # SDD 开发编排器
-    ├── software-methodology-toolkit/      # 10 个方法论代理（兜底）
-    ├── prompt-optimizer/                  # 提示词预检分析与优化
+    ├── lwy-project-agent-writer/              # 创建项目级代理
+    ├── lwy-project-skill-installer/           # 将技能安装到项目中
+    ├── lwy-project-skill-writer/              # 创建项目级技能
+    ├── lwy-requirement-workflow/              # SDD 开发编排器
+    ├── lwy-software-methodology-toolkit/      # 10 个方法论代理（兜底）
+    ├── lwy-prompt-optimizer/                  # 提示词预检分析与优化
     └── trae-rules-writer/                 # 创建 Trae IDE 规则
 ```
 
@@ -55,38 +55,38 @@ skills/                                    # 仓库根目录
 | **on-contradiction** | 毛泽东《矛盾论》— 对立力量的结构分析 | decision-maker, problem-analyzer, report-writer |
 | **on-practice** | 毛泽东《实践论》— 实践-认知螺旋式验证 | decision-maker, problem-analyzer, report-writer |
 | **on-protracted-war** | 毛泽东《论持久战》— 长期博弈的阶段性战略 | decision-maker, problem-analyzer, report-writer |
-| **llm-wiki** | Karpathy 式 LLM Wiki — 复利式知识库 | ingestor, querier, linter, schema-writer |
-| **software-methodology-toolkit** | 10 个方法论代理（当无特定技能匹配时作为兜底） | problem-definer, story-mapper, domain-modeler 等 |
+| **lwy-llm-wiki** | Karpathy 式 LLM Wiki — 复利式知识库 | ingestor, querier, linter, schema-writer |
+| **lwy-software-methodology-toolkit** | 10 个方法论代理（当无特定技能匹配时作为兜底） | problem-definer, story-mapper, domain-modeler 等 |
 
 ### 开发工作流技能
 
 | 技能 | 说明 | 包含脚本 |
 |------|------|----------|
-| **requirement-workflow** | 规格驱动开发：spec.md → tasks.md → 实现 → 验证 | 是 (shell) |
-| **project-skill-writer** | 带约定检测的项目级技能创建 | 否 |
-| **project-agent-writer** | 创建项目级代理 | 否 |
-| **project-skill-installer** | 将技能安装到项目中 | 否 |
+| **lwy-requirement-workflow** | 规格驱动开发：spec.md → tasks.md → 实现 → 验证 | 是 (shell) |
+| **lwy-project-skill-writer** | 带约定检测的项目级技能创建 | 否 |
+| **lwy-project-agent-writer** | 创建项目级代理 | 否 |
+| **lwy-project-skill-installer** | 将技能安装到项目中 | 否 |
 | **trae-rules-writer** | 创建 Trae IDE 规则 | 否 |
 
 ### 工具类技能
 
 | 技能 | 说明 | 包含脚本 |
 |------|------|----------|
-| **knowledge-consolidation** | 将对话洞察持久化到项目 knowledges/；Stop 钩子自动 nudge | 是 (CJS) |
-| **prompt-optimizer** | 提示词预检分析与优化（7 维度评分）；事件落盘 + `trends` 聚合 | 是；子命令 `trends` |
-| **llm-wiki** | Karpathy 式知识库；`health-check` 一键体检 + JSON 快照 | 是；子命令 `lint`、`generate-index`、`generate-topics`、`init`、`freshness-check`、`health-check`、`stats` |
-| **learnwy-status** | 跨子系统综合视图（wiki/optimizer/kc/logs）；周度自动摘要；自动刷新过期 health.json；`doctor` 系统体检 | 是；子命令 `status`、`doctor` |
-| **learnwy-dispatch** | 内部协调器：UserPromptSubmit + Stop + SessionStart 三类钩子合并到单 Node 进程 | 是（仅 install/uninstall）|
+| **lwy-knowledge-consolidation** | 将对话洞察持久化到项目 knowledges/；Stop 钩子自动 nudge | 是 (CJS) |
+| **lwy-prompt-optimizer** | 提示词预检分析与优化（7 维度评分）；事件落盘 + `trends` 聚合 | 是；子命令 `trends` |
+| **lwy-llm-wiki** | Karpathy 式知识库；`health-check` 一键体检 + JSON 快照 | 是；子命令 `lint`、`generate-index`、`generate-topics`、`init`、`freshness-check`、`health-check`、`stats` |
+| **lwy-status** | 跨子系统综合视图（wiki/optimizer/kc/logs）；周度自动摘要；自动刷新过期 health.json；`doctor` 系统体检 | 是；子命令 `status`、`doctor` |
+| **lwy-dispatch** | 内部协调器：UserPromptSubmit + Stop + SessionStart 三类钩子合并到单 Node 进程 | 是（仅 install/uninstall）|
 
 ### 钩子调度器（Dispatcher Trio）
 
-每个事件都由 **`learnwy-dispatch`** 集中触发，避免每个技能单独 spawn 进程：
+每个事件都由 **`lwy-dispatch`** 集中触发，避免每个技能单独 spawn 进程：
 
 | 事件 | 调度器入口 | 调度的子扫描函数 |
 |------|------------|------------------|
-| `UserPromptSubmit` | `skills/learnwy-dispatch/scripts/hooks/user-prompt-submit.cjs` | `llm-wiki/lib/prompt-scan` + `prompt-optimizer/lib/prompt-scan` |
-| `Stop` | `skills/learnwy-dispatch/scripts/hooks/stop.cjs` | `knowledge-consolidation/lib/stop-scan` |
-| `SessionStart` | `skills/learnwy-dispatch/scripts/hooks/session-start.cjs` | `llm-wiki/lib/session-scan` + `learnwy-status/lib/session-scan` |
+| `UserPromptSubmit` | `skills/lwy-dispatch/scripts/hooks/user-prompt-submit.cjs` | `lwy-llm-wiki/lib/prompt-scan` + `lwy-prompt-optimizer/lib/prompt-scan` |
+| `Stop` | `skills/lwy-dispatch/scripts/hooks/stop.cjs` | `lwy-knowledge-consolidation/lib/stop-scan` |
+| `SessionStart` | `skills/lwy-dispatch/scripts/hooks/session-start.cjs` | `lwy-llm-wiki/lib/session-scan` + `lwy-status/lib/session-scan` |
 
 每个子扫描函数都是纯 `(payload | message) => string | null`，副作用（DB 写、状态持久化）封装在自己的 lib 里。一个扫描器抛错不会影响其它扫描器。原本各技能下的同名 hooks/`<event>`.cjs 入口被保留作为备用入口，但生产路径上只走 dispatcher。
 
@@ -173,7 +173,7 @@ metadata:
 ## 常用工作流
 
 ### 结构化开发
-使用 `requirement-workflow` 进行多阶段软件开发：
+使用 `lwy-requirement-workflow` 进行多阶段软件开发：
 ```
 ANALYZING → PLANNING → DESIGNING → IMPLEMENTING → TESTING → DELIVERING
 ```
@@ -188,16 +188,16 @@ on-protracted-war  → 何时行动与演进？  （时间/战略）
 
 ### 知识管理
 ```
-knowledge-consolidation  → 保存单次对话洞察
-llm-wiki                 → 构建完整的复利式知识库
+lwy-knowledge-consolidation  → 保存单次对话洞察
+lwy-llm-wiki                 → 构建完整的复利式知识库
 ```
 
 ### 创建项目级扩展
 ```
-project-skill-writer     → 为项目创建可复用技能
-project-agent-writer     → 创建专用代理
+lwy-project-skill-writer     → 为项目创建可复用技能
+lwy-project-agent-writer     → 创建专用代理
 trae-rules-writer        → 创建 AI 行为规则
-project-skill-installer  → 将已有技能安装到项目中
+lwy-project-skill-installer  → 将已有技能安装到项目中
 ```
 
 ### 构建系统（rslib + pnpm）
@@ -210,10 +210,10 @@ src/                          ← 源码（TypeScript）
 │   ├── cli.ts                ← 命令分发器 + parseArgs 辅助函数
 │   ├── hooks-lib.ts          ← Hook 工具函数（stdin、injectContext、install/uninstall 原语）
 │   ├── install-entry.ts      ← `installCommand` / `uninstallCommand` 作为子命令导出
-├── llm-wiki/{cli,cmd/,lib/,hooks/}
-├── prompt-optimizer/{cli,hooks/}
-├── requirement-workflow/{cli,cmd/,lib/}
-├── knowledge-consolidation/{cli,cmd/}
+├── lwy-llm-wiki/{cli,cmd/,lib/,hooks/}
+├── lwy-prompt-optimizer/{cli,hooks/}
+├── lwy-requirement-workflow/{cli,cmd/,lib/}
+├── lwy-knowledge-consolidation/{cli,cmd/}
 ├── project-{agent,skill}-writer/{cli,cmd/}
 └── trae-rules-writer/{cli,cmd/}
 
@@ -237,8 +237,8 @@ pnpm run check                # typecheck + build（CI 门禁）
 ```bash
 pnpm run install:hooks                                     # 全局注册所有技能 hooks
 pnpm run uninstall:hooks                                   # 移除所有技能 hooks
-node skills/llm-wiki/scripts/cli.cjs init                  # 初始化知识库（任何子命令可用 --help 查看用法）
-node skills/llm-wiki/scripts/cli.cjs health-check          # 单技能安装（由 manage-hooks 调用）
+node skills/lwy-llm-wiki/scripts/cli.cjs init                  # 初始化知识库（任何子命令可用 --help 查看用法）
+node skills/lwy-llm-wiki/scripts/cli.cjs health-check          # 单技能安装（由 manage-hooks 调用）
 ```
 
 **发布命令**：
@@ -260,17 +260,17 @@ pnpm run release              # git push + pnpm dlx skills install + 注册 IDE 
 围绕 `~/.learnwy/` 的数据流由四类钩子驱动，逐步把"沉淀的数据"转换成"主动作用于用户的反馈"：
 
 1. **数据采集**（`UserPromptSubmit` 经 dispatcher）：
-   - prompt-optimizer 把每次触发记录到 `~/.learnwy/prompt-optimizer/events.jsonl`
-   - llm-wiki 扫描关键词命中，注入相关 wiki topic 列表
+   - lwy-prompt-optimizer 把每次触发记录到 `~/.learnwy/lwy-prompt-optimizer/events.jsonl`
+   - lwy-llm-wiki 扫描关键词命中，注入相关 wiki topic 列表
 2. **数据回流**（`Stop` 经 dispatcher）：
-   - knowledge-consolidation 在检测到 "解决问题" 信号时一次性 nudge `/save`
+   - lwy-knowledge-consolidation 在检测到 "解决问题" 信号时一次性 nudge `/save`
 3. **数据呈现**（`SessionStart` 经 dispatcher）：
-   - llm-wiki 注入相关主题
-   - learnwy-status 每 ISO 周首次会话推送综合摘要 + 自动后台刷新过期的 health.json
+   - lwy-llm-wiki 注入相关主题
+   - lwy-status 每 ISO 周首次会话推送综合摘要 + 自动后台刷新过期的 health.json
 4. **手动检视**：
-   - `learnwy-status status` — 全局综合面板
-   - `learnwy-status doctor` — 系统体检（hook 注册、目录结构、Node 版本）
-   - `llm-wiki health-check` / `prompt-optimizer trends` — 子系统快照
+   - `lwy-status status` — 全局综合面板
+   - `lwy-status doctor` — 系统体检（hook 注册、目录结构、Node 版本）
+   - `lwy-llm-wiki health-check` / `lwy-prompt-optimizer trends` — 子系统快照
 
 新加子系统应遵循同一模式：lib 函数纯化、副作用包裹在 lib、入口仅 readStdin + 调用 lib + injectContext。
 

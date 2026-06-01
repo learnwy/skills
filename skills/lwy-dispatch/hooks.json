@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ~/.agents/skills/lwy-dispatch/scripts/hooks/session-start.cjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ~/.agents/skills/lwy-dispatch/scripts/hooks/user-prompt-submit.cjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ~/.agents/skills/lwy-dispatch/scripts/hooks/stop.cjs",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

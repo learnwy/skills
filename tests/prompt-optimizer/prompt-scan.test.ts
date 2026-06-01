@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from '@rstest/core';
 import { mkdtempSync, rmSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { scanPrompt } from '../../src/prompt-optimizer/lib/prompt-scan.js';
-import { eventsFile } from '../../src/prompt-optimizer/lib/events.js';
+import { scanPrompt } from '../../src/lwy-prompt-optimizer/lib/prompt-scan.js';
+import { eventsFile } from '../../src/lwy-prompt-optimizer/lib/events.js';
 
 let dir = '';
 const ENV_KEY = 'LEARNWY_PROMPT_OPTIMIZER_ROOT';

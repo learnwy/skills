@@ -1,3 +1,9 @@
+<!--
+AUTO-GENERATED — DO NOT EDIT DIRECTLY.
+Source of truth: .agents/docs/conditional-reflection.md
+After editing the source, run `pnpm run sync-docs` to propagate.
+-->
+
 # Conditional Reflection in Agent Skills
 
 > 把 Pavlovian 条件反射的工程化范式映射到 AI Agent / Skill 设计：

@@ -75,8 +75,8 @@ We already have the registration capability factored out:
 - `scripts/manage-hooks.mjs` is just a repo-side orchestrator that runs the
   above for every skill carrying a `hooks.json`.
 
-With the lifecycle hook, each hook-skill (`learnwy-dispatch`, `llm-wiki`,
-`prompt-optimizer`, `knowledge-consolidation`, `learnwy-status`) would declare:
+With the lifecycle hook, each hook-skill (`lwy-dispatch`, `lwy-llm-wiki`,
+`lwy-prompt-optimizer`, `lwy-knowledge-consolidation`, `lwy-status`) would declare:
 
 ```yaml
 lifecycle:

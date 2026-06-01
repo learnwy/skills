@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from '@rstest/core';
 import { mkdtempSync, rmSync, readFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { generateHooksJson, installIdeHooks } from '../../src/requirement-workflow/lib/ide-hooks-installer.js';
+import { generateHooksJson, installIdeHooks } from '../../src/lwy-requirement-workflow/lib/ide-hooks-installer.js';
 
 describe('generateHooksJson', () => {
   it('emits SessionStart and Stop events only', () => {

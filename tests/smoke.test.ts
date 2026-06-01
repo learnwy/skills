@@ -58,9 +58,9 @@ describe('cli.cjs --help loads cleanly', () => {
 
 describe('hooks accept stdin payloads', () => {
   const cases: Array<[string, string, Record<string, unknown>]> = [
-    ['llm-wiki', 'auto-query', { user_message: 'tell me about react performance optimization' }],
-    ['llm-wiki', 'session-context', {}],
-    ['prompt-optimizer', 'user-prompt-scan', { user_message: 'optimize my prompt: write good code' }],
+    ['lwy-llm-wiki', 'auto-query', { user_message: 'tell me about react performance optimization' }],
+    ['lwy-llm-wiki', 'session-context', {}],
+    ['lwy-prompt-optimizer', 'user-prompt-scan', { user_message: 'optimize my prompt: write good code' }],
   ];
   for (const [skill, hook, payload] of cases) {
     it(`${skill}/${hook} exits 0`, () => {
@@ -76,7 +76,7 @@ describe('generators write to disk', () => {
   it('knowledge-consolidation path → emits a file path', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'smoke-'));
     const r = spawnSync('node', [
-      join(SKILLS, 'knowledge-consolidation', 'scripts', 'cli.cjs'),
+      join(SKILLS, 'lwy-knowledge-consolidation', 'scripts', 'cli.cjs'),
       'path', '-r', tmp, '-a', 'trae', '-t', 'debug', '-n', 'test',
     ], { encoding: 'utf8' });
     expect(r.status).toBe(0);
@@ -86,8 +86,8 @@ describe('generators write to disk', () => {
   it('project-skill-writer init --name → writes SKILL.md', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'smoke-'));
     const r = spawnSync('node', [
-      join(SKILLS, 'project-skill-writer', 'scripts', 'cli.cjs'),
-      'init', '--skill-dir', join(SKILLS, 'project-skill-writer'),
+      join(SKILLS, 'lwy-project-skill-writer', 'scripts', 'cli.cjs'),
+      'init', '--skill-dir', join(SKILLS, 'lwy-project-skill-writer'),
       '--name', 'foo-bar', '--output-root', join(tmp, 'skills'),
     ], { encoding: 'utf8' });
     expect(r.status).toBe(0);
@@ -97,8 +97,8 @@ describe('generators write to disk', () => {
   it('project-rules-writer init → writes rule .md', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'smoke-'));
     const r = spawnSync('node', [
-      join(SKILLS, 'project-rules-writer', 'scripts', 'cli.cjs'),
-      'init', '--skill-dir', join(SKILLS, 'project-rules-writer'),
+      join(SKILLS, 'lwy-project-rules-writer', 'scripts', 'cli.cjs'),
+      'init', '--skill-dir', join(SKILLS, 'lwy-project-rules-writer'),
       '--name', 'no-foo', '--mode', 'always', '--output-dir', join(tmp, 'rules'),
     ], { encoding: 'utf8' });
     expect(r.status).toBe(0);
@@ -110,7 +110,7 @@ describe('requirement-workflow lifecycle', () => {
   it('init → status → advance --auto round-trip', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'smoke-'));
     mkdirSync(tmp, { recursive: true });
-    const cli = join(SKILLS, 'requirement-workflow', 'scripts', 'cli.cjs');
+    const cli = join(SKILLS, 'lwy-requirement-workflow', 'scripts', 'cli.cjs');
 
     const init = spawnSync('node', [cli, 'init', '-r', tmp, '-n', 'add-login', '-t', 'feature', '-s', 'small'], { encoding: 'utf8' });
     expect(init.status).toBe(0);

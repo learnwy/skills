@@ -6,7 +6,7 @@ import {
   migrateLegacyTraeLayout,
   workflowBase,
   activePointerFile,
-} from '../../src/requirement-workflow/lib/state.js';
+} from '../../src/lwy-requirement-workflow/lib/state.js';
 
 describe('migrateLegacyTraeLayout', () => {
   let tmp: string;
