@@ -253,11 +253,19 @@ function mergeAndWrite(filePath, config, mode) {
         existing.version = config.version || 1;
     }
     const hooks = existing.hooks ??= {};
+    // Idempotent merge: a group is a duplicate if an existing group fires the
+    // same set of commands (command-based, so metadata tweaks like timeout/order
+    // don't let a re-install slip a duplicate through).
+    const commandKey = (g)=>(g.hooks || []).map((h)=>h.command || '').sort().join(' ');
     for (const [event, groups] of Object.entries(config.hooks || {})){
         hooks[event] = hooks[event] || [];
+        const seen = new Set(hooks[event].map(commandKey));
         for (const group of groups){
-            const isDup = hooks[event].some((g)=>JSON.stringify(g) === JSON.stringify(group));
-            if (!isDup) hooks[event].push(group);
+            const key = commandKey(group);
+            if (!seen.has(key)) {
+                hooks[event].push(group);
+                seen.add(key);
+            }
         }
     }
     external_node_fs_namespaceObject.writeFileSync(filePath, JSON.stringify(existing, null, 2) + '\n');
