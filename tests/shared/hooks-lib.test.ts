@@ -2,7 +2,12 @@ import { describe, it, expect, beforeEach, afterEach } from '@rstest/core';
 import { mkdtempSync, rmSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { installHooks, uninstallHooks, type HooksConfig } from '../../src/shared/hooks-lib.js';
+import {
+  enableCodexHooksFeatureToml,
+  installHooks,
+  uninstallHooks,
+  type HooksConfig,
+} from '../../src/shared/hooks-lib.js';
 
 const cfg: HooksConfig = {
   version: 1,
@@ -59,6 +64,27 @@ describe('installHooks (global scope)', () => {
     expect(j.theme).toBe('dark');
     expect(j.model).toBe('opus');
     expect(j.hooks.UserPromptSubmit).toHaveLength(1);
+  });
+
+  it('writes Codex hooks and enables the canonical hooks feature', () => {
+    installHooks(cfg, { target: 'codex', scope: 'global' });
+    const hooks = JSON.parse(readFileSync(join(tmp, '.codex', 'hooks.json'), 'utf8'));
+    const configToml = readFileSync(join(tmp, '.codex', 'config.toml'), 'utf8');
+    expect(hooks.hooks.UserPromptSubmit).toHaveLength(1);
+    expect(configToml).toContain('[features]');
+    expect(configToml).toContain('hooks = true');
+    expect(configToml).not.toContain('codex_hooks');
+  });
+});
+
+describe('enableCodexHooksFeatureToml', () => {
+  it('creates a features table when missing', () => {
+    expect(enableCodexHooksFeatureToml('model = "gpt-5"\n')).toBe('model = "gpt-5"\n\n[features]\nhooks = true\n');
+  });
+
+  it('updates hooks and removes deprecated codex_hooks in the features table', () => {
+    const out = enableCodexHooksFeatureToml('[features]\ncodex_hooks = true\nhooks = false\n[profiles.default]\nmodel = "gpt-5"\n');
+    expect(out).toBe('[features]\nhooks = true\n[profiles.default]\nmodel = "gpt-5"\n');
   });
 });
 

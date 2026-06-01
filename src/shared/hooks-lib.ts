@@ -87,6 +87,64 @@ function wantsCodex(t: InstallTarget): boolean {
   return t === 'codex' || t === 'both' || t === 'all';
 }
 
+export function enableCodexHooksFeatureToml(source: string): string {
+  const normalized = source.replace(/\r\n/g, '\n');
+  const lines = normalized.endsWith('\n') ? normalized.slice(0, -1).split('\n') : normalized.split('\n');
+  const effectiveLines = lines.length === 1 && lines[0] === '' ? [] : lines;
+
+  let featuresStart = -1;
+  let featuresEnd = effectiveLines.length;
+  for (let i = 0; i < effectiveLines.length; i++) {
+    if (/^\s*\[features\]\s*(?:#.*)?$/.test(effectiveLines[i])) {
+      featuresStart = i;
+      for (let j = i + 1; j < effectiveLines.length; j++) {
+        if (/^\s*\[[^\]]+\]\s*(?:#.*)?$/.test(effectiveLines[j])) {
+          featuresEnd = j;
+          break;
+        }
+      }
+      break;
+    }
+  }
+
+  if (featuresStart === -1) {
+    const next = [...effectiveLines];
+    if (next.length > 0 && next.some((line) => line.trim() !== '')) next.push('');
+    next.push('[features]', 'hooks = true');
+    return next.join('\n') + '\n';
+  }
+
+  const before = effectiveLines.slice(0, featuresStart + 1);
+  const section = effectiveLines.slice(featuresStart + 1, featuresEnd);
+  const after = effectiveLines.slice(featuresEnd);
+  let hasHooks = false;
+  const updatedSection: string[] = [];
+
+  for (const line of section) {
+    if (/^\s*codex_hooks\s*=/.test(line)) continue;
+    if (/^\s*hooks\s*=/.test(line)) {
+      const indent = line.match(/^(\s*)/)?.[1] || '';
+      updatedSection.push(`${indent}hooks = true`);
+      hasHooks = true;
+    } else {
+      updatedSection.push(line);
+    }
+  }
+
+  if (!hasHooks) updatedSection.unshift('hooks = true');
+  return [...before, ...updatedSection, ...after].join('\n') + '\n';
+}
+
+function ensureCodexHooksFeature(codexDir: string): string {
+  const configFile = path.join(codexDir, 'config.toml');
+  if (!fs.existsSync(codexDir)) fs.mkdirSync(codexDir, { recursive: true });
+
+  const existing = fs.existsSync(configFile) ? fs.readFileSync(configFile, 'utf8') : '';
+  const next = enableCodexHooksFeatureToml(existing);
+  if (next !== existing) fs.writeFileSync(configFile, next);
+  return configFile;
+}
+
 export function installHooks(config: HooksConfig, options: InstallOptions = {}): string[] {
   const { target = 'both', scope = 'global', projectRoot } = options;
   const results: string[] = [];
@@ -106,9 +164,11 @@ export function installHooks(config: HooksConfig, options: InstallOptions = {}):
       results.push(claudeFile);
     }
     if (wantsCodex(target)) {
-      const codexFile = path.join(homeDir, '.codex', 'hooks.json');
+      const codexDir = path.join(homeDir, '.codex');
+      const codexFile = path.join(codexDir, 'hooks.json');
       mergeAndWrite(codexFile, config, 'standalone');
       results.push(codexFile);
+      results.push(ensureCodexHooksFeature(codexDir));
     }
   } else {
     const root = projectRoot || getProjectDir();
@@ -123,9 +183,11 @@ export function installHooks(config: HooksConfig, options: InstallOptions = {}):
       results.push(claudeFile);
     }
     if (wantsCodex(target)) {
-      const codexFile = path.join(root, '.codex', 'hooks.json');
+      const codexDir = path.join(root, '.codex');
+      const codexFile = path.join(codexDir, 'hooks.json');
       mergeAndWrite(codexFile, config, 'standalone');
       results.push(codexFile);
+      results.push(ensureCodexHooksFeature(codexDir));
     }
   }
 
