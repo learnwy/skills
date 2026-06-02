@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import {
   resolveWikiPaths, PAGE_DIRS, LIFECYCLE_DIRS, RAW_SUBDIRS, type WikiPaths,
 } from '../lib/index.js';
-import { parseArgs, type Command } from '../../shared/cli.js';
+import { parseArgs, type Command } from '../../cli.js';
 
 const SCHEMA = `# LLM Wiki — Schema
 

@@ -5,7 +5,7 @@ import {
   resolveWikiPaths, PAGE_DIRS, PAGE_TYPES, ORPHAN_EXEMPT_DIRS,
   RAW_SUBDIRS, readMdFiles, type WikiPaths,
 } from '../lib/index.js';
-import { parseArgs, type Command } from '../../shared/cli.js';
+import { parseArgs, type Command } from '../../cli.js';
 
 // Source-type dirs carry a **Source** ref that should resolve to raw material.
 const SOURCE_DIRS = new Set(PAGE_TYPES.filter((p) => p.group === 'source').map((p) => p.type));

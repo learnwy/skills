@@ -1,13 +1,7 @@
 #!/usr/bin/env node
-import { readStdin, injectContext } from '../../shared/hooks-lib.js';
-import { scanSession } from '../lib/session-scan.js';
-import { DEFAULT_WIKI_ROOT } from '../lib/constants.js';
+import { sessionContext } from '../../shared/wiki/hooks/session-context.js';
+import { setSkin } from '../../shared/wiki/lib/skin.js';
+import { DEFAULT_WIKI_ROOT } from '../../shared/wiki/lib/skin.js';
 
-async function main(): Promise<void> {
-  const root = process.argv[2] || DEFAULT_WIKI_ROOT;
-  await readStdin();
-  const out = scanSession(root);
-  if (out) injectContext(out);
-}
-
-main().catch(() => process.exit(0));
+setSkin({ name: 'llm-wiki', label: 'llm-wiki', defaultRoot: DEFAULT_WIKI_ROOT });
+sessionContext(DEFAULT_WIKI_ROOT).catch(() => process.exit(0));

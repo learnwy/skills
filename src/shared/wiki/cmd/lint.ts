@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { resolveWikiPaths, PAGE_DIRS, ORPHAN_EXEMPT_DIRS, readMdFiles } from '../lib/index.js';
-import { parseArgs, type Command } from '../../shared/cli.js';
+import { parseArgs, type Command } from '../../cli.js';
 
 // True if the page has an `# H1` title, skipping any leading YAML frontmatter.
 export function hasTitle(content: string): boolean {

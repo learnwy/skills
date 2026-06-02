@@ -1,7 +1,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { resolveWikiPaths, PAGE_DIRS, readMdFiles } from '../lib/index.js';
-import { parseArgs, type Command } from '../../shared/cli.js';
+import { parseArgs, type Command } from '../../cli.js';
 
 const STOP_WORDS = new Set([
   'the', 'and', 'for', 'with', 'from', 'that', 'this', 'into',

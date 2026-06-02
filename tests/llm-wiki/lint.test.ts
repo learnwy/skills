@@ -1,5 +1,5 @@
 import { describe, it, expect } from '@rstest/core';
-import { hasTitle } from '../../src/lwy-llm-wiki/cmd/lint.js';
+import { hasTitle } from '../../src/shared/wiki/cmd/lint.js';
 
 describe('hasTitle', () => {
   it('detects an H1 on line 1', () => {

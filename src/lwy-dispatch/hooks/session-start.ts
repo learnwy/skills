@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readStdin, injectContext } from '../../shared/hooks-lib.js';
-import { scanSession as wikiScan } from '../../lwy-llm-wiki/lib/session-scan.js';
+import { scanSession as wikiScan } from '../../shared/wiki/lib/session-scan.js';
 import { scanSession as statusScan } from '../../lwy-status/lib/session-scan.js';
 
 type Scanner = () => string | null;

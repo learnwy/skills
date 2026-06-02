@@ -32,7 +32,7 @@ function extractSubcommandsFromMd(md) {
   return found;
 }
 
-function extractCommandsFromCli(src) {
+function extractCommandsFromText(src) {
   const m = src.match(/commands\s*:\s*\{([\s\S]*?)\}\s*,?\s*\}\s*\)/);
   if (!m) return null;
   const body = m[1];
@@ -57,6 +57,25 @@ function extractCommandsFromCli(src) {
   return names;
 }
 
+// Resolve a skill's declared commands. Thin cli.ts entries delegate to a shared
+// engine (e.g. `runWikiCli` in shared/wiki/engine.ts) that owns the commands
+// map, so when the map isn't inline we follow the cli's relative imports one
+// hop at a time (depth-capped) to find it.
+function resolveDeclaredCommands(cliPath, cliText, depth = 0) {
+  const inline = extractCommandsFromText(cliText);
+  if (inline) return inline;
+  if (depth > 2) return null;
+  const importRe = /from\s+['"](\.[^'"]+)['"]/g;
+  for (const im of cliText.matchAll(importRe)) {
+    const rel = im[1].replace(/\.js$/, '.ts');
+    const resolved = resolve(dirname(cliPath), rel);
+    if (!existsSync(resolved)) continue;
+    const found = resolveDeclaredCommands(resolved, readFileSync(resolved, 'utf8'), depth + 1);
+    if (found) return found;
+  }
+  return null;
+}
+
 function main() {
   const errors = [];
   for (const skill of listSkillDirs()) {
@@ -69,7 +88,7 @@ function main() {
     const cliText = readFileSync(cli, 'utf8');
 
     const mentioned = extractSubcommandsFromMd(mdText);
-    const declared = extractCommandsFromCli(cliText);
+    const declared = resolveDeclaredCommands(cli, cliText);
     if (declared === null) {
       errors.push(`${skill}: could not parse commands map in src/${skill}/cli.ts`);
       continue;

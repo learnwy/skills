@@ -4,7 +4,7 @@ import {
   resolveWikiPaths, PAGE_TYPES, RAW_SUBDIRS,
   readMdFiles, countMdFilesInSubdirs, extractMeta, slugToTitle, type Meta,
 } from '../lib/index.js';
-import { parseArgs, type Command } from '../../shared/cli.js';
+import { parseArgs, type Command } from '../../cli.js';
 
 interface Page extends Meta {
   slug: string;

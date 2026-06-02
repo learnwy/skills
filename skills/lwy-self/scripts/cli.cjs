@@ -1555,13 +1555,13 @@ function runWikiCli(skin) {
     });
 }
 
-;// CONCATENATED MODULE: ./src/lwy-llm-wiki/cli.ts
+;// CONCATENATED MODULE: ./src/lwy-self/cli.ts
 
 
 runWikiCli({
-    name: 'llm-wiki',
-    label: 'llm-wiki',
-    defaultRoot: DEFAULT_WIKI_ROOT
+    name: 'self',
+    label: 'self',
+    defaultRoot: DEFAULT_SELF_ROOT
 });
 
 for(var __webpack_i__ in __webpack_exports__) {

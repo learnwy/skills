@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from '@rstest/core';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { scanPrompt } from '../../src/lwy-llm-wiki/lib/prompt-scan.js';
+import { scanPrompt } from '../../src/shared/wiki/lib/prompt-scan.js';
 
 const TOPICS = [
   'react-performance',

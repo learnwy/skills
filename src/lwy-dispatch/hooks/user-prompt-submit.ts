@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { readStdin, injectContext } from '../../shared/hooks-lib.js';
-import { scanPrompt as wikiScan } from '../../lwy-llm-wiki/lib/prompt-scan.js';
+import { scanPrompt as wikiScan } from '../../shared/wiki/lib/prompt-scan.js';
 import { scanPrompt as optimizerScan } from '../../lwy-prompt-optimizer/lib/prompt-scan.js';
 
 type Scanner = (message: string) => string | null;

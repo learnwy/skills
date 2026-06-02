@@ -16,14 +16,17 @@ metadata:
 
 ## 存储与引擎
 
-self 是一个独立 root 的 `lwy-llm-wiki` 实例。用 `--root` 把引擎指向该 root 即可复用全部维护命令：
+self 与 `lwy-llm-wiki` 共享**同一个引擎**（公共模块 `src/shared/wiki/`），只是默认 root 不同。`lwy-self` 现在有**自己的二进制**，默认就指向私有 self root（`~/.learnwy/ai/private/self`），所以日常命令**无需 `--root`**；如需指向别的库，`--root` 仍可覆盖。
 
 ```sh
-# 同一引擎，通过 --root 切换库；无需环境变量
-lwy-llm-wiki stats        --root ~/.learnwy/ai/private/self
-lwy-llm-wiki lint         --root ~/.learnwy/ai/private/self
-lwy-llm-wiki generate-index  --root ~/.learnwy/ai/private/self
-lwy-llm-wiki generate-topics --root ~/.learnwy/ai/private/self
+# lwy-self 自带默认 root（私有 self 库），无需 --root
+lwy-self stats
+lwy-self lint
+lwy-self generate-index
+lwy-self generate-topics
+
+# --root 仍可覆盖默认 root
+lwy-self stats --root /some/other/wiki
 ```
 
 完整操作手册见该 root 下的 `CLAUDE.md`（实体优先布局、采集节奏、隐私约定）。

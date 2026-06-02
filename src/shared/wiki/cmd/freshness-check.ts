@@ -1,7 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { resolveWikiPaths, PAGE_DIRS } from '../lib/index.js';
-import { parseArgs, type Command } from '../../shared/cli.js';
+import { parseArgs, type Command } from '../../cli.js';
 
 const STALE_DAYS = 180;
 const TECH_STALE_DAYS = 90;

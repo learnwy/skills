@@ -1,9 +1,9 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { looksLikeNonProse } from '../../shared/text-classifiers.js';
-import { DEFAULT_WIKI_ROOT } from './constants.js';
+import { looksLikeNonProse } from '../../text-classifiers.js';
+import { activeDefaultRoot, activeLabel } from './skin.js';
 
-export function scanPrompt(message: string, wikiRoot: string = DEFAULT_WIKI_ROOT): string | null {
+export function scanPrompt(message: string, wikiRoot: string = activeDefaultRoot()): string | null {
   const lower = (message || '').toLowerCase();
   if (lower.length < 15) return null;
   if (looksLikeNonProse(message)) return null;
@@ -23,7 +23,7 @@ export function scanPrompt(message: string, wikiRoot: string = DEFAULT_WIKI_ROOT
 
   const topMatches = matches.slice(0, 5);
   return [
-    `[llm-wiki] Relevant wiki topics found: ${topMatches.join(', ')}`,
+    `[${activeLabel()}] Relevant wiki topics found: ${topMatches.join(', ')}`,
     'Consider reading these wiki pages before answering.',
     `Wiki path: ${wikiRoot}/wiki/`,
   ].join('\n');

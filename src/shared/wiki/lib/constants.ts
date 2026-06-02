@@ -1,7 +1,8 @@
 import { join } from 'node:path';
-import { learnwyPath, expandHome } from '../../shared/learnwy-paths.js';
+import { expandHome } from '../../learnwy-paths.js';
+import { activeDefaultRoot, DEFAULT_WIKI_ROOT } from './skin.js';
 
-export const DEFAULT_WIKI_ROOT = learnwyPath('llm-wiki');
+export { DEFAULT_WIKI_ROOT, DEFAULT_SELF_ROOT } from './skin.js';
 
 export interface WikiPaths {
   root: string;
@@ -14,9 +15,21 @@ export function wikiPaths(root: string = DEFAULT_WIKI_ROOT): WikiPaths {
   return { root: r, wikiDir: join(r, 'wiki'), rawDir: join(r, 'raw') };
 }
 
-export function resolveWikiPaths(flags: Record<string, string | boolean> = {}): WikiPaths {
+// Resolve the effective root for a flag set, falling back to `defaultRoot`
+// (defaults to the active skin's root, so commands need no per-call wiring).
+export function rootFromFlags(
+  flags: Record<string, string | boolean> = {},
+  defaultRoot: string = activeDefaultRoot(),
+): string {
   const r = flags.root ?? flags['wiki-root'];
-  return wikiPaths(typeof r === 'string' && r.length > 0 ? r : DEFAULT_WIKI_ROOT);
+  return typeof r === 'string' && r.length > 0 ? r : defaultRoot;
+}
+
+export function resolveWikiPaths(
+  flags: Record<string, string | boolean> = {},
+  defaultRoot: string = activeDefaultRoot(),
+): WikiPaths {
+  return wikiPaths(rootFromFlags(flags, defaultRoot));
 }
 
 export interface PageType {

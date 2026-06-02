@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import {
   resolveWikiPaths, PAGE_TYPES, RAW_SUBDIRS, countMdFiles,
 } from '../lib/index.js';
-import { parseArgs, type Command } from '../../shared/cli.js';
+import { parseArgs, type Command } from '../../cli.js';
 
 const pad = (str: string | number, width: number): string => String(str).padEnd(width);
 const num = (val: number, width: number): string => String(val).padStart(width);
