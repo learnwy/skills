@@ -1,82 +1,82 @@
-# 示例：调试会话知识沉淀
+# Example: Consolidating Knowledge from a Debugging Session
 
-## 场景
+## Scenario
 
-用户完成了一次 iOS 图片缓存内存泄漏的调试。
+The user finished debugging an iOS image-cache memory leak.
 
-## AI 检测
+## AI Detection
 
 ```
-AI: 我注意到我们完成了一次重要的调试会话。让我来沉淀这些知识。
+AI: I noticed we just wrapped up an important debugging session. Let me consolidate what we learned.
 
-📊 知识检测:
-- 类型: debug
-- 主题: 图片缓存内存泄漏
-- 价值: 根因分析 + 修复方案
+📊 Knowledge detection:
+- Type: debug
+- Topic: image-cache memory leak
+- Value: root-cause analysis + fix
 ```
 
-## 路径生成
+## Path Generation
 
 ```bash
 $ node {skill_root}/scripts/cli.cjs path -r /project -a trae-cn -t debug -n image-cache-memory-leak
 /project/.trae/knowledges/20260223_001_debug_image-cache-memory-leak.md
 ```
 
-## 输出确认
+## Output Confirmation
 
 ```
-📚 知识已沉淀:
-- 文件: /project/.trae/knowledges/20260223_001_debug_image-cache-memory-leak.md
-- 类型: debug
-- 主题: 图片缓存内存泄漏修复
+📚 Knowledge consolidated:
+- File: /project/.trae/knowledges/20260223_001_debug_image-cache-memory-leak.md
+- Type: debug
+- Topic: image-cache memory-leak fix
 
-摘要: 发现 ImageCacheManager 中因完成回调中的强引用导致的循环引用。
-通过使用 [weak self] 捕获修复。
+Summary: Found a retain cycle in ImageCacheManager caused by a strong reference in the completion callback.
+Fixed by capturing with [weak self].
 ```
 
-## 生成的文档
+## Generated Document
 
 ````markdown
-# 图片缓存内存泄漏修复
+# Image-Cache Memory-Leak Fix
 
-> **类型:** debug
-> **日期:** 2026-02-23
-> **上下文:** 调查应用在浏览图片时的内存持续增长
+> **Type:** debug
+> **Date:** 2026-02-23
+> **Context:** Investigating the app's continuous memory growth while browsing images
 
-## 摘要
+## Summary
 
-发现 ImageCacheManager 中因异步完成回调中的强引用 self 导致的循环引用。
-通过使用 [weak self] 捕获列表修复。
+Found a retain cycle in ImageCacheManager caused by a strong reference to self in the async completion callback.
+Fixed by using a [weak self] capture list.
 
-## 背景
+## Background
 
-用户滑动浏览图片画廊时，应用内存持续增长。
-内存分析器显示 ImageCacheManager 实例从未被释放。
+When the user swiped through the image gallery, the app's memory grew continuously.
+The memory profiler showed ImageCacheManager instances that were never released.
 
-## 详情
+## Details
 
-根因：完成回调中的强引用循环
+Root cause: a retain cycle in the completion callback
 
 ```swift
-// 修复前（循环引用）
+// Before the fix (retain cycle)
 imageLoader.load(url: url) { result in
-    self.cache[url] = result  // 强引用 self
+    self.cache[url] = result  // strong reference to self
 }
 
-// 修复后
+// After the fix
 imageLoader.load(url: url) { [weak self] result in
     self?.cache[url] = result
 }
 ```
 ````
 
-## 关键收获
+## Key Takeaways
 
-- 始终在被对象持有的异步闭包中使用 [weak self]
-- 使用 Instruments Leaks 模板检测循环引用
-- 调查内存增长时检查完成回调
+- Always use [weak self] in async closures held by the captured object
+- Use the Instruments Leaks template to detect retain cycles
+- Check completion callbacks when investigating memory growth
 
-## 相关
+## Related
 
 - /project/Sources/ImageCacheManager.swift
 

@@ -1,89 +1,89 @@
-# 规则类型参考
+# Rule Types Reference
 
-根据项目分析选择合适规则类型的指南。
+A guide to picking the right rule type based on project analysis.
 
-## 分析 → 规则类型映射
+## Analysis → rule-type mapping
 
-| 项目中发现的内容 | 推荐的规则类型 | 应用模式 |
-| -------------- | ------------ | ------- |
-| 一致的命名模式 | 代码风格 | 始终应用 |
-| 特定框架使用 | 框架 | 文件特定（globs） |
-| 清晰的分层边界 | 架构 | 智能应用 |
-| 测试文件约定 | 测试 | 文件特定（globs） |
-| 安全敏感代码 | 安全 | 始终应用 |
-| 业务领域模式 | 领域 | 智能应用 |
+| Found in the project | Recommended rule type | Apply mode |
+| -------------------- | --------------------- | ---------- |
+| Consistent naming patterns | Code style | Always-apply |
+| Specific framework usage | Framework | File-specific (globs) |
+| Clear layering boundaries | Architecture | Smart-apply |
+| Test-file conventions | Testing | File-specific (globs) |
+| Security-sensitive code | Security | Always-apply |
+| Business-domain patterns | Domain | Smart-apply |
 
-## 按项目方面分类的规则
+## Rules by project aspect
 
-### 1. 架构规则
+### 1. Architecture rules
 
-**分析要点**：
+**What to analyse**:
 
-- 目录结构（src/、lib/、core/、infra/）
-- 分层隔离（UI、Domain、Data）
-- 模块边界
-- 依赖方向
+- Directory structure (src/, lib/, core/, infra/)
+- Layer isolation (UI, Domain, Data)
+- Module boundaries
+- Dependency direction
 
-**规则示例**：
+**Example rule**:
 
 ```markdown
 ---
-description: 设计模块或审查架构时应用
+description: Apply when designing modules or reviewing architecture
 alwaysApply: false
 ---
 
-# 架构指南
+# Architecture Guidelines
 
-## 分层边界
-- UI → Domain → Data（单向）
-- Domain 层无外部依赖
-- 使用依赖注入进行跨层通信
+## Layer boundaries
+- UI → Domain → Data (one-directional)
+- The Domain layer has no external dependencies
+- Use dependency injection for cross-layer communication
 
-## 模块结构
-- 每个模块一个职责
-- 通过 index.ts 暴露明确的公共接口
+## Module structure
+- One responsibility per module
+- Expose a clear public interface via index.ts
 ```
 
-### 2. 代码风格规则
+### 2. Code-style rules
 
-**分析要点**：
+**What to analyse**:
 
-- 变量命名（camelCase、snake_case、PascalCase）
-- 文件命名约定
-- 导入组织
-- 格式化偏好
+- Variable naming (camelCase, snake_case, PascalCase)
+- File-naming conventions
+- Import organisation
+- Formatting preferences
 
-**规则示例**：
+**Example rule**:
 
 ```markdown
 ---
 alwaysApply: true
 ---
 
-# 代码风格
+# Code Style
 
-## 命名约定
-- 变量/函数：camelCase
-- 类/类型/组件：PascalCase
-- 常量：UPPER_SNAKE_CASE
-- 私有字段：以 _ 为前缀
+## Naming conventions
+- Variables/functions: camelCase
+- Classes/types/components: PascalCase
+- Constants: UPPER_SNAKE_CASE
+- Private fields: prefixed with _
 
-## 导入顺序
-1. 外部包
-2. 内部模块（@/）
-3. 相对导入（./）
+## Import order
+1. External packages
+2. Internal modules (@/)
+3. Relative imports (./)
 ```
 
-### 3. 框架特定规则
+### 3. Framework-specific rules
 
-**分析要点**：
+**What to analyse**:
 
-- 框架版本和模式
-- 组件结构
-- 状态管理方式
-- API 模式
+- Framework version and patterns
+- Component structure
+- State-management approach
+- API patterns
 
-**规则示例（React）**：
+**Example rule (React)**:
 
 ```markdown
 ---
@@ -91,29 +91,29 @@ globs: *.tsx,*.jsx
 alwaysApply: false
 ---
 
-# React 模式
+# React Patterns
 
-## 组件
-- 使用 Hooks 的函数组件
-- 逻辑复用时提取为自定义 Hook
-- 优先组合而非 prop 穿透
+## Components
+- Function components using Hooks
+- Extract reused logic into custom Hooks
+- Prefer composition over prop drilling
 
-## 状态
-- 仅 UI 关注的使用本地状态
-- 跨组件状态使用 Context
-- 全局状态使用外部 Store
+## State
+- Local state for UI-only concerns
+- Context for cross-component state
+- An external store for global state
 ```
 
-### 4. 测试规则
+### 4. Testing rules
 
-**分析要点**：
+**What to analyse**:
 
-- 测试文件模式（*.test.ts、*.spec.ts）
-- 测试框架（Jest、Vitest 等）
-- 测试结构（describe/it、AAA 模式）
-- Mock 模式
+- Test-file patterns (*.test.ts, *.spec.ts)
+- Test framework (Jest, Vitest, etc.)
+- Test structure (describe/it, AAA pattern)
+- Mocking patterns
 
-**规则示例**：
+**Example rule**:
 
 ```markdown
 ---
@@ -121,89 +121,89 @@ globs: *.test.ts,*.spec.ts,__tests__/**
 alwaysApply: false
 ---
 
-# 测试指南
+# Testing Guidelines
 
-## 结构
-- 遵循 AAA：Arrange（准备）、Act（执行）、Assert（断言）
-- 每个测试一个断言概念
-- 描述性测试名称
+## Structure
+- Follow AAA: Arrange, Act, Assert
+- One assertion concept per test
+- Descriptive test names
 
-## Mock 处理
-- 仅 mock 外部依赖
-- 在测试之间重置 mock
-- 使用依赖注入提高可测试性
+## Mocking
+- Mock external dependencies only
+- Reset mocks between tests
+- Use dependency injection to improve testability
 ```
 
-### 5. 安全规则
+### 5. Security rules
 
-**分析要点**：
+**What to analyse**:
 
-- 认证模式
-- 数据验证
-- 敏感数据处理
-- API 安全
+- Authentication patterns
+- Data validation
+- Sensitive-data handling
+- API security
 
-**规则示例**：
+**Example rule**:
 
 ```markdown
 ---
 alwaysApply: true
 ---
 
-# 安全实践
+# Security Practices
 
-## 关键
-- 绝不记录敏感数据（密码、令牌、个人信息）
-- 始终在入口处验证用户输入
-- 数据库操作使用参数化查询
-- 净化输出以防止 XSS
+## Critical
+- Never log sensitive data (passwords, tokens, personal information)
+- Always validate user input at entry points
+- Use parameterised queries for database operations
+- Sanitise output to prevent XSS
 ```
 
-### 6. 领域规则
+### 6. Domain rules
 
-**分析要点**：
+**What to analyse**:
 
-- 业务实体名称
-- 工作流模式
-- 领域术语
-- 业务约束
+- Business-entity names
+- Workflow patterns
+- Domain terminology
+- Business constraints
 
-**规则示例**：
+**Example rule**:
 
 ```markdown
 ---
-description: 处理业务逻辑或领域实体时应用
+description: Apply when handling business logic or domain entities
 alwaysApply: false
 ---
 
-# 领域指南
+# Domain Guidelines
 
-## 实体命名
-- User、Account、Transaction（而非 usr、acct、txn）
-- 一致使用领域术语
+## Entity naming
+- User, Account, Transaction (not usr, acct, txn)
+- Use domain terminology consistently
 
-## 业务规则
-- 所有金额以分为单位（整数）
-- 日期存储为 UTC，显示时转换为用户时区
+## Business rules
+- All amounts in cents (integers)
+- Store dates as UTC, convert to the user's timezone for display
 ```
 
-## 应用模式选择
+## Choosing the apply mode
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ 问题：此规则应何时应用？                                          │
+│ Question: when should this rule apply?                            │
 ├─────────────────────────────────────────────────────────────────┤
-│ 始终对所有代码？         → alwaysApply: true                     │
-│ 仅针对特定文件类型？     → globs: *.ts + alwaysApply: false       │
-│ AI 认为相关时？          → description: "..." + alwaysApply: false │
-│ 仅在明确提及时？         → alwaysApply: false（无 globs）          │
+│ Always, for all code?       → alwaysApply: true                   │
+│ Only for specific file types? → globs: *.ts + alwaysApply: false  │
+│ When the AI judges it relevant? → description: "..." + alwaysApply: false │
+│ Only when explicitly mentioned? → alwaysApply: false (no globs)   │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## 多规则同时应用时的优先级
+## Precedence when multiple rules apply at once
 
-1. 用户规则（全局偏好）
-2. 始终应用规则（项目范围）
-3. 文件特定规则（当 globs 匹配时）
-4. 智能规则（当 AI 判断相关时）
-5. 手动规则（`#RuleName` 引用）
+1. User rules (global preferences)
+2. Always-apply rules (project-wide)
+3. File-specific rules (when globs match)
+4. Smart rules (when the AI judges them relevant)
+5. Manual rules (`#RuleName` reference)

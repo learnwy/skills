@@ -6,28 +6,28 @@ alwaysApply: {{ALWAYS_APPLY}}
 
 # {{RULE_TITLE}}
 
-## 概述
+## Overview
 
 {{OVERVIEW}}
 
-## 指导方针
+## Guidelines
 
 {{GUIDELINES}}
 
-## 示例
+## Examples
 
-### 正确写法
+### Correct
 
 ```{{LANG}}
 {{GOOD_EXAMPLE}}
 ```
 
-### 错误写法
+### Incorrect
 
 ```{{LANG}}
 {{BAD_EXAMPLE}}
 ```
 
-## 例外情况
+## Exceptions
 
 {{EXCEPTIONS}}

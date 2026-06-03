@@ -1,59 +1,59 @@
-# 应用模式示例
+# Apply-Mode Examples
 
-每种规则应用模式的完整示例。
+Complete examples for each rule apply mode.
 
-## 示例 1：始终应用（安全规则）
+## Example 1: Always-apply (security rule)
 
-**场景**：在所有代码中强制安全实践。
+**Scenario**: enforce security practices across all code.
 
-### 步骤 1：创建规则文件
+### Step 1: Create the rule file
 
 ```bash
-# 创建：.agents/rules/security.md
+# Create: .agents/rules/security.md
 ```
 
-### 步骤 2：编写规则
+### Step 2: Write the rule
 
 ```markdown
 ---
 alwaysApply: true
 ---
 
-# 安全实践
+# Security Practices
 
-## 敏感数据
-- 绝不记录密码、令牌、API 密钥或个人信息
-- 使用环境变量存储密钥
-- 在错误消息中遮盖敏感数据
+## Sensitive data
+- Never log passwords, tokens, API keys, or personal information
+- Use environment variables to store secrets
+- Mask sensitive data in error messages
 
-## 输入验证
-- 在入口处验证所有用户输入
-- 使用允许列表优于拒绝列表
-- 在数据库操作前净化数据
+## Input validation
+- Validate all user input at entry points
+- Prefer allowlists over denylists
+- Sanitise data before database operations
 
-## 认证
-- 使用安全的会话管理
-- 实现适当的 CSRF 防护
-- 强制强密码策略
+## Authentication
+- Use secure session management
+- Implement proper CSRF protection
+- Enforce a strong-password policy
 ```
 
-### 步骤 3：验证
+### Step 3: Verify
 
-开启新聊天并编写任意代码——安全规则将自动生效。
+Open a new chat and write any code — the security rule takes effect automatically.
 
 ---
 
-## 示例 2：文件特定（TypeScript 规则）
+## Example 2: File-specific (TypeScript rule)
 
-**场景**：仅适用于 `.ts` 和 `.tsx` 文件的 TypeScript 指南。
+**Scenario**: TypeScript guidelines that apply only to `.ts` and `.tsx` files.
 
-### 步骤 1：创建规则文件
+### Step 1: Create the rule file
 
 ```bash
-# 创建：.agents/rules/typescript.md
+# Create: .agents/rules/typescript.md
 ```
 
-### 步骤 2：编写规则
+### Step 2: Write the rule
 
 ```markdown
 ---
@@ -61,166 +61,166 @@ globs: *.ts,*.tsx
 alwaysApply: false
 ---
 
-# TypeScript 指南
+# TypeScript Guidelines
 
-## 类型安全
-- 在 tsconfig 中启用严格模式
-- 避免 `any`——对未知类型使用 `unknown`
-- 当类型显而易见时优先使用类型推断
-- 使用可辨识联合处理复杂状态
+## Type safety
+- Enable strict mode in tsconfig
+- Avoid `any` — use `unknown` for unknown types
+- Prefer type inference when the type is obvious
+- Use discriminated unions for complex state
 
-## 模式
-- 类型与实现一起导出
-- 使用 `as const` 处理字面量类型
-- 对象使用接口（interface），联合使用类型别名（type）
+## Patterns
+- Export types alongside their implementation
+- Use `as const` for literal types
+- Use interfaces for objects, type aliases for unions
 
-## 导入
-- 使用路径别名的绝对导入
-- 分组：外部 → 内部 → 相对
+## Imports
+- Absolute imports via path aliases
+- Group: external → internal → relative
 ```
 
-### 步骤 3：用法
+### Step 3: Usage
 
-编辑 TypeScript 文件时规则自动激活：
+The rule activates automatically when editing TypeScript files:
 
 ```
-用户："创建一个用户服务"
-→ 涉及 user.service.ts
-→ TypeScript 规则自动激活
+User: "Create a user service"
+→ involves user.service.ts
+→ the TypeScript rule activates automatically
 ```
 
 ---
 
-## 示例 3：智能应用（测试规则）
+## Example 3: Smart-apply (testing rule)
 
-**场景**：编写测试时应用测试指南。
+**Scenario**: apply testing guidelines when writing tests.
 
-### 步骤 1：创建规则文件
+### Step 1: Create the rule file
 
 ```bash
-# 创建：.agents/rules/testing.md
+# Create: .agents/rules/testing.md
 ```
 
-### 步骤 2：编写规则
+### Step 2: Write the rule
 
 ```markdown
 ---
-description: 编写、审查或讨论测试代码时应用
+description: Apply when writing, reviewing, or discussing test code
 alwaysApply: false
 ---
 
-# 测试指南
+# Testing Guidelines
 
-## 测试结构
-- 遵循 AAA 模式：Arrange（准备）、Act（执行）、Assert（断言）
-- 每个测试一个断言概念
-- 使用描述性测试名称
+## Test structure
+- Follow the AAA pattern: Arrange, Act, Assert
+- One assertion concept per test
+- Use descriptive test names
 
-## 命名约定
-- 格式：`describe('[单元]', () => it('当 [条件] 时应 [行为]'))`
-- 示例：`it('should return null when user not found')`
+## Naming conventions
+- Format: `describe('[unit]', () => it('should [behavior] when [condition]'))`
+- Example: `it('should return null when user not found')`
 
-## Mock 处理
-- 仅 mock 外部依赖
-- 在测试之间重置 mock
-- 使用依赖注入提高可测试性
+## Mocking
+- Mock external dependencies only
+- Reset mocks between tests
+- Use dependency injection to improve testability
 
-## 覆盖率
-- 业务逻辑目标 80% 覆盖率
-- 工具函数 100% 覆盖率
-- 不要测试实现细节
+## Coverage
+- Target 80% coverage for business logic
+- 100% coverage for utility functions
+- Don't test implementation details
 ```
 
-### 步骤 3：用法
+### Step 3: Usage
 
-AI 判断相关性：
+The AI judges relevance:
 
 ```
-用户："帮我为认证模块编写测试"
-→ AI 检测到测试意图
-→ 测试规则自动激活
+User: "Help me write tests for the auth module"
+→ the AI detects test intent
+→ the testing rule activates automatically
 
-用户："重构认证模块"
-→ 未检测到测试意图
-→ 测试规则未激活
+User: "Refactor the auth module"
+→ no test intent detected
+→ the testing rule does not activate
 ```
 
 ---
 
-## 示例 4：手动应用（实验性规则）
+## Example 4: Manual-apply (experimental rule)
 
-**场景**：仅在明确请求时使用的实验性模式。
+**Scenario**: experimental patterns used only on explicit request.
 
-### 步骤 1：创建规则文件
+### Step 1: Create the rule file
 
 ```bash
-# 创建：.agents/rules/experimental-patterns.md
+# Create: .agents/rules/experimental-patterns.md
 ```
 
-### 步骤 2：编写规则
+### Step 2: Write the rule
 
 ```markdown
 ---
 alwaysApply: false
 ---
 
-# 实验性模式
+# Experimental Patterns
 
-## 功能开关
-- 用功能开关包装实验性功能
-- 使用 LaunchDarkly SDK 管理开关
-- 生产环境中所有开关默认为 false
+## Feature flags
+- Wrap experimental features in a feature flag
+- Use the LaunchDarkly SDK to manage flags
+- All flags default to false in production
 
-## A/B 测试
-- 使用分析事件追踪转化
-- 在会话开始时实现变体分配
-- 记录所有变体分配
+## A/B testing
+- Track conversions with analytics events
+- Assign variants at session start
+- Log all variant assignments
 
-## 渐进式发布
-- 从 5% 流量开始
-- 增量前监控错误率
-- 准备好熔断开关
+## Gradual rollout
+- Start at 5% of traffic
+- Monitor error rates before each increment
+- Have a circuit breaker ready
 ```
 
-### 步骤 3：用法
+### Step 3: Usage
 
-必须显式引用：
+Must be referenced explicitly:
 
 ```
-用户："使用 #experimental-patterns，实现新的结账流程"
-→ 实验性规则通过引用激活
+User: "Using #experimental-patterns, implement the new checkout flow"
+→ the experimental rule activates via reference
 ```
 
 ---
 
-## 快速参考
+## Quick reference
 
-| 模式 | 配置 | 激活方式 |
-| ---- | ---- | ------- |
-| 始终应用 | `alwaysApply: true` | 项目中每次聊天 |
-| 文件特定 | `globs: *.ts` + `alwaysApply: false` | 当匹配文件参与时 |
-| 智能 | `description: "..."` + `alwaysApply: false` | AI 判断相关性 |
-| 手动 | `alwaysApply: false`（无 globs/desc） | 聊天中使用 `#RuleName` |
+| Mode | Configuration | Activation |
+| ---- | ------------- | ---------- |
+| Always-apply | `alwaysApply: true` | Every chat in the project |
+| File-specific | `globs: *.ts` + `alwaysApply: false` | When a matching file is involved |
+| Smart | `description: "..."` + `alwaysApply: false` | The AI judges relevance |
+| Manual | `alwaysApply: false` (no globs/desc) | Via `#RuleName` in chat |
 
-## 工作流总结
+## Workflow summary
 
 ```
-[确定规则用途]
+[Determine the rule's purpose]
        ↓
-[根据范围选择模式]
+[Pick the mode based on scope]
        ↓
 ┌─────────────────────────────────────────┐
-│ 全局强制？      → 始终应用              │
-│ 特定文件类型？  → 文件特定              │
-│ 依赖上下文？    → 智能                  │
-│ 仅按需？        → 手动                  │
+│ Enforce globally?    → always-apply      │
+│ Specific file types? → file-specific     │
+│ Context-dependent?   → smart             │
+│ On demand only?      → manual            │
 └─────────────────────────────────────────┘
        ↓
-[创建 .agents/rules/<name>.md]
+[Create .agents/rules/<name>.md]
        ↓
-[配置 frontmatter]
+[Configure the frontmatter]
        ↓
-[编写规则内容]
+[Write the rule content]
        ↓
-[开启新聊天验证]
+[Verify in a new chat]
 ```

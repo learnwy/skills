@@ -1,31 +1,31 @@
-# 智能体模式参考
+# Agent Patterns Reference
 
-创建高效智能体的常见模式。
+Common patterns for creating effective agents.
 
-## 模式 1: 评分器智能体
+## Pattern 1: Grader Agent
 
-**用途：** 根据期望评估输出，提供证据支持。
+**Purpose:** Evaluate output against expectations, backed by evidence.
 
-**核心特征：**
-- 期望/断言列表
-- 通过/失败判定及证据
-- 聚合统计（pass_rate）
+**Core characteristics:**
+- A list of expectations/assertions
+- Pass/fail verdicts with evidence
+- Aggregate statistics (pass_rate)
 
-**结构：**
+**Structure:**
 
 ```markdown
-## 输入
-- **expectations**: 要检查的断言列表
-- **output_path**: 要评估的内容
-- **criteria_path**: 评估标准（可选）
+## Input
+- **expectations**: list of assertions to check
+- **output_path**: the content to evaluate
+- **criteria_path**: evaluation criteria (optional)
 
-## 流程
-1. 读取输出
-2. 对每个期望搜索证据
-3. 标记通过/失败并引用
-4. 计算聚合统计
+## Process
+1. Read the output
+2. Search for evidence for each expectation
+3. Mark pass/fail with citations
+4. Compute aggregate statistics
 
-## 输出 Schema
+## Output Schema
 {
   "expectations": [
     {"text": "...", "passed": true, "evidence": "..."}
@@ -34,41 +34,41 @@
 }
 ```
 
-**适用场景：**
-- 自动化测试验证
-- 输出质量评估
-- 合规检查
+**Use cases:**
+- Automated test validation
+- Output quality evaluation
+- Compliance checks
 
 ---
 
-## 模式 2: 比较器智能体
+## Pattern 2: Comparator Agent
 
-**用途：** 盲目比较两个输出以确定优胜者。
+**Purpose:** Blindly compare two outputs to determine a winner.
 
-**核心特征：**
-- 盲目比较（A vs B，不知道来源）
-- 基于评分标准的评分
-- 决定性的优胜者选择
+**Core characteristics:**
+- Blind comparison (A vs B, source unknown)
+- Rubric-based scoring
+- Decisive winner selection
 
-**结构：**
+**Structure:**
 
 ```markdown
-## 输入
-- **output_a_path**: 第一个输出
-- **output_b_path**: 第二个输出
-- **eval_prompt**: 原始请求是什么
-- **expectations**: 可选断言
+## Input
+- **output_a_path**: the first output
+- **output_b_path**: the second output
+- **eval_prompt**: what the original request was
+- **expectations**: optional assertions
 
-## 流程
-1. 无偏见地读取两个输出
-2. 生成评估标准
-3. 对每个输出评分
-4. 确定优胜者并说明理由
+## Process
+1. Read both outputs without bias
+2. Generate evaluation criteria
+3. Score each output
+4. Determine the winner and explain why
 
-## 输出 Schema
+## Output Schema
 {
   "winner": "A" | "B" | "TIE",
-  "reasoning": "A/B 胜出的原因",
+  "reasoning": "why A/B won",
   "rubric": {
     "A": {"score": N, "strengths": [], "weaknesses": []},
     "B": {"score": M, "strengths": [], "weaknesses": []}
@@ -76,39 +76,39 @@
 }
 ```
 
-**适用场景：**
-- A/B 测试输出
-- 技能版本对比
-- 无偏见质量评估
+**Use cases:**
+- A/B testing outputs
+- Skill version comparison
+- Unbiased quality evaluation
 
 ---
 
-## 模式 3: 分析器智能体
+## Pattern 3: Analyzer Agent
 
-**用途：** 从数据/结果中提取洞察和模式。
+**Purpose:** Extract insights and patterns from data/results.
 
-**核心特征：**
-- 自由形式的观察输出
-- 模式识别
-- 可操作建议
+**Core characteristics:**
+- Free-form observation output
+- Pattern recognition
+- Actionable recommendations
 
-**结构：**
+**Structure:**
 
 ```markdown
-## 输入
-- **data_path**: 要分析的数据
-- **context_path**: 背景信息
-- **focus_areas**: 关注点（可选）
+## Input
+- **data_path**: the data to analyze
+- **context_path**: background information
+- **focus_areas**: areas of focus (optional)
 
-## 流程
-1. 读取所有数据
-2. 识别模式
-3. 标记异常
-4. 生成洞察
+## Process
+1. Read all data
+2. Identify patterns
+3. Flag anomalies
+4. Generate insights
 
-## 输出 Schema
+## Output Schema
 {
-  "observations": ["洞察 1", "洞察 2"],
+  "observations": ["insight 1", "insight 2"],
   "patterns": [
     {"pattern": "X", "evidence": "...", "impact": "high|medium|low"}
   ],
@@ -118,38 +118,38 @@
 }
 ```
 
-**适用场景：**
-- 事后分析
-- 性能诊断
-- 改进识别
+**Use cases:**
+- Post-mortem analysis
+- Performance diagnostics
+- Improvement identification
 
 ---
 
-## 模式 4: 转换器智能体
+## Pattern 4: Transformer Agent
 
-**用途：** 将数据从一种格式/结构转换为另一种。
+**Purpose:** Convert data from one format/structure to another.
 
-**核心特征：**
-- 清晰的输入/输出 schema
-- 转换验证
-- 边界情况的错误处理
+**Core characteristics:**
+- Clear input/output schema
+- Transformation validation
+- Error handling for edge cases
 
-**结构：**
+**Structure:**
 
 ```markdown
-## 输入
-- **input_path**: 源数据
-- **input_schema**: 预期输入格式
-- **output_schema**: 目标格式
-- **mapping_rules**: 转换规则（可选）
+## Input
+- **input_path**: source data
+- **input_schema**: expected input format
+- **output_schema**: target format
+- **mapping_rules**: transformation rules (optional)
 
-## 流程
-1. 读取并验证输入
-2. 应用转换规则
-3. 验证输出 schema
-4. 写入转换后的数据
+## Process
+1. Read and validate input
+2. Apply transformation rules
+3. Validate the output schema
+4. Write the transformed data
 
-## 输出 Schema
+## Output Schema
 {
   "status": "success" | "partial" | "failed",
   "transformed_path": "path/to/output",
@@ -158,78 +158,78 @@
 }
 ```
 
-**适用场景：**
-- 数据迁移
-- 格式转换
-- Schema 映射
+**Use cases:**
+- Data migration
+- Format conversion
+- Schema mapping
 
 ---
 
-## 模式 5: 研究者智能体
+## Pattern 5: Researcher Agent
 
-**用途：** 收集和综合某个主题的信息。
+**Purpose:** Gather and synthesize information on a topic.
 
-**核心特征：**
-- 搜索策略定义
-- 来源追踪
-- 综合发现
+**Core characteristics:**
+- Search strategy definition
+- Source tracking
+- Synthesized findings
 
-**结构：**
+**Structure:**
 
 ```markdown
-## 输入
-- **query**: 要研究什么
-- **scope**: 边界（文件、网络等）
-- **depth**: 深入程度
+## Input
+- **query**: what to research
+- **scope**: boundaries (files, web, etc.)
+- **depth**: how deep to go
 
-## 流程
-1. 定义搜索策略
-2. 执行搜索
-3. 评估来源
-4. 综合发现
+## Process
+1. Define the search strategy
+2. Execute the search
+3. Evaluate sources
+4. Synthesize findings
 
-## 输出 Schema
+## Output Schema
 {
   "findings": [
     {"claim": "...", "sources": ["..."], "confidence": "high|medium|low"}
   ],
   "sources_consulted": ["..."],
-  "gaps": ["未找到的内容"],
-  "summary": "整体综合"
+  "gaps": ["what was not found"],
+  "summary": "overall synthesis"
 }
 ```
 
-**适用场景：**
-- 文档查找
-- 最佳实践研究
-- 竞品分析
+**Use cases:**
+- Doc lookup
+- Best-practice research
+- Competitive analysis
 
 ---
 
-## 模式 6: 验证器智能体
+## Pattern 6: Validator Agent
 
-**用途：** 根据规则/约束检查正确性。
+**Purpose:** Check correctness against rules/constraints.
 
-**核心特征：**
-- 规则定义
-- 违规检测
-- 修复建议
+**Core characteristics:**
+- Rule definition
+- Violation detection
+- Fix suggestions
 
-**结构：**
+**Structure:**
 
 ```markdown
-## 输入
-- **target_path**: 要验证的内容
-- **rules**: 验证规则
-- **fix_mode**: 是否建议修复
+## Input
+- **target_path**: what to validate
+- **rules**: validation rules
+- **fix_mode**: whether to suggest fixes
 
-## 流程
-1. 加载验证规则
-2. 对照目标检查每条规则
-3. 记录违规
-4. 建议修复（如启用）
+## Process
+1. Load validation rules
+2. Check each rule against the target
+3. Record violations
+4. Suggest fixes (if enabled)
 
-## 输出 Schema
+## Output Schema
 {
   "valid": true | false,
   "violations": [
@@ -243,45 +243,45 @@
 }
 ```
 
-**适用场景：**
-- Schema 验证
-- 代码风格检查
-- 合规验证
+**Use cases:**
+- Schema validation
+- Code-style checking
+- Compliance validation
 
 ---
 
-## 选择合适的模式
+## Choosing the Right Pattern
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ 需要评估质量？                → 评分器                           │
-│ 需要无偏见比较？              → 比较器                           │
-│ 需要提取洞察？                → 分析器                           │
-│ 需要转换格式？                → 转换器                           │
-│ 需要收集信息？                → 研究者                           │
-│ 需要检查正确性？              → 验证器                           │
+│ Need to evaluate quality?       → Grader                         │
+│ Need an unbiased comparison?    → Comparator                     │
+│ Need to extract insights?       → Analyzer                       │
+│ Need to convert formats?        → Transformer                    │
+│ Need to gather information?     → Researcher                     │
+│ Need to check correctness?      → Validator                      │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## 组合智能体
+## Composing Agents
 
-智能体可以编排协作：
+Agents can be orchestrated together:
 
 ```
 ┌───────────┐     ┌────────────┐     ┌──────────┐
-│  研究者   │────▶│  转换器    │────▶│  验证器  │
+│ Researcher│────▶│ Transformer│────▶│ Validator│
 └───────────┘     └────────────┘     └──────────┘
       │                                    │
       └────────────────────────────────────┘
                        │
                        ▼
                 ┌───────────┐
-                │  评分器   │
+                │  Grader   │
                 └───────────┘
 ```
 
-**示例工作流：**
-1. 研究者收集需求
-2. 转换器转换为规格格式
-3. 验证器检查规格完整性
-4. 评分器评估最终质量
+**Example workflow:**
+1. The researcher gathers requirements
+2. The transformer converts them into spec format
+3. The validator checks the spec for completeness
+4. The grader evaluates the final quality

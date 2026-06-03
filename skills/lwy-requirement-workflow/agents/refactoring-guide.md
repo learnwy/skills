@@ -1,134 +1,138 @@
 # refactoring-guide
 
-基于 Martin Fowler《重构：改善既有代码的设计》（第 2 版）的代码重构 Agent。
+A code-refactoring agent based on Martin Fowler's *Refactoring: Improving the Design of Existing Code* (2nd edition).
 
-## 适用场景
+## When to use
 
-- 检测到代码异味时
-- 在给混乱代码添加新功能之前
-- 代码评审中建议改进时
-- 削减技术债务时
-- 为测试准备代码时
+- When code smells are detected
+- Before adding new functionality to messy code
+- When suggesting improvements in a code review
+- When paying down technical debt
+- When preparing code for testing
 
 ## Hook Point
 
 `pre_stage_IMPLEMENTING`
 
-## 本 Agent 不做的事
+## What this agent does NOT do
 
-- ❌ **不执行重构** — 仅识别异味并建议重构方案
-- ❌ **不修改代码** — 提供重构计划，而非实现
-- ❌ **不添加新功能** — 专注于改善现有代码结构
-- ❌ **不执行命令或修改文件** — 严格只读
-- ✅ **仅输出**：代码异味分析、重构计划、技术推荐
+- ❌ **Does not perform the refactoring** — only identifies smells and suggests refactorings
+- ❌ **Does not modify code** — provides a refactoring plan, not the implementation
+- ❌ **Does not add new functionality** — focuses on improving existing code structure
+- ❌ **Does not run commands or modify files** — strictly read-only
+- ✅ **Outputs only**: code-smell analysis, refactoring plan, technical recommendations
 
-## 核心理念
+## Core philosophy
 
-> "重构是一种有纪律的技术，在不改变外部行为的前提下重构现有代码的内部结构。" — Martin Fowler
+> "Refactoring is a disciplined technique for restructuring an existing body of code, altering its internal structure without changing its external behavior." — Martin Fowler
 
-重构不是重写。它是一系列小的、保持行为不变的转换，这些转换共同提升代码质量。
+Refactoring is not rewriting. It is a series of small, behavior-preserving transformations that together improve code quality.
 
-## 重构流程
+## The refactoring process
 
-### 黄金法则
+### The golden rule
 
 ```
-⚠️ 永远不要在重构的同时改变功能！
+⚠️ Never change functionality while refactoring!
 
-两顶帽子：
+Two hats:
 ┌─────────────────┐     ┌─────────────────┐
-│ 添加功能         │     │  重构            │
+│ Add a feature    │     │  Refactor        │
 │ ───────────────│     │ ───────────────│
-│ • 添加测试       │ ←→  │ • 不加新测试     │
-│ • 添加代码       │     │ • 改善代码       │
-│ • 测试通过       │     │ • 测试通过       │
+│ • Add a test     │ ←→  │ • No new tests   │
+│ • Add code       │     │ • Improve code   │
+│ • Tests pass     │     │ • Tests pass     │
 └─────────────────┘     └─────────────────┘
-        频繁切换帽子！
+        Switch hats frequently!
 ```
 
-## 代码异味目录
+## Code-smell catalog
 
-### 膨胀类（太大）
+### Bloaters (too big)
 
 ```
 ┌─────────────────┬───────────────────────────────────────────────┐
-│ 异味            │ 重构手法                                       │
+│ Smell           │ Refactoring                                     │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 过长方法        │ Extract Method、Replace Temp with Query、      │
+│ Long Method     │ Extract Method, Replace Temp with Query,        │
 │                 │ Introduce Parameter Object                    │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 过大类          │ Extract Class、Extract Subclass、              │
+│ Large Class     │ Extract Class, Extract Subclass,                │
 │                 │ Extract Interface                             │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 过长参数列表    │ Introduce Parameter Object、                   │
-│                 │ Preserve Whole Object、Replace with Method    │
+│ Long Parameter  │ Introduce Parameter Object,                     │
+│ List            │ Preserve Whole Object, Replace with Method    │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 基本类型偏执    │ Replace Primitive with Object、                │
-│                 │ Replace Type Code with Class/Subclass         │
+│ Primitive       │ Replace Primitive with Object,                  │
+│ Obsession       │ Replace Type Code with Class/Subclass         │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 数据泥团        │ Extract Class、Introduce Parameter Object     │
+│ Data Clumps     │ Extract Class, Introduce Parameter Object     │
 └─────────────────┴───────────────────────────────────────────────┘
 ```
 
-### 面向对象滥用
+### Object-orientation abusers
 
 ```
 ┌─────────────────┬───────────────────────────────────────────────┐
-│ 异味            │ 重构手法                                       │
+│ Smell           │ Refactoring                                     │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ Switch 语句     │ Replace Conditional with Polymorphism、        │
-│                 │ Replace Type Code with Strategy/State         │
+│ Switch          │ Replace Conditional with Polymorphism,          │
+│ Statements      │ Replace Type Code with Strategy/State         │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 平行继承        │ Move Method、Move Field                       │
+│ Parallel        │ Move Method, Move Field                       │
+│ Inheritance     │                                               │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 被拒绝的遗赠    │ Push Down Method/Field、Replace Inheritance   │
+│ Refused Bequest │ Push Down Method/Field, Replace Inheritance   │
 │                 │ with Delegation                               │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 殊途同归的类    │ Extract Superclass、Extract Interface         │
+│ Alternative     │ Extract Superclass, Extract Interface         │
+│ Classes with    │                                               │
+│ Different       │                                               │
+│ Interfaces      │                                               │
 └─────────────────┴───────────────────────────────────────────────┘
 ```
 
-### 变更障碍
+### Change preventers
 
 ```
 ┌─────────────────┬───────────────────────────────────────────────┐
-│ 异味            │ 重构手法                                       │
+│ Smell           │ Refactoring                                     │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 发散式变更      │ Extract Class                                 │
-│                 │ （类因多种原因而变更）                           │
+│ Divergent       │ Extract Class                                 │
+│ Change          │ (a class changes for many reasons)              │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 霰弹式修改      │ Move Method/Field、Inline Class               │
-│                 │ （一个变更触及多个类）                           │
+│ Shotgun Surgery │ Move Method/Field, Inline Class               │
+│                 │ (one change touches many classes)               │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 功能嫉妒        │ Move Method、Extract Method                   │
-│                 │ （方法过多使用其他类的数据）                     │
+│ Feature Envy    │ Move Method, Extract Method                   │
+│                 │ (a method overuses another class's data)        │
 └─────────────────┴───────────────────────────────────────────────┘
 ```
 
-### 多余物（不必要的）
+### Dispensables (unnecessary things)
 
 ```
 ┌─────────────────┬───────────────────────────────────────────────┐
-│ 异味            │ 重构手法                                       │
+│ Smell           │ Refactoring                                     │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 过多注释        │ Extract Method、Rename Method                 │
-│                 │ （代码应自我解释）                              │
+│ Comments        │ Extract Method, Rename Method                 │
+│ (excessive)     │ (code should be self-explanatory)               │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 重复代码        │ Extract Method、Extract Class、                │
-│                 │ Pull Up Method、Form Template Method          │
+│ Duplicated Code │ Extract Method, Extract Class,                  │
+│                 │ Pull Up Method, Form Template Method          │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 死代码          │ Remove Dead Code                              │
+│ Dead Code       │ Remove Dead Code                              │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 夸夸其谈的      │ Collapse Hierarchy、Inline Class、             │
-│ 未来性          │ Remove Unnecessary Parameters                 │
+│ Speculative     │ Collapse Hierarchy, Inline Class,               │
+│ Generality      │ Remove Unnecessary Parameters                 │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 数据类          │ Encapsulate Field、Move Method                │
+│ Data Class      │ Encapsulate Field, Move Method                │
 └─────────────────┴───────────────────────────────────────────────┘
 ```
 
-## 核心重构技术
+## Core refactoring techniques
 
-### Extract Method（最常用）
+### Extract Method (the most common)
 
 ```
 Before:
@@ -232,73 +236,73 @@ def amount_overdue(date_range):
     ...
 ```
 
-## 流程
+## Process
 
-### 步骤 1：识别代码异味
-
-```
-异味检测清单：
-
-□ 方法 > 10 行？→ 考虑 Extract Method
-□ 类 > 200 行？→ 考虑 Extract Class
-□ 参数列表 > 3？→ 考虑 Parameter Object
-□ Switch/if-else 链？→ 考虑多态
-□ 重复代码块？→ 考虑 Extract Method
-□ 注释在解释"为什么"？→ 代码可能需要更清晰
-□ 方法访问其他类的数据？→ 功能嫉妒
-```
-
-### 步骤 2：确保测试覆盖
+### Step 1: Identify code smells
 
 ```
-重构前：
+Smell-detection checklist:
+
+□ Method > 10 lines? → consider Extract Method
+□ Class > 200 lines? → consider Extract Class
+□ Parameter list > 3? → consider Parameter Object
+□ Switch / if-else chain? → consider polymorphism
+□ Duplicated code block? → consider Extract Method
+□ Comments explaining "why"? → the code may need to be clearer
+□ Method accessing another class's data? → Feature Envy
+```
+
+### Step 2: Ensure test coverage
+
+```
+Before refactoring:
 ┌─────────────────────────────────────────────────────────────────┐
-│ □ 现有测试通过                                                    │
-│ □ 待重构代码有测试覆盖                                             │
-│ □ 如果没有测试，先写特征化测试                                      │
+│ □ Existing tests pass                                            │
+│ □ The code to be refactored has test coverage                     │
+│ □ If there are no tests, write characterization tests first       │
 │                                                                 │
-│ 特征化测试："这段代码实际上做了什么？"                                │
-│ 1. 写一个调用该代码的测试                                          │
-│ 2. 断言你观察到的结果（即使看起来不对）                               │
-│ 3. 调整断言以匹配实际行为                                          │
-│ 4. 现在你有了安全网                                               │
+│ Characterization test: "What does this code actually do?"          │
+│ 1. Write a test that calls the code                              │
+│ 2. Assert the result you observe (even if it looks wrong)         │
+│ 3. Adjust the assertion to match the actual behavior              │
+│ 4. Now you have a safety net                                     │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 步骤 3：执行重构
+### Step 3: Perform the refactoring
 
 ```
-重构步骤：
+Refactoring steps:
 
-1. 做一个小变更
-2. 运行测试
-3. 测试通过则提交
-4. 重复
+1. Make a small change
+2. Run the tests
+3. Commit if the tests pass
+4. Repeat
 
-Extract Method 示例步骤：
-1. 识别要提取的代码
-2. 创建新的空方法
-3. 将代码复制到新方法
-4. 编译/解析检查语法
-5. 用调用替换原始代码
-6. 运行测试
-7. 提交
+Example Extract Method steps:
+1. Identify the code to extract
+2. Create a new empty method
+3. Copy the code into the new method
+4. Compile / parse to check syntax
+5. Replace the original code with a call
+6. Run the tests
+7. Commit
 ```
 
-### 步骤 4：审查结果
+### Step 4: Review the result
 
 ```
-重构后检查清单：
+Post-refactoring checklist:
 
-□ 测试仍然通过
-□ 代码更可读了
-□ 命名清楚地表达了意图
-□ 没有增加重复
-□ 方法职责单一（SRP）
-□ 依赖减少了
+□ Tests still pass
+□ The code is more readable
+□ Names clearly express intent
+□ No duplication was added
+□ Methods have a single responsibility (SRP)
+□ Dependencies were reduced
 ```
 
-## 输出
+## Output
 
 ```json
 {
@@ -332,48 +336,48 @@ Extract Method 示例步骤：
 }
 ```
 
-## 调用示例
+## Invocation example
 
 ```
-AI: 启动 refactoring-guide 分析代码质量……
+AI: Launching refactoring-guide to analyze code quality...
 
-🔧 重构分析结果：
+🔧 Refactoring-analysis results:
 
-检测到的代码异味：
+Code smells detected:
 ┌─────────────────┬──────────────┬────────────────────────────────┐
-│ 异味            │ 严重程度      │ 位置                            │
+│ Smell           │ Severity      │ Location                        │
 ├─────────────────┼──────────────┼────────────────────────────────┤
-│ 过长方法        │ 高           │ order_service.py:45-180        │
-│ 功能嫉妒        │ 中           │ order_service.py:90-110        │
-│ 重复代码        │ 中           │ 第 120-140 行，第 160-180 行     │
-│ 数据泥团        │ 低           │ customer、address 总是一起出现   │
+│ Long Method     │ High         │ order_service.py:45-180        │
+│ Feature Envy    │ Medium       │ order_service.py:90-110        │
+│ Duplicated Code │ Medium       │ lines 120-140, lines 160-180   │
+│ Data Clumps     │ Low          │ customer, address always appear together │
 └─────────────────┴──────────────┴────────────────────────────────┘
 
-推荐重构顺序：
+Recommended refactoring order:
 
-1. Extract Method：calculate_discounts（第 50-75 行）
-   风险：低 | 需要测试：2 个
+1. Extract Method: calculate_discounts (lines 50-75)
+   Risk: low | Tests needed: 2
 
-2. Move Method：get_shipping_address 移至 Customer
-   风险：中 | 需要测试：3 个
+2. Move Method: get_shipping_address → Customer
+   Risk: medium | Tests needed: 3
 
-3. Extract Class：从 OrderService 中提取 PricingCalculator
-   风险：中 | 需要测试：5 个
+3. Extract Class: extract PricingCalculator from OrderService
+   Risk: medium | Tests needed: 5
 
-4. Introduce Parameter Object：CustomerContext
-   风险：低 | 需要测试：1 个
+4. Introduce Parameter Object: CustomerContext
+   Risk: low | Tests needed: 1
 
-测试覆盖状态：
-⚠️ 第 90-180 行没有直接测试
-   → 重构前先写特征化测试
+Test-coverage status:
+⚠️ Lines 90-180 have no direct tests
+   → write characterization tests before refactoring
 
-预计改善：
-- 方法长度：135 → 平均 ~30 行
-- 圈复杂度：15 → 5
-- 重复代码：40 行 → 0
+Estimated improvement:
+- Method length: 135 → ~30 lines on average
+- Cyclomatic complexity: 15 → 5
+- Duplicated code: 40 lines → 0
 ```
 
-## 配置选项
+## Configuration options
 
 ```yaml
 config:
@@ -382,7 +386,7 @@ config:
   output: "refactoring_analysis"
 ```
 
-## 参考资料
+## References
 
 - **Refactoring** — Martin Fowler (2nd edition, 2018)
 - **Refactoring to Patterns** — Joshua Kerievsky (2004)

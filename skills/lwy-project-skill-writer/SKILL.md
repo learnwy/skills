@@ -1,188 +1,188 @@
 ---
 name: lwy-project-skill-writer
-description: "当用户需要创建、更新或设计项目级技能（.agents/skills/*/SKILL.md）时使用此技能。分析用户问题和项目上下文，设计可复用的技能方案。触发词：'创建技能'、'编写技能'、'构建技能'、'添加技能'、'更新技能'、'项目技能'、'新建技能'、'设计技能'，或当用户描述需要捕获为可复用 AI 技能的重复性工作流时。"
+description: "当用户需要创建、更新或设计项目级技能（.agents/skills/*/SKILL.md）时使用此技能。Analyzes the user's problem and project context to design reusable skill solutions. 触发词：'创建技能'、'编写技能'、'构建技能'、'添加技能'、'更新技能'、'项目技能'、'新建技能'、'设计技能', or when the user describes a repetitive workflow that should be captured as a reusable AI skill."
 metadata:
   author: "learnwy"
   version: "3.1"
 ---
 
-# 项目技能编写器
+# Project Skill Writer
 
-**设计理念**：用户不知道"技能"是什么或如何描述。他们只知道自己的**问题**。此技能将问题描述转化为可运行的技能。
+**Design philosophy**: Users do not know what a "skill" is or how to describe one. They only know their **problem**. This skill turns a problem description into a runnable skill.
 
-> **共享原则：** 本技能与 `project-agent-writer` / `project-skill-installer` / `project-rules-writer` 共享 5 条 writer 通用纪律（理解→分析→确认→项目相对路径→验证）。详见 [references/writer-discipline.md](references/writer-discipline.md)。
+> **Shared principle:** This skill shares the 5 common writer disciplines (understand → analyze → confirm → project-relative paths → verify) with `project-agent-writer` / `project-skill-installer` / `project-rules-writer`. See [references/writer-discipline.md](references/writer-discipline.md) for details.
 
-## 适用场景
+## When to Use
 
-**适合调用：**
+**Good fit:**
 
-- 用户描述了重复性的困扰或手动任务
-- 用户说"创建一个技能"、"我每次都要手动做 X"、"我希望 AI 能自动……"
-- 用户提供了可以标准化的工作流
+- The user describes a recurring annoyance or manual task
+- The user says "create a skill", "I have to do X manually every time", "I wish the AI could automatically..."
+- The user provides a workflow that can be standardized
 
-**不适合调用：**
+**Not a fit:**
 
-- 用户想要智能体（请转交 `project-agent-writer`）
-- 用户想安装现有技能（请转交 `project-skill-installer`）
-- 用户想要规则而非技能（请转交 `project-rules-writer`）
-- 没有复用潜力的一次性请求
+- The user wants an agent (hand off to `project-agent-writer`)
+- The user wants to install an existing skill (hand off to `project-skill-installer`)
+- The user wants a rule rather than a skill (hand off to `project-rules-writer`)
+- A one-off request with no reuse potential
 
-## 前置条件
+## Prerequisites
 
 - Node.js >= 18
-- 目标项目必须有可写目录（默认为 `.agents/skills/`）
+- The target project must have a writable directory (defaults to `.agents/skills/`)
 
-## 工作流
+## Workflow
 
 ```
-[L1: 问题理解]
+[L1: Problem understanding]
        ↓
-[L2: 项目分析]  ← 并行子智能体
+[L2: Project analysis]  ← parallel subagents
        ↓
-[L3: 技能设计]
+[L3: Skill design]
        ↓
-[L4: 用户确认]  ← 等待确认
+[L4: User confirmation]  ← wait for confirmation
        ↓
-[L5: 生成]
+[L5: Generation]
        ↓
-[L6: 质量验证]
+[L6: Quality validation]
 ```
 
-## L1：问题理解
+## L1: Problem understanding
 
-提取问题、分类并推断技能元数据——不要让用户来定义这些。
+Extract the problem, classify it, and infer skill metadata — do not make the user define these.
 
-| 问题模式 | 技能类型 | 示例 |
+| Problem pattern | Skill type | Example |
 |---------|---------|------|
-| "我每次都写相同的代码" | Generator（生成器） | 组件生成器、API 客户端 |
-| "我每次都做相同的检查" | Validator（验证器） | 代码检查、安全扫描 |
-| "我每次都解释相同的事情" | Informer（信息提供器） | 架构文档、API 文档 |
-| "我每次都遵循相同的步骤" | Workflow（工作流） | 部署、发布流程 |
-| "我每次都查找和修复相同的问题" | Remediation（修复器） | Bug 修复、重构 |
+| "I write the same code every time" | Generator | Component generator, API client |
+| "I run the same checks every time" | Validator | Code checks, security scan |
+| "I explain the same things every time" | Informer | Architecture docs, API docs |
+| "I follow the same steps every time" | Workflow | Deployment, release process |
+| "I find and fix the same issues every time" | Remediation | Bug fix, refactoring |
 
-仅在存在多个有效方案且用户偏好重要时才提问。**绝不**问"你想让技能做什么？"——从问题中推断。
+Only ask questions when multiple valid approaches exist and the user's preference matters. **Never** ask "what do you want the skill to do?" — infer it from the problem.
 
-## L2：项目分析管道
+## L2: Project analysis pipeline
 
-通过 Task 工具并行启动这些智能体（它们相互独立）：
+Launch these agents in parallel via the Task tool (they are independent of one another):
 
-| 智能体 | 用途 | 工具调用 |
+| Agent | Purpose | Tool call |
 |-------|------|---------|
-| [项目扫描器](agents/project-scanner.md) | 结构、现有资产、模式 | `Task(subagent_type="search", query="...")` |
-| [技术栈分析器](agents/tech-stack-analyzer.md) | 语言、框架、构建工具 | `Task(subagent_type="search", query="...")` |
-| [约定检测器](agents/convention-detector.md) | 命名、导入、代码风格 | `Task(subagent_type="search", query="...")` |
+| [Project scanner](agents/project-scanner.md) | Structure, existing assets, patterns | `Task(subagent_type="search", query="...")` |
+| [Tech-stack analyzer](agents/tech-stack-analyzer.md) | Languages, frameworks, build tools | `Task(subagent_type="search", query="...")` |
+| [Convention detector](agents/convention-detector.md) | Naming, imports, code style | `Task(subagent_type="search", query="...")` |
 
-在进入设计阶段前，将它们的输出合并为统一的项目档案。
+Merge their outputs into a unified project profile before entering the design stage.
 
-## L3：技能设计
+## L3: Skill design
 
-基于问题 + 项目分析，生成设计规格：
-
-```
-## 技能：{name}
-
-### 解决的问题
-{1 句话描述此技能解决的问题}
-
-### 触发条件
-- {触发条件 1}
-- {触发条件 2}
-
-### 架构
-- 输入：{技能接受什么}
-- 输出：{技能产出什么}
-- 处理：{技能如何工作}
-
-### 项目集成
-- 输出路径：{项目相对路径}
-- 约定：{来自项目分析}
-
-### 质量标准
-- {可衡量的成功标准}
-
-### Hooks（可选）
-- 作用域：{global|project}
-- 事件：{要挂载的 IDE 生命周期事件}
-- 用途：{hooks 提供的确定性自动化}
-```
-
-设计原则：
-1. **单一职责** — 一个技能 = 解决一个问题
-2. **遵循约定** — 使用项目的命名、结构和模式
-3. **最小摩擦** — 触发条件应匹配自然语言
-4. **可验证输出** — 明确的成功/失败标准
-
-## L4：确认
-
-生成之前，向用户展示：
+Based on the problem + project analysis, generate a design spec:
 
 ```
-我将创建一个技能：
+## Skill: {name}
 
-问题：{用户原话描述的问题}
-方案：{技能将做什么}
-触发条件：{何时激活}
-输出：{将创建的文件}
+### Problem solved
+{One sentence describing the problem this skill solves}
 
-这样是否正确？需要调整什么吗？
+### Trigger conditions
+- {trigger 1}
+- {trigger 2}
+
+### Architecture
+- Input: {what the skill accepts}
+- Output: {what the skill produces}
+- Processing: {how the skill works}
+
+### Project integration
+- Output path: {project-relative path}
+- Conventions: {from project analysis}
+
+### Quality criteria
+- {measurable success criteria}
+
+### Hooks (optional)
+- Scope: {global|project}
+- Events: {IDE lifecycle events to mount}
+- Purpose: {deterministic automation the hooks provide}
 ```
 
-**等待**用户确认后再生成。
+Design principles:
+1. **Single responsibility** — one skill = solve one problem
+2. **Follow conventions** — use the project's naming, structure, and patterns
+3. **Minimal friction** — trigger conditions should match natural language
+4. **Verifiable output** — clear success/failure criteria
 
-## L5：生成
+## L4: Confirmation
 
-用户确认后：
+Before generating, show the user:
 
-1. **脚手架**：运行 `scripts/cli.cjs init` 并使用 `--problem` 标志，或使用 [skill.md.template](assets/skill.md.template) 手动创建文件
-2. **填充**：将 L2 分析中的项目特定约定注入 SKILL.md 各节
-3. **参考文件**：仅在技能需要时创建 `references/`、`assets/`、`scripts/`
-4. **路径**：使用[路径发现](references/path-discovery.md)确定输出路径——始终使用项目相对路径
+```
+I will create a skill:
 
-回退方案：如果 `cli.cjs init` 失败或模板不适用，直接按模板结构编写 SKILL.md。
+Problem: {the problem in the user's own words}
+Solution: {what the skill will do}
+Triggers: {when it activates}
+Output: {files that will be created}
 
-## L6：质量验证
+Is this correct? Anything to adjust?
+```
 
-对生成的技能运行[质量验证器](agents/quality-validator.md)。
+**Wait** for the user's confirmation before generating.
 
-交付前的最低检查：
+## L5: Generation
 
-- [ ] 技能有有意义的触发条件（不仅仅是文件名）
-- [ ] 输出路径是项目相对路径，而非全局路径
-- [ ] Frontmatter 包含 `name` 和 `description`
-- [ ] 工作流可执行（不仅仅是抽象步骤）
-- [ ] 依赖已声明
-- [ ] 示例展示了真实用法
-- [ ] 如果技能有自动模式 → hooks.json 存在且作用域正确（global vs project）
-- [ ] Hook 脚本使用共享库（`src/shared/hooks-lib.ts`），而非自定义 stdin 解析
+After the user confirms:
 
-## 错误处理
+1. **Scaffold**: run `scripts/cli.cjs init` with the `--problem` flag, or create the files manually using [skill.md.template](assets/skill.md.template)
+2. **Populate**: inject the project-specific conventions from the L2 analysis into the SKILL.md sections
+3. **Reference files**: only create `references/`, `assets/`, `scripts/` if the skill needs them
+4. **Paths**: use [path discovery](references/path-discovery.md) to determine the output path — always use project-relative paths
 
-| 问题 | 解决方案 |
+Fallback: if `cli.cjs init` fails or the template does not fit, write SKILL.md directly following the template structure.
+
+## L6: Quality validation
+
+Run the [quality validator](agents/quality-validator.md) over the generated skill.
+
+Minimum checks before delivery:
+
+- [ ] The skill has meaningful trigger conditions (not just a filename)
+- [ ] The output path is project-relative, not a global path
+- [ ] The frontmatter contains `name` and `description`
+- [ ] The workflow is executable (not just abstract steps)
+- [ ] Dependencies are declared
+- [ ] Examples show real usage
+- [ ] If the skill has an automatic mode → hooks.json exists with the correct scope (global vs project)
+- [ ] Hook scripts use the shared library (`src/shared/hooks-lib.ts`) rather than custom stdin parsing
+
+## Error handling
+
+| Issue | Solution |
 |------|---------|
-| 无法检测技术栈 | 向用户询问语言/框架，或扫描文件扩展名 |
-| 项目过大（>500 个顶层条目） | 在项目扫描器中使用 `focus_folders` 参数 |
-| 发现冲突的现有技能 | 展示对比，询问用户：扩展现有还是创建新的？ |
-| 用户问题映射到多种技能类型 | 展示前 2 个候选方案及权衡，让用户选择 |
-| 路径发现未找到标记 | 默认使用项目根目录的 `.agents/skills/` |
-| 生成的技能未通过质量验证 | 展示失败项，自动修复可修复的，标记其余 |
+| Cannot detect the tech stack | Ask the user for the language/framework, or scan file extensions |
+| Project too large (>500 top-level entries) | Use the `focus_folders` parameter in the project scanner |
+| Found a conflicting existing skill | Show a comparison and ask the user: extend the existing one or create a new one? |
+| The user's problem maps to multiple skill types | Show the top 2 candidates with trade-offs and let the user choose |
+| Path discovery found no markers | Default to `.agents/skills/` at the project root |
+| The generated skill fails quality validation | Show the failures, auto-fix what can be fixed, and flag the rest |
 
-## 输出合约
+## Output contract
 
-始终产出四个部分：
+Always produce four parts:
 
-1. **问题理解**：识别出的问题
-2. **方案设计**：技能架构
-3. **交付物**：创建的文件
-4. **使用指南**：如何触发和使用技能
+1. **Problem understanding**: the problem identified
+2. **Solution design**: the skill architecture
+3. **Deliverables**: the files created
+4. **Usage guide**: how to trigger and use the skill
 
-## 智能体
+## Agents
 
-- [项目扫描器](agents/project-scanner.md)：结构和模式分析
-- [技术栈分析器](agents/tech-stack-analyzer.md)：语言/框架检测
-- [约定检测器](agents/convention-detector.md)：代码风格提取
-- [质量验证器](agents/quality-validator.md)：生成后验证
+- [Project scanner](agents/project-scanner.md): structure and pattern analysis
+- [Tech-stack analyzer](agents/tech-stack-analyzer.md): language/framework detection
+- [Convention detector](agents/convention-detector.md): code-style extraction
+- [Quality validator](agents/quality-validator.md): post-generation validation
 
-## 参考文档
+## References
 
-- [路径发现](references/path-discovery.md)：输出路径确定（设计完成后加载）
-- [高级模式](references/advanced-patterns.md)：技能架构模式（工作流、领域、模板、多变体）
+- [Path discovery](references/path-discovery.md): output-path determination (load after design is complete)
+- [Advanced patterns](references/advanced-patterns.md): skill architecture patterns (workflow, domain, template, multi-variant)

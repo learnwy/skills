@@ -1,98 +1,98 @@
-# 飞书收录工作流（ingest-lark）
+# Feishu ingest workflow (ingest-lark)
 
-把飞书群聊与文档作为**一类原始来源**接入 llm-wiki。`lark-context` CLI 只负责拉数据；
-编译/沉淀逻辑由本工作流拥有，产物写入统一的 `~/.learnwy/llm-wiki/` wiki，而**不再**写
-独立的 `~/.claude/lark-memory/`（该库已退役并迁入本 wiki）。
+Ingest Feishu group chats and documents as **one class of raw source** for llm-wiki. The `lark-context` CLI only pulls data;
+the compilation/consolidation logic is owned by this workflow, and artifacts are written into the unified `~/.learnwy/llm-wiki/` wiki — **not**
+into a standalone `~/.claude/lark-memory/` (that store has been retired and migrated into this wiki).
 
-> 全过程由 Claude 本地完成，不调任何外部 LLM API。
+> The whole process runs locally in Claude; it calls no external LLM API.
 
-## 前置依赖
+## Prerequisites
 
-- `lark-context` ≥ 0.1.0（`bnpm i -g @tiktok-fe/lark-context`）
-- `lark-cli` 已 `auth login`
-- 第一步先自检：`lark-context --version`；未装/未登录则透传 stderr，不替用户登录。
+- `lark-context` ≥ 0.1.0 (`bnpm i -g @tiktok-fe/lark-context`)
+- `lark-cli` has run `auth login`
+- Self-check first: `lark-context --version`; if not installed/not logged in, pass stderr through — do not log in on the user's behalf.
 
-## 触发
+## Triggers
 
-- "沉淀一下飞书群 / 把最近聊的整理进 wiki"
-- "收下这个飞书文档 <url>"
-- "最近 X 群聊了啥，记进知识库"
+- "consolidate this Feishu group" / "organize recent chats into the wiki"
+- "ingest this Feishu document <url>"
+- "what has the X group chatted about recently, record it into the knowledge base"
 
-## Step 1 — 决定时间窗口
+## Step 1 — Decide the time window
 
 ```bash
 sqlite3 ~/.lark-context/raw.db "SELECT value FROM kv WHERE key='last_digest_at'"
 ```
 
-| 情况 | 窗口 |
+| Case | Window |
 |---|---|
-| `last_digest_at` 有值且用户没说窗口 | `--since 24h` |
-| `last_digest_at` 为空 + 用户点名特定群 | `--since 90d`（首次沉淀兜底） |
-| 用户明确说了窗口 | 按用户说的 |
+| `last_digest_at` has a value and the user didn't specify a window | `--since 24h` |
+| `last_digest_at` is empty + the user named a specific group | `--since 90d` (first-consolidation fallback) |
+| The user explicitly stated a window | As the user said |
 
-## Step 2 — 解析 chat 过滤
+## Step 2 — Resolve the chat filter
 
 ```bash
 lark-context groups list
 ```
 
-把用户说的群名/别名匹配成一个具体 alias。说"所有群"或不点名 → 不加 `--chat`。
-新群未关注 → 提示走 `groups add` + `pull`，沉淀本身不主动加群。
+Match the group name/alias the user mentioned to a concrete alias. "All groups" or no name → don't add `--chat`.
+A new group not yet followed → suggest `groups add` + `pull`; the consolidation itself does not proactively join groups.
 
-## Step 3 — 拉取并落 raw（不可变层）
+## Step 3 — Pull and land in raw (immutable layer)
 
 ```bash
-lark-context pull [--chat <alias>] [--since <window>]      # 同步到 SQLite
-lark-context show [--chat <alias>] --since <window>        # 取原文
+lark-context pull [--chat <alias>] [--since <window>]      # sync to SQLite
+lark-context show [--chat <alias>] --since <window>        # fetch the original text
 ```
 
-把本次 `show` 原文**原样**存档到 `raw/lark/<alias>-<ISO-date>.md`（带 `**Source**:`、
-`**Pulled**:`、`**Chat**:` 头）。这是本次沉淀的**唯一事实来源**——不捏造、不从记忆补 show 里没有的事。
+Archive this `show` original text **verbatim** to `raw/lark/<alias>-<ISO-date>.md` (with `**Source**:`,
+`**Pulled**:`, `**Chat**:` headers). This is the **single source of truth** for this consolidation — don't fabricate, don't fill in from memory what `show` doesn't contain.
 
-`show` 为空 → 告诉用户"窗口内无新消息"，不写任何编译页，结束（可按需仍更新时间戳）。
+`show` is empty → tell the user "no new messages in the window", write no compiled page, and finish (you may still update the timestamp if needed).
 
-文档场景：`lark-context show-doc <token-or-url>` → 存 `raw/lark/doc-<slug>.md`。
+Document case: `lark-context show-doc <token-or-url>` → save to `raw/lark/doc-<slug>.md`.
 
-## Step 4 — 编译进 wiki（编译层）
+## Step 4 — Compile into the wiki (compilation layer)
 
-读 `raw/lark/` 的本次存档，增量 merge 到对应实体/来源页。映射：
+Read this consolidation's archive in `raw/lark/` and incrementally merge into the corresponding entity/source pages. Mapping:
 
-| 飞书内容 | 目标 | slug 示例 |
+| Feishu content | Target | slug example |
 |---|---|---|
-| 群聊会话沉淀（一次 digest 一页或按群累积） | `wiki/threads/<alias>.md` | `threads/gec-search.md` |
-| 编年流水（按 ISO 周） | `wiki/diaries/<ISO-week>.md` | `diaries/2026-W22.md` |
-| 出现的人 | `wiki/people/<slug>.md` | `people/hou-yu.md` |
-| 项目 / 产品 | `wiki/products/<slug>.md` | `products/toko-standalone.md` |
-| 决策 / 有日期的事件 | `wiki/events/<slug>.md` | `events/mira-router.md` |
-| 组织 / 团队 | `wiki/organizations/<slug>.md` | |
-| 术语 / 概念 | `wiki/concepts/<slug>.md` | |
-| 文档摘要 | `wiki/articles/<slug>.md` | |
+| Group-chat consolidation (one page per digest or accumulated per group) | `wiki/threads/<alias>.md` | `threads/gec-search.md` |
+| Chronological stream (by ISO week) | `wiki/diaries/<ISO-week>.md` | `diaries/2026-W22.md` |
+| People who appear | `wiki/people/<slug>.md` | `people/hou-yu.md` |
+| Projects / products | `wiki/products/<slug>.md` | `products/toko-standalone.md` |
+| Decisions / dated events | `wiki/events/<slug>.md` | `events/mira-router.md` |
+| Organizations / teams | `wiki/organizations/<slug>.md` | |
+| Terms / concepts | `wiki/concepts/<slug>.md` | |
+| Document summary | `wiki/articles/<slug>.md` | |
 
-**增量 merge 规则**：
-- 保留用户手写段落**原封不动**，新事实带日期标签追加
-- summary 过时可改写
-- 价值判断：第一次出现的短暂提及不建新实体；出现 ≥2 次 / 用户说"记一下" / 可执行决策 → 建。宁缺毋滥
-- 冲突（同一事实两个来源说法不同）：两条都列，标注来源（群 + 日期 + 发言人）
-- 交叉引用：thread/diary 页用 `[[people/...]]`、`[[products/...]]`、`[[events/...]]` 链到实体
+**Incremental merge rules**:
+- Keep user-written paragraphs **untouched**; append new facts with date tags
+- A stale summary may be rewritten
+- Value judgment: a fleeting first mention does not create a new entity; appears ≥2 times / the user says "record it" / actionable decision → create one. Better too few than too many
+- Conflict (the same fact stated differently by two sources): list both, attributing the source (group + date + speaker)
+- Cross-references: thread/diary pages use `[[people/...]]`, `[[products/...]]`, `[[events/...]]` to link to entities
 
-## Step 5 — 更新索引 + 时间戳 + 日志
+## Step 5 — Update the index + timestamp + log
 
 ```bash
 cd skills/llm-wiki && node scripts/cli.cjs generate-index && node scripts/cli.cjs generate-topics
 sqlite3 ~/.lark-context/raw.db "INSERT INTO kv(key,value) VALUES('last_digest_at', datetime('now')) ON CONFLICT(key) DO UPDATE SET value=excluded.value"
 ```
 
-往 `log.md` 追加一行：`<date> ingest-lark <alias> — N 条消息 → X 实体 / Y 来源页`。
+Append one line to `log.md`: `<date> ingest-lark <alias> — N messages → X entities / Y source pages`.
 
-## Step 6 — 回报用户
+## Step 6 — Report to the user
 
-> 沉淀了 N 条消息，更新 X 个实体（P 人 / Pr 产品 / E 事件）和 Y 个来源页（threads/diaries）。
+> Consolidated N messages, updated X entities (P people / Pr products / E events) and Y source pages (threads/diaries).
 
-可附"新建 A / 修改 B 文件"的简要列表。
+You may attach a brief "created A / modified B files" list.
 
-## 注意事项
+## Notes
 
-- **不要 fabricate**：只记 show 输出里的事实
-- **保留用户手写内容**：实体页手写段落永不动，只在机器可识别区域（dated bullet / summary）追加
-- **CLI 非零退出**：透传 stderr，命中已知场景（未装 / 未 auth / 被踢出群）补一句建议；否则纯透传
-- **窗口太窄无消息**：报告窗口太窄，不硬写
+- **Don't fabricate**: only record facts in the `show` output
+- **Preserve user-written content**: hand-written paragraphs on entity pages are never touched; only append in machine-recognizable regions (dated bullet / summary)
+- **CLI non-zero exit**: pass stderr through; if it hits a known case (not installed / not authed / kicked out of the group), add a one-line suggestion; otherwise pass through verbatim
+- **Window too narrow, no messages**: report that the window is too narrow; don't force-write

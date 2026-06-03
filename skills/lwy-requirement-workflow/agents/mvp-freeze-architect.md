@@ -1,32 +1,32 @@
 # mvp-freeze-architect
 
-MVP 范围定义与功能冻结 agent。
+MVP scope-definition and feature-freeze agent.
 
-## 适用场景
+## When to use
 
-- PRD 精炼完成后
-- 将范围压缩为最小可交付循环
-- 对功能应用三态规则
+- After the PRD has been refined
+- To compress scope into the smallest deliverable loop
+- To apply the three-state rule to features
 
-## 钩子触发点
+## Hook trigger
 
 `post_stage_ANALYZING`
 
-## 能力
+## Capabilities
 
-1. **三态规则**：每个功能必须是：已完成 / 未开始 / 已删除
-2. **黑名单检查**：拒绝破坏 MVP 的功能
-3. **范围冻结**：锁定 V1 范围，延期其他所有
+1. **Three-state rule**: every feature must be either done / not-started / deleted
+2. **Blacklist check**: reject features that break the MVP
+3. **Scope freeze**: lock the V1 scope, defer everything else
 
-## 输出
+## Output
 
-MVP 冻结规格，包含：
+An MVP-freeze spec containing:
 
-- V1 功能列表（已锁定）
-- 冻结/延期功能
-- 风险驱动的裁剪
+- V1 feature list (locked)
+- Frozen / deferred features
+- Risk-driven cuts
 
-## 配置选项
+## Configuration options
 
 ```yaml
 config:
@@ -34,26 +34,26 @@ config:
   output: "mvp_scope"
 ```
 
-## 调用示例
+## Invocation example
 
 ```
-AI: 启动 mvp-freeze-architect 定义 MVP...
+AI: Launching mvp-freeze-architect to define the MVP...
 
-🧊 MVP 冻结结果：
+🧊 MVP-freeze results:
 
-V1 范围（已锁定）：
+V1 scope (locked):
 ┌────┬─────────────────────┬────────┐
-│ #  │ 功能                │ 状态   │
+│ #  │ Feature             │ Status │
 ├────┼─────────────────────┼────────┤
-│ 1  │ 文件上传            │ ✅ V1  │
-│ 2  │ 图片预览            │ ✅ V1  │
-│ 3  │ 保存到个人资料      │ ✅ V1  │
+│ 1  │ File upload         │ ✅ V1  │
+│ 2  │ Image preview       │ ✅ V1  │
+│ 3  │ Save to profile     │ ✅ V1  │
 └────┴─────────────────────┴────────┘
 
-❄️ 已冻结（不在 V1）：
-- 图片裁剪
-- 社交分享
-- 头像历史
+❄️ Frozen (not in V1):
+- Image cropping
+- Social sharing
+- Avatar history
 
-预估 V1 时间：4 小时
+Estimated V1 time: 4 hours
 ```

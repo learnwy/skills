@@ -1,6 +1,6 @@
 ---
 name: lwy-llm-wiki
-description: "当用户提到'知识库'、'llm wiki'、'个人wiki'、'收录来源'、'编译知识'、'第二大脑'、'构建wiki'、'知识管理'，或想要将书籍、文章、笔记、播客、视频、飞书群聊/文档添加到持久化存储时，使用此技能构建和维护持续复利的知识库。当 ~/.learnwy/llm-wiki/ 存在时，在回答复杂问题前先检查wiki——若目录不存在则跳过。"
+description: "当用户提到'知识库'、'llm wiki'、'个人wiki'、'收录来源'、'编译知识'、'第二大脑'、'构建wiki'、'知识管理', or wants to add books, articles, notes, podcasts, videos, or Feishu group chats/documents to persistent storage, use this skill to build and maintain a continuously compounding knowledge base. When ~/.learnwy/llm-wiki/ exists, check the wiki before answering complex questions — skip if the directory does not exist."
 metadata:
   author: "learnwy"
   version: "4.0"
@@ -10,183 +10,183 @@ metadata:
 
 # LLM Wiki
 
-构建和维护持续复利的个人知识库。LLM 负责所有繁重工作——摘要、交叉引用、归档和记账——而你专注于搜集来源、探索和提出好问题。
+Build and maintain a continuously compounding personal knowledge base. The LLM does all the heavy lifting — summarizing, cross-referencing, archiving, and bookkeeping — while you focus on collecting sources, exploring, and asking good questions.
 
-> **核心原则**: 不要把 LLM 当搜索引擎用。要把它当知识编译器用。不是每次查询都从原始文档重新推导知识（RAG），而是由 LLM 增量构建持久化 wiki——结构化、互相链接的 markdown 文件，随着每个来源的添加和每个问题的提出而持续增值。
+> **Core principle**: Don't use the LLM as a search engine. Use it as a knowledge compiler. Instead of re-deriving knowledge from raw documents on every query (RAG), the LLM incrementally builds a persistent wiki — structured, interlinked markdown files that keep gaining value as each source is added and each question is asked.
 
-## 前置条件
+## Prerequisites
 
-- 具备文件读写能力的 LLM Agent
-- 用于存储 markdown 文件的文件系统
-- Node.js >= 18（管理脚本需要）
-- 可选：飞书来源需要 `lark-context` + `lark-cli`（见「飞书来源」一节）；Obsidian 浏览/图谱视图；Git 版本控制
+- An LLM agent with file read/write capability
+- A file system to store the markdown files
+- Node.js >= 18 (required by the management scripts)
+- Optional: Feishu sources need `lark-context` + `lark-cli` (see the "Feishu sources" section); Obsidian for browsing/graph view; Git for version control
 
-## 使用时机
+## When to use
 
-| 信号 | 动作 |
+| Signal | Action |
 |------|------|
-| "收录这个"、"添加这个来源"、"处理这份文档/文章/播客/视频" | 收录 |
-| "沉淀飞书群"、"把最近聊的整理进 wiki"、"收下这个飞书文档" | 飞书收录（见下） |
-| "wiki 里怎么说X"、复杂知识问题 | 查询 / 自动查询 |
-| "保存到wiki"、"记录下来" | 快捷捕获 |
-| "健康检查"、"lint wiki"、"查找矛盾" | 检查 |
-| "建一个新wiki"、"初始化知识库" | 初始化（`cli.cjs init`） |
-| "从这些文件构建wiki" | 初始化 → 批量收录 |
+| "ingest this", "add this source", "process this document/article/podcast/video" | Ingest |
+| "consolidate this Feishu group", "organize recent chats into the wiki", "ingest this Feishu document" | Feishu ingest (see below) |
+| "what does the wiki say about X", complex knowledge questions | Query / auto-query |
+| "save to wiki", "record this" | Quick capture |
+| "health check", "lint wiki", "find contradictions" | Lint |
+| "create a new wiki", "initialize the knowledge base" | Initialize (`cli.cjs init`) |
+| "build a wiki from these files" | Initialize → bulk ingest |
 
-**不应调用的场景：** 单次对话洞察（→ `knowledge-consolidation`），方法论分析（矛盾/实践/持久战 → `mao-methodology`），代码实现（→ `requirement-workflow`）。
+**When NOT to invoke:** single-conversation insights (→ `knowledge-consolidation`), methodology analysis (contradiction/practice/protracted-war → `mao-methodology`), code implementation (→ `requirement-workflow`).
 
-## 自动模式
+## Auto modes
 
-### 自动查询
+### Auto-query
 
-当 `~/.learnwy/llm-wiki/` 存在时，回答复杂问题前主动检查：
+When `~/.learnwy/llm-wiki/` exists, proactively check it before answering complex questions:
 
-1. 扫描 `wiki/topics.txt`（关键词平面文件）匹配主题
-2. 若匹配 → 阅读相关 wiki 页面
-3. 在回答前附上 wiki 洞见并标注 `[[folder/slug]]` 引用
-4. 如果回答贡献了新知识，提议回写
+1. Scan `wiki/topics.txt` (a flat keyword file) for matching topics
+2. If a match → read the relevant wiki pages
+3. Prepend wiki insights before answering, annotating `[[folder/slug]]` references
+4. If the answer contributes new knowledge, propose a write-back
 
-对以下情况跳过自动查询：简单事实、wiki不存在。
+Skip auto-query for: simple facts, or when the wiki does not exist.
 
-### 快捷捕获
+### Quick capture
 
-当用户说"保存这个"或分享有价值知识时，轻量保存到 `raw/notes/{date}-{slug}.md`。不创建 wiki 页面——稍后运行收录。
+When the user says "save this" or shares valuable knowledge, lightly save it to `raw/notes/{date}-{slug}.md`. Don't create a wiki page — run an ingest later.
 
-## 双层架构
+## Two-layer architecture
 
-| 层级 | 所有者 | 路径 | 用途 |
+| Layer | Owner | Path | Purpose |
 |------|--------|------|------|
-| **原始层** | 你 | `raw/` | 不可变的源材料——LLM 只读，绝不修改 |
-| **Wiki层** | LLM | `wiki/` | 编译页面：实体（人/组织/地点/产品/事件/概念）+ 来源（文章/播客/视频/日记/会话） |
-| **Schema层** | 共同演进 | `CLAUDE.md` | 结构规则、约定、模板 |
+| **Raw layer** | You | `raw/` | Immutable source material — the LLM reads but never modifies it |
+| **Wiki layer** | LLM | `wiki/` | Compiled pages: entities (people/organizations/places/products/events/concepts) + sources (articles/podcasts/videos/diaries/threads) |
+| **Schema layer** | Co-evolved | `CLAUDE.md` | Structure rules, conventions, templates |
 
-> **不可变 `raw/` 是核心安全属性**：所有外部材料（书、文章、播客逐字稿、飞书拉取）先落到 `raw/<source>/`，LLM 只读不改；编译产物写入 `wiki/`。`inbox/` 是"已拉取但未编译"的中转区，`archived/` 存放退役页面。
+> **The immutable `raw/` is a core safety property**: all external material (books, articles, podcast transcripts, Feishu pulls) lands first in `raw/<source>/`, where the LLM reads but never modifies it; compiled artifacts are written to `wiki/`. `inbox/` is the "pulled but not yet compiled" staging area, and `archived/` holds retired pages.
 
-### 存储位置
+### Storage location
 
-- **全局（默认）**: `~/.learnwy/llm-wiki/` — 跨项目跨会话共享
-- 可通过 `--root <dir>` 选项覆盖（如分身库 `--root ~/.learnwy/ai/private/self`）
+- **Global (default)**: `~/.learnwy/llm-wiki/` — shared across projects and sessions
+- Override with the `--root <dir>` option (e.g. the alter-ego library `--root ~/.learnwy/ai/private/self`)
 
-## 目录结构（实体优先）
+## Directory structure (entity-first)
 
 ```
 ~/.learnwy/llm-wiki/
-├── raw/                    # 第1层（不可变）：books/ articles/ papers/ notes/
+├── raw/                    # Layer 1 (immutable): books/ articles/ papers/ notes/
 │                           #   podcasts/ vlogs/ transcripts/ snippets/ specs/
 │                           #   lark/ docs/
-├── wiki/                   # 第2层（编译）
-│   ├── people/             #   实体：人物
-│   ├── organizations/      #   实体：组织 / 团队
-│   ├── places/             #   实体：地点
-│   ├── products/           #   实体：产品 / 项目 / 倡议
-│   ├── events/             #   实体：有日期的事件 / 决策
-│   ├── concepts/           #   实体：概念 / 术语 / 领域知识（含代码模式）
-│   ├── other-entities/     #   实体：其它未归类
-│   ├── articles/           #   来源：文章摘要
-│   ├── podcasts/           #   来源：播客摘要
-│   ├── vlogs/              #   来源：视频摘要
-│   ├── diaries/            #   来源：编年流水（含飞书周记）
-│   ├── threads/            #   来源：会话沉淀（飞书群聊 digest）
-│   ├── inbox/              #   生命周期：已拉取未编译
-│   ├── archived/           #   生命周期：退役页面
-│   ├── index.md            #   自动生成的主索引
-│   └── topics.txt          #   自动生成的关键词列表
-├── CLAUDE.md               # 第3层：Schema
-└── log.md                  # 审计日志
+├── wiki/                   # Layer 2 (compiled)
+│   ├── people/             #   entity: people
+│   ├── organizations/      #   entity: organizations / teams
+│   ├── places/             #   entity: places
+│   ├── products/           #   entity: products / projects / initiatives
+│   ├── events/             #   entity: dated events / decisions
+│   ├── concepts/           #   entity: concepts / terms / domain knowledge (incl. code patterns)
+│   ├── other-entities/     #   entity: other, uncategorized
+│   ├── articles/           #   source: article summaries
+│   ├── podcasts/           #   source: podcast summaries
+│   ├── vlogs/              #   source: video summaries
+│   ├── diaries/            #   source: chronological stream (incl. Feishu weekly notes)
+│   ├── threads/            #   source: conversation consolidations (Feishu group-chat digests)
+│   ├── inbox/              #   lifecycle: pulled but not compiled
+│   ├── archived/           #   lifecycle: retired pages
+│   ├── index.md            #   auto-generated master index
+│   └── topics.txt          #   auto-generated keyword list
+├── CLAUDE.md               # Layer 3: schema
+└── log.md                  # audit log
 ```
 
-> **代码知识去向**：代码片段 / 故障排除归入 `concepts/`（概念页），原始片段落 `raw/snippets/`。本布局以实体为中心，不再有独立的 `snippets/` / `troubleshooting/` 顶层目录。
+> **Where code knowledge goes**: code snippets / troubleshooting go into `concepts/` (concept pages), and the raw snippets land in `raw/snippets/`. This layout is entity-centric — there are no longer separate top-level `snippets/` / `troubleshooting/` directories.
 
-## 飞书来源（合并自 lark-context）
+## Feishu sources (merged from lark-context)
 
-飞书群聊与文档作为**一类原始来源**接入：`lark-context` CLI 退化为纯数据泵（pull → SQLite，show → 原文），编译/沉淀逻辑由本技能拥有。详见 [`references/ingest-lark.md`](references/ingest-lark.md)。
+Feishu group chats and documents are ingested as **one class of raw source**: the `lark-context` CLI degrades into a pure data pump (pull → SQLite, show → original text), while the compilation/consolidation logic is owned by this skill. See [`references/ingest-lark.md`](references/ingest-lark.md) for details.
 
-- 拉取：`lark-context pull` / `show` → 落 `raw/lark/`
-- 编译：群聊会话 → `wiki/threads/`，人物 → `wiki/people/`，决策/事件 → `wiki/events/`，编年流水 → `wiki/diaries/`
-- 旧的 `~/.claude/lark-memory/` 独立记忆库已退役并迁入本 wiki（见迁移说明）
+- Pull: `lark-context pull` / `show` → lands in `raw/lark/`
+- Compile: group-chat conversations → `wiki/threads/`, people → `wiki/people/`, decisions/events → `wiki/events/`, chronological stream → `wiki/diaries/`
+- The old standalone `~/.claude/lark-memory/` memory store has been retired and migrated into this wiki (see the migration notes)
 
-## 操作与 Agent
+## Operations and agents
 
-| 操作 | Agent | 触发条件 | 模式 |
+| Operation | Agent | Trigger | Mode |
 |------|-------|----------|------|
-| **自动查询** | querier | 用户提出复杂问题 + wiki 存在 | 自动 |
-| **快捷捕获** | (内联) | "保存到wiki"或检测到有价值知识 | 半自动 |
-| **收录** | ingestor | 新的原始来源被添加 | 手动 |
-| **飞书收录** | ingestor | 沉淀飞书群 / 文档 | 手动 |
-| **查询** | querier | 用户明确询问 wiki | 手动 |
-| **检查** | linter | 请求健康检查 | 手动 |
-| **初始化** | schema-writer / `cli.cjs init` | 新建 wiki 项目 | 手动 |
+| **Auto-query** | querier | User asks a complex question + wiki exists | Auto |
+| **Quick capture** | (inline) | "save to wiki" or valuable knowledge detected | Semi-auto |
+| **Ingest** | ingestor | A new raw source is added | Manual |
+| **Feishu ingest** | ingestor | Consolidate a Feishu group / document | Manual |
+| **Query** | querier | User explicitly asks the wiki | Manual |
+| **Lint** | linter | Health check requested | Manual |
+| **Initialize** | schema-writer / `cli.cjs init` | Create a new wiki project | Manual |
 
-Agent 定义：[收录器](agents/operations/ingestor.md)、[查询器](agents/operations/querier.md)、[检查器](agents/operations/linter.md)、[Schema编写器](agents/writing/schema-writer.md)。
+Agent definitions: [ingestor](agents/operations/ingestor.md), [querier](agents/operations/querier.md), [linter](agents/operations/linter.md), [schema-writer](agents/writing/schema-writer.md).
 
-## 管理脚本
+## Management scripts
 
-单一 CLI 入口 `{skill_root}/scripts/cli.cjs` 分发所有维护子命令：
+A single CLI entry point `{skill_root}/scripts/cli.cjs` dispatches all maintenance subcommands:
 
 ```sh
 cd skills/llm-wiki
-node scripts/cli.cjs init                       # 脚手架：创建 raw/ + wiki/ 目录、schema、index、log
-node scripts/cli.cjs generate-index             # 从文件系统重新生成 wiki/index.md
-node scripts/cli.cjs generate-topics            # 重新生成 wiki/topics.txt
-node scripts/cli.cjs lint                       # 检查断链、孤立页面
-node scripts/cli.cjs stats                      # 快速仪表板：原始层 + Wiki层统计
-node scripts/cli.cjs freshness-check            # 标记过时/未验证的页面
-node scripts/cli.cjs health-check               # 聚合健康报告 → health.json
-node scripts/cli.cjs install / uninstall        # 注册/移除 IDE 钩子
+node scripts/cli.cjs init                       # scaffold: create raw/ + wiki/ dirs, schema, index, log
+node scripts/cli.cjs generate-index             # regenerate wiki/index.md from the file system
+node scripts/cli.cjs generate-topics            # regenerate wiki/topics.txt
+node scripts/cli.cjs lint                       # check for broken links and orphan pages
+node scripts/cli.cjs stats                      # quick dashboard: raw-layer + wiki-layer stats
+node scripts/cli.cjs freshness-check            # flag stale/unverified pages
+node scripts/cli.cjs health-check               # aggregate health report → health.json
+node scripts/cli.cjs install / uninstall        # register/remove IDE hooks
 ```
 
-| 子命令 | 输出 | 运行时机 |
+| Subcommand | Output | When to run |
 |--------|------|----------|
-| `init` | 全套目录骨架 + CLAUDE.md / index.md / log.md | 首次建库 |
-| `generate-index` | `wiki/index.md` — 按实体/来源分组的页面清单 | 批量收录后或索引漂移时 |
-| `generate-topics` | `wiki/topics.txt` — 自动查询匹配用的关键词 | 新增主题后 |
-| `lint` | 错误（断链）+ 警告（孤立页面） | 每周维护或提交前 |
-| `stats` | 原始层 + Wiki层计数的方框图仪表板 | 随时——快速健康快照 |
-| `freshness-check` | 过时页面（技术类90天，稳定类180天）、未验证、缺少日期 | 每月或重大版本发布后 |
-| `health-check` | 断链 / 孤立 / 失效 **Source** 引用 → `health.json` | CI / 提交前 |
+| `init` | Full directory skeleton + CLAUDE.md / index.md / log.md | First-time setup |
+| `generate-index` | `wiki/index.md` — page listing grouped by entity/source | After bulk ingest or when the index drifts |
+| `generate-topics` | `wiki/topics.txt` — keywords used for auto-query matching | After adding new topics |
+| `lint` | Errors (broken links) + warnings (orphan pages) | Weekly maintenance or pre-commit |
+| `stats` | Box-diagram dashboard of raw-layer + wiki-layer counts | Anytime — a quick health snapshot |
+| `freshness-check` | Stale pages (90 days for technical, 180 for stable), unverified, missing date | Monthly or after a major release |
+| `health-check` | Broken links / orphans / dead **Source** references → `health.json` | CI / pre-commit |
 
-每个命令都接受 `--root <dir>` 覆盖 wiki 位置（默认 `~/.learnwy/llm-wiki`）；同一引擎即可驱动公开世界库与私有分身库，无需环境变量。
+Every command accepts a `--root <dir>` override for the wiki location (default `~/.learnwy/llm-wiki`); the same engine drives both the public world library and the private alter-ego library, with no environment variable needed.
 
-## Agent 输出契约
+## Agent output contract
 
-| 允许 | 不允许 |
-|------|--------|
-| 读取原始来源（绝不修改） | 修改 `raw/` 中的任何内容 |
-| 在 `wiki/` 中创建/更新文件 | 删除原始来源 |
-| 操作后更新 `index.md` 和 `log.md` | 创建没有交叉引用的页面 |
-| 标记来源间的矛盾 | 静默覆盖已有内容 |
+| Allowed | Not allowed |
+|------|------|
+| Read raw sources (never modify) | Modify anything in `raw/` |
+| Create/update files in `wiki/` | Delete raw sources |
+| Update `index.md` and `log.md` after operations | Create pages with no cross-references |
+| Flag contradictions between sources | Silently overwrite existing content |
 
-每次操作必须：(1) 记录到 `log.md`，(2) 更新 `index.md`，(3) 检查矛盾，(4) 维护交叉引用。
+Every operation must: (1) record to `log.md`, (2) update `index.md`, (3) check for contradictions, (4) maintain cross-references.
 
-## 执行检查清单
+## Execution checklist
 
-**操作前**: Wiki存在？ → CLAUDE.md存在？ → 原始来源在正确子目录（飞书 → `raw/lark/`）？ → 易过时内容设 `Verified: no`。
+**Before an operation**: Does the wiki exist? → Does CLAUDE.md exist? → Is the raw source in the correct subdirectory (Feishu → `raw/lark/`)? → Set `Verified: no` for easily-stale content.
 
-**操作后**: log.md已更新？ → index.md反映变更？ → 交叉引用已添加（上限5个，超出用"另见"）？ → 新主题时topics.txt已更新？
+**After an operation**: Is log.md updated? → Does index.md reflect the change? → Are cross-references added (cap 5, use "See also" beyond that)? → Is topics.txt updated when there's a new topic?
 
-## 边界约束
+## Scope boundaries
 
-本技能处理：wiki 初始化、收录（含飞书）、查询、检查、交叉引用、索引维护。
+This skill handles: wiki initialization, ingest (incl. Feishu), query, lint, cross-referencing, index maintenance.
 
-不处理：单次洞察（→ `knowledge-consolidation`），方法论分析（→ `mao-methodology`），代码实现（→ `requirement-workflow`）。
+It does not handle: single insights (→ `knowledge-consolidation`), methodology analysis (→ `mao-methodology`), code implementation (→ `requirement-workflow`).
 
-## 参考文档（按需加载）
+## Reference docs (load on demand)
 
-- [页面模板](references/templates.md) — 实体与来源页模板：人物 / 组织 / 地点 / 产品 / 事件 / 概念 / 文章 / 播客 / 视频 / 日记 / 会话 / 索引
-- [飞书收录工作流](references/ingest-lark.md) — 拉取 → 落 raw/lark → 编译进 threads/people/events/diaries
-- [工作流与参考](references/workflows.md) — 组合工作流、错误处理、核心概念、扩展路线图
+- [Page templates](references/templates.md) — entity and source page templates: people / organizations / places / products / events / concepts / articles / podcasts / videos / diaries / threads / index
+- [Feishu ingest workflow](references/ingest-lark.md) — pull → land in raw/lark → compile into threads/people/events/diaries
+- [Workflows and reference](references/workflows.md) — composite workflows, error handling, core concepts, extension roadmap
 
-## 钩子
+## Hooks
 
-通过 `learnwy-dispatch` 注册 **全局** 钩子（`~/.claude/settings.json` + `~/.trae/hooks.json`），因为 wiki 位于 `~/.learnwy/llm-wiki/`。
+Register **global** hooks via `learnwy-dispatch` (`~/.claude/settings.json` + `~/.trae/hooks.json`), because the wiki lives at `~/.learnwy/llm-wiki/`.
 
-| 事件 | Lib 函数 | 用途 |
+| Event | Lib function | Purpose |
 |------|----------|------|
-| `SessionStart` | `lib/session-scan.ts` | 注入最多 30 个 wiki 主题到会话上下文 |
-| `UserPromptSubmit` | `lib/prompt-scan.ts` | 用户问题 ↔ topics 关键词匹配 → 注入相关页面提示 |
+| `SessionStart` | `lib/session-scan.ts` | Inject up to 30 wiki topics into the session context |
+| `UserPromptSubmit` | `lib/prompt-scan.ts` | Match the user's question ↔ topics keywords → inject relevant page hints |
 
-安装/卸载：`node scripts/cli.cjs install|uninstall --scope global --target both` （由 `src/shared/install-entry.ts` 提供，所有 hook 类技能共用）。
+Install/uninstall: `node scripts/cli.cjs install|uninstall --scope global --target both` (provided by `src/shared/install-entry.ts`, shared by all hook-type skills).
 
-## 来自 knowledge-consolidation
+## From knowledge-consolidation
 
-KC 的 `promote` 子命令把项目级知识文档复制到 `raw/notes/<date>-<slug>.md`，附带 frontmatter 反向指针。下次收录时把它们当作普通原始来源处理（往往合并成 `wiki/concepts/` 页面，并和原 KC 文档建立 `[[link]]`）。这是从"项目本地修复日志"到"全局复利知识库"的单向流入通道。
+KC's `promote` subcommand copies a project-level knowledge document to `raw/notes/<date>-<slug>.md`, with a frontmatter back-pointer. On the next ingest, treat them as ordinary raw sources (they usually merge into a `wiki/concepts/` page and form a `[[link]]` with the original KC document). This is a one-way inflow channel from "project-local fix log" to "global compounding knowledge base".

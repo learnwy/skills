@@ -1,112 +1,112 @@
-# 组合工作流与参考
+# Composite workflows and reference
 
-llm-wiki 技能的详细工作流、错误处理和路线图。
+Detailed workflows, error handling, and roadmap for the llm-wiki skill.
 
-## 组合工作流
+## Composite workflows
 
-### 新 Wiki 初始化（冷启动）
-
-```
-1. schema-writer    → 创建目录结构 + CLAUDE.md schema
-2. ingestor         → 批量收录 raw/ 中的所有原始来源
-3. linter           → 初始健康检查——验证交叉引用和覆盖度
-```
-
-### 日常知识工作
+### New wiki initialization (cold start)
 
 ```
-1. ingestor         → 处理放入 raw/ 的新来源（含 raw/lark/ 飞书来源，详见 references/ingest-lark.md）
-2. querier          → 回答问题、探索主题、生成洞见
-3. querier          → 将有趣的输出回写到 wiki/（回写循环）
+1. schema-writer    → create the directory structure + CLAUDE.md schema
+2. ingestor         → bulk-ingest all raw sources in raw/
+3. linter           → initial health check — verify cross-references and coverage
 ```
 
-### 每周维护
+### Daily knowledge work
 
 ```
-1. linter           → 全面健康检查：矛盾、孤立页面、过时内容
-2. ingestor         → 重新处理 linter 标记为整合不佳的来源
-3. schema-writer    → 如需新约定则更新 CLAUDE.md
+1. ingestor         → process new sources dropped into raw/ (incl. raw/lark/ Feishu sources, see references/ingest-lark.md)
+2. querier          → answer questions, explore topics, generate insights
+3. querier          → write interesting outputs back into wiki/ (write-back loop)
 ```
 
-### 深度研究冲刺
+### Weekly maintenance
 
 ```
-1. ingestor         → 批量收录某主题的10-20个来源
-2. querier          → 问综合性问题："主要的思想流派有哪些？"
-3. querier          → 问对比性问题："X和Y有什么不同？"
-4. querier          → 问矛盾性问题："来源在哪里有分歧？"
-5. linter           → 验证所有新内容已正确链接且一致
+1. linter           → full health check: contradictions, orphan pages, stale content
+2. ingestor         → re-process sources the linter flagged as poorly integrated
+3. schema-writer    → update CLAUDE.md if new conventions are needed
 ```
 
-## 错误处理
+### Deep-research sprint
 
-| 问题 | 解决方案 |
+```
+1. ingestor         → bulk-ingest 10-20 sources on a topic
+2. querier          → ask synthesis questions: "What are the main schools of thought?"
+3. querier          → ask comparison questions: "How do X and Y differ?"
+4. querier          → ask contradiction questions: "Where do the sources disagree?"
+5. linter           → verify all new content is correctly linked and consistent
+```
+
+## Error handling
+
+| Problem | Solution |
 |------|----------|
-| 原始来源不可读（二进制、加密） | 在 log.md 中标记为"已跳过"并注明原因；要求用户提供替代格式 |
-| 来源与已有 wiki 内容矛盾 | 在两个页面都创建矛盾注记；绝不静默覆盖 |
-| Wiki 对单次 LLM 上下文过大 | 逐章节处理；使用 index.md 作为导航指南 |
-| Schema 不覆盖某新来源类型 | 向用户提出 schema 更新建议；在 CLAUDE.md 中添加新模板 |
-| Lint 发现孤立页面（无入站链接） | 列入健康报告；建议哪些页面应引用它们 |
-| 用户问了 wiki 无法回答的问题 | 明确说明；建议需要添加哪些原始来源 |
-| 多个来源对同一事物主张不同 | 在 wiki/concepts/ 下创建对比概念页面，展示所有立场并标注来源归属 |
-| Wiki 索引对上下文窗口过大 | 使用 `wiki/topics.txt` 进行主题扫描；按需阅读页面，而非批量加载 index.md |
-| Android 内容可能未验证 | 要求 Android 页面有 `**已验证**: 是/否` 字段；lint 标记超过7天仍未验证的页面 |
-| 交叉引用数量爆炸（425+页面） | 每节交叉引用限制在最相关的前5个；使用 `## 另见` 放次要链接 |
-| 代码片段语言/框架错误 | 用 `platform:` 和 `language:` 标签标记；lint 验证标签与内容匹配 |
+| Raw source unreadable (binary, encrypted) | Mark it "skipped" in log.md with the reason; ask the user for an alternative format |
+| Source contradicts existing wiki content | Create a contradiction note on both pages; never silently overwrite |
+| Wiki too large for a single LLM context | Process section by section; use index.md as a navigation guide |
+| Schema doesn't cover a new source type | Propose a schema update to the user; add a new template to CLAUDE.md |
+| Lint finds an orphan page (no inbound links) | List it in the health report; suggest which pages should reference it |
+| User asks something the wiki can't answer | State it clearly; suggest which raw sources need to be added |
+| Multiple sources claim different things about the same thing | Create a comparison concept page under wiki/concepts/ presenting all positions with source attribution |
+| Wiki index too large for the context window | Use `wiki/topics.txt` for topic scanning; read pages on demand instead of bulk-loading index.md |
+| Android content may be unverified | Require Android pages to have a `**Verified**: yes/no` field; lint flags pages unverified for more than 7 days |
+| Cross-reference count explosion (425+ pages) | Cap each section's cross-references at the 5 most relevant; use `## See also` for secondary links |
+| Wrong language/framework on a code snippet | Tag with `platform:` and `language:`; lint verifies the tags match the content |
 
-## 核心概念
+## Core concepts
 
-| 概念 | 定义 |
+| Concept | Definition |
 |------|------|
-| **知识编译** | 将原始来源处理为结构化、互相链接的 wiki 页面——在收录时一次完成，不在每次查询时重新推导 |
-| **知识复利** | 每个新来源丰富已有页面；每个问题深化 wiki。知识持续积累，不会重置 |
-| **关注点分离** | 原始来源（不可变真实来源）vs Wiki（LLM 的编译输出）vs Schema（规则）。绝不混淆 |
-| **交叉引用维护** | LLM 自动维护所有相关页面之间的双向链接 |
-| **矛盾检测** | 当新信息与已有 wiki 内容冲突时，LLM 显式标记 |
-| **回写循环** | 查询输出和洞见被回写到 wiki，创建反馈循环 |
-| **Lint 检查** | 定期健康检查以发现孤立页面、断链、过时内容、缺失交叉引用 |
-| **Schema 演进** | CLAUDE.md 规则文件随你发现什么对你的领域有效而演进 |
-| **真实来源** | 原始来源始终权威。Wiki 是编译表示，绝非原始 |
-| **LLM 作为维护者** | LLM 做所有人类讨厌的记账工作——更新索引、修复链接、保持摘要最新 |
+| **Knowledge compilation** | Processing raw sources into structured, interlinked wiki pages — done once at ingest, not re-derived on every query |
+| **Knowledge compounding** | Each new source enriches existing pages; each question deepens the wiki. Knowledge keeps accumulating and never resets |
+| **Separation of concerns** | Raw sources (immutable source of truth) vs. wiki (the LLM's compiled output) vs. schema (the rules). Never conflate them |
+| **Cross-reference maintenance** | The LLM automatically maintains bidirectional links between all related pages |
+| **Contradiction detection** | When new information conflicts with existing wiki content, the LLM explicitly flags it |
+| **Write-back loop** | Query outputs and insights are written back into the wiki, creating a feedback loop |
+| **Lint check** | Periodic health checks to find orphan pages, broken links, stale content, and missing cross-references |
+| **Schema evolution** | The CLAUDE.md rules file evolves as you discover what works for your domain |
+| **Source of truth** | Raw sources are always authoritative. The wiki is a compiled representation, never the original |
+| **LLM as maintainer** | The LLM does all the bookkeeping humans hate — updating the index, fixing links, keeping summaries current |
 
-## 与 Knowledge Consolidation 的关系
+## Relationship to Knowledge Consolidation
 
-| 维度 | llm-wiki | knowledge-consolidation |
+| Dimension | llm-wiki | knowledge-consolidation |
 |------|----------|------------------------|
-| **范围** | 完整知识库系统 | 单次对话洞察 |
-| **输入** | 原始文档、文章、论文 | AI 对话上下文 |
-| **输出** | 互相链接的 wiki：来源页面、概念、实体（人物/组织/事件等） | 一个知识文档 |
-| **生命周期** | 持续的，跨月/年复利 | 每次对话一次性 |
-| **结合** | 将 knowledge-consolidation 的输出作为 llm-wiki 的原始来源 |
+| **Scope** | Complete knowledge-base system | Single-conversation insight |
+| **Input** | Raw documents, articles, papers | AI conversation context |
+| **Output** | Interlinked wiki: source pages, concepts, entities (people/organizations/events, etc.) | One knowledge document |
+| **Lifecycle** | Continuous, compounding across months/years | One-off per conversation |
+| **Combination** | Use knowledge-consolidation's output as a raw source for llm-wiki |
 
-## 扩展路线图 (v2.0 — 8层架构)
+## Extension roadmap (v2.0 — 8-layer architecture)
 
-> **指导原则**: 先实践测试3层核心。8层升级增加基础设施复杂度，应仅在3层版本遇到明确扩展瓶颈时才采用。
+> **Guiding principle**: Practice-test the 3-layer core first. The 8-layer upgrade adds infrastructure complexity and should only be adopted when the 3-layer version hits a clear scaling bottleneck.
 
-| 层 | 名称 | 用途 | 状态 |
+| Layer | Name | Purpose | Status |
 |----|------|------|------|
-| 1 | 原始层 | 存储非结构化原始材料 | ✅ v1.0 (raw/) |
-| 2 | 存储层 | 数据库 (PostgreSQL) + 向量库 (Chroma/Pinecone) + 文件存储 | 🔮 v2.0 |
-| 3 | 索引层 | 全文索引 + 向量索引以实现快速检索 | 🔮 v2.0 |
-| 4 | LLM 处理层 | AI Agent 摘要、清洗、结构化原始知识 | ✅ v1.0 (收录器 agent) |
-| 5 | 知识图谱层 | 实体-关系图谱，链接知识节点 | 🔮 v2.0 |
-| 6 | 缓存层 | 缓存高频知识以实现快速查询 | 🔮 v2.0 |
-| 7 | 目录层 | 生成统一目录和导航 | ✅ v1.0 (index.md + schema) |
-| 8 | 可视化与 API 层 | 前端可视化 + 开放 API | 🔮 v2.0 |
+| 1 | Raw layer | Store unstructured raw material | ✅ v1.0 (raw/) |
+| 2 | Storage layer | Database (PostgreSQL) + vector store (Chroma/Pinecone) + file storage | 🔮 v2.0 |
+| 3 | Index layer | Full-text index + vector index for fast retrieval | 🔮 v2.0 |
+| 4 | LLM processing layer | AI agents summarize, clean, and structure raw knowledge | ✅ v1.0 (ingestor agent) |
+| 5 | Knowledge-graph layer | Entity-relationship graph linking knowledge nodes | 🔮 v2.0 |
+| 6 | Cache layer | Cache high-frequency knowledge for fast queries | 🔮 v2.0 |
+| 7 | Catalog layer | Generate a unified catalog and navigation | ✅ v1.0 (index.md + schema) |
+| 8 | Visualization & API layer | Frontend visualization + open API | 🔮 v2.0 |
 
-**v2.0 计划的 agent:**
+**Agents planned for v2.0:**
 
-| Agent | 核心功能 |
+| Agent | Core function |
 |-------|----------|
-| graph-builder | 构建和维护实体-关系知识图谱 |
-| vector-indexer | 生成和维护向量嵌入以支持语义搜索 |
-| api-server | 通过 REST/GraphQL API 暴露 wiki 内容 |
-| conflict-resolver | 高级多来源矛盾解决 |
-| freshness-monitor | 跟踪来源时效并触发过时内容重新收录 |
+| graph-builder | Build and maintain the entity-relationship knowledge graph |
+| vector-indexer | Generate and maintain vector embeddings for semantic search |
+| api-server | Expose wiki content through a REST/GraphQL API |
+| conflict-resolver | Advanced multi-source contradiction resolution |
+| freshness-monitor | Track source freshness and trigger re-ingest of stale content |
 
-## 参考
+## References
 
-- **LLM Wiki** — Andrej Karpathy (GitHub Gist, 2026年4月)
-- **Obsidian** — 本地优先的 markdown 知识管理 (obsidian.md)
-- **qmd** — markdown vault 的快速全文搜索
-- **Vannevar Bush, "As We May Think"** (1945) — 最初的 Memex 概念
+- **LLM Wiki** — Andrej Karpathy (GitHub Gist, April 2026)
+- **Obsidian** — local-first markdown knowledge management (obsidian.md)
+- **qmd** — fast full-text search for a markdown vault
+- **Vannevar Bush, "As We May Think"** (1945) — the original Memex concept

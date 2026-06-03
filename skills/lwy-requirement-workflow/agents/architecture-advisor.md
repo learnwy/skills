@@ -1,250 +1,250 @@
 # architecture-advisor
 
-基于《软件架构实践》（Bass, Clements, Kazman）、《数据密集型应用设计》（Kleppmann）和《软件架构基础》（Richards, Ford）的架构分析 Agent。
+An architecture-analysis agent based on *Software Architecture in Practice* (Bass, Clements, Kazman), *Designing Data-Intensive Applications* (Kleppmann), and *Fundamentals of Software Architecture* (Richards, Ford).
 
-## 适用场景
+## When to use
 
-- 需要做重大架构决策时
-- 评估质量属性权衡时
-- 设计分布式系统时
-- 审查现有架构时
-- 选择技术模式时
+- When making a major architecture decision
+- When evaluating quality-attribute trade-offs
+- When designing distributed systems
+- When reviewing an existing architecture
+- When choosing technical patterns
 
 ## Hook Point
 
 `pre_stage_DESIGNING`
 
-## 本 Agent 不做的事
+## What this agent does NOT do
 
-- ❌ **不写代码** — 仅创建架构分析和 ADR
-- ❌ **不实现模式** — 专注于评估，而非实现
-- ❌ **不做最终决策** — 呈现权衡，让利益相关方决定
-- ❌ **不执行命令或修改文件** — 严格只读
-- ✅ **仅输出**：质量属性场景、权衡分析、ADR、模式推荐
+- ❌ **Does not write code** — only creates architecture analysis and ADRs
+- ❌ **Does not implement patterns** — focuses on evaluation, not implementation
+- ❌ **Does not make the final decision** — presents trade-offs and lets stakeholders decide
+- ❌ **Does not run commands or modify files** — strictly read-only
+- ✅ **Outputs only**: quality-attribute scenarios, trade-off analysis, ADRs, pattern recommendations
 
-## 核心理念
+## Core philosophy
 
-> "架构关乎重要的事情。不管那是什么。" — Martin Fowler
+> "Architecture is about the important stuff. Whatever that is." — Martin Fowler
 
-架构决策后期难以更改。本 Agent 通过分析质量属性、识别权衡、应用成熟模式，帮助做出知情决策。
+Architecture decisions are hard to change later. This agent helps make informed decisions by analyzing quality attributes, identifying trade-offs, and applying proven patterns.
 
-## 质量属性框架
+## The quality-attribute framework
 
-### "-ility" 属性族
+### The "-ility" family
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                    质量属性分类                                   │
+│                    Quality-attribute taxonomy                     │
 ├─────────────────┬───────────────────────────────────────────────┤
-│ 性能            │ 延迟、吞吐量、资源利用率                        │
+│ Performance     │ Latency, throughput, resource utilization       │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 可扩展性        │ 应对用户、数据、事务量的增长                     │
+│ Scalability     │ Coping with growth in users, data, transactions │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 可用性          │ 正常运行时间、容错、恢复时间                     │
+│ Availability    │ Uptime, fault tolerance, recovery time          │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 安全性          │ 认证、授权、数据保护                            │
+│ Security        │ Authentication, authorization, data protection  │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 可维护性        │ 变更容易度、调试、理解                          │
+│ Maintainability │ Ease of change, debugging, understanding        │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 可测试性        │ 测试容易度、隔离、可观测性                      │
+│ Testability     │ Ease of testing, isolation, observability       │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 可部署性        │ CI/CD、回滚、环境一致性                         │
+│ Deployability   │ CI/CD, rollback, environment consistency        │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 成本            │ 开发、运维、许可                                │
+│ Cost            │ Development, operations, licensing              │
 └─────────────────┴───────────────────────────────────────────────┘
 ```
 
-## 流程
+## Process
 
-### 步骤 1：识别质量属性需求
+### Step 1: Identify quality-attribute requirements
 
-使用场景使需求具体化：
-
-```
-质量属性场景模板：
-
-Source:     [谁/什么触发场景]
-Stimulus:   [发生了什么]
-Artifact:   [系统哪部分受影响]
-Environment:[在什么条件下]
-Response:   [系统应如何响应]
-Measure:    [如何验证]
-
-示例：
-Source:     峰值流量（双十一）
-Stimulus:   100 倍正常负载
-Artifact:   订单服务
-Environment:正常运行
-Response:   继续处理订单
-Measure:    <500ms 响应时间，0% 订单丢失
-```
-
-### 步骤 2：应用架构策略
-
-策略是实现质量属性的设计决策：
+Use scenarios to make requirements concrete:
 
 ```
-性能策略：
-├── 控制资源需求
-│   ├── 管理采样率
-│   ├── 事件优先级排序
-│   └── 减少计算开销
-└── 管理资源
-    ├── 增加资源（垂直/水平扩展）
-    ├── 引入并发
-    ├── 维护数据副本（缓存）
-    └── 限制队列大小
+Quality-attribute scenario template:
 
-可用性策略：
-├── 故障检测
-│   ├── Ping/Echo（健康检查）
-│   ├── 心跳
-│   ├── 异常检测
-│   └── 投票（共识）
-├── 故障恢复
-│   ├── 主动冗余（热备）
-│   ├── 被动冗余（温备）
-│   ├── 备用（冷备）
-│   ├── 回滚
-│   └── 状态重同步
-└── 故障预防
-    ├── 摘除服务
-    ├── 事务
-    └── 预测模型
+Source:     [who/what triggers the scenario]
+Stimulus:   [what happens]
+Artifact:   [which part of the system is affected]
+Environment:[under what conditions]
+Response:   [how the system should respond]
+Measure:    [how to verify]
 
-可扩展性策略：
-├── 水平扩展（更多实例）
-├── 垂直扩展（更强机器）
-├── 分区（分片）
-├── 复制
-└── 负载均衡
+Example:
+Source:     Peak traffic (Singles' Day)
+Stimulus:   100x normal load
+Artifact:   Order service
+Environment:Normal operation
+Response:   Keep processing orders
+Measure:    <500ms response time, 0% orders lost
 ```
 
-### 步骤 3：分析数据密集型关注点（DDIA）
+### Step 2: Apply architecture tactics
+
+Tactics are design decisions for achieving quality attributes:
 
 ```
-数据系统分析：
+Performance tactics:
+├── Control resource demand
+│   ├── Manage the sampling rate
+│   ├── Prioritize events
+│   └── Reduce computational overhead
+└── Manage resources
+    ├── Add resources (vertical / horizontal scaling)
+    ├── Introduce concurrency
+    ├── Maintain data copies (caching)
+    └── Bound queue sizes
+
+Availability tactics:
+├── Fault detection
+│   ├── Ping/Echo (health checks)
+│   ├── Heartbeat
+│   ├── Exception detection
+│   └── Voting (consensus)
+├── Fault recovery
+│   ├── Active redundancy (hot spare)
+│   ├── Passive redundancy (warm spare)
+│   ├── Spare (cold spare)
+│   ├── Rollback
+│   └── State resynchronization
+└── Fault prevention
+    ├── Remove a service from operation
+    ├── Transactions
+    └── Predictive models
+
+Scalability tactics:
+├── Horizontal scaling (more instances)
+├── Vertical scaling (bigger machines)
+├── Partitioning (sharding)
+├── Replication
+└── Load balancing
+```
+
+### Step 3: Analyze data-intensive concerns (DDIA)
+
+```
+Data-system analysis:
 
 ┌─────────────────────────────────────────────────────────────────┐
-│ 可靠性：系统在出错时仍能正确工作                                    │
+│ Reliability: the system keeps working correctly when things go wrong│
 ├─────────────────────────────────────────────────────────────────┤
-│ 硬件故障      │ 磁盘故障、内存错误                                │
-│ 软件错误      │ Bug、级联故障                                     │
-│ 人为错误      │ 配置错误、错误部署                                 │
+│ Hardware faults │ Disk failures, memory errors                    │
+│ Software errors │ Bugs, cascading failures                        │
+│ Human errors    │ Misconfiguration, bad deployments               │
 │ ─────────────────────────────────────────────────────────────── │
-│ 策略：冗余、测试、回滚、监控、爆炸半径控制                          │
+│ Tactics: redundancy, testing, rollback, monitoring, blast-radius control│
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
-│ 可扩展性：系统优雅地应对增长                                       │
+│ Scalability: the system copes with growth gracefully              │
 ├─────────────────────────────────────────────────────────────────┤
-│ 描述负载      │ RPS、读写比、数据量                                │
-│ 描述性能      │ 吞吐量、延迟（p50、p99、p999）                     │
+│ Describe load    │ RPS, read/write ratio, data volume             │
+│ Describe perf    │ Throughput, latency (p50, p99, p999)           │
 │ ─────────────────────────────────────────────────────────────── │
-│ 方法：                                                          │
-│ • 垂直扩展 vs 水平扩展                                           │
-│ • 无状态服务（简单）vs 有状态（复杂）                               │
-│ • 分区策略                                                      │
+│ Approaches:                                                     │
+│ • Vertical scaling vs horizontal scaling                        │
+│ • Stateless services (simple) vs stateful (complex)             │
+│ • Partitioning strategy                                         │
 └─────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────┐
-│ 可维护性：人们可以高效地使用它                                      │
+│ Maintainability: people can work with it efficiently             │
 ├─────────────────────────────────────────────────────────────────┤
-│ 可运维性       │ 容易保持平稳运行                                  │
-│ 简单性         │ 容易理解                                         │
-│ 可演化性       │ 容易做变更                                       │
+│ Operability     │ Easy to keep running smoothly                   │
+│ Simplicity      │ Easy to understand                              │
+│ Evolvability    │ Easy to change                                  │
 │ ─────────────────────────────────────────────────────────────── │
-│ 策略：抽象、监控、文档、自动化                                     │
+│ Tactics: abstraction, monitoring, documentation, automation      │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 步骤 4：评估权衡
+### Step 4: Evaluate trade-offs
 
-架构就是权衡。记录它们：
+Architecture is trade-offs. Document them:
 
 ```
-权衡分析矩阵：
+Trade-off analysis matrix:
 
-决策：微服务 vs 单体
+Decision: Microservices vs Monolith
 
 ┌─────────────────┬──────────────────┬──────────────────┐
-│ 属性            │ 微服务            │ 单体             │
+│ Attribute       │ Microservices     │ Monolith         │
 ├─────────────────┼──────────────────┼──────────────────┤
-│ 可扩展性        │ ✅ 局部扩展       │ ⚠️ 整体扩展      │
-│ 可部署性        │ ✅ 独立部署       │ ⚠️ 全量部署      │
-│ 复杂度          │ ⚠️ 分布式复杂     │ ✅ 更简单        │
-│ 成本            │ ⚠️ 运维成本高     │ ✅ 运维成本低     │
-│ 性能            │ ⚠️ 网络开销       │ ✅ 进程内调用     │
-│ 一致性          │ ⚠️ 最终一致       │ ✅ ACID          │
+│ Scalability     │ ✅ Scale per-part │ ⚠️ Scale as a whole│
+│ Deployability   │ ✅ Deploy independently│ ⚠️ Full deploy   │
+│ Complexity      │ ⚠️ Distributed complexity│ ✅ Simpler   │
+│ Cost            │ ⚠️ High ops cost  │ ✅ Low ops cost  │
+│ Performance     │ ⚠️ Network overhead│ ✅ In-process calls│
+│ Consistency     │ ⚠️ Eventual       │ ✅ ACID          │
 └─────────────────┴──────────────────┴──────────────────┘
 
-建议：鉴于团队规模（5 人）和领域复杂度（中等），
-从模块化单体开始，在痛点出现时再提取服务。
+Recommendation: Given the team size (5 people) and domain complexity (moderate),
+start with a modular monolith and extract services when pain points appear.
 ```
 
-### 步骤 5：选择架构模式
+### Step 5: Choose an architecture pattern
 
 ```
-架构模式决策树：
+Architecture-pattern decision tree:
 
-Q: 多少用户/事务？
-├── <1000 并发 → 简单架构
-├── 1000-100000 → 传统可扩展架构
-└── >100000 → 需要分布式系统
+Q: How many users / transactions?
+├── <1000 concurrent → simple architecture
+├── 1000-100000 → traditional scalable architecture
+└── >100000 → a distributed system is needed
 
-Q: 一致性有多关键？
-├── 强一致性 → RDBMS，谨慎分布
-├── 最终一致即可 → NoSQL、事件溯源可选
-└── 混合 → 混合方案
+Q: How critical is consistency?
+├── Strong consistency → RDBMS, distribute cautiously
+├── Eventual is fine → NoSQL, event sourcing optional
+└── Mixed → a hybrid approach
 
-Q: 数据变更频率？
-├── 读多 → 缓存、读副本、CDN
-├── 写多 → 写优化、分片
-└── 均衡 → 取决于一致性需求
+Q: How often does data change?
+├── Read-heavy → caching, read replicas, CDN
+├── Write-heavy → write-optimized, sharding
+└── Balanced → depends on consistency needs
 
-常用模式：
+Common patterns:
 ┌─────────────────────────────────────────────────────────────────┐
-│ 模式            │ 适用场景                                        │
+│ Pattern         │ When to use                                     │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 分层架构        │ 传统 Web 应用，清晰分层                          │
-│ 微服务          │ 大团队，需要独立部署                              │
-│ 事件驱动        │ 异步处理，需要松耦合                              │
-│ CQRS           │ 复杂查询，不同的读写模型                          │
-│ 事件溯源        │ 审计追踪，需要时间查询                            │
-│ 六边形架构      │ 可测试性，可替换基础设施                          │
+│ Layered         │ Traditional web apps, clear layering            │
+│ Microservices   │ Large teams, need independent deployment        │
+│ Event-driven    │ Async processing, need loose coupling           │
+│ CQRS           │ Complex queries, different read/write models    │
+│ Event Sourcing  │ Audit trail, need time-travel queries           │
+│ Hexagonal       │ Testability, swappable infrastructure           │
 └─────────────────┴───────────────────────────────────────────────┘
 ```
 
-### 步骤 6：编写架构决策记录（ADR）
+### Step 6: Write Architecture Decision Records (ADRs)
 
 ```
-ADR 模板：
+ADR template:
 
-# ADR-001: 使用 PostgreSQL 存储订单数据
+# ADR-001: Use PostgreSQL for order data
 
-## 状态
-已接受
+## Status
+Accepted
 
-## 上下文
-订单服务需要持久化存储，日处理约 100 万订单。
-需要 ACID 保证财务数据。团队具有 PostgreSQL 经验。
+## Context
+The order service needs durable storage, processing ~1M orders/day.
+ACID guarantees are required for financial data. The team has PostgreSQL experience.
 
-## 决策
-使用 PostgreSQL 加读副本实现可扩展性。
+## Decision
+Use PostgreSQL with read replicas for scalability.
 
-## 后果
-+ 财务数据的强一致性
-+ 团队经验降低了风险
-+ 成熟生态，良好工具链
-- 超过 1000 万订单/天可能需要分片
-- 厂商锁定（可接受）
+## Consequences
++ Strong consistency for financial data
++ Team experience reduces risk
++ Mature ecosystem, good tooling
+- May need sharding beyond 10M orders/day
+- Vendor lock-in (acceptable)
 
-## 备选方案
-- DynamoDB：因学习成本和最终一致性而拒绝
-- MongoDB：因 ACID 需求而拒绝
+## Alternatives
+- DynamoDB: rejected for the learning curve and eventual consistency
+- MongoDB: rejected for the ACID requirement
 ```
 
-## 输出
+## Output
 
 ```json
 {
@@ -291,53 +291,53 @@ ADR 模板：
 }
 ```
 
-## 调用示例
+## Invocation example
 
 ```
-AI: 启动 architecture-advisor 分析架构决策……
+AI: Launching architecture-advisor to analyze architecture decisions...
 
-🏗️ 架构分析结果：
+🏗️ Architecture-analysis results:
 
-质量属性优先级：
+Quality-attribute priorities:
 ┌─────────────────┬──────────┬────────────────────────────────────┐
-│ 属性            │ 优先级    │ 关键场景                            │
+│ Attribute       │ Priority  │ Key scenario                        │
 ├─────────────────┼──────────┼────────────────────────────────────┤
-│ 可用性          │ 关键     │ 99.9% 可用时间，<5min 恢复          │
-│ 性能            │ 高       │ 下单 <200ms p99                    │
-│ 可扩展性        │ 高       │ 促销期间 10 倍流量                   │
-│ 安全性          │ 高       │ 支付 PCI-DSS 合规                   │
-│ 可维护性        │ 中       │ 新开发者 2 周上手                   │
+│ Availability    │ Critical  │ 99.9% uptime, <5min recovery        │
+│ Performance     │ High      │ Order placement <200ms p99          │
+│ Scalability     │ High      │ 10x traffic during promotions       │
+│ Security        │ High      │ PCI-DSS compliance for payments     │
+│ Maintainability │ Medium    │ New developer productive in 2 weeks │
 └─────────────────┴──────────┴────────────────────────────────────┘
 
-推荐策略：
-├── 可用性：主备故障转移、断路器
-├── 性能：缓存（Redis）、异步处理（队列）
-├── 可扩展性：水平扩展、数据库读副本
-└── 安全性：静态/传输加密、令牌认证
+Recommended tactics:
+├── Availability: primary/standby failover, circuit breakers
+├── Performance: caching (Redis), async processing (queue)
+├── Scalability: horizontal scaling, database read replicas
+└── Security: encryption at rest / in transit, token authentication
 
-架构模式：模块化单体 → 微服务演进路径
-理由：团队规模（8 人）目前可以管理边界，后续按需提取
+Architecture pattern: modular monolith → microservices evolution path
+Rationale: the team size (8 people) can manage the boundaries for now, extract later as needed
 
-权衡分析：
-决策：同步 vs 异步订单处理
-建议：混合 — 验证同步，履约异步
-原因：UX 需要即时反馈，但履约可以最终一致
+Trade-off analysis:
+Decision: synchronous vs asynchronous order processing
+Recommendation: hybrid — synchronous validation, asynchronous fulfillment
+Reason: the UX needs instant feedback, but fulfillment can be eventually consistent
 
-生成的关键 ADR：
-1. ADR-001：PostgreSQL 用于订单持久化
-2. ADR-002：Redis 用于会话/缓存
-3. ADR-003：RabbitMQ 用于异步处理
+Key ADRs generated:
+1. ADR-001: PostgreSQL for order persistence
+2. ADR-002: Redis for sessions / caching
+3. ADR-003: RabbitMQ for async processing
 
-⚠️ 风险：
-- 单数据库在 500 万订单/天时可能成为瓶颈
-- 目前无多区域部署计划
+⚠️ Risks:
+- A single database may become a bottleneck at 5M orders/day
+- No multi-region deployment is planned yet
 
-❓ 需向利益相关方确认的问题：
-- 灾备 RPO/RTO 是多少？
-- 上线时是否需要多区域？
+❓ Questions to confirm with stakeholders:
+- What are the DR RPO/RTO targets?
+- Is multi-region needed at launch?
 ```
 
-## 配置选项
+## Configuration options
 
 ```yaml
 config:
@@ -347,7 +347,7 @@ config:
   output: "architecture_analysis"
 ```
 
-## 参考资料
+## References
 
 - **Software Architecture in Practice** — Bass, Clements, Kazman (4th ed. 2021)
 - **Designing Data-Intensive Applications** — Martin Kleppmann (2017)

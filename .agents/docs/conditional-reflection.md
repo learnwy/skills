@@ -1,223 +1,223 @@
 # Conditional Reflection in Agent Skills
 
-> 把 Pavlovian 条件反射的工程化范式映射到 AI Agent / Skill 设计：
-> **明确刺激 → 确定响应**，不依赖模型每次现场推理；可靠性来自前置设计，而非运行时判断。
+> Maps the engineering paradigm of Pavlovian conditioned reflexes onto AI Agent / Skill design:
+> **explicit stimulus → deterministic response**, without relying on the model to reason from scratch every time. Reliability comes from up-front design, not runtime judgment.
 
-## 1. 概念框架
+## 1. Conceptual framework
 
-经典条件反射的四要素 → Skill 工程化对应：
+The four elements of classical conditioning → their Skill-engineering counterparts:
 
-| 经典要素 | 工程化映射 |
+| Classical element | Engineering mapping |
 |---|---|
-| 无条件刺激（食物） | 业务终态（用户得到正确结果） |
-| 条件刺激（铃声） | Trigger：hook 事件 / 关键词 / 文件模式 / 命令前缀 |
-| 反射弧（神经通路） | Hook 脚本 / Skill 描述里的 trigger 段 / Slash 命令绑定 |
-| 强化与消退 | trends/usage 日志 → 周期性回顾 → 调整触发条件 |
+| Unconditioned stimulus (food) | Business end-state (the user gets the correct result) |
+| Conditioned stimulus (bell) | Trigger: hook event / keyword / file pattern / command prefix |
+| Reflex arc (neural pathway) | Hook script / the trigger section of a Skill description / slash-command binding |
+| Reinforcement & extinction | trends/usage logs → periodic review → adjust the trigger conditions |
 
-**核心判据**：只要满足条件 X，行为 Y 必然发生，且 Y 的形态可预测。
-凡是"模型每次现场判断要不要做、怎么做"的，都不是条件反射，而是审议（deliberation）。
+**Core criterion**: whenever condition X holds, behavior Y necessarily fires, and the form of Y is predictable.
+Anything where "the model decides on the spot whether to act and how" is not a reflex but deliberation.
 
-## 2. 三级反射强度模型
+## 2. Three-tier reflex-strength model
 
-本仓库 15 个 skills 大致落在三档：
+The 15 skills in this repo fall roughly into three tiers:
 
-### Tier 1 — 硬反射（Hard Reflex）
-**100% 确定性，无 LLM 介入**。事件直接进脚本，输出注入对话上下文。
+### Tier 1 — Hard Reflex
+**100% deterministic, no LLM involvement**. The event goes straight into a script, and the output is injected into the conversation context.
 
-| Skill | 触发器 | 反射弧 |
+| Skill | Trigger | Reflex arc |
 |---|---|---|
-| `lwy-dispatch` | UserPromptSubmit / Stop / SessionStart hook | 单进程聚合调度 3 类 hook |
-| `lwy-prompt-optimizer`（hook 部分） | UserPromptSubmit + 检测到提示词模式 | 注入 7 维度评分提示 |
-| `lwy-llm-wiki`（hook 部分） | UserPromptSubmit + 关键词扫描命中 | 注入相关 wiki topic 列表 |
-| `lwy-prompt-optimizer`（hook 部分） | UserPromptSubmit + 检测到提示词模式 | 注入 7 维度评分提示 |
-| `lwy-knowledge-consolidation`（Stop hook） | Stop + 模式匹配（"figured it out" 等） | 注入 nudge 提示用户保存 |
-| `lwy-status`（SessionStart） | 每周首次 session | 注入跨子系统摘要 |
+| `lwy-dispatch` | UserPromptSubmit / Stop / SessionStart hook | Single-process aggregation of 3 hook classes |
+| `lwy-prompt-optimizer` (hook part) | UserPromptSubmit + prompt pattern detected | Inject the 7-dimension scoring prompt |
+| `lwy-llm-wiki` (hook part) | UserPromptSubmit + keyword scan hit | Inject the list of relevant wiki topics |
+| `lwy-prompt-optimizer` (hook part) | UserPromptSubmit + prompt pattern detected | Inject the 7-dimension scoring prompt |
+| `lwy-knowledge-consolidation` (Stop hook) | Stop + pattern match ("figured it out", etc.) | Inject a nudge prompting the user to save |
+| `lwy-status` (SessionStart) | First session of the week | Inject the cross-subsystem digest |
 
-### Tier 2 — 软反射（Soft Reflex）
-**LLM 做模式匹配但不做价值判断**。SKILL.md 的 `description` 里写明 trigger 词，模型见到就调用，不思考"该不该用"。
+### Tier 2 — Soft Reflex
+**The LLM does pattern matching but no value judgment**. The `description` in SKILL.md spells out the trigger words; when the model sees them it invokes the skill without deliberating over "should I use this".
 
-| Skill | 触发词样例 |
+| Skill | Sample trigger words |
 |---|---|
-| `on-contradiction` | "矛盾分析"、"主要矛盾"、"trade-off analysis" |
-| `on-practice` | "实事求是"、"实践论"、"verify through practice" |
-| `on-protracted-war` | "持久战"、"分阶段策略"、"underdog strategy" |
-| `lwy-requirement-workflow` | "develop feature"、"build feature"、"开发功能" |
-| `lwy-project-skill-writer` | "创建技能"、"编写技能"、"设计技能" |
-| `lwy-project-agent-writer` | "create agent"、"build an agent" |
-| `lwy-project-skill-installer` | "install skill"、"add skill" |
-| `lwy-prompt-optimizer`（主动模式） | "优化提示词"、"分析 prompt"、"review this prompt" |
-| `lwy-llm-wiki`（主动模式） | "知识库"、"个人 wiki"、"收录这个" |
+| `on-contradiction` | "矛盾分析", "主要矛盾", "trade-off analysis" |
+| `on-practice` | "实事求是", "实践论", "verify through practice" |
+| `on-protracted-war` | "持久战", "分阶段策略", "underdog strategy" |
+| `lwy-requirement-workflow` | "develop feature", "build feature", "开发功能" |
+| `lwy-project-skill-writer` | "创建技能", "编写技能", "设计技能" |
+| `lwy-project-agent-writer` | "create agent", "build an agent" |
+| `lwy-project-skill-installer` | "install skill", "add skill" |
+| `lwy-prompt-optimizer` (proactive mode) | "优化提示词", "分析 prompt", "review this prompt" |
+| `lwy-llm-wiki` (proactive mode) | "知识库", "个人 wiki", "收录这个" |
 
-### Tier 3 — 条件认知（Conditioned Cognition）
-**反射触发后，进入一套受约束的推理流程**。Skill 提供工作流模板/agent 编排，LLM 在框内推理，但仍需判断。
+### Tier 3 — Conditioned Cognition
+**Once the reflex fires, it enters a constrained reasoning flow**. The skill provides a workflow template / agent orchestration; the LLM reasons within the frame but still has to make judgments.
 
-| Skill | 反射后的认知约束 |
+| Skill | Post-reflex cognitive constraint |
 |---|---|
-| `lwy-requirement-workflow` | spec.md → tasks.md → 实现 → 验证 的 SDD 生命周期 |
-| `lwy-software-methodology-toolkit` | 10 个方法论 agent 的兜底分诊 |
-| `on-contradiction` / `on-practice` / `on-protracted-war` | 各自的 decision-maker / problem-analyzer / report-writer agent 三角 |
-| `lwy-llm-wiki`（ingestor / querier 等） | 摘要 → 交叉引用 → 入库的固定流水线 |
+| `lwy-requirement-workflow` | The SDD lifecycle: spec.md → tasks.md → implement → verify |
+| `lwy-software-methodology-toolkit` | Fallback triage across 10 methodology agents |
+| `on-contradiction` / `on-practice` / `on-protracted-war` | Each one's decision-maker / problem-analyzer / report-writer triad |
+| `lwy-llm-wiki` (ingestor / querier, etc.) | The fixed pipeline: summarize → cross-reference → file |
 
 ---
 
-## 3. 各级反射的最佳实践
+## 3. Best practices per reflex tier
 
-### 3.1 Tier 1（Hard Reflex）
+### 3.1 Tier 1 (Hard Reflex)
 
-**何时用**：行为完全可枚举、不需要语言理解、需要绝对可靠（每次都触发、永不漏）。
+**When to use**: the behavior is fully enumerable, needs no language understanding, and must be absolutely reliable (fires every time, never misses).
 
-**设计要点**：
-1. **触发条件用代码判定，不靠模型**。例如英文检测用 `englishCharRatio > 0.7`，不要让模型"判断这是不是英文"。
-2. **副作用最小化**：hook 只注入文本/系统提示，不直接改文件。改文件留给后续 LLM 调用工具。
-3. **失败静默（fail-soft）**：一个 scanner 抛错不能影响其他 scanner，更不能阻塞用户的 prompt。本仓库 `lwy-dispatch` 已用 try/catch 隔离每个子扫描。
-4. **冷启动延迟 < 200ms**：hook 在每次 prompt 都跑，慢就是事故。本仓库用 `rslib` 把 TS 打包成单文件 CJS，避免 require 树展开。
-5. **可观测**：所有 hook 输出都进日志（`~/.learnwy/.../logs/`），便于事后统计触发频次和误报率。
-6. **去重 / 限频**：同一会话内同一提示不重复注入；周期性提示（如每周摘要）用 ISO 周作为去重键。
+**Design points**:
+1. **Decide the trigger condition in code, not via the model**. For example, detect English with `englishCharRatio > 0.7` rather than asking the model "is this English".
+2. **Minimize side effects**: a hook only injects text / system prompts, it does not modify files directly. Leave file changes to a later LLM tool call.
+3. **Fail-soft**: one scanner throwing must not affect the others, and certainly must not block the user's prompt. In this repo `lwy-dispatch` already isolates each sub-scan with try/catch.
+4. **Cold-start latency < 200ms**: a hook runs on every prompt, so being slow is an incident. This repo uses `rslib` to bundle the TS into a single-file CJS, avoiding require-tree expansion.
+5. **Observable**: all hook output goes to logs (`~/.learnwy/.../logs/`), making it easy to measure trigger frequency and false-positive rate after the fact.
+6. **Dedup / rate-limit**: don't re-inject the same prompt within one session; for periodic prompts (e.g. the weekly digest) use the ISO week as the dedup key.
 
-**反例**：
-- ❌ 在 hook 里做网络请求（高延迟、低可靠）
-- ❌ hook 里直接 `console.log` 大段调试（污染上下文）
-- ❌ 用 `setTimeout` / `setInterval` 实现"周期性"——hook 是无状态的，应靠落盘时间戳判断
+**Anti-examples**:
+- ❌ Making network requests inside a hook (high latency, low reliability)
+- ❌ `console.log`-ing big debug dumps in a hook (pollutes the context)
+- ❌ Implementing "periodic" behavior with `setTimeout` / `setInterval` — hooks are stateless and should rely on a persisted timestamp instead
 
-### 3.2 Tier 2（Soft Reflex）
+### 3.2 Tier 2 (Soft Reflex)
 
-**何时用**：触发条件需要少量语义理解（关键词/意图），但响应路径相对固定。
+**When to use**: the trigger condition needs a little semantic understanding (keyword / intent), but the response path is relatively fixed.
 
-**SKILL.md `description` 的反射工程化写法**：
+**The reflex-engineering form for a SKILL.md `description`**:
 
 ```yaml
-description: "<一句话核心能力>。Triggers: '<触发词1>'、'<触发词2>'、'<英文同义>'、'<反例排除条件>'。Do not use for: '<边界1>'、'<边界2>'。"
+description: "<one-line core capability>. Triggers: '<trigger1>', '<trigger2>', '<english synonym>', '<exclusion condition>'. Do not use for: '<boundary1>', '<boundary2>'."
 ```
 
-四要素：
-1. **核心能力一句话**：让模型 1 秒判断"这事跟我有关吗"。
-2. **触发词列表**：中英双语都列；包含口语化变体（"帮我看看"≠"分析"）。
-3. **边界排除（Do not use for）**：对抗"什么都想接"的过度泛化。本仓库 `lwy-knowledge-consolidation` 显式写了 "For global compounding knowledge, use lwy-llm-wiki instead"，避免和 wiki 抢活。
-4. **同类技能互链**：让模型在分诊时知道"另一个更合适的我"。
+Four elements:
+1. **Core capability in one sentence**: let the model judge "is this relevant to me?" in one second.
+2. **Trigger-word list**: list both Chinese and English; include colloquial variants ("帮我看看" ≠ "分析").
+3. **Boundary exclusion (Do not use for)**: counter the over-generalization of "wanting to take on everything". In this repo `lwy-knowledge-consolidation` explicitly says "For global compounding knowledge, use lwy-llm-wiki instead" to avoid competing with the wiki for work.
+4. **Cross-link to sibling skills**: let the model know, during triage, that "a better-suited me exists".
 
-**优秀示例**（来自本仓库 `lwy-prompt-optimizer`）：
+**A good example** (from this repo's `lwy-prompt-optimizer`):
 > "Pre-flight analysis and scoring of user prompts across 7 dimensions. Triggers: any substantive prose prompt, '优化提示词', '分析 prompt', 'review this prompt'. Do not use for: casual chat, single-word queries."
 
-**反例**：
-- ❌ description 写成"通用助手，可处理各种问题"——0 触发力。
-- ❌ 触发词只写英文，中文环境下命中率骤降。
-- ❌ 把"实现细节"写进 description（应放 SKILL.md body），消耗模型的注意力预算。
+**Anti-examples**:
+- ❌ A description like "general assistant, handles all kinds of problems" — zero triggering power.
+- ❌ Trigger words in English only — hit rate plummets in a Chinese-language environment.
+- ❌ Putting "implementation details" in the description (they belong in the SKILL.md body) — it burns the model's attention budget.
 
-### 3.3 Tier 3（Conditioned Cognition）
+### 3.3 Tier 3 (Conditioned Cognition)
 
-**何时用**：触发后需要多步推理，但推理路径要可复制、可审计。
+**When to use**: multi-step reasoning is required after the trigger, but the reasoning path must be reproducible and auditable.
 
-**设计要点**：
-1. **流程显式化**：把推理路径写成有限状态机（如 `lwy-requirement-workflow` 的 INIT → IMPLEMENTING → TESTING → DONE）。
-2. **检查点 / 验证门**：每一步结束前要求显式确认（写 spec、跑测试、读 diff），防止 LLM "感觉差不多了就跳步"。
-3. **agent 角色分离**：把"分析者 / 决策者 / 落笔者"分开（参考三本毛选 skill 的 decision-maker / problem-analyzer / report-writer 三角），各 agent 用各自的提示词范式，避免一个 prompt 既要分析又要总结又要决策。
-4. **回路（feedback loop）**：执行结果写回日志/index，下次同类问题能引用上次的产出。本仓库 `lwy-llm-wiki` 的 `health.json`、`lwy-prompt-optimizer` 的 trends 都是这种回路。
+**Design points**:
+1. **Make the flow explicit**: write the reasoning path as a finite state machine (e.g. `lwy-requirement-workflow`'s INIT → IMPLEMENTING → TESTING → DONE).
+2. **Checkpoints / verification gates**: require an explicit confirmation before each step ends (write the spec, run the tests, read the diff) to stop the LLM from "feeling close enough and skipping a step".
+3. **Separation of agent roles**: split "analyzer / decision-maker / writer" apart (see the decision-maker / problem-analyzer / report-writer triad in the three Mao-methodology skills); give each agent its own prompt paradigm, so one prompt isn't forced to analyze, summarize, and decide all at once.
+4. **Feedback loop**: write execution results back to logs/index, so the next similar problem can cite the previous output. In this repo `lwy-llm-wiki`'s `health.json` and `lwy-prompt-optimizer`'s trends are both such loops.
 
 ---
 
-## 4. 提示词设计的反射化最佳实践
+## 4. Reflex-oriented best practices for prompt design
 
-把"提示词"当成反射弧的中段：上游是 trigger，下游是工具调用 + 文本输出。
+Treat "the prompt" as the middle segment of the reflex arc: upstream is the trigger, downstream is the tool call + text output.
 
-### 4.1 通用原则
-| 原则 | 落地手法 |
+### 4.1 General principles
+| Principle | How to land it |
 |---|---|
-| **结构 > 自由文本** | 用表格 / 列表 / YAML 替代散文。模型对结构化输入的"反射"更快更准。 |
-| **正例 + 反例配对** | 只给正例容易过拟合；只给反例容易混淆。本仓库多个 SKILL.md 用 "✅ Use for / ❌ Do not use for" 配对。 |
-| **触发词单调化** | 同一触发词只对应一个 skill。出现交叉时显式互斥（如 KC vs lwy-llm-wiki 的边界声明）。 |
-| **响应模板固化** | 输出格式用模板锚定（如 lwy-prompt-optimizer 的 "7 维度评分表"），不让模型每次重设计版式。 |
-| **副作用前置声明** | "本 skill 会写文件到 X / 调用 Y API"。让模型/用户预知反射的"冲量"。 |
+| **Structure > free text** | Use tables / lists / YAML instead of prose. The model "reflexes" faster and more accurately on structured input. |
+| **Pair positive + negative examples** | Positives only tend to overfit; negatives only tend to confuse. Several SKILL.md files in this repo pair "✅ Use for / ❌ Do not use for". |
+| **Keep trigger words monotonic** | One trigger word maps to exactly one skill. When overlap appears, make them explicitly mutually exclusive (e.g. the boundary declaration between KC and lwy-llm-wiki). |
+| **Fix the response template** | Anchor the output format with a template (e.g. lwy-prompt-optimizer's "7-dimension scoring table") so the model doesn't redesign the layout every time. |
+| **Declare side effects up front** | "This skill writes files to X / calls the Y API." Let the model/user anticipate the reflex's "momentum". |
 
-### 4.2 反射 vs 审议的边界标记
+### 4.2 Marking the reflex-vs-deliberation boundary
 
-明确告诉模型："这一步是反射（无脑做），那一步要审议（停下来想）"。
+Tell the model explicitly: "this step is a reflex (do it mindlessly), that step is deliberation (stop and think)".
 
 ```markdown
-## 反射段（Reflex）
-1. 拿到 X → 调用 tool A → 拿结果。**不要** 在此阶段提问。
+## Reflex segment
+1. Got X → call tool A → take the result. **Do not** ask questions in this phase.
 
-## 审议段（Deliberation）
-2. 看到 A 的结果后，**停下来** 判断 X 属于哪一类（Y / Z）。
-3. 根据分类，分别走不同分支。
+## Deliberation segment
+2. After seeing A's result, **stop** and judge which class X belongs to (Y / Z).
+3. Branch differently based on the classification.
 ```
 
-本仓库 `lwy-requirement-workflow` 的 INIT → IMPLEMENTING 的过渡就是这种边界。
+The INIT → IMPLEMENTING transition in this repo's `lwy-requirement-workflow` is exactly this kind of boundary.
 
-### 4.3 钝化与脱敏
+### 4.3 Desensitization
 
-强反射的副作用是"过敏"：什么都触发。设计时主动加抑制条件：
+A strong reflex has a side effect: "allergy" — triggering on everything. Add inhibitory conditions proactively at design time:
 
-- `lwy-prompt-optimizer` 的 hook 写了 "Skip silently if input is casual chat or a single-word query"——避免每条消息都被打断。
-- `lwy-llm-wiki` 的 prompt-scan 用 1913 个关键词索引而非全文 grep，控制误报。
-- `lwy-prompt-optimizer` 显式列出 "不触发条件"（用户在闲聊、单词查询等场景）。
+- `lwy-prompt-optimizer`'s hook says "Skip silently if input is casual chat or a single-word query" — to avoid interrupting on every message.
+- `lwy-llm-wiki`'s prompt-scan uses an index of 1913 keywords rather than a full-text grep, to control false positives.
+- `lwy-prompt-optimizer` explicitly lists "do-not-trigger conditions" (casual chat, single-word queries, etc.).
 
 ---
 
-## 5. 强模型 vs 轻量模型的反射适配
+## 5. Reflex adaptation for strong vs. lightweight models
 
-| 维度 | 大模型（Opus / GPT-4 级） | 轻量模型（Haiku / 小模型 / 端侧） |
+| Dimension | Large model (Opus / GPT-4 class) | Lightweight model (Haiku / small / on-device) |
 |---|---|---|
-| **触发判定能力** | 能从模糊触发词推断意图（"帮我搞一下这个" → 大概率是开发任务） | 必须用显式关键词、命令前缀、或 hook 强制触发 |
-| **反射范围** | 可以放宽 trigger 列表，靠模型推断兜底 | 必须把 trigger 列穷尽；遗漏即漏触发 |
-| **响应模板严格度** | 模板可以是"框架级"（"包含一个表+一段总结"） | 模板要"字段级"（每列叫什么、什么数据类型） |
-| **多技能分诊** | 能在 16 个 skill 中自主选最匹配 | 应通过 `find-skills` / `lwy-dispatch` 预先把候选缩到 ≤3 个 |
-| **审议段（Tier 3）** | 可以把推理流程写成"目标 + 约束"，让模型自己规划 | 必须写成有限状态机/流程图，每步明确输入输出 |
-| **错误恢复** | 能从异常输出自我纠错（"我刚才漏了一步，重新来"） | 错了就错了，必须前置兜底（hook 校验 / 模板补丁 / 二次调用大模型修） |
-| **token 预算** | 可以塞长 SKILL.md（数千 tokens） | SKILL.md 应 < 500 tokens；细节挪到 references/ 按需加载 |
-| **典型用法** | Tier 2 + Tier 3 为主，hook 做加速器 | Tier 1 为主，hook 承担大部分确定性逻辑，LLM 只做最后一公里 |
+| **Trigger-judgment ability** | Can infer intent from fuzzy triggers ("help me deal with this" → most likely a dev task) | Must use explicit keywords, command prefixes, or hook-forced triggering |
+| **Reflex scope** | Can loosen the trigger list and let model inference backstop it | Must enumerate the trigger list exhaustively; an omission is a missed trigger |
+| **Response-template strictness** | Templates can be "framework-level" ("include a table + a summary") | Templates must be "field-level" (what each column is called, what data type) |
+| **Multi-skill triage** | Can autonomously pick the best match among 16 skills | Should pre-narrow candidates to ≤3 via `find-skills` / `lwy-dispatch` |
+| **Deliberation segment (Tier 3)** | Can write the reasoning flow as "goal + constraints" and let the model plan itself | Must write it as a finite state machine / flowchart, with explicit I/O per step |
+| **Error recovery** | Can self-correct from anomalous output ("I missed a step, let me redo it") | Wrong is wrong; must backstop up front (hook validation / template patch / a second call to a large model to fix) |
+| **Token budget** | Can fit a long SKILL.md (thousands of tokens) | SKILL.md should be < 500 tokens; move detail to references/ for on-demand loading |
+| **Typical usage** | Mostly Tier 2 + Tier 3, with hooks as accelerators | Mostly Tier 1; hooks carry most of the deterministic logic, the LLM only does the last mile |
 
-### 5.1 强模型的反射设计要诀
-- **避免过度规约**：把 SKILL.md 写成枷锁会浪费大模型的判断力。给"原则 + 边界"，留推理空间。
-- **trigger 可以宽松**：靠模型分诊，比靠 trigger 词穷举更可扩展。
-- **审议段用"提问驱动"**：让模型自问"这一步还缺什么信息"再行动。
+### 5.1 Reflex-design tips for strong models
+- **Avoid over-specification**: turning SKILL.md into a straitjacket wastes a large model's judgment. Give "principles + boundaries" and leave reasoning room.
+- **Triggers can be loose**: relying on model triage scales better than exhaustively enumerating trigger words.
+- **Make the deliberation segment "question-driven"**: have the model ask itself "what info is this step still missing" before acting.
 
-### 5.2 轻量模型的反射设计要诀
-- **能 hook 不靠 prompt**：能在脚本里判定的（语言、文件类型、时间窗口）就别让模型判定。
-- **多用 slash command + 显式参数**：`/lookup <word>` 比"查一下 break the ice 是什么意思"更可靠。
-- **响应用模板字符串**：变量 + 固定句式拼接，比让模型自由生成更稳定。
-- **大小模型分工**：trigger 与渲染由小模型/脚本处理，关键的 Tier 3 推理段（如方法论分析）切到大模型 API。本仓库的 `lwy-dispatch` 就是这个思路——hook 用 Node.js 跑，分析交给会话里的 LLM。
+### 5.2 Reflex-design tips for lightweight models
+- **Prefer a hook over a prompt**: whatever can be decided in a script (language, file type, time window) shouldn't be left to the model.
+- **Use slash commands + explicit arguments**: `/lookup <word>` is more reliable than "look up what 'break the ice' means".
+- **Use template strings for responses**: variables + fixed phrasing concatenated is more stable than free generation.
+- **Divide labor between large and small models**: let a small model/script handle triggering and rendering, and route the critical Tier 3 reasoning segment (e.g. methodology analysis) to a large-model API. This repo's `lwy-dispatch` follows exactly this idea — hooks run in Node.js, analysis is handed to the LLM in the conversation.
 
-### 5.3 同一 skill 的双模型适配模式
+### 5.3 Dual-model adaptation pattern within one skill
 
 ```
-[hook (Node.js)]  →  [小模型分诊]  →  [大模型推理]  →  [小模型/脚本渲染]
-   Tier 1            Tier 2          Tier 3            Tier 1
+[hook (Node.js)]  →  [small-model triage]  →  [large-model reasoning]  →  [small-model/script render]
+   Tier 1              Tier 2                  Tier 3                      Tier 1
 ```
 
-每一段用最便宜能 work 的工具。不要让大模型干 hook 该干的活，也不要让小模型啃 Tier 3 推理。
+Use the cheapest tool that works for each segment. Don't make a large model do the hook's job, and don't make a small model chew through Tier 3 reasoning.
 
 ---
 
-## 6. 反模式（Anti-patterns）
+## 6. Anti-patterns
 
-| 反模式 | 症状 | 修复 |
+| Anti-pattern | Symptom | Fix |
 |---|---|---|
-| **过敏触发** | 任何 prompt 都打扰 | 加抑制条件、限频、ISO 周去重 |
-| **沉默漏触发** | 应该触发却没触发 | 检查 description 触发词覆盖度；用 trends 日志统计漏报 |
-| **审议段当反射** | 简单工具调用前要长篇思考 | 把流程写进 SKILL.md，让模型直接走分支 |
-| **反射段当审议** | 该硬编码的逻辑用模型推理（如检测语言、判断文件类型） | 移到 hook 脚本 |
-| **触发词重叠** | 多个 skill 抢同一意图，模型反复横跳 | 显式互斥声明 + 边界文档 |
-| **脆弱的反射弧** | hook 报错 → 整个 prompt 被阻断 | try/catch 包每个 scanner，dispatcher 隔离 |
-| **隐式反射** | hook 偷偷改文件 / 发请求，用户不知情 | 副作用前置声明；状态变更走 LLM 工具调用而非 hook |
+| **Allergic triggering** | Every prompt gets interrupted | Add inhibitory conditions, rate-limit, ISO-week dedup |
+| **Silent missed trigger** | Should have fired but didn't | Check the description's trigger-word coverage; use trends logs to count misses |
+| **Deliberation-as-reflex** | Long deliberation before a simple tool call | Write the flow into SKILL.md and let the model branch directly |
+| **Reflex-as-deliberation** | Logic that should be hard-coded is done by model inference (e.g. detecting language, judging file type) | Move it into the hook script |
+| **Overlapping trigger words** | Multiple skills fight for the same intent; the model ping-pongs | Explicit mutual-exclusion declarations + a boundary doc |
+| **Fragile reflex arc** | A hook error → the whole prompt is blocked | Wrap each scanner in try/catch; isolate via the dispatcher |
+| **Implicit reflex** | A hook quietly modifies files / sends requests without the user knowing | Declare side effects up front; route state changes through LLM tool calls, not the hook |
 
 ---
 
-## 7. 在本仓库新增 skill 时的反射化检查表
+## 7. Reflex-oriented checklist when adding a new skill to this repo
 
-- [ ] 这个 skill 的触发器属于 Tier 1 / 2 / 3 中的哪档？
-- [ ] 触发条件能用代码判定的部分是否都下沉到 hook？
-- [ ] description 的触发词中英双语是否都覆盖？是否包含口语变体？
-- [ ] 是否声明了 "Do not use for" / 与同类 skill 的边界？
-- [ ] 响应是否有固定模板，避免模型每次重设计？
-- [ ] 强 / 弱模型场景下，SKILL.md 是否分别可读（弱模型读 description + body，强模型可深入 references/）？
-- [ ] 副作用是否前置声明？hook 是否 fail-soft？
-- [ ] 是否有 trends/log 回路，便于事后调整触发条件？
+- [ ] Which tier (1 / 2 / 3) does this skill's trigger belong to?
+- [ ] Have all the parts of the trigger condition that can be decided in code been pushed down into a hook?
+- [ ] Does the description's trigger words cover both Chinese and English? Do they include colloquial variants?
+- [ ] Is a "Do not use for" / boundary against sibling skills declared?
+- [ ] Does the response have a fixed template, so the model doesn't redesign it each time?
+- [ ] Under strong / weak model scenarios, is SKILL.md readable for each (weak models read description + body, strong models can go deep into references/)?
+- [ ] Are side effects declared up front? Is the hook fail-soft?
+- [ ] Is there a trends/log loop to make it easy to adjust trigger conditions afterward?
 
 ---
 
-## 参考
+## References
 
-- 本仓库 `skills/lwy-dispatch/` —— Tier 1 dispatcher 的工业化实现
-- 本仓库 `skills/lwy-prompt-optimizer/SKILL.md` —— 双模式（hook + 主动）反射的最佳样板
-- 本仓库 `skills/on-contradiction/` 等三本毛选 —— Tier 3 条件认知的 agent 三角
-- [Agent Skills Specification](https://agentskills.io/specification) —— 描述字段的官方规范
+- This repo's `skills/lwy-dispatch/` — the industrial implementation of a Tier 1 dispatcher
+- This repo's `skills/lwy-prompt-optimizer/SKILL.md` — the best template for dual-mode (hook + proactive) reflexes
+- This repo's `skills/on-contradiction/` and the other two Mao-methodology skills — the agent triad for Tier 3 conditioned cognition
+- [Agent Skills Specification](https://agentskills.io/specification) — the official spec for the description field

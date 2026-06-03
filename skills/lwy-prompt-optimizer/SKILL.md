@@ -1,221 +1,221 @@
 ---
 name: lwy-prompt-optimizer
-description: "对每条包含提示词或 AI 指令的用户消息使用此技能——在执行前分析弱点并建议改进。从 7 个维度（清晰度、具体性、上下文、结构、示例、约束、完整性）评分，将模糊指令重写为精确规格。触发词：任何 AI 提示词、'optimize my prompt'、'improve this requirement'、'make this more specific'、'rewrite this prompt'，或当原始需求缺乏细节和结构时触发。"
+description: "Use this skill on every user message that contains a prompt or AI instruction — analyze its weaknesses and suggest improvements before executing. Score across 7 dimensions (clarity, specificity, context, structure, examples, constraints, completeness) and rewrite vague instructions into precise specs. Triggers: any AI prompt, 'optimize my prompt', 'improve this requirement', 'make this more specific', 'rewrite this prompt', '优化提示词', '改进提示词', '重写提示词', or whenever a raw requirement lacks detail and structure."
 metadata:
   author: "learnwy"
   version: "1.1"
   trigger: "always"
 ---
 
-# 提示词优化器
+# Prompt Optimizer
 
-飞行前提示词检查器，在发送给 AI 系统之前分析、评价并改进提示词。充当教练角色——通过展示 7 个关键维度上的可改进之处，教会用户写出更好的提示词。
+A pre-flight prompt checker that analyzes, critiques, and improves prompts before they are sent to an AI system. It plays the role of a coach — teaching users to write better prompts by showing what can be improved across 7 key dimensions.
 
-> **核心原则**：先分析再行动。此技能在对话开始时调用，当用户的消息看起来像是给 AI 系统的提示词或指令时。先分析，再改进，最后由用户决定。
+> **Core principle**: analyze before acting. This skill is invoked at the start of a conversation, whenever the user's message looks like a prompt or instruction for an AI system. Analyze first, then improve, then let the user decide.
 
-## 前置条件
+## Prerequisites
 
-- 无运行时依赖（纯方法论技能，无脚本）
-- 适用于任何提示词——代码生成、写作、分析、创意任务
+- No runtime dependencies (a pure methodology skill, no scripts)
+- Works for any prompt — code generation, writing, analysis, creative tasks
 
-## 使用场景
+## When to use
 
-**触发条件：**
+**Triggers:**
 
-- 用户说"optimize my prompt"、"improve this prompt"、"check my prompt"、"review my prompt"
-- 用户说"make this more specific"、"help me write a better prompt"
-- 用户提供原始需求并请求帮助完善
-- 用户准备向 AI 发送大段指令，想先获得反馈
+- User says "optimize my prompt", "improve this prompt", "check my prompt", "review my prompt"
+- User says "make this more specific", "help me write a better prompt"
+- User provides a raw requirement and asks for help refining it
+- User is about to send a long instruction to an AI and wants feedback first
 
-**不触发条件：**
+**Do not trigger when:**
 
-- 用户在进行普通对话
-- 用户要求 AI 执行某件事（而非改进提示词）
-- 输入明显是代码、文件路径或技术命令
+- The user is having an ordinary conversation
+- The user asks the AI to do something (rather than improve a prompt)
+- The input is clearly code, a file path, or a technical command
 
-## 7 维度分析框架
+## 7-Dimension Analysis Framework
 
-每个提示词都从以下 7 个维度进行分析：
+Every prompt is analyzed across these 7 dimensions:
 
-| 维度 | 检查内容 |
+| Dimension | What it checks |
 |------|----------|
-| **清晰度** | 意图是否明确？是否有模糊词（好的、不错的、合适的等）？ |
-| **具体性** | 是否有具体约束（格式、长度、受众、语调）？ |
-| **上下文** | 是否提供了背景/角色/场景？ |
-| **结构** | 是否逻辑组织？步骤是否有序？ |
-| **示例** | 是否在需要时包含输入/输出示例？ |
-| **约束** | 是否定义了边界（不该做什么、边界情况）？ |
-| **完整性** | AI 能否在第一次尝试就产出正确输出？ |
+| **Clarity** | Is the intent unambiguous? Are there vague words (good, nice, appropriate, etc.)? |
+| **Specificity** | Are there concrete constraints (format, length, audience, tone)? |
+| **Context** | Is background / role / scenario provided? |
+| **Structure** | Is it logically organized? Are the steps ordered? |
+| **Examples** | Does it include input/output examples where needed? |
+| **Constraints** | Are boundaries defined (what not to do, edge cases)? |
+| **Completeness** | Can the AI produce the correct output on the first try? |
 
-每个维度的评分：
-- ✅ **强** — 覆盖良好，无需操作
-- ⚠️ **弱** — 部分涉及，可以改进
-- ❌ **缺失** — 完全未涉及，必须补充
+Score for each dimension:
+- ✅ **Strong** — well covered, no action needed
+- ⚠️ **Weak** — partially addressed, can be improved
+- ❌ **Missing** — not addressed at all, must be added
 
-## 工作流
-
-```
-[1. 接收草稿提示词]
-       ↓
-[2. 维度分析] → 对每个维度评分（✅ 强 / ⚠️ 弱 / ❌ 缺失）
-       ↓
-[3. 展示评价卡片] → 带评分的结构化报告
-       ↓
-[4. 建议改进] → 对每个弱项维度给出具体重写
-       ↓
-[5. 展示优化后的提示词] → 完整重写版本
-       ↓
-[6. 用户决策] → 使用原版 / 使用优化版 / 手动编辑
-```
-
-## 响应格式
-
-分析提示词时，始终按此精确结构响应：
+## Workflow
 
 ```
-## 🔍 提示词分析
+[1. Receive draft prompt]
+       ↓
+[2. Dimension analysis] → score each dimension (✅ strong / ⚠️ weak / ❌ missing)
+       ↓
+[3. Show the critique card] → a structured report with scores
+       ↓
+[4. Suggest improvements] → a concrete rewrite for each weak dimension
+       ↓
+[5. Show the optimized prompt] → the full rewritten version
+       ↓
+[6. User decision] → use original / use optimized / edit manually
+```
 
-**综合评分: {X}/7 个维度为强**
+## Response Format
 
-| 维度 | 评分 | 备注 |
+When analyzing a prompt, always respond with this exact structure:
+
+```
+## 🔍 Prompt Analysis
+
+**Overall score: {X}/7 dimensions strong**
+
+| Dimension | Score | Notes |
 |------|------|------|
-| 清晰度 | ✅/⚠️/❌ | {简要说明} |
-| 具体性 | ✅/⚠️/❌ | {简要说明} |
-| 上下文 | ✅/⚠️/❌ | {简要说明} |
-| 结构 | ✅/⚠️/❌ | {简要说明} |
-| 示例 | ✅/⚠️/❌ | {简要说明} |
-| 约束 | ✅/⚠️/❌ | {简要说明} |
-| 完整性 | ✅/⚠️/❌ | {简要说明} |
+| Clarity | ✅/⚠️/❌ | {brief note} |
+| Specificity | ✅/⚠️/❌ | {brief note} |
+| Context | ✅/⚠️/❌ | {brief note} |
+| Structure | ✅/⚠️/❌ | {brief note} |
+| Examples | ✅/⚠️/❌ | {brief note} |
+| Constraints | ✅/⚠️/❌ | {brief note} |
+| Completeness | ✅/⚠️/❌ | {brief note} |
 
-### 优点
-{优势要点}
+### Strengths
+{strength points}
 
-### 可改进之处
-{对每个 ⚠️/❌ 维度：具体问题 + 具体修复建议}
+### What can be improved
+{for each ⚠️/❌ dimension: the specific problem + a specific fix}
 
-## ✨ 优化后的提示词
+## ✨ Optimized Prompt
 
-{包含所有改进的完整重写版本}
+{the full rewritten version with all improvements}
 
 ---
-**所做更改：**
-{编号列表说明修改了什么及原因}
+**What changed:**
+{a numbered list of what was changed and why}
 ```
 
-展示分析后，询问用户：**使用原版 / 使用优化版 / 手动编辑？**
+After showing the analysis, ask the user: **use original / use optimized / edit manually?**
 
-## 英语学习联动
+## English-Learning Integration
 
-优化完成后，自动触发 english-learner 技能的英语学习：
+After optimizing, automatically trigger the english-learner skill's English study:
 
-1. 检查用户原始中文表达是否有语法错误、错字或别扭用法——若有，先展示纠正
-2. 从优化后的提示词中提取 2-3 个高价值英文词汇/表达
-3. 对比用户原始表达和优化后的表达，指出用词提升之处
-4. 自动通过 `batch_save` 保存所有新词汇到词库（无需询问用户）
+1. Check the user's original Chinese phrasing for grammar mistakes, typos, or awkward usage — if any, show the corrections first
+2. Extract 2-3 high-value English words/expressions from the optimized prompt
+3. Compare the user's original phrasing with the optimized phrasing, and point out the word-choice improvements
+4. Automatically save all new vocabulary to the word bank via `batch_save` (no need to ask the user)
 
-**格式：**
+**Format:**
 
 ```
-🌐 **英语学习**
+🌐 **English Learning**
 
-**中文纠正：**（仅在发现问题时展示）
-| 原文 | 纠正 | 说明 |
+**Chinese corrections:** (only shown when issues are found)
+| Original | Correction | Note |
 |------|------|------|
-| {错误} | {修正} | {原因} |
+| {mistake} | {fix} | {reason} |
 
-**提示词精选词汇：**
-| 你的表达 | 优化表达 | 为什么更好 |
+**Prompt vocabulary highlights:**
+| Your phrasing | Optimized phrasing | Why it's better |
 |----------|----------|-----------|
-| {原词} | {improved} | {简要说明} |
+| {original word} | {improved} | {brief note} |
 
-💾 已自动保存到词库
+💾 Saved to the word bank automatically
 ```
 
-**规则：**
-- 仅在提示词含中文或用户是中文母语者时触发
-- 先纠正中文问题，再展示英文提升
-- 聚焦「如何用英文更精确地描述意图」的学习价值
-- 直接保存，无需用户确认
+**Rules:**
+- Only trigger when the prompt contains Chinese or the user is a native Chinese speaker
+- Correct the Chinese issues first, then show the English improvements
+- Focus on the learning value of "how to describe intent more precisely in English"
+- Save directly, no user confirmation needed
 
-## 提示词改进模式
+## Prompt-Improvement Patterns
 
-改进弱项维度时可参考的模式：
+Patterns to draw on when improving weak dimensions:
 
-### 1. 模糊 → 具体
-- **改前**: "写好代码"
-- **改后**: "写 TypeScript 代码，要求显式返回类型，不使用 `any`，每个函数不超过 20 行"
+### 1. Vague → Specific
+- **Before**: "Write good code"
+- **After**: "Write TypeScript code with explicit return types, no `any`, and no function longer than 20 lines"
 
-### 2. 缺少上下文 → 有上下文
-- **改前**: "翻译一下"
-- **改后**: "将这段营销文案从中文翻译成英文，保持轻松的语调，面向 Z 世代受众"
+### 2. Missing context → With context
+- **Before**: "Translate this"
+- **After**: "Translate this marketing copy from Chinese to English, keeping a casual tone, aimed at a Gen-Z audience"
 
-### 3. 无示例 → 有示例
-- **改前**: "格式化数据"
-- **改后**: "格式化数据为：输入：`{raw}` → 输出：`| col1 | col2 |`"
+### 3. No examples → With examples
+- **Before**: "Format the data"
+- **After**: "Format the data as: input: `{raw}` → output: `| col1 | col2 |`"
 
-### 4. 无结构 → 有结构
-- **改前**: 混杂多种关注点的大段文字
-- **改后**: 带有清晰序号和分组的有序步骤
+### 4. No structure → With structure
+- **Before**: A wall of text mixing multiple concerns
+- **After**: Ordered steps with clear numbering and grouping
 
-### 5. 无约束 → 有边界
-- **改前**: "写一篇文章"
-- **改后**: "写一篇 500 字的文章，不用术语，8 年级阅读水平，包含 3 个示例"
+### 5. No constraints → With boundaries
+- **Before**: "Write an article"
+- **After**: "Write a 500-word article, no jargon, 8th-grade reading level, with 3 examples"
 
-### 6. 缺少角色 → 有角色锚定
-- **改前**: "解释 X"
-- **改后**: "以资深后端工程师向初级开发者解释的角度，解释 X"
+### 6. Missing role → With role anchoring
+- **Before**: "Explain X"
+- **After**: "Explain X as a senior backend engineer explaining it to a junior developer"
 
-## 错误处理
+## Error Handling
 
-| 问题 | 解决方案 |
+| Problem | Solution |
 |------|----------|
-| 提示词已经很强（6-7/7） | 说"您的提示词已经结构良好！"并仅建议微调 |
-| 提示词太短无法分析 | 请用户提供更多关于目标的上下文 |
-| 用户拒绝优化版本 | 尊重其选择，使用原始提示词继续 |
+| Prompt is already strong (6-7/7) | Say "Your prompt is already well structured!" and suggest only minor tweaks |
+| Prompt is too short to analyze | Ask the user for more context about the goal |
+| User rejects the optimized version | Respect their choice and continue with the original prompt |
 
-## 执行检查清单
+## Execution Checklist
 
-响应前确认：
+Confirm before responding:
 
-- [ ] 所有 7 个维度已分析
-- [ ] 已分配评分并附简要说明
-- [ ] 已认可优点（不只是批评）
-- [ ] 每个弱项维度有具体、可操作的修复建议
-- [ ] 已提供完整的优化后提示词
-- [ ] 已明确列出更改内容
-- [ ] 已给用户选择：接受/拒绝/编辑
+- [ ] All 7 dimensions analyzed
+- [ ] Scores assigned with brief notes
+- [ ] Strengths acknowledged (not just criticism)
+- [ ] Each weak dimension has a specific, actionable fix
+- [ ] The full optimized prompt is provided
+- [ ] The changes are explicitly listed
+- [ ] The user is given a choice: accept / reject / edit
 
 ## Hooks
 
-本技能注册 IDE hook，使飞行前分析**确定性**触发——AI 不需要记住去调用它。
+This skill registers an IDE hook so that the pre-flight analysis triggers **deterministically** — the AI does not need to remember to invoke it.
 
-### 作用域
+### Scope
 
-**全局** — 安装到 `~/.claude/settings.json` 和 `~/.trae/hooks.json`（无项目级状态）。
+**Global** — installed to `~/.claude/settings.json` and `~/.trae/hooks.json` (no project-level state).
 
-### 事件
+### Events
 
-| 事件 | 脚本 | 用途 |
+| Event | Script | Purpose |
 |------|------|------|
-| `UserPromptSubmit` | `scripts/hooks/user-prompt-scan.cjs` | 检测提示词形态的输入并注入 7 维度审查提醒 |
+| `UserPromptSubmit` | `scripts/hooks/user-prompt-scan.cjs` | Detect prompt-shaped input and inject a 7-dimension review reminder |
 
-### 触发策略（三级模式）
+### Trigger Strategy (three-tier mode)
 
-hook 现在在**所有 prose 输入**上触发（仅跳过代码、文件路径、shell 命令和 ≤7 字符的极短输入）：
+The hook now triggers on **all prose input** (skipping only code, file paths, shell commands, and very short input ≤7 characters):
 
-1. **显式请求**（explicit） — 消息包含 `optimize / improve / review / rewrite / check / refine my prompt`、`make this prompt more X`，或中文等效词 `优化提示词 / 改进提示词 / 重写提示词`。**输出**：完整 7 维分析 + Optimized Prompt 块。
-2. **结构化提示词形态**（structured） — 消息 ≥400 字符、≥4 行，且包含 ≥2 个标记如 `you are`、`your task is`、`act as`、`instructions:`、`constraints:`、`output format:`。**输出**：完整 7 维分析 + Optimized Prompt 块。
-3. **轻量模式**（light） — 其他所有 prose 输入（短对话、闲聊式问题）。**输出**：仅 1 行——挑出 7 维里最弱的那个并给一条具体改写建议；若 7 维都过关，固定渲染 `"✨ Prompt-opt: already clear, no rewrite needed."` 然后继续任务。
+1. **Explicit request** (explicit) — the message contains `optimize / improve / review / rewrite / check / refine my prompt`, `make this prompt more X`, or the Chinese equivalents `优化提示词 / 改进提示词 / 重写提示词`. **Output**: a full 7-dimension analysis + an Optimized Prompt block.
+2. **Structured prompt shape** (structured) — the message is ≥400 characters and ≥4 lines, and contains ≥2 markers such as `you are`, `your task is`, `act as`, `instructions:`, `constraints:`, `output format:`. **Output**: a full 7-dimension analysis + an Optimized Prompt block.
+3. **Light mode** (light) — all other prose input (short exchanges, chit-chat questions). **Output**: a single line — pick the weakest of the 7 dimensions and give one concrete rewrite suggestion; if all 7 pass, render the fixed string `"✨ Prompt-opt: already clear, no rewrite needed."` and continue the task.
 
-事件日志（`~/.learnwy/prompt-optimizer/events.jsonl`）会记录 trigger 类型（explicit / structured / light），可用 `cli.cjs trends` 查看分布。
+The event log (`~/.learnwy/prompt-optimizer/events.jsonl`) records the trigger type (explicit / structured / light); use `cli.cjs trends` to view the distribution.
 
-### 安装
+### Install
 
 ```bash
 node scripts/cli.cjs install --scope global --target both
 ```
 
-### 卸载
+### Uninstall
 
 ```bash
 node scripts/cli.cjs uninstall --scope global --target both

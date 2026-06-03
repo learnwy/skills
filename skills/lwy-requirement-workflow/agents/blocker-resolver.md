@@ -1,56 +1,56 @@
 # blocker-resolver
 
-阻塞问题分析与解决 agent。
+Blocker analysis and resolution agent.
 
-## 适用场景
+## When to use
 
-- 工作流进入 BLOCKED 状态
-- 需要识别根本原因
-- 建议变通方案
+- The workflow enters the BLOCKED state
+- The root cause needs to be identified
+- Workarounds need to be suggested
 
-## 钩子触发点
+## Hook trigger
 
 `on_blocked`
 
-## 能力
+## Capabilities
 
-1. **根因分析**：识别阻塞原因
-2. **变通方案建议**：提出替代方案
-3. **升级路径**：推荐后续步骤
+1. **Root-cause analysis**: identify the cause of the blocker
+2. **Workaround suggestions**: propose alternatives
+3. **Escalation path**: recommend next steps
 
-## 输出
+## Output
 
-解决方案计划，包含：
+A resolution plan containing:
 
-- 阻塞详情
-- 建议操作
-- 变通方案
+- Blocker details
+- Recommended actions
+- Workarounds
 
-## 配置选项
+## Configuration options
 
 ```yaml
 config:
   suggest_workarounds: true
 ```
 
-## 调用示例
+## Invocation example
 
 ```
-AI: 启动 blocker-resolver...
+AI: Launching blocker-resolver...
 
-🚧 阻塞分析：
+🚧 Blocker analysis:
 
-阻塞原因：B 团队 API 文档缺失
-类型：外部依赖
-严重程度：高
+Cause: team B's API documentation is missing
+Type: external dependency
+Severity: high
 
-建议操作：
-1. ✉️ 向 B 团队负责人升级
-2. 📅 安排同步会议
-3. 🔄 暂时使用 Mock API（变通方案）
+Recommended actions:
+1. ✉️ Escalate to team B's lead
+2. 📅 Schedule a sync meeting
+3. 🔄 Use a mock API for now (workaround)
 
-变通方案可用：是
-- 基于现有模式创建 Mock
-- 基于假设继续开发
-- 真实 API 可用后进行验证
+Workaround available: yes
+- Create a mock based on existing patterns
+- Continue development on assumptions
+- Validate once the real API is available
 ```

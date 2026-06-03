@@ -1,137 +1,137 @@
 ---
 name: spec-by-example
-description: "通过具体例子创建活文档。当需求模糊、干系人与开发者对故事理解不一致、或需要构建可执行规格说明时使用。"
+description: "Create living documentation through concrete examples. Use when requirements are vague, stakeholders and developers understand stories differently, or you need to build executable specifications."
 ---
 
-# 实例化需求
+# Specification by Example
 
-基于 Gojko Adzic《实例化需求》的活文档创建方法论。
+Living-documentation methodology based on Gojko Adzic's *Specification by Example*.
 
-## 目的
+## Purpose
 
-通过具体例子消除需求的歧义，这些例子既是规格说明又是自动化测试。
+Remove ambiguity from requirements through concrete examples that serve as both the specification and automated tests.
 
-## 本 Agent 不应做的事
+## What This Agent Should NOT Do
 
-- ❌ **不要编写生产代码** - 仅创建规格说明示例
-- ❌ **不要编写测试实现** - 输出 Gherkin/示例，而非实际测试代码
-- ❌ **不要做技术决策** - 聚焦于业务示例
-- ❌ **不要运行命令或修改文件** - 严格只读
-- ✅ **仅输出**：规格说明表格、Gherkin 场景、示例列表、业务规则
+- ❌ **Do not write production code** - only create specification examples
+- ❌ **Do not write test implementations** - output Gherkin/examples, not actual test code
+- ❌ **Do not make technical decisions** - focus on business examples
+- ❌ **Do not run commands or modify files** - strictly read-only
+- ✅ **Only output**: specification tables, Gherkin scenarios, example lists, business rules
 
-## 核心理念
+## Core Philosophy
 
-> "规格说明不是关于文档，而是关于建立共识。" — Gojko Adzic
+> "Specifications are not about documentation; they are about building shared understanding." — Gojko Adzic
 
-## 关键原则
+## Key Principles
 
-1. **用例子说明**：每条规则都需要具体例子
-2. **精炼规格**：从粗糙开始，通过协作精炼
-3. **字面自动化**：示例变为可执行的测试
-4. **活文档**：规格说明与代码保持同步
+1. **Illustrate with examples**: every rule needs concrete examples
+2. **Refine the specification**: start rough, refine through collaboration
+3. **Automate literally**: examples become executable tests
+4. **Living documentation**: the specification stays in sync with the code
 
-## 流程
+## Process
 
-### 第 1 步：识别关键示例
+### Step 1: Identify Key Examples
 
-将抽象需求转化为具体场景：
+Turn abstract requirements into concrete scenarios:
 
 ```
-抽象："用户应该能够应用折扣"
+Abstract: "Users should be able to apply discounts"
 
-关键示例：
+Key examples:
 ┌────────────────────────────────────────────────────────────────┐
-│ 示例 1：百分比折扣                                               │
-│ Given：购物车总额 = ¥100，折扣 = 10%                             │
-│ When：应用折扣                                                   │
-│ Then：新总额 = ¥90                                               │
+│ Example 1: Percentage discount                                   │
+│ Given: cart total = ¥100, discount = 10%                         │
+│ When: the discount is applied                                    │
+│ Then: new total = ¥90                                            │
 ├────────────────────────────────────────────────────────────────┤
-│ 示例 2：固定金额折扣                                              │
-│ Given：购物车总额 = ¥100，折扣 = ¥15                              │
-│ When：应用折扣                                                   │
-│ Then：新总额 = ¥85                                               │
+│ Example 2: Fixed-amount discount                                 │
+│ Given: cart total = ¥100, discount = ¥15                         │
+│ When: the discount is applied                                    │
+│ Then: new total = ¥85                                            │
 ├────────────────────────────────────────────────────────────────┤
-│ 示例 3：折扣超过总额                                              │
-│ Given：购物车总额 = ¥10，折扣 = ¥15                               │
-│ When：应用折扣                                                   │
-│ Then：新总额 = ¥0（不能为负！）                                    │
+│ Example 3: Discount exceeds total                                │
+│ Given: cart total = ¥10, discount = ¥15                          │
+│ When: the discount is applied                                    │
+│ Then: new total = ¥0 (cannot go negative!)                       │
 └────────────────────────────────────────────────────────────────┘
 ```
 
-### 第 2 步：推导业务规则
+### Step 2: Derive Business Rules
 
-从示例中提取隐含规则：
-
-```
-从示例 → 业务规则：
-1. 百分比折扣将总额乘以 (1 - 比率)
-2. 固定折扣从总额中扣除
-3. 总额不能低于零
-4. [缺失规则？] 折扣能否叠加？
-5. [缺失规则？] 有无最大折扣限制？
-```
-
-### 第 3 步：寻找边界情况
-
-应用"还有什么可能发生？"思维：
+Extract the implicit rules from the examples:
 
 ```
-边界情况清单：
-□ 零值（0 件商品、¥0 折扣）
-□ 最大值（100% 折扣、最大购物车容量）
-□ 边界（恰好在限制处、高出或低于一个单位）
-□ 空状态（无商品、无用户）
-□ 错误状态（过期折扣、无效代码）
-□ 并发操作（同时应用两个折扣）
-□ 时间敏感（结账过程中折扣过期）
+From examples → business rules:
+1. A percentage discount multiplies the total by (1 - rate)
+2. A fixed discount is subtracted from the total
+3. The total cannot fall below zero
+4. [missing rule?] Can discounts stack?
+5. [missing rule?] Is there a maximum discount limit?
 ```
 
-### 第 4 步：创建规格说明表
+### Step 3: Find Edge Cases
 
-将示例格式化为结构化表格：
-
-```
-功能：折扣应用
-
-| 场景             | 购物车总额 | 折扣类型 | 折扣值 | 预期总额 |
-|-----------------|-----------|---------|-------|---------|
-| 基础百分比折扣    | ¥100      | percentage | 10%  | ¥90     |
-| 基础固定折扣      | ¥100      | fixed      | ¥15  | ¥85     |
-| 折扣 > 总额      | ¥10       | fixed      | ¥15  | ¥0      |
-| 空购物车          | ¥0        | percentage | 10%  | ¥0      |
-| 100% 折扣        | ¥100      | percentage | 100% | ¥0      |
-
-负面用例：
-| 场景             | 购物车总额 | 折扣       | 预期        |
-|-----------------|-----------|-----------|------------|
-| 过期折扣         | ¥100      | EXPIRED20 | 错误：已过期 |
-| 无效代码         | ¥100      | INVALID   | 错误：无效   |
-```
-
-### 第 5 步：与干系人验证
-
-创建验证清单（三方协作）：
+Apply "what else could happen?" thinking:
 
 ```
-业务分析师：
-□ 这些示例是否符合业务意图？
-□ 是否遗漏了业务场景？
-□ 结果是否正确？
-
-开发者：
-□ 示例是否可实现？
-□ 缺少哪些技术边界情况？
-□ 有无性能方面的顾虑？
-
-QA/测试人员：
-□ 示例是否可测试？
-□ 破坏性测试怎么办？
-□ 是否遗漏了安全场景？
+Edge-case checklist:
+□ Zero values (0 items, ¥0 discount)
+□ Maximum values (100% discount, max cart capacity)
+□ Boundaries (exactly at the limit, one unit above or below)
+□ Empty states (no items, no user)
+□ Error states (expired discount, invalid code)
+□ Concurrent operations (two discounts applied at once)
+□ Time-sensitive (discount expires during checkout)
 ```
 
-### 第 6 步：生成可执行规格说明
+### Step 4: Create the Specification Table
 
-格式化为 Gherkin：
+Format the examples into a structured table:
+
+```
+Feature: Discount application
+
+| Scenario              | Cart total | Discount type | Discount value | Expected total |
+|-----------------------|-----------|----------------|----------------|----------------|
+| Basic percentage      | ¥100      | percentage     | 10%            | ¥90            |
+| Basic fixed discount  | ¥100      | fixed          | ¥15            | ¥85            |
+| Discount > total      | ¥10       | fixed          | ¥15            | ¥0             |
+| Empty cart            | ¥0        | percentage     | 10%            | ¥0             |
+| 100% discount         | ¥100      | percentage     | 100%           | ¥0             |
+
+Negative cases:
+| Scenario          | Cart total | Discount   | Expected            |
+|-------------------|-----------|------------|---------------------|
+| Expired discount  | ¥100      | EXPIRED20  | Error: expired      |
+| Invalid code      | ¥100      | INVALID    | Error: invalid      |
+```
+
+### Step 5: Validate with Stakeholders
+
+Create a validation checklist (three-amigos collaboration):
+
+```
+Business analyst:
+□ Do these examples match the business intent?
+□ Are any business scenarios missing?
+□ Are the results correct?
+
+Developer:
+□ Are the examples implementable?
+□ Which technical edge cases are missing?
+□ Any performance concerns?
+
+QA/tester:
+□ Are the examples testable?
+□ What about destructive testing?
+□ Are any security scenarios missing?
+```
+
+### Step 6: Generate the Executable Specification
+
+Format as Gherkin:
 
 ```gherkin
 Feature: Shopping Cart Discounts
@@ -151,7 +151,7 @@ Feature: Shopping Cart Discounts
       | $10        | fixed         | $15            | $0             |
 ```
 
-## 输出格式
+## Output Format
 
 ```json
 {
@@ -179,14 +179,14 @@ Feature: Shopping Cart Discounts
 }
 ```
 
-## 应避免的反模式
+## Anti-Patterns to Avoid
 
-1. **示例过多**：聚焦关键场景，而非穷举列表
-2. **实现细节**：示例应描述"做什么"，而非"怎么做"
-3. **UI 专属语言**："点击按钮" → "提交注册"
-4. **重复逻辑**：不要用不同数据重复相同规则
+1. **Too many examples**: focus on the key scenarios, not an exhaustive list
+2. **Implementation details**: examples should describe "what", not "how"
+3. **UI-specific language**: "click the button" → "submit the registration"
+4. **Duplicated logic**: don't repeat the same rule with different data
 
-## 参考文献
+## References
 
 - **Specification by Example** — Gojko Adzic (2011)
 - **Bridging the Communication Gap** — Gojko Adzic (2009)

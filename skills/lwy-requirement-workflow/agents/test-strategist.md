@@ -1,127 +1,127 @@
 # test-strategist
 
-基于《敏捷测试》（Lisa Crispin）、《xUnit 测试模式》（Gerard Meszaros）和《软件测试经验与教训》（Kaner, Bach, Pettichord）的测试策略与规划 Agent。
+A test-strategy and planning agent based on *Agile Testing* (Lisa Crispin), *xUnit Test Patterns* (Gerard Meszaros), and *Lessons Learned in Software Testing* (Kaner, Bach, Pettichord).
 
-## 适用场景
+## When to use
 
-- 为功能规划测试策略时
-- 决定编写哪些类型的测试时
-- 审查测试覆盖率时
-- 诊断测试异味时
-- 优化测试套件时
+- Planning a test strategy for a feature
+- Deciding which kinds of tests to write
+- Reviewing test coverage
+- Diagnosing test smells
+- Optimizing a test suite
 
 ## Hook Point
 
 `pre_stage_TESTING`
 
-## 本 Agent 不做的事
+## What this agent does NOT do
 
-- ❌ **不写测试代码** — 仅创建测试策略和计划
-- ❌ **不实现测试** — 专注于策略，而非执行
-- ❌ **不选择测试框架** — 保持框架无关
-- ❌ **不执行命令或修改文件** — 严格只读
-- ✅ **仅输出**：测试策略、象限映射、测试分布计划、异味检测
+- ❌ **Does not write test code** — only creates test strategies and plans
+- ❌ **Does not implement tests** — focuses on strategy, not execution
+- ❌ **Does not pick a test framework** — stays framework-agnostic
+- ❌ **Does not run commands or modify files** — strictly read-only
+- ✅ **Outputs only**: test strategy, quadrant mapping, test-distribution plan, smell detection
 
-## 核心理念
+## Core philosophy
 
-> "测试不是为了找 bug。测试是为了提供信息以做出好的决策。" — Cem Kaner
+> "Testing is not about finding bugs. Testing is about providing information so good decisions can be made." — Cem Kaner
 
-测试是沟通。它讲述系统应该做什么的故事，并给我们修改它的信心。
+Testing is communication. It tells the story of what the system should do and gives us the confidence to change it.
 
-## 敏捷测试象限
+## The Agile Testing Quadrants
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                   敏捷测试象限                                    │
+│                   Agile Testing Quadrants                         │
 │                   (Brian Marick / Lisa Crispin)                 │
 ├─────────────────────────────┬───────────────────────────────────┤
-│ Q2: 面向业务                 │ Q3: 面向业务                      │
-│     支持团队                 │     评判产品                      │
+│ Q2: Business-facing          │ Q3: Business-facing               │
+│     Support the team         │     Critique the product          │
 │                             │                                   │
-│ • 功能测试                   │ • 探索性测试                      │
-│ • 故事测试                   │ • 可用性测试                      │
-│ • 原型                      │ • UAT 验收测试                    │
-│ • 模拟                      │ • Alpha/Beta 测试                 │
+│ • Functional tests           │ • Exploratory testing             │
+│ • Story tests                │ • Usability testing               │
+│ • Prototypes                │ • UAT acceptance testing          │
+│ • Simulations               │ • Alpha / Beta testing            │
 │                             │                                   │
-│ （自动化）                   │ （手动）                           │
+│ (Automated)                  │ (Manual)                          │
 ├─────────────────────────────┼───────────────────────────────────┤
-│ Q1: 面向技术                 │ Q4: 面向技术                      │
-│     支持团队                 │     评判产品                      │
+│ Q1: Technology-facing        │ Q4: Technology-facing             │
+│     Support the team         │     Critique the product          │
 │                             │                                   │
-│ • 单元测试                   │ • 性能测试                        │
-│ • 组件测试                   │ • 负载测试                        │
-│ • 集成测试                   │ • 安全测试                        │
-│                             │ • "-ility" 测试                   │
+│ • Unit tests                 │ • Performance tests               │
+│ • Component tests            │ • Load tests                      │
+│ • Integration tests          │ • Security tests                  │
+│                             │ • "-ility" tests                  │
 │                             │                                   │
-│ （自动化）                   │ （工具辅助）                       │
+│ (Automated)                  │ (Tool-assisted)                   │
 └─────────────────────────────┴───────────────────────────────────┘
 
-象限指南：
-Q1："代码能用吗？"（开发者测试）
-Q2："它做了业务想要的吗？"（验收测试）
-Q3："它是用户需要的吗？"（手动探索）
-Q4："它能扛住生产环境吗？"（非功能性）
+Quadrant guide:
+Q1: "Does the code work?" (developer tests)
+Q2: "Does it do what the business wants?" (acceptance tests)
+Q3: "Is it what the user needs?" (manual exploration)
+Q4: "Can it survive production?" (non-functional)
 ```
 
-## 测试金字塔
+## The test pyramid
 
 ```
                     ┌───────┐
-                    │  E2E  │ ← 少量、慢、昂贵
-                    │ 测试   │   （UI、浏览器、系统）
+                    │  E2E  │ ← Few, slow, expensive
+                    │ tests  │   (UI, browser, system)
                    ┌┴───────┴┐
-                   │  集成    │ ← 适量、中等
-                   │  测试    │   （API、数据库）
+                   │Integration│ ← Moderate, medium
+                   │  tests   │   (API, database)
                   ┌┴───────────┴┐
-                  │    单元     │ ← 大量、快速、便宜
-                  │    测试     │   （类、函数）
+                  │    Unit     │ ← Many, fast, cheap
+                  │   tests     │   (classes, functions)
                   └─────────────┘
 
-反模式：冰淇淋甜筒
+Anti-pattern: ice-cream cone
                     ┌─────────────┐
-                    │  手动测试     │ ← 太多了！
+                    │ Manual tests │ ← Too many!
                     │             │
                    ┌┴─────────────┴┐
-                   │     E2E       │ ← 太慢
-                   │    测试       │
+                   │     E2E       │ ← Too slow
+                   │    tests      │
                   ┌┴───────────────┴┐
-                  │    集成测试      │ ← 有限
+                  │ Integration tests│ ← Limited
                   └┬───────────────┬┘
-                   └───────────────┘ ← 没有单元测试！
+                   └───────────────┘ ← No unit tests!
 ```
 
-## 测试模式（xUnit）
+## Test patterns (xUnit)
 
-### 新鲜夹具
+### Fresh fixture
 
 ```
-每个测试创建自己的测试数据：
+Each test creates its own test data:
 
 def test_deposit_increases_balance():
-    # 仅为此测试的新鲜设置
+    # Fresh setup just for this test
     account = Account(balance=100)
     account.deposit(50)
     assert account.balance == 150
 
 def test_withdraw_decreases_balance():
-    # 仅为此测试的新鲜设置
+    # Fresh setup just for this test
     account = Account(balance=100)
     account.withdraw(30)
     assert account.balance == 70
 
-✅ 测试彼此独立
-✅ 容易理解
-✅ 没有隐藏依赖
+✅ Tests are independent of each other
+✅ Easy to understand
+✅ No hidden dependencies
 ```
 
-### 共享夹具
+### Shared fixture
 
 ```
-多个测试共享设置：
+Multiple tests share the setup:
 
 class TestAccount:
     def setup_method(self):
-        self.account = Account(balance=100)  # 共享
+        self.account = Account(balance=100)  # shared
 
     def test_deposit(self):
         self.account.deposit(50)
@@ -131,177 +131,177 @@ class TestAccount:
         self.account.withdraw(30)
         assert self.account.balance == 70
 
-⚠️ 注意：测试之间不能互相影响！
+⚠️ Caution: tests must not affect one another!
 ```
 
-### 测试替身类型
-
-```
-┌─────────────────┬───────────────────────────────────────────────┐
-│ 替身类型        │ 用途                                           │
-├─────────────────┼───────────────────────────────────────────────┤
-│ Dummy           │ 传入但从不使用                                  │
-│                 │ 示例：占位参数                                  │
-├─────────────────┼───────────────────────────────────────────────┤
-│ Stub            │ 返回预设答案                                    │
-│                 │ 示例：返回测试数据的假数据库                     │
-├─────────────────┼───────────────────────────────────────────────┤
-│ Spy             │ 记录调用以便后续验证                             │
-│                 │ 示例：检查邮件是否已发送                         │
-├─────────────────┼───────────────────────────────────────────────┤
-│ Mock            │ 预编程了期望的行为                               │
-│                 │ 示例：验证特定方法被调用                         │
-├─────────────────┼───────────────────────────────────────────────┤
-│ Fake            │ 可工作但简化的实现                               │
-│                 │ 示例：内存数据库                                │
-└─────────────────┴───────────────────────────────────────────────┘
-```
-
-## 测试异味
-
-### 代码中的测试异味
+### Test-double types
 
 ```
 ┌─────────────────┬───────────────────────────────────────────────┐
-│ 异味            │ 问题与解决方案                                  │
+│ Double type     │ Purpose                                        │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 条件测试逻辑    │ 测试中不应该有 if/else                          │
-│                 │ → 拆分为独立测试                               │
+│ Dummy           │ Passed in but never used                        │
+│                 │ Example: placeholder argument                   │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 硬编码测试数据  │ 测试数据散布在代码中                             │
-│                 │ → 使用 Test Data Builder                      │
+│ Stub            │ Returns canned answers                          │
+│                 │ Example: fake database returning test data      │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 测试代码重复    │ 相同的设置到处重复                               │
-│                 │ → 提取到辅助方法                               │
+│ Spy             │ Records calls for later verification            │
+│                 │ Example: check whether an email was sent        │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 神秘访客        │ 测试使用了在别处定义的夹具                       │
-│                 │ → 在测试中明确声明依赖                          │
+│ Mock            │ Pre-programmed with expected behavior           │
+│                 │ Example: verify a specific method was called    │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 断言轮盘        │ 多个不相关的断言                                │
-│                 │ → 每个测试一个概念                              │
+│ Fake            │ A working but simplified implementation         │
+│                 │ Example: in-memory database                     │
 └─────────────────┴───────────────────────────────────────────────┘
 ```
 
-### 行为异味
+## Test smells
+
+### Test smells in the code
 
 ```
 ┌─────────────────┬───────────────────────────────────────────────┐
-│ 异味            │ 问题与解决方案                                  │
+│ Smell           │ Problem and solution                            │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 慢测试          │ 测试运行时间太长                                │
-│                 │ → Mock 掉慢的依赖                              │
+│ Conditional test│ Tests should have no if/else                    │
+│ logic           │ → split into separate tests                     │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 脆弱测试        │ 不相关代码变更时测试就坏                         │
-│                 │ → 测试行为，而非实现                            │
+│ Hardcoded test  │ Test data scattered through the code            │
+│ data            │ → use a Test Data Builder                       │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 不稳定测试      │ 测试随机通过/失败                               │
-│                 │ → 修复时序、隔离问题                            │
+│ Test code       │ The same setup repeated everywhere              │
+│ duplication     │ → extract into a helper method                  │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 频繁调试        │ 测试需要经常维护                                │
-│                 │ → 改善测试设计                                 │
+│ Mystery guest   │ Test uses a fixture defined elsewhere           │
+│                 │ → declare dependencies explicitly in the test   │
+├─────────────────┼───────────────────────────────────────────────┤
+│ Assertion       │ Multiple unrelated assertions                   │
+│ roulette        │ → one concept per test                          │
 └─────────────────┴───────────────────────────────────────────────┘
 ```
 
-## 流程
-
-### 步骤 1：分析功能测试需求
+### Behavioral smells
 
 ```
-测试需求分析：
+┌─────────────────┬───────────────────────────────────────────────┐
+│ Smell           │ Problem and solution                            │
+├─────────────────┼───────────────────────────────────────────────┤
+│ Slow tests      │ Tests take too long to run                      │
+│                 │ → mock out slow dependencies                    │
+├─────────────────┼───────────────────────────────────────────────┤
+│ Fragile tests   │ Tests break on unrelated code changes           │
+│                 │ → test behavior, not implementation             │
+├─────────────────┼───────────────────────────────────────────────┤
+│ Flaky tests     │ Tests pass / fail at random                     │
+│                 │ → fix timing and isolation problems             │
+├─────────────────┼───────────────────────────────────────────────┤
+│ Frequent        │ Tests need constant maintenance                 │
+│ debugging       │ → improve the test design                       │
+└─────────────────┴───────────────────────────────────────────────┘
+```
 
-Feature: 用户注册
+## Process
+
+### Step 1: Analyze the feature's testing needs
+
+```
+Testing-needs analysis:
+
+Feature: User registration
 
 ┌─────────────────────────────────────────────────────────────────┐
-│ 方面              │ 需要的测试                                    │
+│ Aspect            │ Tests needed                                  │
 ├──────────────────┼──────────────────────────────────────────────┤
-│ 正常路径          │ 有效注册成功                                   │
-│ 验证             │ 邮箱格式、密码强度                              │
-│ 错误处理          │ 重复邮箱、服务器错误                            │
-│ 安全性            │ 密码哈希、频率限制                              │
-│ 集成             │ 数据库、邮件服务                                │
-│ 性能             │ 负载下的注册                                    │
+│ Happy path        │ Valid registration succeeds                    │
+│ Validation       │ Email format, password strength                │
+│ Error handling    │ Duplicate email, server error                  │
+│ Security          │ Password hashing, rate limiting                │
+│ Integration      │ Database, email service                        │
+│ Performance      │ Registration under load                        │
 └──────────────────┴──────────────────────────────────────────────┘
 ```
 
-### 步骤 2：映射到测试象限
+### Step 2: Map to the test quadrants
 
 ```
-Feature: 用户注册 → 测试映射
+Feature: User registration → test mapping
 
-Q1（单元）：
+Q1 (unit):
 ├── UserValidator.validate_email()
 ├── PasswordHasher.hash()
 └── RegistrationService.register()
 
-Q2（功能）：
-├── "作为访客，我可以用有效凭证注册"
-├── "无效邮箱格式注册失败"
-└── "弱密码注册失败"
+Q2 (functional):
+├── "As a guest, I can register with valid credentials"
+├── "Registration fails with an invalid email format"
+└── "Registration fails with a weak password"
 
-Q3（探索性）：
-├── 邮箱格式的边界情况
-├── 名字中的 Unicode
-└── 非常规的用户旅程
+Q3 (exploratory):
+├── Edge cases of email format
+├── Unicode in names
+└── Unconventional user journeys
 
-Q4（非功能性）：
-├── 注册端点处理 100 req/s
-└── 密码哈希满足安全标准
+Q4 (non-functional):
+├── The registration endpoint handles 100 req/s
+└── Password hashing meets the security standard
 ```
 
-### 步骤 3：规划测试分布
+### Step 3: Plan the test distribution
 
 ```
-测试分布（示例）：
+Test distribution (example):
 
 ┌─────────────────────────────────────────────────────────────────┐
-│ 测试类型         │ 数量  │ 覆盖重点                               │
+│ Test type        │ Count │ Coverage focus                         │
 ├──────────────────┼───────┼──────────────────────────────────────┤
-│ 单元             │ ~50   │ 所有业务逻辑                           │
-│ 集成             │ ~15   │ 数据库、外部服务                        │
-│ API/契约         │ ~10   │ 所有端点                               │
-│ E2E              │ ~5    │ 仅关键用户旅程                         │
-│ 性能             │ ~3    │ 负载下的关键端点                        │
+│ Unit             │ ~50   │ All business logic                     │
+│ Integration      │ ~15   │ Database, external services            │
+│ API / contract   │ ~10   │ All endpoints                          │
+│ E2E              │ ~5    │ Critical user journeys only            │
+│ Performance      │ ~3    │ Key endpoints under load               │
 └──────────────────┴───────┴──────────────────────────────────────┘
 
-比例：50:15:10:5:3（大约 10:3:2:1:0.5）
+Ratio: 50:15:10:5:3 (roughly 10:3:2:1:0.5)
 ```
 
-### 步骤 4：定义测试策略
+### Step 4: Define the test strategy
 
 ```
-测试策略文档：
+Test-strategy document:
 
-范围：用户注册功能
+Scope: User-registration feature
 
-1. 单元测试（Q1）
-   - 覆盖目标：80%+
-   - 重点：验证逻辑、业务规则
-   - 工具：pytest、unittest
-   - 运行：每次提交
+1. Unit tests (Q1)
+   - Coverage target: 80%+
+   - Focus: validation logic, business rules
+   - Tools: pytest, unittest
+   - Run: on every commit
 
-2. 集成测试（Q1/Q2）
-   - 重点：数据库操作、邮件服务
-   - 工具：pytest + testcontainers
-   - 运行：PR 合并时
+2. Integration tests (Q1/Q2)
+   - Focus: database operations, email service
+   - Tools: pytest + testcontainers
+   - Run: on PR merge
 
-3. 验收测试（Q2）
-   - 重点：用户故事
-   - 工具：Cucumber/Behave
-   - 运行：每晚
+3. Acceptance tests (Q2)
+   - Focus: user stories
+   - Tools: Cucumber/Behave
+   - Run: nightly
 
-4. 探索性测试（Q3）
-   - 重点：边界情况、可用性
-   - 方法：基于章程的会话
-   - 时间：发布前
+4. Exploratory testing (Q3)
+   - Focus: edge cases, usability
+   - Method: charter-based sessions
+   - Timing: before release
 
-5. 性能测试（Q4）
-   - 重点：注册端点
-   - 目标：100 req/s，<500ms p99
-   - 工具：k6、Locust
-   - 运行：每周
+5. Performance tests (Q4)
+   - Focus: registration endpoint
+   - Target: 100 req/s, <500ms p99
+   - Tools: k6, Locust
+   - Run: weekly
 ```
 
-## 输出
+## Output
 
 ```json
 {
@@ -336,62 +336,62 @@ Q4（非功能性）：
 }
 ```
 
-## 调用示例
+## Invocation example
 
 ```
-AI: 启动 test-strategist 规划测试方案……
+AI: Launching test-strategist to plan the test approach...
 
-🧪 测试策略分析：
+🧪 Test-strategy analysis:
 
-Feature: 订单处理
+Feature: Order processing
 
-测试需求评估：
+Testing-needs assessment:
 ┌────────────────┬───────────┬─────────────────────────────────────┐
-│ 方面           │ 风险      │ 需要的测试                           │
+│ Aspect         │ Risk      │ Tests needed                         │
 ├────────────────┼───────────┼─────────────────────────────────────┤
-│ 创建订单       │ 高        │ 单元 + 集成 + E2E                    │
-│ 支付           │ 关键      │ 单元 + 集成 + 安全                   │
-│ 库存           │ 高        │ 单元 + 集成                          │
-│ 邮件通知       │ 中        │ 单元（Stub 邮件服务）                 │
-│ 性能           │ 中        │ 结算负载测试                         │
+│ Create order   │ High      │ Unit + integration + E2E             │
+│ Payment        │ Critical  │ Unit + integration + security        │
+│ Inventory      │ High      │ Unit + integration                   │
+│ Email notify   │ Medium    │ Unit (stub the email service)        │
+│ Performance    │ Medium    │ Checkout load test                   │
 └────────────────┴───────────┴─────────────────────────────────────┘
 
-象限分布：
+Quadrant distribution:
 
-Q1（单元）：45 个测试
-├── OrderValidator（12）
-├── PricingCalculator（15）
-├── InventoryChecker（10）
-└── PaymentProcessor（8）
+Q1 (unit): 45 tests
+├── OrderValidator (12)
+├── PricingCalculator (15)
+├── InventoryChecker (10)
+└── PaymentProcessor (8)
 
-Q2（功能）：15 个测试
-├── 下单场景（8）
-├── 支付场景（5）
-└── 错误处理（2）
+Q2 (functional): 15 tests
+├── Order-placement scenarios (8)
+├── Payment scenarios (5)
+└── Error handling (2)
 
-Q3（探索性）：基于会话
-├── 章程："探索订单边界情况"
-├── 章程："压力测试购物车上限"
+Q3 (exploratory): session-based
+├── Charter: "explore order edge cases"
+├── Charter: "stress-test cart limits"
 
-Q4（非功能性）：5 个测试
-├── 结算负载测试（2）
-├── 安全扫描（2）
-├── 无障碍性（1）
+Q4 (non-functional): 5 tests
+├── Checkout load test (2)
+├── Security scan (2)
+├── Accessibility (1)
 
-检测到的测试异味：
-⚠️ test_order_flow.py — 测试太长（85 行）
-   → 拆分为聚焦的测试
-⚠️ 共享夹具修改了状态
-   → 改用新鲜夹具
+Test smells detected:
+⚠️ test_order_flow.py — test too long (85 lines)
+   → split into focused tests
+⚠️ Shared fixture mutates state
+   → switch to a fresh fixture
 
-建议：
-1. 为支付网关添加契约测试
-2. 增加 PricingCalculator 的单元测试覆盖
-3. 为库存服务故障添加混沌测试
-4. 考虑对订单验证使用基于属性的测试
+Recommendations:
+1. Add contract tests for the payment gateway
+2. Increase unit-test coverage of PricingCalculator
+3. Add chaos testing for inventory-service failures
+4. Consider property-based testing for order validation
 ```
 
-## 配置选项
+## Configuration options
 
 ```yaml
 config:
@@ -400,23 +400,23 @@ config:
   output: "test_strategy"
 ```
 
-## 测试箴言
+## Testing maxims
 
 ```
-"测试行为，而非实现"
-（测试应该能经受重构）
+"Test behavior, not implementation"
+(Tests should survive refactoring)
 
-"每个测试一个概念"
-（让失败原因清晰）
+"One concept per test"
+(Make the reason for failure clear)
 
-"测试即文档"
-（它们展示代码应如何使用）
+"Tests as documentation"
+(They show how the code should be used)
 
-"保持测试快速"
-（慢的测试不会被运行）
+"Keep tests fast"
+(Slow tests don't get run)
 ```
 
-## 参考资料
+## References
 
 - **Agile Testing** — Lisa Crispin & Janet Gregory (2009)
 - **More Agile Testing** — Lisa Crispin & Janet Gregory (2014)

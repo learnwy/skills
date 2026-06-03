@@ -1,32 +1,32 @@
 # error-analyzer
 
-错误分析与修复建议 agent。
+Error analysis and fix-suggestion agent.
 
-## 适用场景
+## When to use
 
-- 工作流中发生任何错误时
-- 需要诊断问题
-- 建议修复方案
+- Whenever an error occurs in the workflow
+- The problem needs to be diagnosed
+- A fix needs to be suggested
 
-## 钩子触发点
+## Hook trigger
 
 `on_error`
 
-## 能力
+## Capabilities
 
-1. **错误诊断**：识别根本原因
-2. **修复建议**：提出解决方案
-3. **预防**：推荐防护措施
+1. **Error diagnosis**: identify the root cause
+2. **Fix suggestions**: propose solutions
+3. **Prevention**: recommend safeguards
 
-## 输出
+## Output
 
-错误报告，包含：
+An error report containing:
 
-- 错误详情
-- 根本原因
-- 建议修复
+- Error details
+- Root cause
+- Suggested fix
 
-## 配置选项
+## Configuration options
 
 ```yaml
 config:
@@ -34,30 +34,30 @@ config:
   suggest_fixes: true
 ```
 
-## 调用示例
+## Invocation example
 
 ````
-AI: 启动 error-analyzer...
+AI: Launching error-analyzer...
 
-❌ 错误分析：
+❌ Error analysis:
 
-错误：TypeScript 编译失败
-位置：src/upload.ts:45
-信息：Property 'size' does not exist on type 'File'
+Error: TypeScript compilation failed
+Location: src/upload.ts:45
+Message: Property 'size' does not exist on type 'File'
 
-根本原因：
-- 缺少 Web API 类型导入
+Root cause:
+- Missing Web API type import
 
-建议修复：
+Suggested fix:
 ```typescript
-// 在文件顶部添加
+// Add at the top of the file
 /// <reference lib="dom" />
 ````
 
-预防措施：
+Prevention:
 
-- 在 CI 中添加 tsconfig lib 检查
-- 更新项目模板
+- Add a tsconfig lib check in CI
+- Update the project template
 
 ```
 

@@ -1,32 +1,32 @@
 # test-strategy-advisor
 
-测试策略建议 agent。
+Test-strategy advisory agent.
 
-## 适用场景
+## When to use
 
-- 测试阶段开始前
-- 分析代码变更以确定测试优先级
-- 推荐测试方法
+- Before the testing phase begins
+- To analyze code changes and set test priorities
+- To recommend testing approaches
 
-## 钩子触发点
+## Hook trigger
 
 `pre_stage_TESTING`
 
-## 能力
+## Capabilities
 
-1. **变更分析**：识别高风险变更
-2. **覆盖建议**：确定优先测试区域
-3. **测试类型选择**：单元/集成/端到端
+1. **Change analysis**: identify high-risk changes
+2. **Coverage recommendations**: determine priority test areas
+3. **Test-type selection**: unit / integration / end-to-end
 
-## 输出
+## Output
 
-测试计划，包含：
+A test plan containing:
 
-- 优先区域
-- 推荐测试类型
-- 覆盖目标
+- Priority areas
+- Recommended test types
+- Coverage targets
 
-## 配置选项
+## Configuration options
 
 ```yaml
 config:
@@ -34,25 +34,25 @@ config:
   prioritize_areas: true
 ```
 
-## 调用示例
+## Invocation example
 
 ```
-AI: 启动 test-strategy-advisor...
+AI: Launching test-strategy-advisor...
 
-🧪 测试策略建议：
+🧪 Test-strategy recommendation:
 
-高优先级区域：
-1. uploadHandler.ts - 新的文件上传逻辑
-2. imageProcessor.ts - 图片处理
+High-priority areas:
+1. uploadHandler.ts - new file-upload logic
+2. imageProcessor.ts - image processing
 
-推荐测试：
+Recommended tests:
 ┌──────────────┬────────┬──────────────────────┐
-│ 类型         │ 数量   │ 重点                 │
+│ Type         │ Count  │ Focus                │
 ├──────────────┼────────┼──────────────────────┤
-│ 单元测试     │ 8      │ 核心函数             │
-│ 集成测试     │ 3      │ API 端点             │
-│ 端到端       │ 1      │ 上传流程             │
+│ Unit         │ 8      │ Core functions       │
+│ Integration  │ 3      │ API endpoints        │
+│ End-to-end   │ 1      │ Upload flow          │
 └──────────────┴────────┴──────────────────────┘
 
-覆盖目标：80%
+Coverage target: 80%
 ```

@@ -1,66 +1,66 @@
-# 完整工作流：创建技能（问题驱动）
+# Complete workflow: creating a skill (problem-driven)
 
-问题驱动创建技能的端到端示例。
+An end-to-end example of problem-driven skill creation.
 
-## 问题优先方法
+## Problem-first approach
 
-**旧方式**：用户说"我要一个技能" → 提问 → 生成
+**Old way**: the user says "I want a skill" → ask questions → generate
 
-**新方式**：用户描述困扰 → 理解问题 → 分析项目 → 设计 → 确认 → 生成
+**New way**: the user describes an annoyance → understand the problem → analyze the project → design → confirm → generate
 
-## 场景
+## Scenario
 
-**用户说**："我每次创建新组件时都在写相同的 React 组件样板代码——TypeScript、styled-components 和测试。每次创建 Button 或 Card，都是从旧文件复制粘贴然后修改。太重复了，而且总会遗漏什么。"
+**The user says**: "Every time I create a new component, I write the same React component boilerplate — TypeScript, styled-components, and tests. Every time I create a Button or Card, I copy-paste from an old file and modify it. It is too repetitive, and I always miss something."
 
-## 步骤 1：问题理解（L1）
+## Step 1: Problem understanding (L1)
 
-不要问"你想给技能起什么名字？"，而是理解问题：
-
-```
-问题分析：
-- 模式："我每次都在写相同的……"
-- 类型：Generator（生成器，重复创建代码）
-- 输入：组件名称、props 类型
-- 输出：完整组件文件（index.tsx、styles.ts、types.ts、test.tsx）
-- 频率：高（每个新组件）
-```
-
-## 步骤 2：项目分析（L2）
-
-通过 Task 工具并行运行：
-
-- **项目扫描器**：发现 `src/components/` 下有 12 个现有组件，每个包含 `index.tsx`、`styles.ts`、`types.ts`
-- **技术栈分析器**：React 18 + TypeScript 5 + styled-components v6
-- **约定检测器**：组件使用 PascalCase、函数式组件 + Hooks、桶导出
-
-## 步骤 3：技能设计（L3）
-
-生成**之前**展示给用户：
+Instead of asking "what do you want to name the skill?", understand the problem:
 
 ```
-我将创建一个技能：
-
-问题：你在手动编写 React 组件样板代码
-方案：自动生成包含样式和测试的完整组件文件
-触发条件："new component"、"create component"、"generate component"
-创建的文件：
-  - {name}/index.tsx（组件）
-  - {name}/styles.ts（styled-components）
-  - {name}/types.ts（TypeScript 接口）
-  - {name}/test.tsx（基础测试）
-
-这样是否正确？需要调整什么吗？
+Problem analysis:
+- Pattern: "I write the same ... every time"
+- Type: Generator (repeatedly creating code)
+- Input: component name, props types
+- Output: complete component files (index.tsx, styles.ts, types.ts, test.tsx)
+- Frequency: high (every new component)
 ```
 
-## 步骤 4：用户确认（L4）
+## Step 2: Project analysis (L2)
 
-用户说："可以，但我还想生成 prop-types"
+Run in parallel via the Task tool:
 
-→ 更新设计，在 `types.ts` 中加入 prop-types。
+- **Project scanner**: found 12 existing components under `src/components/`, each containing `index.tsx`, `styles.ts`, `types.ts`
+- **Tech-stack analyzer**: React 18 + TypeScript 5 + styled-components v6
+- **Convention detector**: components use PascalCase, function components + Hooks, barrel exports
 
-## 步骤 5：生成技能（L5）
+## Step 3: Skill design (L3)
 
-创建的技能目录：
+Show the user **before** generating:
+
+```
+I will create a skill:
+
+Problem: you are manually writing React component boilerplate
+Solution: auto-generate complete component files with styles and tests
+Triggers: "new component", "create component", "generate component"
+Files created:
+  - {name}/index.tsx (component)
+  - {name}/styles.ts (styled-components)
+  - {name}/types.ts (TypeScript interfaces)
+  - {name}/test.tsx (basic tests)
+
+Is this correct? Anything to adjust?
+```
+
+## Step 4: User confirmation (L4)
+
+The user says: "Looks good, but I also want prop-types generated."
+
+→ Update the design to include prop-types in `types.ts`.
+
+## Step 5: Generate the skill (L5)
+
+The skill directory created:
 
 ```
 .agents/skills/react-component-generator/
@@ -74,34 +74,34 @@
     └── component-patterns.md
 ```
 
-SKILL.md 包含：
-- 带触发词的 Frontmatter："new component"、"create component"
-- 工作流：分析目标 → 选择模板 → 填充上下文 → 创建文件
-- 组件类型与模板的快速参考表
-- 名称冲突和缺少目录的错误处理
+SKILL.md contains:
+- Frontmatter with trigger words: "new component", "create component"
+- Workflow: analyze target → select template → populate context → create files
+- A quick-reference table of component types vs templates
+- Error handling for name conflicts and missing directories
 
-## 步骤 6：质量验证（L6）
+## Step 6: Quality validation (L6)
 
-运行质量验证器：
+Run the quality validator:
 
 ```json
 {
   "overall_score": 0.92,
   "status": "pass",
   "checks": {
-    "triggers": "3 个独立、具体的触发词",
-    "output_path": ".agents/skills/（项目相对路径） ✓",
+    "triggers": "3 distinct, specific trigger words",
+    "output_path": ".agents/skills/ (project-relative path) ✓",
     "frontmatter": "name + description ✓",
-    "workflow": "4 步，原子化，已验证 ✓"
+    "workflow": "4 steps, atomic, verified ✓"
   }
 }
 ```
 
-## 验证清单
+## Validation checklist
 
-- [x] 描述中包含所有触发关键词
-- [x] "适用场景"章节清晰
-- [x] "不适合调用"防止误触发
-- [x] 参考文档从 SKILL.md 链接
-- [x] 模板匹配项目约定（PascalCase、styled-components）
-- [x] 输出路径为项目相对路径
+- [x] The description contains all trigger keywords
+- [x] The "When to Use" section is clear
+- [x] The "Not a fit" section prevents false triggers
+- [x] References are linked from SKILL.md
+- [x] Templates match project conventions (PascalCase, styled-components)
+- [x] The output path is project-relative

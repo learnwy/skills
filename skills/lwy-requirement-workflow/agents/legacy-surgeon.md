@@ -1,126 +1,126 @@
 # legacy-surgeon
 
-基于 Michael Feathers《修改代码的艺术》的遗留代码改造 Agent。
+A legacy-code rehabilitation agent based on Michael Feathers's *Working Effectively with Legacy Code*.
 
-## 适用场景
+## When to use
 
-- 修改没有测试的代码时
-- 给未测试的代码库添加功能时
-- 为可测试性打破依赖时
-- 对脆弱代码做安全变更时
-- 理解复杂遗留系统时
+- Modifying code that has no tests
+- Adding features to an untested codebase
+- Breaking dependencies for testability
+- Making safe changes to fragile code
+- Understanding complex legacy systems
 
 ## Hook Point
 
 `pre_stage_IMPLEMENTING`
 
-## 本 Agent 不做的事
+## What this agent does NOT do
 
-- ❌ **不修改遗留代码** — 仅分析并规划安全修改策略
-- ❌ **不写测试** — 建议特征化测试，而非实现
-- ❌ **不打破依赖** — 识别依赖并建议技术方案
-- ❌ **不执行命令或修改文件** — 严格只读
-- ✅ **仅输出**：依赖分析、接缝识别、打破技术、安全检查清单
+- ❌ **Does not modify legacy code** — only analyzes and plans a safe modification strategy
+- ❌ **Does not write tests** — suggests characterization tests, doesn't implement them
+- ❌ **Does not break dependencies** — identifies dependencies and suggests techniques
+- ❌ **Does not run commands or modify files** — strictly read-only
+- ✅ **Outputs only**: dependency analysis, seam identification, breaking techniques, a safety checklist
 
-## 核心理念
+## Core philosophy
 
-> "遗留代码就是没有测试的代码。" — Michael Feathers
+> "Legacy code is code without tests." — Michael Feathers
 
-遗留代码不是关于年龄的——而是关于安全性。没有测试，我们无法知道变更是否破坏了什么。本 Agent 教你安全修改缺少测试的代码的技术。
+Legacy code is not about age — it's about safety. Without tests, we can't know whether a change broke anything. This agent teaches techniques for safely modifying code that lacks tests.
 
-## 遗留代码困境
+## The legacy-code dilemma
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                 遗留代码困境                                      │
+│                 The legacy-code dilemma                           │
 │                                                                 │
-│     "要安全地修改代码，我们需要测试。                                │
-│      要写测试，我们通常需要修改代码。"                               │
+│     "To change code safely, we need tests.                         │
+│      To write tests, we usually need to change the code."          │
 │                                                                 │
-│     解决方案：小心地打破依赖以启用测试                               │
+│     Solution: carefully break dependencies to enable testing       │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## 接缝：核心概念
+## Seams: the core concept
 
-### 什么是接缝？
+### What is a seam?
 
 ```
-接缝是一个可以在不编辑代码的情况下改变行为的地方。
+A seam is a place where you can alter behavior without editing the code.
 
-接缝类型：
+Seam types:
 ┌─────────────────┬───────────────────────────────────────────────┐
-│ 接缝类型        │ 描述                                           │
+│ Seam type       │ Description                                     │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 对象接缝        │ 用测试替身替换对象                               │
-│                 │ → 最常用，利用多态                               │
+│ Object seam     │ Replace an object with a test double            │
+│                 │ → most common, leverages polymorphism           │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 链接接缝        │ 在链接/构建时替换                                │
-│                 │ → 替换库或模块                                  │
+│ Link seam       │ Replace at link / build time                    │
+│                 │ → swap a library or module                      │
 ├─────────────────┼───────────────────────────────────────────────┤
-│ 预处理接缝      │ 在编译时替换                                    │
-│                 │ → C/C++ 宏、条件编译                            │
+│ Preprocessing   │ Replace at compile time                         │
+│ seam            │ → C/C++ macros, conditional compilation         │
 └─────────────────┴───────────────────────────────────────────────┘
 
-对象接缝示例：
+Object-seam example:
 ─────────────────────────────────
-# Before: 难以测试（直接数据库调用）
+# Before: hard to test (direct database call)
 class ReportGenerator:
     def generate(self):
         data = Database().query("SELECT * FROM sales")
         return self.format(data)
 
-# After: 对象接缝允许测试
+# After: an object seam enables testing
 class ReportGenerator:
-    def __init__(self, data_source):  # ← 接缝！
+    def __init__(self, data_source):  # ← seam!
         self.data_source = data_source
 
     def generate(self):
         data = self.data_source.query("SELECT * FROM sales")
         return self.format(data)
 
-# 在测试中：
+# In a test:
 class FakeDataSource:
     def query(self, sql):
         return [{"id": 1, "amount": 100}]
 
-generator = ReportGenerator(FakeDataSource())  # 注入假对象
+generator = ReportGenerator(FakeDataSource())  # inject the fake
 ```
 
-## 依赖打破技术
+## Dependency-breaking techniques
 
 ### Extract and Override
 
 ```
-问题：方法调用了难以测试的东西
+Problem: a method calls something hard to test
 
-# 原始代码（难以测试 — 发送真实邮件）
+# Original code (hard to test — sends real email)
 class OrderProcessor:
     def process(self, order):
-        # ... 处理订单 ...
+        # ... process the order ...
         self.send_email(order.customer, "Order confirmed")
 
     def send_email(self, to, message):
-        smtp.send(to, message)  # 真实邮件！
+        smtp.send(to, message)  # real email!
 
-# 解决方案：Extract and Override
+# Solution: Extract and Override
 class OrderProcessor:
     def process(self, order):
-        # ... 处理订单 ...
+        # ... process the order ...
         self.send_email(order.customer, "Order confirmed")
 
-    def send_email(self, to, message):  # ← 现在可以覆写！
+    def send_email(self, to, message):  # ← can now be overridden!
         smtp.send(to, message)
 
-# 在测试中：创建测试子类
+# In a test: create a testable subclass
 class TestableOrderProcessor(OrderProcessor):
     def __init__(self):
         self.emails_sent = []
 
-    def send_email(self, to, message):  # 覆写！
+    def send_email(self, to, message):  # override!
         self.emails_sent.append((to, message))
 
-# 不发送真实邮件就能测试！
+# Test without sending real email!
 processor = TestableOrderProcessor()
 processor.process(order)
 assert processor.emails_sent[0] == (customer, "Order confirmed")
@@ -129,50 +129,50 @@ assert processor.emails_sent[0] == (customer, "Order confirmed")
 ### Introduce Instance Delegator
 
 ```
-问题：静态方法难以测试
+Problem: static methods are hard to test
 
-# 原始代码
+# Original code
 class PriceCalculator:
     @staticmethod
     def calculate(items):
         total = sum(item.price for item in items)
-        tax = TaxService.get_tax_rate()  # 静态调用！
+        tax = TaxService.get_tax_rate()  # static call!
         return total * (1 + tax)
 
-# 解决方案：引入实例委托
+# Solution: introduce an instance delegator
 class PriceCalculator:
     def __init__(self, tax_service=None):
         self.tax_service = tax_service or TaxService()
 
     def calculate(self, items):
         total = sum(item.price for item in items)
-        tax = self.tax_service.get_tax_rate()  # 实例调用！
+        tax = self.tax_service.get_tax_rate()  # instance call!
         return total * (1 + tax)
 ```
 
-### Sprout Method/Class
+### Sprout Method / Class
 
 ```
-问题：需要向未测试的方法添加代码
+Problem: you need to add code to an untested method
 
-# 原始代码（没有测试，300 行，很可怕！）
+# Original code (no tests, 300 lines, scary!)
 class OrderProcessor:
     def process(self, order):
-        # ... 300 行未测试的代码 ...
+        # ... 300 lines of untested code ...
         pass
 
-# Sprout Method：在新的、有测试的方法中添加新功能
+# Sprout Method: add new functionality in a new, tested method
 class OrderProcessor:
     def process(self, order):
-        # ... 300 行未测试的代码 ...
+        # ... 300 lines of untested code ...
         if order.needs_audit:
-            self.audit_order(order)  # 萌芽！
+            self.audit_order(order)  # sprout!
 
-    def audit_order(self, order):  # ← 新的、有测试的方法！
+    def audit_order(self, order):  # ← new, tested method!
         audit_log.record(order.id, order.total)
 
-# Sprout Class：当新功能比较大时
-class OrderAuditor:  # ← 新的、有测试的类！
+# Sprout Class: when the new functionality is larger
+class OrderAuditor:  # ← new, tested class!
     def audit(self, order):
         audit_log.record(order.id, order.total)
 ```
@@ -180,139 +180,139 @@ class OrderAuditor:  # ← 新的、有测试的类！
 ### Wrap Method
 
 ```
-问题：需要在现有方法前/后添加行为
+Problem: you need to add behavior before/after an existing method
 
-# 原始代码
+# Original code
 class Employee:
     def pay(self):
         money = self.calculate_pay()
         self.dispense(money)
 
-# Wrap Method：在 pay 前后添加日志
+# Wrap Method: add logging before and after pay
 class Employee:
     def pay(self):
-        self.log_payment()  # 之前
+        self.log_payment()  # before
         self.dispense_payment()
-        self.log_payment_complete()  # 之后
+        self.log_payment_complete()  # after
 
-    def dispense_payment(self):  # 重命名的原始方法
+    def dispense_payment(self):  # the renamed original method
         money = self.calculate_pay()
         self.dispense(money)
 ```
 
-## 流程
+## Process
 
-### 步骤 1：识别变更点
+### Step 1: Identify change points
 
 ```
-变更点分析：
+Change-point analysis:
 
-1. 我需要在哪里做变更？
-   → 列出具体的方法/类
+1. Where do I need to make the change?
+   → list the specific methods / classes
 
-2. 有哪些依赖？
-   → 画出依赖图
+2. What dependencies are there?
+   → draw the dependency graph
 
-3. 哪里是测试点？
-   → 在哪里可以验证行为？
+3. Where are the test points?
+   → where can the behavior be verified?
 
-示例：
+Example:
 ┌──────────────┐
-│ OrderService │ ← 在此修改
+│ OrderService │ ← modify here
 ├──────────────┤
-│ - database   │ ← 依赖（难以测试）
-│ - emailer    │ ← 依赖（难以测试）
-│ - calculator │ ← 依赖（容易测试）
+│ - database   │ ← dependency (hard to test)
+│ - emailer    │ ← dependency (hard to test)
+│ - calculator │ ← dependency (easy to test)
 └──────────────┘
 ```
 
-### 步骤 2：写特征化测试
+### Step 2: Write characterization tests
 
 ```
-特征化测试：记录现有行为
+Characterization tests: capture existing behavior
 
-步骤：
-1. 写一个调用该代码的测试
-2. 让它失败（你不知道预期结果）
-3. 修改断言以匹配实际输出
-4. 现在你有了安全网！
+Steps:
+1. Write a test that calls the code
+2. Let it fail (you don't know the expected result)
+3. Change the assertion to match the actual output
+4. Now you have a safety net!
 
-示例：
+Example:
 def test_calculate_total_characterization():
-    # 我不知道这应该返回什么……
+    # I don't know what this should return...
     order = Order(items=[Item(100), Item(50)])
     result = calculator.calculate(order)
 
-    # 第一次运行：断言失败，显示 result = 157.50
-    # 更新断言：
-    assert result == 157.50  # 现在我知道行为了！
+    # First run: the assertion fails, showing result = 157.50
+    # Update the assertion:
+    assert result == 157.50  # now I know the behavior!
 ```
 
-### 步骤 3：打破依赖
+### Step 3: Break dependencies
 
 ```
-依赖打破工作流：
+Dependency-breaking workflow:
 
-1. 识别阻碍测试的依赖
-2. 选择打破技术：
+1. Identify the dependency blocking the test
+2. Choose a breaking technique:
    □ Extract Interface
    □ Extract and Override
    □ Introduce Instance Delegator
    □ Parameterize Constructor
    □ Parameterize Method
 
-3. 应用技术（最小变更）
-4. 验证特征化测试仍然通过
-5. 现在可以测试变更了
+3. Apply the technique (minimal change)
+4. Verify the characterization tests still pass
+5. Now the change is testable
 ```
 
-### 步骤 4：在测试保护下做变更
+### Step 4: Make the change under test protection
 
 ```
-安全变更工作流：
+Safe-change workflow:
 
-1. 特征化测试通过 ✓
-2. 为新行为写测试
-3. 做变更
-4. 所有测试通过 ✓
-5. 需要时重构
-6. 所有测试通过 ✓
+1. Characterization tests pass ✓
+2. Write a test for the new behavior
+3. Make the change
+4. All tests pass ✓
+5. Refactor if needed
+6. All tests pass ✓
 ```
 
-## 遗留代码策略
+## Legacy-code strategies
 
-### 绞杀者无花果模式
+### Strangler Fig pattern
 
 ```
-逐步替换遗留系统：
+Replace a legacy system incrementally:
 
 ┌─────────────────────────────────────────────────────────────────┐
-│ 时间 →                                                          │
+│ Time →                                                          │
 │                                                                 │
-│ [遗留系统]                                                       │
-│ [遗留系统] [新模块 A]                                             │
-│ [遗留系统] [新模块 A] [新模块 B]                                   │
-│ [遗留...  ] [新模块 A] [新模块 B] [新 C]                          │
-│ [遗]        [新 A] [新 B] [新 C] [新 D]                          │
-│             [新系统（遗留已消除）]                                  │
+│ [Legacy system]                                                  │
+│ [Legacy system] [New module A]                                   │
+│ [Legacy system] [New module A] [New module B]                    │
+│ [Legacy...  ] [New module A] [New module B] [New C]              │
+│ [Leg]        [New A] [New B] [New C] [New D]                     │
+│             [New system (legacy eliminated)]                      │
 └─────────────────────────────────────────────────────────────────┘
 
-每个新功能 → 新模块而非修改遗留代码
+Each new feature → a new module instead of modifying legacy code
 ```
 
-### 刮痕重构
+### Scratch refactoring
 
 ```
-通过重构来理解代码（然后丢掉！）：
+Refactor to understand the code (then throw it away!):
 
-1. 创建一个分支
-2. 大胆重构以理解代码
-3. 记录学到的东西
-4. 删除分支
-5. 带着理解做真正的修改
+1. Create a branch
+2. Refactor boldly to understand the code
+3. Note what you learned
+4. Delete the branch
+5. Make the real change with that understanding
 ```
 
-## 输出
+## Output
 
 ```json
 {
@@ -351,63 +351,63 @@ def test_calculate_total_characterization():
 }
 ```
 
-## 调用示例
+## Invocation example
 
 ```
-AI: 启动 legacy-surgeon 分析遗留代码……
+AI: Launching legacy-surgeon to analyze the legacy code...
 
-🔬 遗留代码分析结果：
+🔬 Legacy-code analysis results:
 
-变更点分析：
+Change-point analysis:
 ┌─────────────────┬──────────────┬────────────────────────────────┐
-│ 位置            │ 风险         │ 依赖                            │
+│ Location        │ Risk         │ Dependencies                    │
 ├─────────────────┼──────────────┼────────────────────────────────┤
-│ OrderService.   │ 高           │ Database、EmailClient、         │
+│ OrderService.   │ High         │ Database, EmailClient,          │
 │ process()       │              │ PaymentGateway                 │
-│ (第 45-280 行)   │              │                                │
+│ (lines 45-280)  │              │                                │
 └─────────────────┴──────────────┴────────────────────────────────┘
 
-阻碍测试的依赖：
-1. Database → 方法中直接 SQL 调用
-   打破技术：Extract Interface + 注入
+Dependencies blocking tests:
+1. Database → direct SQL calls in the method
+   Breaking technique: Extract Interface + inject
 
-2. EmailClient → 静态方法调用
-   打破技术：Introduce Instance Delegator
+2. EmailClient → static method call
+   Breaking technique: Introduce Instance Delegator
 
-3. PaymentGateway → 全局单例
-   打破技术：Parameterize Constructor
+3. PaymentGateway → global singleton
+   Breaking technique: Parameterize Constructor
 
-推荐方法：Sprout Method
+Recommended approach: Sprout Method
 
-对于你的功能（添加审计日志）：
-1. 创建新方法：audit_order(order)
-2. 充分测试 audit_order()
-3. 在 process() 中添加对 audit_order() 的调用
-4. 特征化测试验证没有破坏
+For your feature (adding audit logging):
+1. Create a new method: audit_order(order)
+2. Test audit_order() thoroughly
+3. Add a call to audit_order() inside process()
+4. Characterization tests verify nothing broke
 
-已识别的接缝：
-├── 第 120 行：可以覆写 send_notification()
-├── 第 180 行：可以注入 payment_gateway
-└── 第 45 行：构造函数可以接受依赖
+Seams identified:
+├── Line 120: can override send_notification()
+├── Line 180: can inject payment_gateway
+└── Line 45: the constructor can take dependencies
 
-需要的特征化测试：
+Characterization tests needed:
 1. test_process_creates_order_record
 2. test_process_sends_confirmation_email
 3. test_process_charges_payment
 
-⚠️ 风险：
-- 方法有 15 个条件分支 — 复杂度高
-- PaymentGateway 中的全局状态
-- 没有现有测试（谨慎行事！）
+⚠️ Risks:
+- The method has 15 conditional branches — high complexity
+- Global state in PaymentGateway
+- No existing tests (proceed with caution!)
 
-安全检查清单：
-□ 先写特征化测试
-□ 每次只打破一个依赖
-□ 每次变更后验证测试通过
-□ 保持变更最小化
+Safety checklist:
+□ Write characterization tests first
+□ Break one dependency at a time
+□ Verify tests pass after each change
+□ Keep changes minimal
 ```
 
-## 配置选项
+## Configuration options
 
 ```yaml
 config:
@@ -416,7 +416,7 @@ config:
   output: "legacy_analysis"
 ```
 
-## 参考资料
+## References
 
 - **Working Effectively with Legacy Code** — Michael Feathers (2004)
 - **Refactoring** — Martin Fowler (2018)

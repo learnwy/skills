@@ -1,132 +1,132 @@
 ---
 name: lwy-project-agent-writer
-description: "当用户想要创建、更新或设计项目级智能体（.agents/agents/*.md）时使用此技能。分析用户问题和项目上下文来设计工作方案。触发词：'create agent'、'build an agent'、'add agent'、'design agent'、'update agent'、'project agent'、'subagent'、'worker agent'、'automated worker'，或当用户描述应由自治智能体处理的重复性任务时触发。"
+description: "Use this skill when the user wants to create, update, or design a project-level agent (.agents/agents/*.md). Analyze the user's question and project context to design a work plan. Triggers: 'create agent', 'build an agent', 'add agent', 'design agent', 'update agent', 'project agent', 'subagent', 'worker agent', 'automated worker', or when the user describes a repetitive task that should be handled by an autonomous agent."
 metadata:
   author: "learnwy"
   version: "4.0"
 ---
 
-# 项目智能体编写器
+# Project Agent Writer
 
-分析项目的结构、规范和自动化缺口，然后**设计**一个智能体来解决用户的问题。在生成任何文件之前，始终通过 `AskUserQuestion` 与用户确认。
+Analyze the project's structure, conventions, and automation gaps, then **design** an agent to solve the user's problem. Always confirm with the user via `AskUserQuestion` before generating any files.
 
-> **核心原则**：先理解问题，再分析项目，然后设计智能体，仅在用户确认后才生成。
+> **Core principle**: First understand the problem, then analyze the project, then design the agent, and only generate after the user confirms.
 
-> **共享原则：** 本技能与 `project-skill-writer` / `project-skill-installer` / `project-rules-writer` 共享 5 条 writer 通用纪律。详见 [../project-skill-writer/references/writer-discipline.md](../project-skill-writer/references/writer-discipline.md)。
+> **Shared principle:** This skill shares the 5 common writer disciplines with `project-skill-writer` / `project-skill-installer` / `project-rules-writer`. See [../project-skill-writer/references/writer-discipline.md](../project-skill-writer/references/writer-discipline.md) for details.
 
-## 使用场景
+## Use Cases
 
-**触发条件：**
+**Trigger when:**
 
-- 用户说"create an agent"、"I need an agent that..."、"make AI do X every time"
-- 用户描述自动化需求（"someone to automatically..."、"I want something that monitors..."）
-- 用户想构建评分器、比较器、分析器、转换器、研究者或验证器
+- The user says "create an agent", "I need an agent that...", "make AI do X every time"
+- The user describes an automation need ("someone to automatically...", "I want something that monitors...")
+- The user wants to build a grader, comparator, analyzer, transformer, researcher, or validator
 
-**不触发条件：**
+**Do not trigger when:**
 
-- 用户想**安装**技能 → 委托给 `project-skill-installer`
-- 用户想**创建**技能 → 委托给 `project-skill-writer`
-- 用户想**创建**规则 → 委托给 `project-rules-writer`
+- The user wants to **install** a skill → delegate to `project-skill-installer`
+- The user wants to **create** a skill → delegate to `project-skill-writer`
+- The user wants to **create** a rule → delegate to `project-rules-writer`
 
-## 前置条件
+## Prerequisites
 
 - Node.js >= 18
-- 目标项目必须有可写目录用于智能体输出
+- The target project must have a writable directory for agent output
 
-## 工作流
+## Workflow
 
 ```
-[L1: 理解问题]
+[L1: Understand the problem]
          ↓
-[L2: 项目分析]
+[L2: Project analysis]
          ↓
-[L3: 智能体设计]
+[L3: Agent design]
          ↓
-[L4: 确认]  ← AskUserQuestion（必须确认）
+[L4: Confirm]  ← AskUserQuestion (confirmation required)
          ↓
-[L5: 生成]
+[L5: Generate]
          ↓
-[L6: 验证]
+[L6: Verify]
 ```
 
-## L1: 理解问题
+## L1: Understand the Problem
 
-提取用户需求——不要问"你想让智能体做什么？"而是从他们的问题中推断：
+Extract the user's needs—do not ask "what do you want the agent to do?" but infer from their question:
 
-### 问题分类
+### Problem Classification
 
-| 问题模式 | 智能体类型 | 示例 |
+| Problem pattern | Agent type | Example |
 |----------|------------|------|
-| "评估/评分/比较输出" | 评分器 | 代码审查者、PR 质量检查器 |
-| "比较 A 和 B，选出更好的" | 比较器 | 技能版本对比、A/B 测试器 |
-| "分析/发现模式/报告洞察" | 分析器 | Bug 查找器、性能诊断 |
-| "转换/转化/标准化数据" | 转换器 | 格式转换器、Schema 映射器 |
-| "研究/收集/综合信息" | 研究者 | 文档查找、最佳实践 |
-| "检查/验证/执行规则" | 验证器 | Schema 检查器、合规验证器 |
+| "evaluate/grade/compare output" | Grader | Code reviewer, PR quality checker |
+| "compare A and B, pick the better one" | Comparator | Skill version comparison, A/B tester |
+| "analyze/find patterns/report insights" | Analyzer | Bug finder, performance diagnostics |
+| "convert/transform/normalize data" | Transformer | Format converter, schema mapper |
+| "research/gather/synthesize information" | Researcher | Doc lookup, best practices |
+| "check/validate/enforce rules" | Validator | Schema checker, compliance validator |
 
-### 提取智能体规格
+### Extract the Agent Spec
 
-从用户的问题中提取：
-- **角色**：智能体做什么（从问题描述中提取）
-- **输入**：什么触发智能体 / 需要什么数据
-- **输出**：智能体产出什么
-- **约束**：边界和限制
+Extract from the user's question:
+- **Role**: what the agent does (extracted from the problem description)
+- **Input**: what triggers the agent / what data it needs
+- **Output**: what the agent produces
+- **Constraints**: boundaries and limitations
 
-## L2: 项目分析
+## L2: Project Analysis
 
-扫描项目以理解上下文。并行使用搜索工具：
+Scan the project to understand context. Use search tools in parallel:
 
-### 检测目标
+### Detection Targets
 
-| 信号 | 查找内容 | 工具 |
+| Signal | What to look for | Tool |
 |------|----------|------|
-| 语言 | 文件扩展名（`.ts`、`.py`、`.swift`、`.go`） | Glob |
-| 框架 | package.json 依赖、Podfile、go.mod、Cargo.toml | Read |
-| 现有智能体 | `.agents/agents/`、`.trae/agents/`、`.claude/agents/`、`.cursor/agents/` | Glob |
-| 现有技能 | `.agents/skills/`、`.trae/skills/`、`.cursor/skills/` | Glob |
-| 自动化脚本 | `scripts/`、`tools/`、`Makefile` 目标 | Glob |
-| API 接口 | REST 端点、GraphQL schema、gRPC protos | Grep |
-| 规范 | 命名模式、输出格式、目录结构 | LS |
+| Language | File extensions (`.ts`, `.py`, `.swift`, `.go`) | Glob |
+| Framework | package.json dependencies, Podfile, go.mod, Cargo.toml | Read |
+| Existing agents | `.agents/agents/`, `.trae/agents/`, `.claude/agents/`, `.cursor/agents/` | Glob |
+| Existing skills | `.agents/skills/`, `.trae/skills/`, `.cursor/skills/` | Glob |
+| Automation scripts | `scripts/`, `tools/`, `Makefile` targets | Glob |
+| API interfaces | REST endpoints, GraphQL schema, gRPC protos | Grep |
+| Conventions | Naming patterns, output formats, directory structure | LS |
 
-### 分析输出
-
-```
-项目: {name}
-语言: {检测到的语言}
-现有智能体: {列表或"无"}
-现有技能: {列表或"无"}
-自动化脚本: {列表或"无"}
-集成点: {API、文件模式、工具}
-规范: {命名、输出格式}
-```
-
-## L3: 智能体设计
-
-基于问题（L1）+ 分析（L2），设计智能体：
+### Analysis Output
 
 ```
-智能体: {name}
-问题: {用户原话描述的问题}
-角色: {一句话描述}
-类型: {评分器|比较器|分析器|转换器|研究者|验证器}
+Project: {name}
+Language: {detected language}
+Existing agents: {list or "none"}
+Existing skills: {list or "none"}
+Automation scripts: {list or "none"}
+Integration points: {API, file patterns, tools}
+Conventions: {naming, output format}
+```
 
-触发条件: {智能体何时激活}
-输入: {智能体需要什么数据}
-流程: {高层步骤}
-输出: {智能体产出什么 + 格式}
-约束: {边界 + 不该做什么}
+## L3: Agent Design
 
-要创建的文件:
+Based on the problem (L1) + analysis (L2), design the agent:
+
+```
+Agent: {name}
+Problem: {the problem in the user's own words}
+Role: {one-sentence description}
+Type: {Grader|Comparator|Analyzer|Transformer|Researcher|Validator}
+
+Trigger: {when the agent activates}
+Input: {what data the agent needs}
+Process: {high-level steps}
+Output: {what the agent produces + format}
+Constraints: {boundaries + what it should not do}
+
+Files to create:
   - {path/to/agent.md}
 ```
 
-## L4: 确认（必须使用 AskUserQuestion）
+## L4: Confirm (AskUserQuestion required)
 
-**关键**：在生成任何文件之前，通过 `AskUserQuestion` 展示设计方案。
+**Critical**: Present the design via `AskUserQuestion` before generating any files.
 
-### AskUserQuestion 调用
+### AskUserQuestion Call
 
-使用 `AskUserQuestion`：
+Use `AskUserQuestion`:
 
 ```json
 {
@@ -137,7 +137,7 @@ metadata:
     "options": [
       {
         "label": "Create {agent-name} (Recommended)",
-        "description": "{type} agent — {一句话角色}. Output: {path}"
+        "description": "{type} agent — {one-sentence role}. Output: {path}"
       },
       {
         "label": "Adjust design",
@@ -152,10 +152,10 @@ metadata:
 }
 ```
 
-**规则**：
-- 始终展示设计的智能体名称和类型
-- 包含输出路径让用户知道文件放在哪里
-- 如果多种智能体类型都有效，提供备选方案：
+**Rules**:
+- Always show the designed agent's name and type
+- Include the output path so the user knows where the file goes
+- If multiple agent types are valid, offer alternatives:
 
 ```json
 {
@@ -181,20 +181,20 @@ metadata:
 }
 ```
 
-- 绝不在用户确认前生成文件
-- 如果用户说"调整设计"，带着反馈回到 L3
+- Never generate files before the user confirms
+- If the user says "adjust the design", return to L3 with the feedback
 
-## L5: 生成
+## L5: Generate
 
-用户确认后：
+After the user confirms:
 
-1. 使用[路径发现](references/path-discovery.md)确定输出路径
-2. 使用 `scripts/cli.cjs init` 创建智能体脚手架
-3. 从 L3 设计中填入角色、输入、流程、输出
-4. 设置正确的项目相对输出路径
-5. 包含质量门控和约束
+1. Use [path discovery](references/path-discovery.md) to determine the output path
+2. Use `scripts/cli.cjs init` to create the agent scaffold
+3. Fill in the role, input, process, and output from the L3 design
+4. Set the correct project-relative output path
+5. Include quality gates and constraints
 
-### 生成命令
+### Generation Command
 
 ```bash
 node scripts/cli.cjs init \
@@ -204,57 +204,57 @@ node scripts/cli.cjs init \
   --output-dir <project>/.agents/agents/
 ```
 
-## L6: 验证
+## L6: Verify
 
-交付前验证：
+Verify before delivery:
 
-- [ ] 智能体有清晰、具体的角色（非模糊）
-- [ ] 输入有明确定义和描述
-- [ ] 输出 schema 是确定性的（JSON 带已知字段）
-- [ ] 约束被强制执行（不该做什么）
-- [ ] 输出路径是项目相对路径，非全局
-- [ ] 智能体遵循 L2 分析中的规范
+- [ ] The agent has a clear, specific role (not vague)
+- [ ] Inputs are clearly defined and described
+- [ ] The output schema is deterministic (JSON with known fields)
+- [ ] Constraints are enforced (what it should not do)
+- [ ] The output path is project-relative, not global
+- [ ] The agent follows the conventions from the L2 analysis
 
-### 交付报告
+### Delivery Report
 
 ```
-已创建智能体:
-  名称: {agent-name}
-  类型: {评分器|比较器|分析器|...}
-  路径: {项目相对路径}
+Agent created:
+  Name: {agent-name}
+  Type: {Grader|Comparator|Analyzer|...}
+  Path: {project-relative path}
 
-使用方式: 通过 Task 工具使用其定义的输入来启动此智能体。
+Usage: Launch this agent via the Task tool using its defined inputs.
 ```
 
-## 错误处理
+## Error Handling
 
-| 问题 | 解决方案 |
+| Problem | Solution |
 |------|----------|
-| 用户问题太模糊 | 从上下文推断最可能的智能体类型，在 L4 确认 |
-| 多种有效的智能体类型 | 在 AskUserQuestion 中展示备选方案，让用户选择 |
-| 不存在智能体目录 | 创建 `.agents/agents/` |
-| 用户请求创建技能/规则 | 路由到 `project-skill-writer` 或 `project-rules-writer` |
-| 用户在 L4 说"调整设计" | 回到 L3，纳入反馈 |
-| 输出路径是全局的 | 拒绝，强制使用项目相对路径 |
-| 智能体与现有的冲突 | 展示对比，询问用户是替换还是重命名 |
+| User's question is too vague | Infer the most likely agent type from context, confirm at L4 |
+| Multiple valid agent types | Present alternatives in AskUserQuestion and let the user choose |
+| No agent directory exists | Create `.agents/agents/` |
+| User requests creating a skill/rule | Route to `project-skill-writer` or `project-rules-writer` |
+| User says "adjust the design" at L4 | Return to L3 and incorporate the feedback |
+| Output path is global | Reject, enforce a project-relative path |
+| Agent conflicts with an existing one | Show a comparison, ask the user whether to replace or rename |
 
-## 边界限定
+## Scope
 
-此技能**仅**处理：
-- 分析项目以获取智能体设计上下文
-- 基于用户问题设计智能体
-- 通过 AskUserQuestion 确认设计
-- 将智能体文件生成到项目相对路径
-- 验证已生成的智能体
+This skill handles **only**:
+- Analyzing the project for agent design context
+- Designing the agent based on the user's problem
+- Confirming the design via AskUserQuestion
+- Generating the agent file to a project-relative path
+- Verifying the generated agent
 
-此技能**不**处理：
-- 创建技能 → `project-skill-writer`
-- 安装技能 → `project-skill-installer`
-- 创建规则 → `project-rules-writer`
-- 全局智能体安装（始终限定在项目范围内）
+This skill does **not** handle:
+- Creating skills → `project-skill-writer`
+- Installing skills → `project-skill-installer`
+- Creating rules → `project-rules-writer`
+- Global agent installation (always scoped to the project)
 
-## 参考资料
+## References
 
-- [智能体模式](references/agent-patterns.md) — 架构模式（评分器、比较器、分析器、转换器、研究者、验证器）
-- [路径发现](references/path-discovery.md) — 输出路径确定（设计完成后加载）
-- [示例：评分器智能体](examples/grader-agent.md) — 创建评分器智能体的完整演练
+- [Agent patterns](references/agent-patterns.md) — Architecture patterns (grader, comparator, analyzer, transformer, researcher, validator)
+- [Path discovery](references/path-discovery.md) — Output path determination (load after the design is complete)
+- [Example: Grader agent](examples/grader-agent.md) — Complete walkthrough of creating a grader agent

@@ -1,46 +1,46 @@
-# 钩子标准参考
+# Hooks Standard Reference
 
-AI 编码代理技能的通用钩子参考。标准钩子是 IDE 生命周期事件，允许技能在特定时间点运行确定性脚本。Trae IDE（Trae）和 Claude Code 都支持相同的核心规范。
+A general hooks reference for AI coding-agent skills. Standard hooks are IDE lifecycle events that let a skill run deterministic scripts at specific points in time. Both Trae IDE (Trae) and Claude Code support the same core specification.
 
-## 兼容性矩阵
+## Compatibility matrix
 
-| IDE | 配置路径 | 备注 |
+| IDE | Config path | Notes |
 |-----|----------|------|
-| Trae (Trae IDE) | `$PROJECT/.trae/hooks.json` | 也读取 `.claude/settings.json` |
-| Claude Code | `$PROJECT/.claude/settings.json` | 在 `"hooks"` 键中 |
+| Trae (Trae IDE) | `$PROJECT/.trae/hooks.json` | Also reads `.claude/settings.json` |
+| Claude Code | `$PROJECT/.claude/settings.json` | Under the `"hooks"` key |
 
-**建议**：使用 `.claude/settings.json` 以获得跨 IDE 最大可移植性。
+**Recommendation**: use `.claude/settings.json` for maximum cross-IDE portability.
 
-## 核心事件
+## Core events
 
-Trae 和 Claude Code 共享：
+Shared by Trae and Claude Code:
 
-| 事件 | 触发条件 | 使用场景 |
+| Event | Triggered when | Use cases |
 |------|----------|----------|
-| `SessionStart` | 会话初始化 | 环境配置、上下文注入、加载项目状态 |
-| `UserPromptSubmit` | 用户提示被处理前 | 拦截/增强提示、注入上下文 |
-| `PreToolUse` | 工具调用执行前 | 验证、阻止或修改工具调用 |
-| `PostToolUse` | 工具调用完成后 | 自动格式化、日志记录、验证结果 |
-| `Stop` | 代理停止响应前 | 质量门禁，允许停止前验证输出 |
+| `SessionStart` | The session initializes | Environment setup, context injection, loading project state |
+| `UserPromptSubmit` | Before the user prompt is processed | Intercept/enhance the prompt, inject context |
+| `PreToolUse` | Before a tool call executes | Validate, block, or modify the tool call |
+| `PostToolUse` | After a tool call completes | Auto-format, log, validate results |
+| `Stop` | Before the agent stops responding | Quality gate; validate output before allowing a stop |
 
-**PreToolUse/PostToolUse** 支持 `matcher`——匹配工具名称的正则模式。
-**Stop** 支持 `loop_limit`——钩子可以拒绝的最大次数，之后强制停止。
+**PreToolUse/PostToolUse** support `matcher` — a regex pattern matching tool names.
+**Stop** supports `loop_limit` — the maximum number of times the hook can reject before a stop is forced.
 
-## 扩展事件（Claude Code 2.1+）
+## Extended events (Claude Code 2.1+)
 
-| 事件 | 触发条件 | 使用场景 |
+| Event | Triggered when | Use cases |
 |------|----------|----------|
-| `Notification` | 代理需要用户输入 | 桌面提醒 |
-| `PermissionRequest` | 工具需要授权 | 自动批准安全操作 |
-| `ConfigChange` | 设置被修改 | 审计跟踪 |
-| `CwdChanged` | 工作目录变更 | 重新加载环境/上下文 |
-| `FileChanged` | 监控文件被修改 | 热重载配置 |
-| `SubagentStart` | 子代理启动 | 监控生命周期 |
-| `SubagentStop` | 子代理完成 | 收集结果 |
-| `PreCompact` | 上下文压缩前 | 保留关键状态 |
-| `PostCompact` | 上下文压缩后 | 重新注入丢失的上下文 |
+| `Notification` | The agent needs user input | Desktop alerts |
+| `PermissionRequest` | A tool needs authorization | Auto-approve safe operations |
+| `ConfigChange` | Settings are modified | Audit trail |
+| `CwdChanged` | The working directory changes | Reload environment / context |
+| `FileChanged` | A watched file is modified | Hot-reload config |
+| `SubagentStart` | A subagent starts | Monitor the lifecycle |
+| `SubagentStop` | A subagent finishes | Collect results |
+| `PreCompact` | Before context compaction | Preserve critical state |
+| `PostCompact` | After context compaction | Re-inject lost context |
 
-## 配置格式
+## Configuration format
 
 ```json
 {
@@ -48,12 +48,12 @@ Trae 和 Claude Code 共享：
   "hooks": {
     "<EventName>": [
       {
-        "matcher": "<工具名称的正则模式>",
+        "matcher": "<regex pattern for tool names>",
         "loop_limit": 5,
         "hooks": [
           {
             "type": "command",
-            "command": "<shell 命令>",
+            "command": "<shell command>",
             "timeout": 30
           }
         ]
@@ -63,26 +63,26 @@ Trae 和 Claude Code 共享：
 }
 ```
 
-- `matcher`——可选，仅用于 PreToolUse/PostToolUse（匹配工具名称的正则）
-- `loop_limit`——可选，仅用于 Stop（防止无限拒绝循环）
-- `timeout`——钩子被终止前的秒数（默认：30）
+- `matcher` — optional, only for PreToolUse/PostToolUse (regex matching tool names)
+- `loop_limit` — optional, only for Stop (prevents an infinite rejection loop)
+- `timeout` — seconds before the hook is killed (default: 30)
 
-## 钩子类型
+## Hook types
 
-| 类型 | 可用性 | 描述 |
+| Type | Availability | Description |
 |------|--------|------|
-| `command` | 通用 | 运行 shell 脚本；接收 stdin JSON，输出 stdout |
-| `prompt` | 仅 Claude Code | 发送提示给模型进行判断 |
-| `agent` | 仅 Claude Code | 启动子代理进行复杂决策 |
-| `http` | 仅 Claude Code | 调用 HTTP 端点 |
+| `command` | Universal | Runs a shell script; receives stdin JSON, emits stdout |
+| `prompt` | Claude Code only | Sends a prompt to the model for a judgment |
+| `agent` | Claude Code only | Launches a subagent for complex decisions |
+| `http` | Claude Code only | Calls an HTTP endpoint |
 
-为最大可移植性，建议仅使用 `command` 类型。
+For maximum portability, use only the `command` type.
 
-## 输入输出契约
+## Input/output contract
 
-### 输入（stdin 上的 JSON）
+### Input (JSON on stdin)
 
-所有事件接收基础载荷：
+All events receive a base payload:
 
 ```json
 {
@@ -93,60 +93,60 @@ Trae 和 Claude Code 共享：
 }
 ```
 
-事件特定字段合并到此对象中：
+Event-specific fields are merged into this object:
 
-| 事件 | 附加字段 |
+| Event | Additional fields |
 |------|----------|
-| `UserPromptSubmit` | `prompt`（字符串） |
-| `PreToolUse` | `tool_name`、`tool_params`（对象） |
-| `PostToolUse` | `tool_name`、`tool_params`、`tool_result` |
-| `Stop` | `stop_reason`、`summary` |
-| `SessionStart` | `env`（对象） |
+| `UserPromptSubmit` | `prompt` (string) |
+| `PreToolUse` | `tool_name`, `tool_params` (object) |
+| `PostToolUse` | `tool_name`, `tool_params`, `tool_result` |
+| `Stop` | `stop_reason`, `summary` |
+| `SessionStart` | `env` (object) |
 
-### 输出
+### Output
 
-| 格式 | 使用场景 |
+| Format | Use case |
 |------|----------|
-| stdout 上的 JSON | 结构化响应（决策、修改） |
-| stdout 上的纯文本 | SessionStart（注入为上下文）、UserPromptSubmit（前置拼接） |
+| JSON on stdout | Structured response (decisions, modifications) |
+| Plain text on stdout | SessionStart (injected as context), UserPromptSubmit (prepended) |
 
-### 退出码
+### Exit codes
 
-| 退出码 | 含义 |
+| Exit code | Meaning |
 |--------|------|
-| 0 | 成功——正常继续 |
-| 2 | 阻止/拒绝——拒绝该操作 |
-| 其他 | 忽略——视为无操作 |
+| 0 | Success — continue normally |
+| 2 | Block/reject — deny the operation |
+| Other | Ignored — treated as a no-op |
 
-## 环境变量
+## Environment variables
 
-| 变量 | IDE | 描述 |
+| Variable | IDE | Description |
 |------|-----|------|
-| `TRAE_PROJECT_DIR` | Trae | 项目根路径 |
-| `CLAUDE_PROJECT_DIR` | Claude Code | 项目根路径 |
-| `TRAE_ENV_FILE` | Trae | 在此写入环境变量以持久化会话 |
-| `CLAUDE_ENV_FILE` | Claude Code | 在此写入环境变量以持久化会话 |
+| `TRAE_PROJECT_DIR` | Trae | Project root path |
+| `CLAUDE_PROJECT_DIR` | Claude Code | Project root path |
+| `TRAE_ENV_FILE` | Trae | Write environment variables here to persist them across the session |
+| `CLAUDE_ENV_FILE` | Claude Code | Write environment variables here to persist them across the session |
 
-脚本应检查两个变体以确保可移植性：
+Scripts should check both variants for portability:
 
 ```bash
 PROJECT_DIR="${TRAE_PROJECT_DIR:-$CLAUDE_PROJECT_DIR}"
 ```
 
-## 工作流技能集成
+## Workflow-skill integration
 
-工作流技能（如 `requirement-workflow`）可以为项目生成 `hooks.json` 以强制执行阶段门禁和质量检查。
+A workflow skill (such as `requirement-workflow`) can generate a project's `hooks.json` to enforce phase gates and quality checks.
 
-### 内部钩子触发点 → 标准事件
+### Internal hook trigger points → standard events
 
-| 内部钩子 | 标准事件 | 策略 |
+| Internal hook | Standard event | Strategy |
 |----------|----------|------|
-| `pre_stage_*` | `UserPromptSubmit` 或 `PreToolUse` | 注入阶段上下文，验证前置条件 |
-| `post_stage_*` | `PostToolUse` 或 `Stop` | 验证交付物，触发下一阶段 |
-| `on_error` | `PostToolUse` | 检查退出码 2；记录并暴露错误 |
-| `on_blocked` | `Stop` | 返回 `{"decision": "block"}` 阻止过早停止 |
+| `pre_stage_*` | `UserPromptSubmit` or `PreToolUse` | Inject stage context, validate preconditions |
+| `post_stage_*` | `PostToolUse` or `Stop` | Validate deliverables, trigger the next stage |
+| `on_error` | `PostToolUse` | Check for exit code 2; log and surface the error |
+| `on_blocked` | `Stop` | Return `{"decision": "block"}` to prevent a premature stop |
 
-### 生成的配置模式
+### Generated configuration pattern
 
 ```json
 {
@@ -167,9 +167,9 @@ PROJECT_DIR="${TRAE_PROJECT_DIR:-$CLAUDE_PROJECT_DIR}"
 }
 ```
 
-## 实际示例
+## Practical examples
 
-### 编辑后自动格式化
+### Auto-format after editing
 
 ```json
 {
@@ -191,7 +191,7 @@ PROJECT_DIR="${TRAE_PROJECT_DIR:-$CLAUDE_PROJECT_DIR}"
 }
 ```
 
-### 阻止危险命令
+### Block dangerous commands
 
 ```json
 {
@@ -213,9 +213,9 @@ PROJECT_DIR="${TRAE_PROJECT_DIR:-$CLAUDE_PROJECT_DIR}"
 }
 ```
 
-`block-dangerous.cjs` 读取 stdin，检查 `tool_params.command` 是否匹配危险模式（`rm -rf /`、`git push --force` 等），退出码 2 进行阻止。
+`block-dangerous.cjs` reads stdin, checks whether `tool_params.command` matches a dangerous pattern (`rm -rf /`, `git push --force`, etc.), and exits with code 2 to block it.
 
-### 停止时的质量门禁
+### Quality gate on stop
 
 ```json
 {
@@ -237,9 +237,9 @@ PROJECT_DIR="${TRAE_PROJECT_DIR:-$CLAUDE_PROJECT_DIR}"
 }
 ```
 
-脚本验证交付物是否存在、测试是否通过、或规格标准是否满足。退出码 2 强制代理继续工作。在 3 次拒绝后（`loop_limit`），代理无论如何都会停止。
+The script verifies that deliverables exist, tests pass, or specification criteria are met. Exit code 2 forces the agent to keep working. After 3 rejections (`loop_limit`), the agent stops anyway.
 
-### 会话上下文注入
+### Session-context injection
 
 ```json
 {
@@ -260,13 +260,13 @@ PROJECT_DIR="${TRAE_PROJECT_DIR:-$CLAUDE_PROJECT_DIR}"
 }
 ```
 
-纯文本输出作为会话初始上下文注入。使用此方式加载项目状态、当前阶段或待办任务。
+Plain-text output is injected as the session's initial context. Use this to load project state, the current phase, or pending tasks.
 
-## 最佳实践
+## Best practices
 
-1. **保持钩子快速**——超时默认 30 秒，但交互事件建议 < 5 秒
-2. **使用 `command` 类型**——唯一跨 IDE 可移植的选项
-3. **检查两套环境变量**——`TRAE_*` 和 `CLAUDE_*` 以支持跨 IDE 脚本
-4. **默认退出 0**——只在明确要阻止时退出 2
-5. **日志输出到 stderr**——stdout 作为输出被消费；调试信息发送到 stderr
-6. **脚本需幂等**——钩子可能因重试而多次触发
+1. **Keep hooks fast** — the timeout defaults to 30 seconds, but aim for < 5 seconds on interactive events
+2. **Use the `command` type** — the only cross-IDE-portable option
+3. **Check both sets of environment variables** — `TRAE_*` and `CLAUDE_*` for cross-IDE scripts
+4. **Exit 0 by default** — exit 2 only when you explicitly want to block
+5. **Log to stderr** — stdout is consumed as output; send debug info to stderr
+6. **Make scripts idempotent** — hooks may fire multiple times due to retries

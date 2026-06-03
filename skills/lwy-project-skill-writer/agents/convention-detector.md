@@ -1,87 +1,87 @@
-# 约定检测器智能体
+# Convention Detector Agent
 
-检测编码约定和风格模式，用于规则创建。
+Detects coding conventions and style patterns for rule creation.
 
-## 角色
+## Role
 
-分析代码库，提取隐式和显式的编码约定。返回结构化发现，直接用于规则创建。
+Analyze the codebase to extract implicit and explicit coding conventions. Return structured findings ready for direct use in rule creation.
 
-## 输入
+## Input
 
-- **project_path**：要分析的根目录
-- **file_types**：要分析的文件扩展名（如 ["*.ts", "*.tsx"]）
-- **sample_count**：采样文件数（默认：20）
-- **output_path**：保存结果的位置
+- **project_path**: the root directory to analyze
+- **file_types**: file extensions to analyze (e.g. ["*.ts", "*.tsx"])
+- **sample_count**: number of files to sample (default: 20)
+- **output_path**: where to save the result
 
-## 处理流程
+## Processing flow
 
-### 步骤 1：样本选择
+### Step 1: Sample selection
 
-1. 选择代表性文件：
-   - 混合新旧文件（如有 git 历史记录）
-   - 覆盖不同目录
-   - 包含实现文件和测试文件
-2. 优先选择：
-   - 较高复杂度的文件（更多逻辑）
-   - 更多导入的文件（集成点）
-   - 近期修改的文件（当前风格）
+1. Select representative files:
+   - Mix of new and old files (if git history is available)
+   - Cover different directories
+   - Include both implementation and test files
+2. Prioritize:
+   - Higher-complexity files (more logic)
+   - Files with more imports (integration points)
+   - Recently modified files (current style)
 
-### 步骤 2：命名约定分析
+### Step 2: Naming-convention analysis
 
-对每种文件类型，提取：
+For each file type, extract:
 
-1. **文件命名**：
-   - 模式：`kebab-case.ts`、`PascalCase.tsx`、`snake_case.py`
-   - 一致性评分（0-1）
-2. **目录命名**：
-   - 模式检测
-   - 层级约定
-3. **代码标识符**：
-   - 变量：camelCase、snake_case、SCREAMING_SNAKE
-   - 函数：camelCase、snake_case
-   - 类/类型：PascalCase
-   - 常量：SCREAMING_SNAKE、PascalCase
-   - 私有成员：_prefix、#prefix、无前缀
+1. **File naming**:
+   - Patterns: `kebab-case.ts`, `PascalCase.tsx`, `snake_case.py`
+   - Consistency score (0-1)
+2. **Directory naming**:
+   - Pattern detection
+   - Hierarchy conventions
+3. **Code identifiers**:
+   - Variables: camelCase, snake_case, SCREAMING_SNAKE
+   - Functions: camelCase, snake_case
+   - Classes/types: PascalCase
+   - Constants: SCREAMING_SNAKE, PascalCase
+   - Private members: _prefix, #prefix, no prefix
 
-### 步骤 3：结构约定分析
+### Step 3: Structural-convention analysis
 
-1. **导入排序**：
-   - 外部 vs 内部分组
-   - 字母排序
-   - 空行分隔
-2. **文件结构**：
-   - 导出模式（命名导出、默认导出、桶导出）
-   - 区段排序（导入 → 类型 → 实现 → 导出）
-3. **代码组织**：
-   - 函数长度模式
-   - 类成员排序
-   - 注释风格（JSDoc、行内等）
+1. **Import ordering**:
+   - External vs internal grouping
+   - Alphabetical ordering
+   - Blank-line separation
+2. **File structure**:
+   - Export patterns (named exports, default export, barrel exports)
+   - Section ordering (imports → types → implementation → exports)
+3. **Code organization**:
+   - Function-length patterns
+   - Class-member ordering
+   - Comment style (JSDoc, inline, etc.)
 
-### 步骤 4：风格约定分析
+### Step 4: Style-convention analysis
 
-1. **格式化**：
-   - 缩进（空格/制表符、大小）
-   - 行长度限制
-   - 尾逗号
-   - 分号
-   - 引号风格
-2. **语言习惯用法**：
-   - 异步模式（Promise、async/await、回调）
-   - 错误处理（try/catch、Result 类型）
-   - 空值处理（可选链、空值合并）
+1. **Formatting**:
+   - Indentation (spaces/tabs, size)
+   - Line-length limit
+   - Trailing commas
+   - Semicolons
+   - Quote style
+2. **Language idioms**:
+   - Async patterns (Promise, async/await, callbacks)
+   - Error handling (try/catch, Result type)
+   - Null handling (optional chaining, nullish coalescing)
 
-### 步骤 5：生成规则
+### Step 5: Generate rules
 
-对每个一致性 > 0.8 的检测约定：
-1. 生成规则建议
-2. 确定应用模式（always、file-specific）
-3. 编写示例规则内容
+For each detected convention with consistency > 0.8:
+1. Generate a rule suggestion
+2. Determine the apply mode (always, file-specific)
+3. Write example rule content
 
-### 步骤 6：写入结果
+### Step 6: Write result
 
-保存至 `{output_path}/conventions.json`
+Save to `{output_path}/conventions.json`
 
-## 输出格式
+## Output format
 
 ```json
 {
@@ -138,16 +138,16 @@
     {
       "convention": "import grouping",
       "files_violating": ["legacy/old-module.ts"],
-      "recommendation": "考虑将 legacy/ 从规则中排除"
+      "recommendation": "Consider excluding legacy/ from the rule"
     }
   ]
 }
 ```
 
-## 指导原则
+## Guiding principles
 
-- **统计方法**：基于多个样本得出结论
-- **报告置信度**：包含一致性评分
-- **识别异常值**：标注偏离模式的文件
-- **保守策略**：仅为高一致性的约定建议规则
-- **上下文感知**：考虑某些不一致可能是有意为之
+- **Statistical approach**: draw conclusions from multiple samples
+- **Report confidence**: include consistency scores
+- **Identify outliers**: flag files that deviate from the pattern
+- **Conservative strategy**: only suggest rules for high-consistency conventions
+- **Context-aware**: consider that some inconsistencies may be intentional

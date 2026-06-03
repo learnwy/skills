@@ -1,53 +1,53 @@
-## 项目智能体路径发现
+## Project Agent Path Discovery
 
-此参考在智能体设计完成后使用。在以下情况下加载：
-1. 你有一个设计好的智能体，需要确定它应放置的位置
-2. 用户已确认智能体设计，你准备生成文件
+This reference is used after the agent design is complete. Load it when:
+1. You have a designed agent and need to determine where it should be placed
+2. The user has confirmed the agent design and you are about to generate files
 
-### 不要首先加载此文档！
+### Do Not Load This Document First!
 
-**关键**：路径发现是最后一步，不是第一步！
+**Critical**: Path discovery is the last step, not the first!
 
 ```
-正确流程:
-1. 理解用户的问题
-2. 分析项目（现有智能体、集成点、规范）
-3. 设计智能体方案
-4. 通过 AskUserQuestion 与用户验证
-5. 最后才：加载 path-discovery 确定输出位置
+Correct flow:
+1. Understand the user's problem
+2. Analyze the project (existing agents, integration points, conventions)
+3. Design the agent plan
+4. Validate with the user via AskUserQuestion
+5. Only then: load path-discovery to determine the output location
 ```
 
-### 输出契约：`.agents/agents/`
+### Output Contract: `.agents/agents/`
 
-项目级智能体统一落到项目根目录的 `.agents/agents/<name>.md`。这是 tool-neutral 的目录——和 IDE 自己管理的 `.trae/`、`.claude/`、`.cursor/` 解耦，避免 writer 与 IDE 互相覆盖。
+Project-level agents all land at `.agents/agents/<name>.md` in the project root. This is a tool-neutral directory—decoupled from the IDE-managed `.trae/`, `.claude/`, `.cursor/`, to prevent the writer and the IDE from overwriting each other.
 
-兄弟产物：
-- 技能 → `<project>/.agents/skills/<name>/`
-- 规则 → `<project>/.agents/rules/<name>.md`
+Sibling artifacts:
+- Skills → `<project>/.agents/skills/<name>/`
+- Rules → `<project>/.agents/rules/<name>.md`
 
-### IDE 标记检测（仅作上下文判断，不改变输出位置）
+### IDE Marker Detection (context only, does not change the output location)
 
-继续扫描以下标记，用于了解项目使用哪种 AI IDE，从而调整智能体的接入说明（例如"用 Trae 的 Task 工具调用"）：
+Continue to scan the following markers to learn which AI IDE the project uses, so you can adjust the agent's integration instructions (e.g. "invoke via Trae's Task tool"):
 
-| 标记 | 工具 |
+| Marker | Tool |
 |---|---|
 | `{project_dir}/.trae/` | Trae / Trae-CN |
 | `{project_dir}/.claude/` | Claude Code |
 | `{project_dir}/.cursor/` | Cursor |
 | `{project_dir}/.windsurf/` | Windsurf |
 
-无论检测到哪个 IDE，**输出路径仍然是 `.agents/agents/`**。
+Regardless of which IDE is detected, **the output path is still `.agents/agents/`**.
 
-### 发现优先级
+### Discovery Priority
 
-1. 用户明确指定（`--output-dir` 或对话中说明）→ 必须是项目相对路径
-2. 项目已存在 `.agents/agents/` → 直接使用
-3. 默认 → 在项目根创建 `.agents/agents/`
+1. User explicitly specifies (`--output-dir` or stated in conversation) → must be a project-relative path
+2. Project already has `.agents/agents/` → use it directly
+3. Default → create `.agents/agents/` in the project root
 
-### 验证规则
+### Validation Rules
 
-- 路径必须存在或可在项目工作区内创建
-- 路径必须可写
-- 路径选择必须在最终输出中报告
-- 使用项目相对路径，绝不使用 `~/.trae/agents`、`~/.claude/agents` 等全局路径
-- 不要写入项目自身的 `.trae/`、`.claude/`、`.cursor/`——那是 IDE 拥有的目录
+- The path must exist or be creatable within the project workspace
+- The path must be writable
+- The path choice must be reported in the final output
+- Use a project-relative path, never global paths like `~/.trae/agents`, `~/.claude/agents`
+- Do not write into the project's own `.trae/`, `.claude/`, `.cursor/`—those are IDE-owned directories

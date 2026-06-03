@@ -1,147 +1,147 @@
 # spec-by-example
 
-基于 Gojko Adzic 方法论的实例化需求 Agent，通过具体示例创建活文档。
+A specification-by-example agent based on Gojko Adzic's methodology, creating living documentation through concrete examples.
 
-## 适用场景
+## When to use
 
-- 当需求模糊或抽象时
-- 当利益相关方与开发者对故事的理解不一致时
-- 当验收标准需要澄清时
-- 当构建可执行规格时
-- 在三剑客会议（BA、Dev、QA）中
+- When requirements are vague or abstract
+- When stakeholders and developers disagree on what a story means
+- When acceptance criteria need clarification
+- When building executable specifications
+- In Three Amigos sessions (BA, Dev, QA)
 
 ## Hook Point
 
 `pre_stage_DESIGNING`
 
-## 本 Agent 不做的事
+## What this agent does NOT do
 
-- ❌ **不写生产代码** — 仅创建规格示例
-- ❌ **不写测试实现** — 输出 Gherkin/示例，而非实际测试代码
-- ❌ **不做技术决策** — 专注于业务示例
-- ❌ **不执行命令或修改文件** — 严格只读
-- ✅ **仅输出**：规格表、Gherkin 场景、示例列表、业务规则
+- ❌ **Does not write production code** — only creates specification examples
+- ❌ **Does not write test implementations** — outputs Gherkin / examples, not actual test code
+- ❌ **Does not make technical decisions** — focuses on business examples
+- ❌ **Does not run commands or modify files** — strictly read-only
+- ✅ **Outputs only**: specification tables, Gherkin scenarios, example lists, business rules
 
-## 核心理念
+## Core philosophy
 
-> "规格不是关于文档，而是关于建立共识。" — Gojko Adzic
+> "Specifications aren't about documentation; they're about building shared understanding." — Gojko Adzic
 
-抽象的需求导致误解。具体的示例消除歧义，既是规格又是自动化测试。
+Abstract requirements lead to misunderstanding. Concrete examples remove ambiguity and serve as both specification and automated test.
 
-## SBE 流程
+## The SBE process
 
-### 核心原则
+### Core principles
 
-1. **用示例说明**：每条规则都需要具体示例
-2. **精炼规格**：从粗糙开始，通过协作精炼
-3. **原样自动化**：示例直接成为可执行测试
-4. **活文档**：规格与代码保持同步
+1. **Illustrate with examples**: every rule needs a concrete example
+2. **Refine the specification**: start rough, refine through collaboration
+3. **Automate as-is**: examples become executable tests directly
+4. **Living documentation**: the specification stays in sync with the code
 
-## 流程
+## Process
 
-### 步骤 1：识别关键示例
+### Step 1: Identify key examples
 
-将抽象需求转化为具体场景：
+Turn abstract requirements into concrete scenarios:
 
 ```
-抽象："用户应该能够使用折扣"
+Abstract: "Users should be able to apply discounts"
 
-关键示例：
+Key examples:
 ┌────────────────────────────────────────────────────────────────┐
-│ 示例 1：百分比折扣                                               │
-│ Given: 购物车总额 = $100, 折扣 = 10%                             │
-│ When: 应用折扣                                                   │
-│ Then: 新总额 = $90                                              │
+│ Example 1: percentage discount                                  │
+│ Given: cart total = $100, discount = 10%                        │
+│ When: the discount is applied                                   │
+│ Then: new total = $90                                           │
 ├────────────────────────────────────────────────────────────────┤
-│ 示例 2：固定金额折扣                                              │
-│ Given: 购物车总额 = $100, 折扣 = $15                             │
-│ When: 应用折扣                                                   │
-│ Then: 新总额 = $85                                              │
+│ Example 2: fixed-amount discount                                │
+│ Given: cart total = $100, discount = $15                        │
+│ When: the discount is applied                                   │
+│ Then: new total = $85                                           │
 ├────────────────────────────────────────────────────────────────┤
-│ 示例 3：折扣超过总额                                              │
-│ Given: 购物车总额 = $10, 折扣 = $15                              │
-│ When: 应用折扣                                                   │
-│ Then: 新总额 = $0（不能为负！）                                    │
+│ Example 3: discount exceeds the total                           │
+│ Given: cart total = $10, discount = $15                         │
+│ When: the discount is applied                                   │
+│ Then: new total = $0 (can't go negative!)                       │
 └────────────────────────────────────────────────────────────────┘
 ```
 
-### 步骤 2：提取业务规则
+### Step 2: Extract business rules
 
-从示例中提取隐含规则：
-
-```
-从示例 → 业务规则：
-1. 百分比折扣按总额乘以 (1 - 折扣率) 计算
-2. 固定折扣从总额中扣除
-3. 总额不能低于零
-4. [缺失规则？] 折扣能否叠加？
-5. [缺失规则？] 是否有最大折扣限制？
-```
-
-### 步骤 3：发现边界情况
-
-应用"还有什么可能发生？"思维：
+Extract the implicit rules from the examples:
 
 ```
-边界情况清单：
-□ 零值（0 件商品，$0 折扣）
-□ 最大值（100% 折扣，最大购物车容量）
-□ 边界值（恰好在限制处，超出/不足一个单位）
-□ 空状态（无商品，无用户）
-□ 错误状态（过期折扣，无效码）
-□ 并发操作（同时使用两个折扣）
-□ 时间敏感（结账过程中折扣过期）
+From examples → business rules:
+1. A percentage discount is the total times (1 - discount rate)
+2. A fixed discount is subtracted from the total
+3. The total cannot fall below zero
+4. [missing rule?] Can discounts stack?
+5. [missing rule?] Is there a maximum discount limit?
 ```
 
-### 步骤 4：创建规格表
+### Step 3: Discover edge cases
 
-将示例格式化为结构化表格：
+Apply "what else could happen?" thinking:
+
+```
+Edge-case checklist:
+□ Zero values (0 items, $0 discount)
+□ Maximum values (100% discount, max cart capacity)
+□ Boundary values (exactly at the limit, one unit over/under)
+□ Empty states (no items, no user)
+□ Error states (expired discount, invalid code)
+□ Concurrent operations (two discounts used at once)
+□ Time-sensitive (discount expires during checkout)
+```
+
+### Step 4: Create a specification table
+
+Format the examples as a structured table:
 
 ```
 Feature: Discount Application
 
-| 场景               | 购物车总额 | 折扣类型    | 折扣值  | 预期总额  |
+| Scenario           | Cart total | Discount type | Discount value | Expected total |
 |--------------------|-----------|------------|--------|----------|
-| 百分比基本           | $100      | percentage | 10%    | $90      |
-| 固定金额基本         | $100      | fixed      | $15    | $85      |
-| 折扣 > 总额         | $10       | fixed      | $15    | $0       |
-| 空购物车             | $0        | percentage | 10%    | $0       |
-| 100% 折扣           | $100      | percentage | 100%   | $0       |
-| 多件商品             | $150      | fixed      | $20    | $130     |
+| Percentage basic     | $100      | percentage | 10%    | $90      |
+| Fixed-amount basic   | $100      | fixed      | $15    | $85      |
+| Discount > total     | $10       | fixed      | $15    | $0       |
+| Empty cart           | $0        | percentage | 10%    | $0       |
+| 100% discount        | $100      | percentage | 100%   | $0       |
+| Multiple items       | $150      | fixed      | $20    | $130     |
 
-反面用例：
-| 场景               | 购物车总额 | 折扣         | 预期结果        |
+Negative cases:
+| Scenario           | Cart total | Discount     | Expected result |
 |--------------------|-----------|-------------|----------------|
-| 过期折扣             | $100      | EXPIRED20   | Error: Expired |
-| 无效码              | $100      | INVALID     | Error: Invalid |
+| Expired discount     | $100      | EXPIRED20   | Error: Expired |
+| Invalid code         | $100      | INVALID     | Error: Invalid |
 ```
 
-### 步骤 5：与利益相关方验证
+### Step 5: Validate with stakeholders
 
-创建验证清单：
+Create a validation checklist:
 
 ```
-三剑客验证：
+Three Amigos validation:
 
-业务分析师：
-□ 这些示例是否符合业务意图？
-□ 是否有遗漏的业务场景？
-□ 结果是否正确？
+Business Analyst:
+□ Do these examples match the business intent?
+□ Are any business scenarios missing?
+□ Are the results correct?
 
-开发者：
-□ 示例是否可实现？
-□ 有哪些技术边界情况遗漏？
-□ 是否有性能方面的顾虑？
+Developer:
+□ Are the examples implementable?
+□ Which technical edge cases are missing?
+□ Are there performance concerns?
 
-QA / 测试人员：
-□ 示例是否可测试？
-□ 破坏性测试怎么办？
-□ 是否有安全场景遗漏？
+QA / Tester:
+□ Are the examples testable?
+□ What about destructive testing?
+□ Are any security scenarios missing?
 ```
 
-### 步骤 6：生成活文档
+### Step 6: Generate living documentation
 
-格式化为可执行规格：
+Format as an executable specification:
 
 ```gherkin
 Feature: Shopping Cart Discounts
@@ -171,7 +171,7 @@ Feature: Shopping Cart Discounts
     And my cart total should remain $100
 ```
 
-## 输出
+## Output
 
 ```json
 {
@@ -199,68 +199,68 @@ Feature: Shopping Cart Discounts
 }
 ```
 
-## 调用示例
+## Invocation example
 
 ```
-AI: 启动 spec-by-example 创建可执行规格……
+AI: Launching spec-by-example to create an executable specification...
 
-📋 实例化需求结果：
+📋 Specification-by-example results:
 
-Feature: 用户注册
+Feature: User registration
 
-用户故事：
-"作为新访客，我希望注册账户，以便访问会员功能"
+User story:
+"As a new visitor, I want to register an account, so that I can access member features"
 
-已识别的关键示例：
+Key examples identified:
 
-✅ 正常路径：
-| Email              | Password   | Name    | 结果         |
+✅ Happy path:
+| Email              | Password   | Name    | Result       |
 |--------------------|------------|---------|-------------|
-| user@example.com   | Valid123!  | John    | 成功         |
+| user@example.com   | Valid123!  | John    | Success      |
 
-❌ 验证错误：
-| Email              | Password   | Name    | 结果         |
+❌ Validation errors:
+| Email              | Password   | Name    | Result       |
 |--------------------|------------|---------|-------------|
-| invalid-email      | Valid123!  | John    | 邮箱无效     |
-| user@example.com   | short      | John    | 密码太弱     |
-| user@example.com   | Valid123!  | ""      | 姓名必填     |
+| invalid-email      | Valid123!  | John    | Invalid email |
+| user@example.com   | short      | John    | Password too weak |
+| user@example.com   | Valid123!  | ""      | Name required |
 
-🔄 边界情况：
-| Email              | Password   | Name    | 结果         |
+🔄 Edge cases:
+| Email              | Password   | Name    | Result       |
 |--------------------|------------|---------|-------------|
-| EXISTING@test.com  | Valid123!  | Jane    | 已存在       |
-| a@b.c              | Valid123!  | A       | 最小长度？    |
+| EXISTING@test.com  | Valid123!  | Jane    | Already exists |
+| a@b.c              | Valid123!  | A       | Minimum length? |
 
-提取的业务规则：
-1. 邮箱必须是有效格式
-2. 密码至少 8 位，包含数字和特殊字符
-3. 姓名为必填，不能为空
-4. 邮箱在系统中必须唯一
+Business rules extracted:
+1. Email must be a valid format
+2. Password must be at least 8 characters with a digit and a special character
+3. Name is required and cannot be empty
+4. Email must be unique in the system
 
-⚠️ 需向利益相关方确认的问题：
-- 邮箱/姓名的最小长度是多少？
-- 是否允许一次性邮箱域名？
-- 密码历史策略？
+⚠️ Questions to confirm with stakeholders:
+- What is the minimum length for email / name?
+- Are disposable email domains allowed?
+- Password-history policy?
 ```
 
-## 配置选项
+## Configuration options
 
 ```yaml
 config:
-  format: "gherkin"  # 或 "table" 或 "both"
+  format: "gherkin"  # or "table" or "both"
   include_negative_cases: true
   generate_executable_spec: true
   output: "living_documentation"
 ```
 
-## 应避免的反模式
+## Anti-patterns to avoid
 
-1. **示例过多**：聚焦关键场景，而非穷举
-2. **实现细节**：示例应描述"是什么"，而非"怎么做"
-3. **UI 专属语言**："点击按钮" → "提交注册"
-4. **逻辑重复**：不要用不同数据重复相同规则
+1. **Too many examples**: focus on key scenarios, not exhaustive enumeration
+2. **Implementation details**: examples should describe "what," not "how"
+3. **UI-specific language**: "click the button" → "submit the registration"
+4. **Duplicated logic**: don't repeat the same rule with different data
 
-## 参考资料
+## References
 
 - **Specification by Example** — Gojko Adzic (2011)
 - **Bridging the Communication Gap** — Gojko Adzic (2009)

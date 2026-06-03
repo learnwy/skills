@@ -1,53 +1,67 @@
 ---
 name: lwy-self
-description: "个人「分身/alter-ego」生活与工作记录。当用户想记录今天做了什么、与谁协作、推进了哪些项目/决策，或说『记一下』『今天』『周报』『我的同事/项目』『alter ego』『生活日志』时触发。把日常沉淀进私有的 self 知识库（diaries/people/products/events），让 AI 成为了解你的分身。与 lwy-llm-wiki（世界知识：书/概念）相对，本 skill 管理私人层。"
+description: "Personal alter-ego life & work log. Triggers when the user wants to record what they did today, who they collaborated with, which projects/decisions they moved forward, or says 『记一下』『今天』『周报』『我的同事/项目』『把这场会/妙记沉淀进来』『alter ego』『life log』. Files daily life and meetings into the private self store (diaries/people/products/events) so the AI becomes an informed alter-ego. Counterpart to lwy-llm-wiki (world knowledge: books/concepts); this skill owns the personal layer."
 metadata:
   author: "learnwy"
-  version: "1.0"
+  version: "1.1"
   privacy: "private — local-only, never pushed to the public repo"
 ---
 
-# lwy-self — 个人分身 / Alter-Ego
+# lwy-self — Personal Alter-Ego
 
-记录你的**生活与工作**，构建一个了解你的私人自我模型——与 `lwy-llm-wiki`（世界知识）相对的**个人层**。
+Record your **life and work** to build a private self-model that knows you — the **personal layer**,
+counterpart to `lwy-llm-wiki` (world knowledge).
 
-- **世界 wiki**（`~/.learnwy/llm-wiki/`，公开）："我对世界的认知"——书、概念、作者。
-- **分身 / self**（`~/.learnwy/ai/private/self/`，私有 submodule，本地）："我是谁、做了什么、认识谁"——日志、同事、项目、决策。
+- **World wiki** (`~/.learnwy/llm-wiki/`, public): "what I know about the world" — books, concepts, authors.
+- **Alter-ego / self** (`~/.learnwy/ai/private/self/`, private local-only submodule): "who I am, what I did, who I know" — diaries, colleagues, projects, decisions.
 
-## 存储与引擎
+## Storage & engine
 
-self 与 `lwy-llm-wiki` 共享**同一个引擎**（公共模块 `src/shared/wiki/`），只是默认 root 不同。`lwy-self` 现在有**自己的二进制**，默认就指向私有 self root（`~/.learnwy/ai/private/self`），所以日常命令**无需 `--root`**；如需指向别的库，`--root` 仍可覆盖。
+self shares the **same engine** as `lwy-llm-wiki` (the shared module `src/shared/wiki/`); only the
+default root differs. `lwy-self` now has **its own binary** defaulting to the private self root
+(`~/.learnwy/ai/private/self`), so everyday commands need **no `--root`**; pass `--root` to point at a different store.
 
 ```sh
-# lwy-self 自带默认 root（私有 self 库），无需 --root
+# lwy-self defaults to the private self store — no --root needed
 lwy-self stats
 lwy-self lint
 lwy-self generate-index
 lwy-self generate-topics
 
-# --root 仍可覆盖默认 root
+# --root still overrides the default
 lwy-self stats --root /some/other/wiki
 ```
 
-完整操作手册见该 root 下的 `CLAUDE.md`（实体优先布局、采集节奏、隐私约定）。
+Full operations manual lives in that root's `CLAUDE.md` (entity-first layout, capture rhythm, privacy conventions).
 
-## 何时用本 skill
+## When to use this skill
 
-| 信号 | 动作 |
-|------|------|
-| "记一下 / 今天 / 刚才和X聊了" | **每日速记**：在 `ai/private/self/wiki/diaries/<ISO-周>.md` 追加一条带日期的 bullet |
-| "整理本周 / 周报 / 回顾这周" | **周回顾**：读本周 diary，把稳定事实提炼进 people/products/events 实体页 |
-| "X是谁 / 我和谁在做Y / 这个项目什么情况" | **查询**：读 self 的 people/products/events 页并作答 |
-| "把这个飞书群/文档沉淀进来" | **采集**：经 `lark-context` 落 `raw/lark/`，再编译进 threads/people/events（见 lwy-llm-wiki 的 ingest-lark 流程） |
+| Signal | Action |
+|--------|--------|
+| "record this / today / I just talked with X" | **Daily quick-capture**: append a dated bullet to `ai/private/self/wiki/diaries/<ISO-week>.md` |
+| "review this week / weekly report / recap the week" | **Weekly review**: read the week's diary, promote durable facts into people/products/events entity pages |
+| "who is X / who am I doing Y with / what's the status of this project" | **Query**: read the self people/products/events pages and answer |
+| "file this Feishu group/doc into self" | **Ingest**: land via `lark-context` into `raw/lark/`, then compile into threads/people/events (see lwy-llm-wiki's ingest-lark flow) |
+| "file this meeting/minutes into self / record this meeting" | **Meeting ingest**: pull the minutes transcript → resolve speakers → compile into diaries/people/products/events (see [`references/ingest-meeting.md`](references/ingest-meeting.md)) |
 
-## 三步工作流
+## Three-step workflow
 
-1. **每日速记** → `diaries/<ISO-周>.md` 下按日期追加一行（事件 / 对话 / 决策）。一句一条，先落不丢。
-2. **编译** → 当某条值得固化时，把它整合进相关 `[[people/slug]]` / `[[products/slug]]` / `[[events/slug]]` 实体页并交叉链接（编译是整合进网络，不是孤立摘要）。
-3. **周回顾** → 读整周 diary，提炼持久事实进实体页，跑 lint 保持链接干净。
+1. **Daily quick-capture** → append one dated line (event / conversation / decision) under the date in `diaries/<ISO-week>.md`. One line each; land it first, lose nothing.
+2. **Compile** → when a bullet warrants persistence, fold it into the relevant `[[people/slug]]` / `[[products/slug]]` / `[[events/slug]]` entity page and cross-link (compiling is integrating into the network, not isolated summarizing).
+3. **Weekly review** → read the whole week's diary, promote durable facts into entity pages, run `lint` to keep links clean.
 
-## 边界
+## Name resolution (the key to "being there")
 
-- **隐私**：PII 与公司内部内容。仅本地 + 私有 submodule，**绝不**复制进公开的 `llm-wiki/` 世界库。
-- **不负责**：世界知识（书/概念）→ 用 `lwy-llm-wiki`；通用对话洞察 → `lwy-knowledge-consolidation`。
-- 中文内容在此完全 OK（单用户私人库）。
+When filing meetings / group chats, every speaker must resolve to one specific person — get it right and
+each statement attributes to a person; get it wrong and it degrades into "some colleague thought…"
+summary-speak. **The self store's `people/` pages ARE the living name map**: they already carry
+alias/pinyin/homophone resolution, roles, and the relationship to you (汪洋) — stronger than a static
+`name-map.md`, and they compound over time. When resolving, tell yourself from others and from managers
+(a manager's-voice statement most likely comes from a manager); when in doubt re-check the speaker
+markers and mark "(speaker TBD)" rather than mis-attributing.
+
+## Boundaries
+
+- **Privacy**: PII and internal company content. Local + private submodule only; **never** copied into the public `llm-wiki/` world store.
+- **Not this skill**: world knowledge (books/concepts) → `lwy-llm-wiki`; generic conversation insight → `lwy-knowledge-consolidation`; a **forwardable one-shot meeting note** (terminal / Feishu card) → the `meeting-notes` skill (this skill only does **store-ingest**; the two chain).
+- Chinese content is fine inside the store itself (single-user private library); skill docs stay English.
